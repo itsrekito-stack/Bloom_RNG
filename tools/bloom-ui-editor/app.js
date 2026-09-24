@@ -72,7 +72,7 @@ function setRoot(raw,label="Модель загружена"){
   state.selectedId=state.root.__id;
   state.history=[];state.future=[];state.dirty=false;
   syncInsetFromRoot();renderAll();toast(label);
- }catch(e){toast("Ошибка модели: "+e.message,true)}
+ }catch(e){console.error("[Bloom UI Studio] model/render error",e);toast("Ошибка модели: "+e.message,true)}
 }
 function syncInsetFromRoot(){
  if(state.root?.ClassName==="ScreenGui"){
@@ -100,9 +100,38 @@ function redo(){if(!state.future.length)return;state.history.push(serialize(fals
 function changed(){state.dirty=true;renderAll()}
 
 function prop(node,key,fallback){return node?.Properties?.[key]??fallback}
-function u2v(node,key,def=u2()){const v=prop(node,key,def);return v?.UDim2||def.UDim2}
-function udv(node,key,def=ud()){const v=prop(node,key,def);return v?.UDim||def.UDim}
-function v2v(node,key,def=v2()){const v=prop(node,key,def);return v?.Vector2||def.Vector2}
+function asUDim2(v,def=[[0,0],[0,0]]){
+ if(v?.UDim2&&Array.isArray(v.UDim2))v=v.UDim2;
+ if(Array.isArray(v)&&Array.isArray(v[0])&&Array.isArray(v[1])){
+  return [
+   [finite(v[0][0]),roundOffset(v[0][1])],
+   [finite(v[1][0]),roundOffset(v[1][1])]
+  ];
+ }
+ return deepClone(def);
+}
+function asUDim(v,def=[0,0]){
+ if(v?.UDim&&Array.isArray(v.UDim))v=v.UDim;
+ if(Array.isArray(v))return [finite(v[0]),roundOffset(v[1])];
+ return deepClone(def);
+}
+function asVector2(v,def=[0,0]){
+ if(v?.Vector2&&Array.isArray(v.Vector2))v=v.Vector2;
+ if(Array.isArray(v))return [finite(v[0]),finite(v[1])];
+ return deepClone(def);
+}
+function u2v(node,key,def=u2()){
+ const fallback=asUDim2(def,[[0,0],[0,0]]);
+ return asUDim2(prop(node,key,null),fallback);
+}
+function udv(node,key,def=ud()){
+ const fallback=asUDim(def,[0,0]);
+ return asUDim(prop(node,key,null),fallback);
+}
+function v2v(node,key,def=v2()){
+ const fallback=asVector2(def,[0,0]);
+ return asVector2(prop(node,key,null),fallback);
+}
 function color(v,trans=0){
  const a=clamp(1-finite(trans),0,1);const c=Array.isArray(v)?v:[1,1,1];
  return `rgba(${Math.round(clamp(c[0],0,1)*255)},${Math.round(clamp(c[1],0,1)*255)},${Math.round(clamp(c[2],0,1)*255)},${a})`;
