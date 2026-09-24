@@ -19,7 +19,8 @@ end
 function X:Snapshot(player)
  local p=self:Profile(player) if not p then return nil end
  self.TutorialService:Refresh(player)
- local public={Profile=U.Copy(p),Synergies=self.GardenSynergyService.Active[player] or {},BeeCapacity=self.StatsService:BeeCapacity(p),HivePosition=self.GardenPlotService:HivePosition(player),Trial=self.BuildTrialService.Active[player],ServerBloom=self.SocialService.Progress,Pulse=self.SocialService.Pulse,Cards=self.SeasonService:Offers(p),Odds=self.RollService:Odds(player),UI=self.UIStateService:Snapshot(player)}
+ local uiState=self.UIStateService:Snapshot(player)
+ local public={Profile=U.Copy(p),Synergies=self.GardenSynergyService.Active[player] or {},BeeCapacity=self.StatsService:BeeCapacity(p),HivePosition=self.GardenPlotService:HivePosition(player),Trial=uiState and uiState.Trials and uiState.Trials.Active or nil,ServerBloom=self.SocialService.Progress,Pulse=self.SocialService.Pulse,Cards=self.SeasonService:Offers(p),Odds=self.RollService:Odds(player),UI=uiState}
  public.Profile.LegacyArchive=nil public.Profile.Telemetry=nil public.Profile.Migrations=nil
  return public
 end
