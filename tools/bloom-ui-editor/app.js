@@ -17,7 +17,7 @@ const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 const state={
  root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,geometry:true,inset:36,mode:"design",previewScene:"gameplay",
  projectHandle:null,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
- history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[],assistantSyncing:false,bridgeBase:"",modelLoadFailed:false
+ history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[],assistantSyncing:false,bridgeBase:"",modelLoadFailed:false,autoSaveTimer:null,autoSaving:false,autoSaveQueued:false,lastAutoSaveError:""
 };
 
 let idCounter=1;
@@ -152,11 +152,27 @@ function pushHistory(){
  state.future=[];
 }
 function restoreSnapshot(json){
- const raw=JSON.parse(json);state.root=normalizeNode(raw);state.selectedId=state.root.__id;state.selectedIds=new Set([state.selectedId]);state.selectionAnchorId=state.selectedId;state.dirty=true;renderAll()
+ const raw=JSON.parse(json);state.root=normalizeNode(raw);state.selectedId=state.root.__id;state.selectedIds=new Set([state.selectedId]);state.selectionAnchorId=state.selectedId;markDirty();renderAll()
 }
 function undo(){if(!state.history.length)return;state.future.push(serialize(false));restoreSnapshot(state.history.pop());toast("Undo")}
 function redo(){if(!state.future.length)return;state.history.push(serialize(false));restoreSnapshot(state.future.pop());toast("Redo")}
-function changed(){state.dirty=true;renderAll()}
+
+function currentModelLooksSafe(){
+ if(!state.root||state.root.ClassName!=="ScreenGui")return false;
+ const safe=(state.root.Children||[]).find(x=>x.Name==="SafeRoot"&&x.ClassName==="Frame");
+ return !!safe&&(safe.Children||[]).length>0;
+}
+function markDirty(){
+ state.dirty=true;
+ scheduleAutoSave();
+}
+function scheduleAutoSave(delay=320){
+ if(!state.projectHandle||!state.root||state.assistantSyncing)return;
+ clearTimeout(state.autoSaveTimer);
+ state.autoSaveTimer=setTimeout(()=>{state.autoSaveTimer=null;autoSaveNow(true)},delay);
+}
+
+function changed(){markDirty();renderAll()}
 
 function prop(node,key,fallback){return node?.Properties?.[key]??fallback}
 function asUDim2(v,def=[[0,0],[0,0]]){
@@ -602,7 +618,7 @@ function tidySiblings(columns=3,gap=8){
  state.selectedIds=new Set(data.map(x=>x.c.__id));
  state.selectedId=n.__id;
  state.selectionAnchorId=data[0].c.__id;
- state.dirty=true;
+ markDirty();
  revealTreePath(state.selectedId);
  renderAll();
  scrollTreeToSelected();
@@ -642,7 +658,7 @@ function distributeSiblings(axis="x",gap=8){
  state.selectedIds=new Set(data.map(x=>x.c.__id));
  state.selectedId=n.__id;
  state.selectionAnchorId=data[0].c.__id;
- state.dirty=true;
+ markDirty();
  revealTreePath(state.selectedId);
  renderAll();
  scrollTreeToSelected();
@@ -698,7 +714,7 @@ function fitSelectedParent(){
  pushHistory();
  if(fitParentToChildren(parent,8)){
   state.selectedId=parent.__id;state.selectedIds=new Set([parent.__id]);state.selectionAnchorId=parent.__id;
-  state.dirty=true;renderAll();finishSelection();toast(parent.Name+" подогнан под содержимое");
+  markDirty();renderAll();finishSelection();toast(parent.Name+" подогнан под содержимое");
  }else{
   state.history.pop();toast("Не удалось подогнать родителя",true);
  }
@@ -1165,7 +1181,9 @@ function updatePixelReadout(){
  if(box)[...box.querySelectorAll("strong")].forEach((s,i)=>s.textContent=vals[i]);
 }
 function updateStatus(){
- const n=selected(),count=state.selectedIds.size;const mode=isPreview()?`PREVIEW · ${state.previewScene} · mock data`:(state.projectHandle?"Project connected":"Design");els.status.textContent=(state.dirty?"● ":"")+mode+" · "+(count>1?`${count} объектов выбрано · `:"")+(n?`${n.Name} [${n.ClassName}]`:"");
+ const n=selected(),count=state.selectedIds.size;const mode=isPreview()?`PREVIEW · ${state.previewScene} · mock data`:(state.projectHandle?"Project connected":"Design");
+ const saveState=state.autoSaving?" ↻ AUTO SAVE":state.lastAutoSaveError?" ⚠ SAVE ERROR":state.dirty?" ●":" ✓";
+ els.status.textContent=saveState+" "+mode+" · "+(count>1?`${count} объектов выбрано · `:"")+(n?`${n.Name} [${n.ClassName}]`:"");
  els.target.textContent=state.targetPath;
 }
 
@@ -1197,7 +1215,7 @@ function bakeLayout(parent,options={}){
   child.Properties.Size={UDim2:[[0,Math.max(1,roundOffset(r.w))],[0,Math.max(1,roundOffset(r.h))]]};
  }
  parent.Children=(parent.Children||[]).filter(c=>c!==layout);
- state.dirty=true;
+ markDirty();
  if(rerender)renderAll();
  if(notify)toast((layout.ClassName||"Layout")+" запечён — теперь элементы полностью свободны");
  return true;
@@ -1245,7 +1263,7 @@ window.addEventListener("pointermove",ev=>{
    p[1][1]=roundOffset(p[1][1]+guide.ry);
    item.n.Properties.Position={UDim2:p};
   }
-  renderViewport();updateOverlay();showSmartGuides(guide.x,guide.y);updatePixelReadout();state.dirty=true;updateStatus()
+  renderViewport();updateOverlay();showSmartGuides(guide.x,guide.y);updatePixelReadout();markDirty();updateStatus()
  }else if(d.type==="resize")resizeFromDrag(d,dx,dy,ev.altKey);
  else if(d.type==="group-resize")resizeGroupFromDrag(d,dx,dy,ev.altKey);
 });
@@ -1355,7 +1373,7 @@ function resizeGroupFromDrag(d,dx,dy,bypassGuides=false){
   item.n.Properties.Position={UDim2:ps};
  }
 
- state.dirty=true;renderViewport();updateOverlay();showSmartGuides(guide.x,guide.y);updatePixelReadout();updateStatus();
+ markDirty();renderViewport();updateOverlay();showSmartGuides(guide.x,guide.y);updatePixelReadout();updateStatus();
 }
 
 function resizeFromDrag(d,dx,dy,bypassGuides=false){
@@ -1395,7 +1413,7 @@ function resizeFromDrag(d,dx,dy,bypassGuides=false){
   sz[1][1]=roundOffset(desiredH-d.size[1][0]*ph);
   ps[1][1]=roundOffset(d.pos[1][1]+applied*(1-a[1]));
  }
- d.n.Properties.Size={UDim2:sz};d.n.Properties.Position={UDim2:ps};state.dirty=true;renderViewport();updateOverlay();showSmartGuides(guide.x,guide.y);updatePixelReadout();updateStatus();
+ d.n.Properties.Size={UDim2:sz};d.n.Properties.Position={UDim2:ps};markDirty();renderViewport();updateOverlay();showSmartGuides(guide.x,guide.y);updatePixelReadout();updateStatus();
 }
 
 function defaultObject(kind){
@@ -1494,7 +1512,7 @@ function reparentPreserve(nodes,newParent,insertIndex=null){
  state.selectedIds=new Set(roots.map(n=>n.__id));
  state.selectedId=roots[roots.length-1].__id;
  state.selectionAnchorId=roots[0].__id;
- state.dirty=true;renderAll();finishSelection();
+ markDirty();renderAll();finishSelection();
  toast(roots.length===1?roots[0].Name+" перемещён в "+newParent.Name:roots.length+" объектов перемещено в "+newParent.Name);
  return true;
 }
@@ -1582,7 +1600,7 @@ function groupSelected(){
  parent.Children=remaining;
 
  state.selectedId=group.__id;state.selectedIds=new Set([group.__id]);state.selectionAnchorId=group.__id;
- state.dirty=true;renderAll();finishSelection();
+ markDirty();renderAll();finishSelection();
  toast(nodes.length+" объектов сгруппировано");
 }
 function ungroupSelected(){
@@ -1620,7 +1638,7 @@ function ungroupSelected(){
  state.selectedIds=new Set(moved.map(n=>n.__id));
  state.selectedId=moved[moved.length-1].__id;
  state.selectionAnchorId=moved[0].__id;
- state.dirty=true;renderAll();finishSelection();
+ markDirty();renderAll();finishSelection();
  toast(groups.length+" групп разгруппировано · "+moved.length+" объектов выбрано");
 }
 
@@ -1717,9 +1735,13 @@ async function reloadModelFromServer(label="AI изменения загруже
 }
 async function assistantSync(){
  if(state.assistantSyncing)return;
- if(state.dirty){
-  toast("Есть несохранённые изменения. Сначала нажми «В ИГРУ →» или экспортируй JSON.",true);
-  return;
+ if(state.projectHandle&&(state.dirty||state.modelLoadFailed)){
+  toast("AI SYNC: сначала сохраняю текущий UI…");
+  const saved=await flushAutoSave();
+  if(!saved){
+   toast("AI SYNC остановлен: не удалось сохранить текущий BloomUI.model.json",true);
+   return;
+  }
  }
  const btn=$("#aiSyncBtn");
  state.assistantSyncing=true;
@@ -1758,7 +1780,7 @@ async function connectProject(){
  if(!window.showDirectoryPicker){toast("Нужен Chrome/Edge на localhost",true);return}
  try{
   state.projectHandle=await window.showDirectoryPicker({mode:"readwrite"});
-  await saveHandle(state.projectHandle);updateStatus();toast("Проект подключён: "+state.projectHandle.name)
+  await saveHandle(state.projectHandle);updateStatus();toast("Проект подключён: "+state.projectHandle.name);if(state.dirty||state.modelLoadFailed)scheduleAutoSave(80)
  }catch(e){if(e.name!=="AbortError")toast(e.message,true)}
 }
 async function getFile(path,create=false){
@@ -1767,16 +1789,76 @@ async function getFile(path,create=false){
  for(const part of parts)dir=await dir.getDirectoryHandle(part,{create});
  return dir.getFileHandle(file,{create});
 }
+
+async function writeCurrentModel({silent=false,force=false}={}){
+ if(state.autoSaving){state.autoSaveQueued=true;return true}
+ if(!state.projectHandle)return false;
+ if(!state.root)return false;
+
+ // If disk JSON was damaged, only repair it when the editor has a real HUD tree.
+ if(state.modelLoadFailed&&!currentModelLooksSafe()){
+  if(!silent)toast("Сохранение заблокировано: recovery-модель HUD не найдена",true);
+  return false;
+ }
+
+ let payload;
+ try{
+  payload=serialize(true)+"\n";
+  JSON.parse(payload);
+ }catch(e){
+  if(!silent)toast("Autosave отменён: модель в памяти невалидна",true);
+  return false;
+ }
+
+ state.autoSaving=true;
+ state.autoSaveQueued=false;
+ try{
+  const h=await getFile(state.targetPath,true);
+  const w=await h.createWritable();
+  await w.write(payload);
+  await w.close();
+
+  state.dirty=false;
+  state.modelLoadFailed=false;
+  state.lastAutoSaveError="";
+  try{localStorage.setItem("BloomUIStudioLastGoodModel",serialize(false))}catch{}
+  const push=$("#pushBtn");
+  if(push){push.disabled=false;push.title="Записать модель в игру"}
+  updateStatus();
+  if(!silent)toast("Сохранено в "+state.targetPath+" — Rojo может синхронизировать");
+  return true;
+ }catch(e){
+  state.lastAutoSaveError=e?.message||String(e);
+  if(!silent)toast("Не удалось записать: "+state.lastAutoSaveError,true);
+  return false;
+ }finally{
+  state.autoSaving=false;
+  if(state.autoSaveQueued){
+   state.autoSaveQueued=false;
+   scheduleAutoSave(80);
+  }
+ }
+}
+async function autoSaveNow(silent=true){
+ clearTimeout(state.autoSaveTimer);
+ state.autoSaveTimer=null;
+ return await writeCurrentModel({silent});
+}
+async function flushAutoSave(){
+ clearTimeout(state.autoSaveTimer);
+ state.autoSaveTimer=null;
+ if(!state.projectHandle)return false;
+ if(!state.dirty&&!state.modelLoadFailed)return true;
+ return await writeCurrentModel({silent:true,force:true});
+}
+
 async function pullProject(){
  try{const h=await getFile(state.targetPath,false),f=await h.getFile(),raw=JSON.parse(await f.text());setRoot(raw,"Загружено из Roblox/Rojo файла")}
  catch(e){toast("Не удалось прочитать: "+e.message,true)}
 }
 async function pushProject(){
- if(state.modelLoadFailed){toast("Сохранение заблокировано: сначала восстанови исходный BloomUI.model.json",true);return}
- try{
-  const h=await getFile(state.targetPath,true),w=await h.createWritable();await w.write(serialize(true)+"\n");await w.close();
-  state.dirty=false;updateStatus();toast("Записано в "+state.targetPath+" — Rojo может синхронизировать");assistantStatus()
- }catch(e){toast("Не удалось записать: "+e.message,true)}
+ const ok=await writeCurrentModel({silent:false,force:true});
+ if(ok)assistantStatus();
 }
 function download(){
  const blob=new Blob([serialize(true)+"\n"],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(state.root?.Name||"BloomUI")+".model.json";a.click();URL.revokeObjectURL(a.href)
@@ -1806,17 +1888,25 @@ async function loadInitial(){
     console.error("[Bloom UI Studio] BloomUI.model.json parse error",parseError);
     state.modelLoadFailed=true;
     const backup=localStorage.getItem("BloomUIStudioLastGoodModel");
+    let recovered=false;
     if(backup){
      try{
       state.root=normalizeNode(JSON.parse(backup));
       const safe=(state.root.Children||[]).find(x=>x.Name==="SafeRoot"&&x.ClassName==="Frame");
       state.selectedId=(safe||state.root).__id;state.selectedIds=new Set([state.selectedId]);state.selectionAnchorId=state.selectedId;
-      state.history=[];state.future=[];state.dirty=false;
+      state.history=[];state.future=[];markDirty();recovered=currentModelLooksSafe();
       renderAll();
      }catch{}
     }
-    const push=$("#pushBtn");if(push){push.disabled=true;push.title="Заблокировано: исходный BloomUI.model.json повреждён. Не перезаписывай его пустой моделью."}
-    toast("RECOVERY MODE: BloomUI.model.json повреждён. «В ИГРУ» заблокировано, чтобы не стереть HUD.",true);
+    const push=$("#pushBtn");
+    if(recovered){
+     if(push){push.disabled=false;push.title="Восстановить повреждённый BloomUI.model.json из последней рабочей модели"}
+     toast("RECOVERY MODE: рабочая модель найдена · JSON будет восстановлен автосохранением",true);
+     scheduleAutoSave(80);
+    }else{
+     if(push){push.disabled=true;push.title="Заблокировано: нет безопасной recovery-модели"}
+     toast("RECOVERY MODE: JSON повреждён и безопасной копии HUD нет",true);
+    }
     return;
    }
   }
@@ -1930,5 +2020,10 @@ window.addEventListener("keydown",e=>{
 
 loadPrefs();
 syncToolbarFromState();
-loadInitial().then(()=>{requestAnimationFrame(()=>fitViewport());assistantStatus()});
+loadInitial().then(()=>{
+ requestAnimationFrame(()=>fitViewport());
+ assistantStatus();
+ // Catches every editing path, including drag/resize helpers that mark dirty directly.
+ setInterval(()=>{if(state.dirty&&state.projectHandle&&!state.assistantSyncing&&!state.autoSaving&&!state.autoSaveTimer)scheduleAutoSave(180)},500);
+});
 })();
