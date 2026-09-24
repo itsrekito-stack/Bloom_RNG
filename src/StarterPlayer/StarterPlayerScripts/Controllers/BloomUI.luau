@@ -19,7 +19,7 @@ local RollAudio=require(RS.Config.RollAudioConfig)
 local NumberFormatter=require(RS.Shared.NumberFormatter)
 
 local C=Theme.Colors
-local CLIENT_BUILD="ui-polish-v5-workshop-pan-2026-09-25"
+local CLIENT_BUILD="ui-backend-v1-2026-09-25"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0}
 
 local MENU_NAMES={
@@ -338,6 +338,7 @@ end
 function UI:RenderMenu()
  if not self.Menu or not self.State then return end
  local p=self.State.Profile
+ local ui=self.State.UI or {}
  local name=self.Menu
  self:ClearPanel()
  self.PanelTitle.Text=MENU_NAMES[name] or name
@@ -367,12 +368,21 @@ function UI:RenderMenu()
    self:Button(self.Content,"Повторить посадку • "..self.LastSeed,function() self:Send("Plant",slot,self.LastSeed) self:Close() end,Icons.GetRewardIcon("FlowerSeed",self.LastSeed))
   end
   local available={}
-  for id,f in pairs(F.Species) do
-   local owned=p.FlowerCollection.OwnedSeedCopies[id] or 0
-   local planted=0
-   for _,s in ipairs(p.Garden.Slots) do if s.SpeciesId==id then planted=planted+1 end end
-   local count=math.max(0,owned-planted)
-   if count>0 then table.insert(available,{Id=id,Flower=f,Count=count,Owned=owned}) end
+  if ui.Inventory and type(ui.Inventory.Flowers)=="table" then
+   for _,entry in ipairs(ui.Inventory.Flowers) do
+    local flower=F.Species[entry.Id]
+    if flower and (entry.Free or 0)>0 then
+     table.insert(available,{Id=entry.Id,Flower=flower,Count=entry.Free,Owned=entry.Count})
+    end
+   end
+  else
+   for id,f in pairs(F.Species) do
+    local owned=p.FlowerCollection.OwnedSeedCopies[id] or 0
+    local planted=0
+    for _,s in ipairs(p.Garden.Slots) do if s.SpeciesId==id then planted=planted+1 end end
+    local count=math.max(0,owned-planted)
+    if count>0 then table.insert(available,{Id=id,Flower=f,Count=count,Owned=owned}) end
+   end
   end
   table.sort(available,function(a,b)
    local ar=R.Rank[a.Flower.Rarity] or 1 local br=R.Rank[b.Flower.Rarity] or 1
@@ -391,20 +401,33 @@ function UI:RenderMenu()
 
  elseif name=="SeedSatchel" then
   local items={}
-  for id,count in pairs(p.FlowerCollection.OwnedSeedCopies) do
-   local f=F.Species[id]
-   if f and count>0 then
-    local planted=0
-    for _,s in ipairs(p.Garden.Slots) do if s.SpeciesId==id then planted=planted+1 end end
-    local mastery=p.FlowerCollection.FlowerMastery[id] or {Level=1,XP=0}
-    table.insert(items,{Id=id,Flower=f,Count=count,Planted=planted,Free=math.max(0,count-planted),Mastery=mastery})
+  if ui.Inventory and type(ui.Inventory.Flowers)=="table" then
+   for _,entry in ipairs(ui.Inventory.Flowers) do
+    local f=F.Species[entry.Id]
+    if f then
+     table.insert(items,{
+      Id=entry.Id,Flower=f,Count=entry.Count or 0,Planted=entry.Planted or 0,Free=entry.Free or 0,
+      Mastery=entry.Mastery or {Level=1,XP=0,NextXP=25},Favorite=entry.Favorite==true,Protected=entry.Protected==true,
+      CanDissolve=entry.CanDissolve==true,CanUpgrade=entry.CanUpgrade==true,
+     })
+    end
    end
+  else
+   for id,count in pairs(p.FlowerCollection.OwnedSeedCopies) do
+    local f=F.Species[id]
+    if f and count>0 then
+     local planted=0
+     for _,s in ipairs(p.Garden.Slots) do if s.SpeciesId==id then planted=planted+1 end end
+     local mastery=p.FlowerCollection.FlowerMastery[id] or {Level=1,XP=0}
+     table.insert(items,{Id=id,Flower=f,Count=count,Planted=planted,Free=math.max(0,count-planted),Mastery=mastery,Favorite=p.FlowerCollection.FavoriteFlowers[id]==true,Protected=p.FlowerCollection.LockedFlowers[id]==true,CanDissolve=math.max(0,count-planted)>0,CanUpgrade=true})
+    end
+   end
+   table.sort(items,function(a,b)
+    local ar=R.Rank[a.Flower.Rarity] or 1 local br=R.Rank[b.Flower.Rarity] or 1
+    if ar==br then return a.Flower.DisplayName<b.Flower.DisplayName end
+    return ar<br
+   end)
   end
-  table.sort(items,function(a,b)
-   local ar=R.Rank[a.Flower.Rarity] or 1 local br=R.Rank[b.Flower.Rarity] or 1
-   if ar==br then return a.Flower.DisplayName<b.Flower.DisplayName end
-   return ar<br
-  end)
 
   local template=self.Panel:FindFirstChild("SeedSatchelTemplate")
   if not template then
@@ -445,12 +468,12 @@ function UI:RenderMenu()
     info.Rarity.Text=string.upper(active.Flower.Rarity).." • x"..active.Count
     info.Rarity.TextColor3=rarityColor
     info.RarityAccent.BackgroundColor3=rarityColor
-    info.Mastery.Text="Mastery "..active.Mastery.Level.." • XP "..active.Mastery.XP.."/"..(active.Mastery.Level*25)
+    info.Mastery.Text="Mastery "..active.Mastery.Level.." • XP "..active.Mastery.XP.."/"..(active.Mastery.NextXP or active.Mastery.Level*25)
     info.Owned.Text="FREE "..active.Free.." / OWNED "..active.Count
 
     local actionsMap={
-     Favorite={Text=p.FlowerCollection.FavoriteFlowers[active.Id] and "★ UNFAVORITE" or "★ FAVORITE",Fn=function() self:Send("Flag",active.Id,"FavoriteFlowers") end,Visible=true},
-     Protect={Text=p.FlowerCollection.LockedFlowers[active.Id] and "◆ UNLOCK" or "◆ PROTECT",Fn=function() self:Send("Flag",active.Id,"LockedFlowers") end,Visible=true},
+     Favorite={Text=active.Favorite and "★ UNFAVORITE" or "★ FAVORITE",Fn=function() self:Send("Flag",active.Id,"FavoriteFlowers") end,Visible=true},
+     Protect={Text=active.Protected and "◆ UNLOCK" or "◆ PROTECT",Fn=function() self:Send("Flag",active.Id,"LockedFlowers") end,Visible=true},
      Dissolve={Text="DISSOLVE",Fn=function() self:Send("Dissolve",active.Id,1) end,Visible=active.Free>0},
      Mastery={Text="MASTERY +XP",Fn=function() self:Send("FlowerUpgrade",active.Id) end,Visible=true},
      Memory={Text="MEMORY",Fn=function() self:Send("Keepsake","Flower",active.Id) end,Visible=true},
@@ -481,7 +504,7 @@ function UI:RenderMenu()
       local icon=tile:FindFirstChild("Icon") if icon then icon.Image=Icons.GetRewardIcon("FlowerSeed",entry.Id) icon.Size=UDim2.fromOffset(34,34) icon.Position=UDim2.new(.5,-17,0,4) end
       local countLabel=tile:FindFirstChild("Count") if countLabel then countLabel.Text="x"..entry.Count end
       local nameLabel=tile:FindFirstChild("Name") if nameLabel then nameLabel.Text=entry.Flower.DisplayName nameLabel.TextSize=7 end
-      local flags=tile:FindFirstChild("Flags") if flags then flags.Text=(p.FlowerCollection.LockedFlowers[entry.Id] and "◆" or (p.FlowerCollection.FavoriteFlowers[entry.Id] and "★" or "")) end
+      local flags=tile:FindFirstChild("Flags") if flags then flags.Text=(entry.Protected and "◆" or (entry.Favorite and "★" or "")) end
       tile.Activated:Connect(function() self.SelectedSatchelItem=entry.Id self:RenderMenu() end)
      end
     end
@@ -511,7 +534,8 @@ function UI:RenderMenu()
    shell.LayoutOrder=1
 
    local top=shell:WaitForChild("WorkshopTop")
-   top.Points.Text=tostring(p.WorkshopV5.Points).." POINTS"
+   local workshopUI=ui.Workshop
+   top.Points.Text=tostring(workshopUI and workshopUI.Points or p.WorkshopV5.Points).." POINTS"
    local body=shell:WaitForChild("WorkshopBody")
    local canvas=body.TreePanel.TreeCanvas
    local panMap=canvas:FindFirstChild("PanMap")
@@ -533,9 +557,10 @@ function UI:RenderMenu()
    for id,n in pairs(W.Nodes) do
     local node=nodes:FindFirstChild("Node_"..id)
     if node and node:IsA("TextButton") then
-     local owned=id=="CORE" or p.WorkshopV5.Nodes[id]==true
+     local backend=workshopUI and workshopUI.Nodes and workshopUI.Nodes[id]
+     local owned=backend and backend.Owned or id=="CORE" or p.WorkshopV5.Nodes[id]==true
      local parentOwned=not n.Parent or n.Parent=="CORE" or p.WorkshopV5.Nodes[n.Parent]==true
-     local available=not owned and parentOwned and (p.HiveLevel or 1)>=(n.Hive or 0)
+     local available=backend and backend.Available or (not owned and parentOwned and p.Hive.Level>=(n.Hive or 0))
      local selected=id==selectedId
      local icon=node:FindFirstChild("HexIcon")
      if icon and icon:IsA("ImageLabel") then
@@ -572,14 +597,17 @@ function UI:RenderMenu()
     table.sort(descriptions)
     details.Effect.Text=#descriptions>0 and table.concat(descriptions,"\n") or "Core progression node"
     details.Cost.Text=tostring(n.Cost or 0).." point  •  "..compact(n.Coins or 0).." coins"..((n.Dust or 0)>0 and "  •  "..compact(n.Dust).." dust" or "")..((n.Nectar or 0)>0 and "  •  "..compact(n.Nectar).." nectar" or "")
-    details.Requirement.Text="Hive "..tostring(n.Hive or 0)..(n.Parent and "  •  Parent "..n.Parent or "")
-    local owned=p.WorkshopV5.Nodes[n.Id]==true
-    details.BuyButton.Text=owned and "OWNED" or "UPGRADE"
-    details.BuyButton.BackgroundColor3=owned and C.GreenDeep or C.Gold
-    details.BuyButton.TextColor3=owned and C.Text or C.Black
-    details.BuyButton.Active=not owned
+    local backend=workshopUI and workshopUI.Nodes and workshopUI.Nodes[n.Id]
+    local owned=backend and backend.Owned or p.WorkshopV5.Nodes[n.Id]==true
+    local available=backend and backend.Available or not owned
+    local reasonText=backend and backend.ReasonText
+    details.Requirement.Text="Hive "..tostring(n.Hive or 0)..(n.Parent and "  •  Parent "..n.Parent or "")..(reasonText and "  •  "..reasonText or "")
+    details.BuyButton.Text=owned and "OWNED" or available and "UPGRADE" or "LOCKED"
+    details.BuyButton.BackgroundColor3=owned and C.GreenDeep or available and C.Gold or C.PanelRaised
+    details.BuyButton.TextColor3=owned and C.Text or available and C.Black or C.Faint
+    details.BuyButton.Active=available and not owned
     details.BuyButton.Activated:Connect(function()
-     if not owned then self:Send("WorkshopBuy",n.Id) end
+     if available and not owned then self:Send("WorkshopBuy",n.Id) end
     end)
    end
    details.RespecButton.Activated:Connect(function() self:Send("Respec") end)
@@ -609,8 +637,15 @@ function UI:RenderMenu()
 
  elseif name=="Map" then
   self:Section(self.Content,"Мир Bloom RNG")
-  if p.WorkshopV5.Nodes.EXPLORATION_1 and self.State.Pulse then self:Label(self.Content,"Biome Pulse  •  "..self.State.Pulse.Sector,36) end
-  for _,id in ipairs(L.Order) do self:Label(self.Content,L.Sectors[id].Name.."   •   "..(p.World.UnlockedSectors[id] and "ОТКРЫТО" or "требуется Hive "..L.Sectors[id].Hive),36) end
+  local mapUI=ui.Map
+  local pulse=mapUI and mapUI.Pulse or self.State.Pulse
+  if p.WorkshopV5.Nodes.EXPLORATION_1 and pulse then self:Label(self.Content,"Biome Pulse  •  "..pulse.Sector,36) end
+  for _,id in ipairs(L.Order) do
+   local sector=mapUI and mapUI.Sectors and mapUI.Sectors[id]
+   local unlocked=sector and sector.Unlocked or p.World.UnlockedSectors[id]
+   local current=sector and sector.Current
+   self:Label(self.Content,L.Sectors[id].Name.."   •   "..(unlocked and "ОТКРЫТО" or "требуется Hive "..L.Sectors[id].Hive)..(current and "  •  ТЫ ЗДЕСЬ" or ""),36)
+  end
   self:Section(self.Content,"Landmarks")
   local any=false
   for id in pairs(p.World.LandmarkDiscoveries) do any=true self:Label(self.Content,"✓  "..id,32) end
@@ -619,8 +654,19 @@ function UI:RenderMenu()
 
  elseif name=="Trials" then
   self:Section(self.Content,"Build Trials")
-  for id,t in pairs(Trials) do
-   self:Button(self.Content,(p.Quests.Trials[id] and "✓  " or "")..t.Name.."   •   "..t.Sector,function() self:Send("Trial",id) end,Icons.Get("System","Quests"))
+  local trialsUI=ui.Trials
+  if trialsUI and trialsUI.Active then
+   self:Label(self.Content,"ACTIVE  •  "..trialsUI.Active.Id.."  •  "..math.ceil(trialsUI.Active.TimeLeft or 0).."s",34)
+  end
+  if trialsUI and type(trialsUI.Items)=="table" then
+   for _,t in ipairs(trialsUI.Items) do
+    local suffix=t.CanStart and "" or (t.ReasonText and "  •  "..t.ReasonText or "")
+    self:Button(self.Content,(t.Completed and "✓  " or "")..t.Name.."   •   "..t.Sector..suffix,function() self:Send("Trial",t.Id) end,Icons.Get("System","Quests"))
+   end
+  else
+   for id,t in pairs(Trials) do
+    self:Button(self.Content,(p.Quests.Trials[id] and "✓  " or "")..t.Name.."   •   "..t.Sector,function() self:Send("Trial",id) end,Icons.Get("System","Quests"))
+   end
   end
 
  elseif name=="Settings" then
@@ -1247,7 +1293,7 @@ function UI:Start()
    if not payload.OK then
     if payload.Action=="Roll" and self.Auto then self:SetAutoRolling(false) end
     if not (payload.Action=="Ready" and payload.Reason=="PROFILE_LOADING") then
-     self:Toast(payload.Reason or "Действие пока недоступно")
+     self:Toast(payload.Message or payload.Reason or "Действие пока недоступно")
     end
    end
    if self.Menu and payload.Action~="Menu" and payload.Action~="Roll" and payload.Action~="Ready" then task.defer(function() self:RenderMenu() end) end
