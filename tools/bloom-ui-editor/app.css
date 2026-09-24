@@ -565,3 +565,10 @@ dialog::backdrop{background:rgba(0,0,0,.62)}.dialog-head{height:44px;display:fle
   border:1px dashed rgba(99,181,255,.28);
   pointer-events:none;
 }
+
+.arrange-check{
+ display:flex!important;align-items:center!important;gap:6px!important;
+ color:#8ea2b7!important;font-size:9px!important
+}
+.arrange-check input{width:auto!important;height:auto!important}
+#fitParentBtn{border-color:#36536b}
