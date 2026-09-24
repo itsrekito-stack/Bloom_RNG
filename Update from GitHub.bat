@@ -7,6 +7,16 @@ echo ============================================================
 echo   Bloom RNG safe updater
 echo ============================================================
 
+set "RECOVERY_DIR=%~dp0.recovery"
+if not exist "%RECOVERY_DIR%" mkdir "%RECOVERY_DIR%" >nul 2>&1
+for /f "tokens=1-4 delims=/-. " %%a in ("%date%") do set "DATESTAMP=%%d%%b%%c"
+for /f "tokens=1-3 delims=:,. " %%a in ("%time%") do set "TIMESTAMP=%%a%%b%%c"
+set "TIMESTAMP=%TIMESTAMP: =0%"
+if exist "src\StarterGui\BloomUI.model.json" (
+  copy /Y "src\StarterGui\BloomUI.model.json" "%RECOVERY_DIR%\BloomUI.model.before-update.%DATESTAMP%-%TIMESTAMP%.json" >nul
+  echo [BACKUP] BloomUI.model.json copied to .recovery before Git operations.
+)
+
 set "HAD_CHANGES=0"
 for /f "delims=" %%A in ('git status --porcelain') do set "HAD_CHANGES=1"
 
