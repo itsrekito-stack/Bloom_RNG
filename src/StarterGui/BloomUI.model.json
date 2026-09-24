@@ -4505,11 +4505,11 @@
               ]
             },
             "BackgroundColor3": [
-              0.07058823529411765,
-              0.09803921568627451,
-              0.13333333333333333
+              0.0471,
+              0.0863,
+              0.1333
             ],
-            "BackgroundTransparency": 0.01,
+            "BackgroundTransparency": 0.02,
             "BorderSizePixel": 0,
             "ZIndex": 50,
             "Visible": false,
@@ -4558,11 +4558,11 @@
                   ]
                 },
                 "BackgroundColor3": [
-                  0.09411764705882353,
-                  0.12941176470588237,
-                  0.17254901960784313
+                  0.0706,
+                  0.1216,
+                  0.1843
                 ],
-                "BackgroundTransparency": 0.08,
+                "BackgroundTransparency": 0.05,
                 "BorderSizePixel": 0,
                 "ZIndex": 51,
                 "Visible": true,
@@ -4628,7 +4628,7 @@
                       0.9725490196078431,
                       0.9882352941176471
                     ],
-                    "TextSize": 19,
+                    "TextSize": 18,
                     "TextWrapped": true,
                     "TextXAlignment": "Left",
                     "TextYAlignment": "Center",
@@ -4669,9 +4669,9 @@
                     "BorderSizePixel": 0,
                     "Text": "",
                     "TextColor3": [
-                      0.6509803921568628,
-                      0.7215686274509804,
-                      0.792156862745098
+                      0.54,
+                      0.64,
+                      0.74
                     ],
                     "TextSize": 10,
                     "TextWrapped": true,
@@ -4711,9 +4711,9 @@
                       ]
                     },
                     "BackgroundColor3": [
-                      0.13333333333333333,
-                      0.17647058823529413,
-                      0.22745098039215686
+                      0.0784,
+                      0.1373,
+                      0.2078
                     ],
                     "BorderSizePixel": 0,
                     "Text": "",
@@ -4794,12 +4794,12 @@
                       "Name": "UIStroke",
                       "Properties": {
                         "Color": [
-                          0.027450980392156862,
-                          0.0392156862745098,
-                          0.054901960784313725
+                          0.1647,
+                          0.3373,
+                          0.5176
                         ],
-                        "Thickness": 2,
-                        "Transparency": 0.02,
+                        "Thickness": 1.2,
+                        "Transparency": 0.28,
                         "ApplyStrokeMode": "Border"
                       }
                     }
@@ -4812,10 +4812,64 @@
                     "CornerRadius": {
                       "UDim": [
                         0,
-                        20
+                        16
                       ]
                     }
                   }
+                },
+                {
+                  "ClassName": "Frame",
+                  "Name": "HeaderAccent",
+                  "Properties": {
+                    "Size": {
+                      "UDim2": [
+                        [
+                          0,
+                          96
+                        ],
+                        [
+                          0,
+                          2
+                        ]
+                      ]
+                    },
+                    "Position": {
+                      "UDim2": [
+                        [
+                          0,
+                          16
+                        ],
+                        [
+                          1,
+                          -2
+                        ]
+                      ]
+                    },
+                    "BackgroundColor3": [
+                      0.345,
+                      0.694,
+                      1
+                    ],
+                    "BackgroundTransparency": 0.22,
+                    "BorderSizePixel": 0,
+                    "ZIndex": 53,
+                    "Visible": true
+                  },
+                  "Children": [
+                    {
+                      "ClassName": "UICorner",
+                      "Name": "UICorner",
+                      "Properties": {
+                        "CornerRadius": {
+                          "UDim": [
+                            0,
+                            1
+                          ]
+                        }
+                      },
+                      "Children": []
+                    }
+                  ]
                 }
               ]
             },
@@ -4933,12 +4987,12 @@
               "Name": "UIStroke",
               "Properties": {
                 "Color": [
-                  0.023529411764705882,
-                  0.03529411764705882,
-                  0.050980392156862744
+                  0.1647,
+                  0.3373,
+                  0.5176
                 ],
-                "Thickness": 2,
-                "Transparency": 0.06,
+                "Thickness": 1.5,
+                "Transparency": 0.24,
                 "ApplyStrokeMode": "Border"
               }
             },
@@ -5264,20 +5318,20 @@
                       "UDim2": [
                         [
                           0,
-                          64
+                          70
                         ],
                         [
                           0,
-                          64
+                          70
                         ]
                       ]
                     },
                     "BackgroundColor3": [
-                      0.12156862745098039,
-                      0.16470588235294117,
-                      0.21568627450980393
+                      0.0471,
+                      0.0863,
+                      0.1333
                     ],
-                    "BackgroundTransparency": 0,
+                    "BackgroundTransparency": 0.04,
                     "BorderSizePixel": 0,
                     "Image": "",
                     "AutoButtonColor": false,
@@ -5293,11 +5347,11 @@
                           "UDim2": [
                             [
                               0,
-                              34
+                              38
                             ],
                             [
                               0,
-                              34
+                              38
                             ]
                           ]
                         },
@@ -5305,11 +5359,11 @@
                           "UDim2": [
                             [
                               0.5,
-                              -17
+                              -19
                             ],
                             [
                               0,
-                              4
+                              6
                             ]
                           ]
                         },
@@ -5328,11 +5382,11 @@
                           "UDim2": [
                             [
                               0,
-                              22
+                              26
                             ],
                             [
                               0,
-                              14
+                              15
                             ]
                           ]
                         },
@@ -5340,31 +5394,46 @@
                           "UDim2": [
                             [
                               1,
-                              -24
+                              -28
                             ],
                             [
                               0,
-                              2
+                              3
                             ]
                           ]
                         },
                         "BackgroundColor3": [
-                          0.12549019607843137,
-                          0.4117647058823529,
-                          0.7215686274509804
+                          0.0627,
+                          0.1804,
+                          0.302
                         ],
                         "BackgroundTransparency": 0,
                         "BorderSizePixel": 0,
                         "Text": "x1",
                         "TextColor3": [
-                          0.9607843137254902,
-                          0.9725490196078431,
-                          0.9882352941176471
+                          0.78,
+                          0.9,
+                          1
                         ],
                         "TextSize": 9,
                         "Font": "GothamBold",
                         "ZIndex": 55
-                      }
+                      },
+                      "Children": [
+                        {
+                          "ClassName": "UICorner",
+                          "Name": "UICorner",
+                          "Properties": {
+                            "CornerRadius": {
+                              "UDim": [
+                                0,
+                                7
+                              ]
+                            }
+                          },
+                          "Children": []
+                        }
+                      ]
                     },
                     {
                       "ClassName": "TextLabel",
@@ -5374,7 +5443,7 @@
                           "UDim2": [
                             [
                               1,
-                              -6
+                              -8
                             ],
                             [
                               0,
@@ -5386,11 +5455,11 @@
                           "UDim2": [
                             [
                               0,
-                              3
+                              4
                             ],
                             [
                               1,
-                              -18
+                              -19
                             ]
                           ]
                         },
@@ -5404,7 +5473,7 @@
                         ],
                         "TextSize": 8,
                         "TextWrapped": true,
-                        "Font": "GothamMedium",
+                        "Font": "GothamBold",
                         "ZIndex": 54
                       }
                     },
@@ -5428,7 +5497,7 @@
                           "UDim2": [
                             [
                               0,
-                              3
+                              4
                             ],
                             [
                               0,
@@ -5441,8 +5510,8 @@
                         "Text": "",
                         "TextColor3": [
                           1,
-                          0.803921568627451,
-                          0.3568627450980392
+                          0.745,
+                          0.251
                         ],
                         "TextSize": 11,
                         "Font": "GothamBold",
@@ -5456,7 +5525,7 @@
                         "CornerRadius": {
                           "UDim": [
                             0,
-                            10
+                            11
                           ]
                         }
                       }
@@ -5466,12 +5535,12 @@
                       "Name": "UIStroke",
                       "Properties": {
                         "Color": [
-                          0.023529411764705882,
-                          0.03529411764705882,
-                          0.050980392156862744
+                          0.1098,
+                          0.2235,
+                          0.3412
                         ],
-                        "Thickness": 1.5,
-                        "Transparency": 0.14,
+                        "Thickness": 1.2,
+                        "Transparency": 0.28,
                         "ApplyStrokeMode": "Border"
                       }
                     }
