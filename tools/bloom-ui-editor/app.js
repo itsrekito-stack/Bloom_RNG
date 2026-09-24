@@ -412,10 +412,10 @@ function updateGeometrySelection(){
  const moveRoots=selectedMoveRoots();
  if(moveRoots.length>1){
   const r=groupBounds(moveRoots);if(!r)return;
-  const box=document.createElement("div");box.className="geom-group-box";
-  box.style.left=r.left+"px";box.style.top=r.top+"px";box.style.width=r.w+"px";box.style.height=r.h+"px";
-  box.innerHTML='<span>'+moveRoots.length+' объектов · '+Math.round(r.w)+' × '+Math.round(r.h)+'</span>';
-  els.geometry.appendChild(box);
+  const badge=document.createElement("div");badge.className="geom-size-badge geom-group-size";
+  badge.textContent=Math.round(r.w)+" × "+Math.round(r.h)+" · "+moveRoots.length+" объектов";
+  badge.style.left=(r.right+8)+"px";badge.style.top=(r.bottom+8)+"px";
+  els.geometry.appendChild(badge);
   return;
  }
  const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName))return;
@@ -992,10 +992,27 @@ function collapseSelectionToPrimary(){
  finishSelection();
 }
 function updateOverlay(){
- const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName)){els.overlay.classList.add("hidden");updateGeometrySelection();return}
+ const roots=selectedMoveRoots();
+ const n=selected();
+ if(!n||n===state.root||MODIFIERS.has(n.ClassName)||!roots.length){els.overlay.classList.add("hidden");updateGeometrySelection();return}
+
+ if(roots.length>1){
+  const b=groupBounds(roots);
+  if(!b){els.overlay.classList.add("hidden");updateGeometrySelection();return}
+  els.overlay.classList.remove("hidden");
+  els.overlay.classList.add("multi-group");
+  els.overlay.classList.remove("precision-small");
+  els.overlay.style.left=b.left+"px";els.overlay.style.top=b.top+"px";
+  els.overlay.style.width=b.w+"px";els.overlay.style.height=b.h+"px";
+  els.overlay.querySelector(".sel-caption").textContent=`${roots.length} объектов · GROUP · ${Math.round(b.w)}×${Math.round(b.h)}`;
+  updateGeometrySelection();
+  return;
+ }
+
  const nodeEl=els.guiRoot.querySelector(`[data-id="${n.__id}"]`);if(!nodeEl||nodeEl.style.display==="none"){els.overlay.classList.add("hidden");updateGeometrySelection();return}
  const dr=els.device.getBoundingClientRect(),rr=nodeEl.getBoundingClientRect(),z=state.zoom;
  els.overlay.classList.remove("hidden");
+ els.overlay.classList.remove("multi-group");
  els.overlay.style.left=((rr.left-dr.left)/z)+"px";els.overlay.style.top=((rr.top-dr.top)/z)+"px";
  els.overlay.style.width=(rr.width/z)+"px";els.overlay.style.height=(rr.height/z)+"px";
  const lr=localRect(nodeEl);
@@ -1230,13 +1247,117 @@ window.addEventListener("pointermove",ev=>{
   }
   renderViewport();updateOverlay();showSmartGuides(guide.x,guide.y);updatePixelReadout();state.dirty=true;updateStatus()
  }else if(d.type==="resize")resizeFromDrag(d,dx,dy,ev.altKey);
+ else if(d.type==="group-resize")resizeGroupFromDrag(d,dx,dy,ev.altKey);
 });
 window.addEventListener("pointerup",()=>{if(state.drag){state.drag=null;clearSmartGuides();renderTree();renderInspector();updateGeometrySelection()}});
 
 els.overlay.querySelectorAll("i").forEach(handle=>handle.addEventListener("pointerdown",ev=>{
- ev.stopPropagation();ev.preventDefault();const n=selected();if(!n)return;pushHistory();
+ ev.stopPropagation();ev.preventDefault();
+ const n=selected();if(!n)return;
+ const roots=selectedMoveRoots();
+ if(roots.length>1){
+  startGroupResize(ev,handle.dataset.dir,roots);
+  return;
+ }
+ pushHistory();
  state.drag={type:"resize",n,dir:handle.dataset.dir,startX:ev.clientX,startY:ev.clientY,size:deepClone(u2v(n,"Size",u2(0,100,0,100))),pos:deepClone(u2v(n,"Position")),anchor:deepClone(v2v(n,"AnchorPoint")),geometry:collectGuideTargets(n)}
 }));
+
+function startGroupResize(ev,dir,nodes){
+ const base=groupBounds(nodes);if(!base)return false;
+
+ // One undo snapshot for the entire group resize.
+ pushHistory();
+
+ // Layout-managed children need to become free before proportional scaling.
+ const parents=[];const seen=new Set();
+ for(const item of nodes){
+  const p=findParent(item.__id);
+  if(p&&isLayoutParent(p)&&!seen.has(p.__id)){seen.add(p.__id);parents.push(p)}
+ }
+ let baked=false;
+ for(const p of parents)baked=bakeLayout(p,{record:false,render:false,notify:false})||baked;
+ if(baked){renderAll();nodes=selectedMoveRoots()}
+
+ const refreshedBase=groupBounds(nodes);if(!refreshedBase)return false;
+ const items=[];
+ for(const item of nodes){
+  const el=els.guiRoot.querySelector(`[data-id="${item.__id}"]`),r=localRect(el);if(!r)continue;
+  const parent=findParent(item.__id);
+  const parentEl=parent&&parent!==state.root?els.guiRoot.querySelector(`[data-id="${parent.__id}"]`):els.guiRoot;
+  const pr=localRect(parentEl);if(!pr)continue;
+  items.push({
+   n:item,r,
+   parentRect:pr,
+   pos:deepClone(u2v(item,"Position")),
+   size:deepClone(u2v(item,"Size",u2(0,r.w,0,r.h))),
+   anchor:deepClone(v2v(item,"AnchorPoint",[0,0]))
+  });
+ }
+ if(items.length<2)return false;
+
+ state.drag={
+  type:"group-resize",dir,startX:ev.clientX,startY:ev.clientY,
+  items,base:refreshedBase,geometry:collectGroupGuideTargets(nodes)
+ };
+ if(baked)toast("Layout запечён · групповое масштабирование свободно");
+ return true;
+}
+function resizeGroupFromDrag(d,dx,dy,bypassGuides=false){
+ const dir=d.dir,s=state.snap,b=d.base;
+ let rx=Math.round(dx/s)*s,ry=Math.round(dy/s)*s,guide={rx,ry,x:null,y:null};
+ if(!bypassGuides)guide=smartSnapResize({dir,geometry:d.geometry},rx,ry);
+ rx=guide.rx;ry=guide.ry;
+
+ let left=b.left,top=b.top,right=b.right,bottom=b.bottom;
+ const corner=(dir.includes("e")||dir.includes("w"))&&(dir.includes("n")||dir.includes("s"));
+
+ if(corner){
+  let fx=1,fy=1;
+  if(dir.includes("e"))fx=(b.w+rx)/Math.max(1,b.w);
+  else if(dir.includes("w"))fx=(b.w-rx)/Math.max(1,b.w);
+  if(dir.includes("s"))fy=(b.h+ry)/Math.max(1,b.h);
+  else if(dir.includes("n"))fy=(b.h-ry)/Math.max(1,b.h);
+
+  // Corner resize is uniform: whichever axis the pointer changed more controls scale.
+  let factor=Math.abs(fx-1)>=Math.abs(fy-1)?fx:fy;
+  factor=Math.max(.02,factor);
+  const nw=Math.max(1,b.w*factor),nh=Math.max(1,b.h*factor);
+
+  if(dir.includes("e"))right=left+nw;else left=right-nw;
+  if(dir.includes("s"))bottom=top+nh;else top=bottom-nh;
+ }else{
+  if(dir.includes("e"))right=Math.max(left+1,b.right+rx);
+  if(dir.includes("w"))left=Math.min(right-1,b.left+rx);
+  if(dir.includes("s"))bottom=Math.max(top+1,b.bottom+ry);
+  if(dir.includes("n"))top=Math.min(bottom-1,b.top+ry);
+ }
+
+ const nw=Math.max(1,right-left),nh=Math.max(1,bottom-top);
+ const sx=nw/Math.max(1,b.w),sy=nh/Math.max(1,b.h);
+
+ for(const item of d.items){
+  const r=item.r,pr=item.parentRect,a=item.anchor;
+  const relX=(r.left-b.left)*sx,relY=(r.top-b.top)*sy;
+  const targetLeft=left+relX,targetTop=top+relY;
+  const targetW=Math.max(1,r.w*sx),targetH=Math.max(1,r.h*sy);
+
+  const sz=deepClone(item.size),ps=deepClone(item.pos);
+  sz[0][1]=roundOffset(targetW-item.size[0][0]*Math.max(1,pr.w));
+  sz[1][1]=roundOffset(targetH-item.size[1][0]*Math.max(1,pr.h));
+
+  const anchorX=targetLeft-pr.left+a[0]*targetW;
+  const anchorY=targetTop-pr.top+a[1]*targetH;
+  ps[0][1]=roundOffset(anchorX-item.pos[0][0]*Math.max(1,pr.w));
+  ps[1][1]=roundOffset(anchorY-item.pos[1][0]*Math.max(1,pr.h));
+
+  item.n.Properties.Size={UDim2:sz};
+  item.n.Properties.Position={UDim2:ps};
+ }
+
+ state.dirty=true;renderViewport();updateOverlay();showSmartGuides(guide.x,guide.y);updatePixelReadout();updateStatus();
+}
+
 function resizeFromDrag(d,dx,dy,bypassGuides=false){
  const dir=d.dir,s=state.snap;let rx=Math.round(dx/s)*s,ry=Math.round(dy/s)*s,guide={rx,ry,x:null,y:null};
  if(!bypassGuides)guide=smartSnapResize(d,rx,ry);
