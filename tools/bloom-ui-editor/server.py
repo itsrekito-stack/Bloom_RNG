@@ -18,7 +18,7 @@ HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 ROOT = Path(os.environ.get("BLOOM_UI_ROOT", os.getcwd())).resolve()
 CACHE_LIMIT = 256
-BRIDGE_VERSION = 2
+BRIDGE_VERSION = 3
 
 _thumbnail_cache: "OrderedDict[str, tuple[bytes, str]]" = OrderedDict()
 
@@ -122,6 +122,150 @@ def git_status_payload() -> dict:
     }
 
 
+def git_stash_entries() -> list[tuple[str, str]]:
+    result = run_git("stash", "list", "--format=%gd%x09%gs")
+    if result.returncode != 0:
+        return []
+    out: list[tuple[str, str]] = []
+    for line in result.stdout.splitlines():
+        if "\t" in line:
+            ref, subject = line.split("\t", 1)
+            out.append((ref.strip(), subject.strip()))
+    return out
+
+
+def safe_sync_git() -> tuple[int, dict]:
+    status_before = git_status_payload()
+    if not status_before.get("ok"):
+        return 503, status_before
+
+    old_head = status_before.get("head", "")
+    dirty = bool(status_before.get("dirty"))
+    stash_ref = ""
+    stash_label = ""
+    stashed = False
+    restored = False
+
+    if dirty:
+        stash_label = f"Bloom UI Studio AI SYNC {int(time.time())}"
+        try:
+            stash = run_git("stash", "push", "-u", "-m", stash_label, timeout=30.0)
+        except (subprocess.TimeoutExpired, OSError) as exc:
+            return 500, {"ok": False, "stage": "stash", "error": str(exc)}
+        if stash.returncode != 0:
+            output = "\n".join(x for x in [stash.stdout.strip(), stash.stderr.strip()] if x)
+            return 500, {"ok": False, "stage": "stash", "error": output or "git stash failed"}
+
+        for ref, subject in git_stash_entries():
+            if stash_label in subject:
+                stash_ref = ref
+                break
+        if not stash_ref:
+            return 500, {
+                "ok": False,
+                "stage": "stash",
+                "error": "Локальные изменения были сохранены, но stash не удалось идентифицировать. Ничего не удалено.",
+            }
+        stashed = True
+
+    try:
+        pull = run_git("pull", "--ff-only", timeout=45.0)
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        pull = None
+        pull_error = str(exc)
+    else:
+        pull_error = ""
+
+    if pull is None or pull.returncode != 0:
+        output = pull_error
+        if pull is not None:
+            output = "\n".join(x for x in [pull.stdout.strip(), pull.stderr.strip()] if x) or "git pull --ff-only failed"
+
+        restore_note = ""
+        if stashed and stash_ref:
+            try:
+                restore = run_git("stash", "apply", stash_ref, timeout=30.0)
+            except (subprocess.TimeoutExpired, OSError) as exc:
+                restore = None
+                restore_note = str(exc)
+            if restore is not None and restore.returncode == 0:
+                restored = True
+                run_git("stash", "drop", stash_ref)
+            elif restore is not None:
+                restore_note = "\n".join(x for x in [restore.stdout.strip(), restore.stderr.strip()] if x)
+
+        return 500, {
+            "ok": False,
+            "stage": "pull",
+            "error": output,
+            "stashed": stashed,
+            "restored": restored,
+            "stash_ref": stash_ref if stashed and not restored else "",
+            "restore_error": restore_note,
+        }
+
+    status_after_pull = git_status_payload()
+    new_head = status_after_pull.get("head", "")
+
+    if stashed and stash_ref:
+        try:
+            restore = run_git("stash", "apply", stash_ref, timeout=30.0)
+        except (subprocess.TimeoutExpired, OSError) as exc:
+            return 500, {
+                "ok": False,
+                "stage": "restore",
+                "error": str(exc),
+                "changed": bool(old_head and new_head and old_head != new_head),
+                "stashed": True,
+                "restored": False,
+                "stash_ref": stash_ref,
+            }
+
+        if restore.returncode != 0:
+            status_conflict = git_status_payload()
+            conflict_scan = run_git("diff", "--name-only", "--diff-filter=U")
+            conflicts = [x for x in conflict_scan.stdout.splitlines() if x.strip()] if conflict_scan.returncode == 0 else []
+            output = "\n".join(x for x in [restore.stdout.strip(), restore.stderr.strip()] if x)
+            return 409, {
+                "ok": False,
+                "stage": "restore",
+                "error": "Мои изменения подтянуты, но при возврате твоих локальных правок возник конфликт. Stash сохранён.",
+                "details": output[-6000:],
+                "conflicts": conflicts,
+                "changed": bool(old_head and new_head and old_head != new_head),
+                "stashed": True,
+                "restored": False,
+                "stash_ref": stash_ref,
+                "dirty": status_conflict.get("dirty", True),
+            }
+
+        restored = True
+        drop = run_git("stash", "drop", stash_ref)
+        if drop.returncode != 0:
+            return 500, {
+                "ok": False,
+                "stage": "drop",
+                "error": "Локальные изменения возвращены, но временный stash не удалось удалить. Данные не потеряны.",
+                "stash_ref": stash_ref,
+                "changed": bool(old_head and new_head and old_head != new_head),
+                "stashed": True,
+                "restored": True,
+            }
+
+    status_final = git_status_payload()
+    pull_output = "\n".join(x for x in [pull.stdout.strip(), pull.stderr.strip()] if x)
+    return 200, {
+        "ok": True,
+        "changed": bool(old_head and new_head and old_head != new_head),
+        "head": status_final.get("head", new_head),
+        "subject": status_final.get("subject", ""),
+        "dirty": status_final.get("dirty", False),
+        "stashed": stashed,
+        "restored": restored,
+        "output": pull_output[-6000:],
+    }
+
+
 class BloomHandler(SimpleHTTPRequestHandler):
     server_version = "BloomUIStudio/1.0"
 
@@ -192,58 +336,9 @@ class BloomHandler(SimpleHTTPRequestHandler):
             self.send_error(404, "Unknown endpoint")
             return
 
-        status_before = git_status_payload()
-        if not status_before.get("ok"):
-            body = json.dumps(status_before, ensure_ascii=False).encode("utf-8")
-            self.send_response(503)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
-            return
-
-        if status_before.get("dirty"):
-            payload = {
-                "ok": False,
-                "error": "Local Git working tree has changes; refusing to overwrite them.",
-                "changes": status_before.get("changes", []),
-            }
-            body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-            self.send_response(409)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
-            return
-
-        old_head = status_before.get("head", "")
-        try:
-            pull = run_git("pull", "--ff-only", timeout=45.0)
-        except (subprocess.TimeoutExpired, OSError) as exc:
-            payload = {"ok": False, "error": str(exc)}
-            body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-            self.send_response(500)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
-            return
-
-        status_after = git_status_payload()
-        new_head = status_after.get("head", "")
-        output = "\n".join(x for x in [pull.stdout.strip(), pull.stderr.strip()] if x)
-        payload = {
-            "ok": pull.returncode == 0,
-            "changed": bool(old_head and new_head and old_head != new_head),
-            "head": new_head,
-            "subject": status_after.get("subject", ""),
-            "output": output[-6000:],
-        }
-        if pull.returncode != 0:
-            payload["error"] = output or "git pull --ff-only failed"
-
+        status_code, payload = safe_sync_git()
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        self.send_response(200 if payload["ok"] else 500)
+        self.send_response(status_code)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
