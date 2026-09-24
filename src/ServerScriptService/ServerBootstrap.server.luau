@@ -23,7 +23,7 @@ for _,player in ipairs(Players:GetPlayers()) do task.spawn(function() removeLega
 
 local Data=require(Services.DataService)
 local Player=require(Services.PlayerService)
-local names={"RemoteService","FlowerService","InventoryService","StatsService","FlowerProgressionService","GardenSynergyService","GardenPlotService","HiveService","RollService","GardenActivityService","PollinatorService","MapService","WorkshopService","TutorialService","MetaProgressionService","BuildTrialService","SeasonService","SocialService","AnalyticsService"}
+local names={"RemoteService","FlowerService","InventoryService","StatsService","FlowerProgressionService","GardenSynergyService","GardenPlotService","HiveService","RollService","GardenActivityService","PollinatorService","MapService","WorkshopService","TutorialService","MetaProgressionService","BuildTrialService","SeasonService","SocialService","AnalyticsService","UIStateService"}
 local loaded={} for _,name in ipairs(names) do loaded[name]=require(Services[name]) end
 local ok,err=xpcall(function()
  require(script.Parent.Tests.ConfigValidation).Run()
