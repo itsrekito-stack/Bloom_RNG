@@ -17,7 +17,7 @@ const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 const state={
  root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,geometry:true,inset:36,mode:"design",previewScene:"gameplay",
  projectHandle:null,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
- history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[]
+ history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[],assistantSyncing:false
 };
 
 let idCounter=1;
@@ -1514,6 +1514,64 @@ function duplicateSelected(){
  const n=selected();if(!n||n===state.root)return;const p=findParent(n.__id);pushHistory();const copy=normalizeNode(stripNode(n));copy.Name=uniqueName(n.Name);const pos=u2v(copy,"Position");if(pos){pos[0][1]+=12;pos[1][1]+=12;copy.Properties.Position={UDim2:pos}}p.Children.push(copy);state.selectedId=copy.__id;state.selectedIds=new Set([copy.__id]);state.selectionAnchorId=copy.__id;changed()
 }
 
+
+async function assistantStatus(){
+ try{
+  const r=await fetch("/api/git/status",{cache:"no-store"});
+  const data=await r.json();
+  const badge=$("#aiBridgeStatus");
+  if(!badge)return data;
+  if(!r.ok||!data.ok){
+   badge.textContent="AI offline";
+   badge.className="ai-bridge-status error";
+   return data;
+  }
+  badge.textContent=(data.dirty?"LOCAL CHANGES · ":"")+((data.head||"").slice(0,7)||"AI ready");
+  badge.className="ai-bridge-status "+(data.dirty?"warn":"ready");
+  badge.title=data.subject||"Assistant bridge ready";
+  return data;
+ }catch(e){
+  const badge=$("#aiBridgeStatus");
+  if(badge){badge.textContent="AI offline";badge.className="ai-bridge-status error"}
+  return {ok:false,error:String(e)};
+ }
+}
+async function reloadModelFromServer(label="AI изменения загружены"){
+ const r=await fetch("/src/StarterGui/BloomUI.model.json?ts="+Date.now(),{cache:"no-store"});
+ if(!r.ok)throw new Error("BloomUI.model.json не найден после синхронизации");
+ const raw=await r.json();
+ setRoot(raw,label);
+}
+async function assistantSync(){
+ if(state.assistantSyncing)return;
+ if(state.dirty){
+  toast("Есть несохранённые изменения. Сначала нажми «В ИГРУ →» или экспортируй JSON.",true);
+  return;
+ }
+ const btn=$("#aiSyncBtn");
+ state.assistantSyncing=true;
+ if(btn){btn.disabled=true;btn.textContent="AI SYNC…"}
+ try{
+  const status=await assistantStatus();
+  if(status?.dirty){
+   toast("Локальный Git содержит изменения. AI SYNC не будет их перезаписывать.",true);
+   return;
+  }
+  const r=await fetch("/api/git/pull",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
+  const data=await r.json();
+  if(!r.ok||!data.ok)throw new Error(data.error||data.output||("HTTP "+r.status));
+  await reloadModelFromServer(data.changed?"AI UI обновлён из GitHub":"AI SYNC: уже актуально");
+  await assistantStatus();
+  if(data.changed)requestAnimationFrame(()=>focusSelected());
+ }catch(e){
+  toast("AI SYNC: "+e.message,true);
+  await assistantStatus();
+ }finally{
+  state.assistantSyncing=false;
+  if(btn){btn.disabled=false;btn.textContent="AI SYNC"}
+ }
+}
+
 async function connectProject(){
  if(!window.showDirectoryPicker){toast("Нужен Chrome/Edge на localhost",true);return}
  try{
@@ -1534,7 +1592,7 @@ async function pullProject(){
 async function pushProject(){
  try{
   const h=await getFile(state.targetPath,true),w=await h.createWritable();await w.write(serialize(true)+"\n");await w.close();
-  state.dirty=false;updateStatus();toast("Записано в "+state.targetPath+" — Rojo может синхронизировать")
+  state.dirty=false;updateStatus();toast("Записано в "+state.targetPath+" — Rojo может синхронизировать");assistantStatus()
  }catch(e){toast("Не удалось записать: "+e.message,true)}
 }
 function download(){
@@ -1564,7 +1622,7 @@ async function loadInitial(){
 $("#palette").addEventListener("click",e=>{const b=e.target.closest("[data-add]");if(b)addObject(b.dataset.add)});
 $("#createFirstFrame").onclick=()=>addObject("Frame");
 $("#deleteBtn").onclick=deleteSelected;$("#duplicateBtn").onclick=duplicateSelected;$("#outdentBtn").onclick=outdentSelected;$("#groupBtn").onclick=groupSelected;$("#ungroupBtn").onclick=ungroupSelected;
-$("#connectBtn").onclick=connectProject;$("#pullBtn").onclick=pullProject;$("#pushBtn").onclick=pushProject;
+$("#connectBtn").onclick=connectProject;$("#pullBtn").onclick=pullProject;$("#pushBtn").onclick=pushProject;$("#aiSyncBtn").onclick=assistantSync;
 $("#exportBtn").onclick=download;$("#copyBtn").onclick=copyModel;$("#importBtn").onclick=()=>els.fileInput.click();
 els.fileInput.onchange=()=>els.fileInput.files[0]&&importFile(els.fileInput.files[0]);
 $("#presetSelect").onchange=e=>{const [w,h]=e.target.value.split("x").map(Number);state.viewport={w,h};$("#viewportW").value=w;$("#viewportH").value=h;renderAll();savePrefs();fitViewport()};
@@ -1661,5 +1719,5 @@ window.addEventListener("keydown",e=>{
 
 loadPrefs();
 syncToolbarFromState();
-loadInitial().then(()=>{requestAnimationFrame(()=>fitViewport())});
+loadInitial().then(()=>{requestAnimationFrame(()=>fitViewport());assistantStatus()});
 })();
