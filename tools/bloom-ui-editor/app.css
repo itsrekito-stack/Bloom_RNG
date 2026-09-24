@@ -74,3 +74,48 @@ dialog::backdrop{background:rgba(0,0,0,.62)}.dialog-head{height:44px;display:fle
 .show-hidden{padding:3px 6px;border:1px solid #4b3d27;border-radius:6px;background:#211b12}
 .raw-json,#rawProps{background:#090d12!important;color:#cfe2f6!important;border-color:#303b4b!important}
 #rawProps{min-height:150px}
+
+/* Clear Roblox viewport boundary and empty-canvas onboarding. */
+.device{
+  background:#101925;
+  outline:2px solid #4b5a70;
+  outline-offset:0;
+}
+.device::after{
+  content:"ROBLOX VIEWPORT";
+  position:absolute;
+  right:8px;
+  bottom:6px;
+  z-index:999998;
+  pointer-events:none;
+  color:rgba(177,198,222,.42);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.08em;
+}
+.gui-root{
+  background:
+    linear-gradient(rgba(73,120,160,.025),rgba(73,120,160,.025));
+}
+.empty-canvas{
+  position:absolute;
+  left:50%;
+  top:50%;
+  z-index:999997;
+  transform:translate(-50%,-50%);
+  width:260px;
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:7px;
+  border:1px dashed #45617d;
+  border-radius:13px;
+  background:rgba(11,18,28,.82);
+  text-align:center;
+  box-shadow:0 14px 36px rgba(0,0,0,.25);
+}
+.empty-canvas.hidden{display:none}
+.empty-canvas strong{font-size:15px}
+.empty-canvas span{color:#8799ad;font-size:10px}
+.empty-canvas .btn{margin-top:4px}
