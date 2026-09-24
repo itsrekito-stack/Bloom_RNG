@@ -12,6 +12,7 @@ function S:Accept(player)
  local now=os.clock() local b=self.Buckets[player] or {Time=now,Tokens=C.RemoteBurst} self.Buckets[player]=b b.Tokens=math.min(C.RemoteBurst,b.Tokens+(now-b.Time)*C.RemoteRate) b.Time=now if b.Tokens<1 then return false end b.Tokens=b.Tokens-1 return true
 end
 function S:Start()
+ print("[RemoteService] State sync ready: state-sync-v3-2026-09-24")
  self.StateRequest.OnServerInvoke=function(player)
   if not self.X:Profile(player) then return nil,"PROFILE_LOADING" end
   local ok,state=pcall(function() return self.X:Snapshot(player) end)
