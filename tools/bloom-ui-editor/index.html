@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bloom UI Studio</title>
+<link rel="stylesheet" href="./app.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">B</div>
+      <div><strong>Bloom UI Studio</strong><small>Roblox ScreenGui visual editor</small></div>
+    </div>
+    <div class="top-actions">
+      <button id="connectBtn" class="btn">Подключить проект</button>
+      <button id="pullBtn" class="btn">← Из Roblox</button>
+      <button id="pushBtn" class="btn primary">В ИГРУ →</button>
+      <span class="divider"></span>
+      <button id="importBtn" class="icon-btn" title="Импорт JSON">⇧</button>
+      <button id="exportBtn" class="icon-btn" title="Экспорт JSON">⇩</button>
+      <button id="copyBtn" class="icon-btn" title="Копировать модель для ChatGPT">AI</button>
+    </div>
+  </header>
+
+  <section class="workspace">
+    <aside class="sidebar left">
+      <div class="panel-head">
+        <div><strong>Объекты</strong><small>Roblox instances</small></div>
+        <button id="addMenuBtn" class="mini">＋</button>
+      </div>
+      <div id="palette" class="palette">
+        <button data-add="Frame"><i>▣</i><span>Frame</span></button>
+        <button data-add="TextLabel"><i>T</i><span>TextLabel</span></button>
+        <button data-add="TextButton"><i>▤</i><span>TextButton</span></button>
+        <button data-add="ImageLabel"><i>◈</i><span>ImageLabel</span></button>
+        <button data-add="ImageButton"><i>◇</i><span>ImageButton</span></button>
+        <button data-add="ScrollingFrame"><i>↕</i><span>ScrollingFrame</span></button>
+        <button data-add="UICorner"><i>◜</i><span>UICorner</span></button>
+        <button data-add="UIStroke"><i>□</i><span>UIStroke</span></button>
+        <button data-add="UIListLayout"><i>☷</i><span>UIListLayout</span></button>
+        <button data-add="UIGridLayout"><i>▦</i><span>UIGridLayout</span></button>
+        <button data-add="UIPadding"><i>↔</i><span>UIPadding</span></button>
+      </div>
+
+      <div class="section-title">
+        <span>ИЕРАРХИЯ</span>
+        <div>
+          <button id="duplicateBtn" class="tiny" title="Дублировать">⧉</button>
+          <button id="deleteBtn" class="tiny danger" title="Удалить">⌫</button>
+        </div>
+      </div>
+      <div id="tree" class="tree"></div>
+    </aside>
+
+    <main class="center">
+      <div class="viewbar">
+        <select id="presetSelect">
+          <option value="1366x768">Desktop 1366×768</option>
+          <option value="1920x1080">Full HD 1920×1080</option>
+          <option value="1280x720">HD 1280×720</option>
+          <option value="1440x900">Laptop 1440×900</option>
+          <option value="390x844">Mobile 390×844</option>
+        </select>
+        <label>W <input id="viewportW" type="number" value="1366"></label>
+        <label>H <input id="viewportH" type="number" value="768"></label>
+        <span class="divider"></span>
+        <label>Zoom <input id="zoomRange" type="range" min="25" max="150" value="72"><b id="zoomLabel">72%</b></label>
+        <label>Snap
+          <select id="snapSelect">
+            <option>1</option><option>2</option><option>4</option><option selected>8</option><option>16</option>
+          </select>
+        </label>
+        <label class="check"><input id="labelsToggle" type="checkbox" checked> Names</label>
+        <label class="check"><input id="gridToggle" type="checkbox" checked> Grid</label>
+        <label>Inset <input id="insetInput" type="number" value="36" min="0" max="120"></label>
+      </div>
+
+      <div id="stageScroller" class="stage-scroller">
+        <div id="stage" class="stage">
+          <div id="device" class="device">
+            <div class="roblox-topbar"><span>Roblox safe inset preview</span></div>
+            <div id="guiRoot" class="gui-root"></div>
+            <div id="selectionOverlay" class="selection-overlay hidden">
+              <div class="sel-caption"></div>
+              <i data-dir="nw"></i><i data-dir="n"></i><i data-dir="ne"></i>
+              <i data-dir="e"></i><i data-dir="se"></i><i data-dir="s"></i>
+              <i data-dir="sw"></i><i data-dir="w"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="statusbar">
+        <span id="statusText">Готово</span>
+        <span id="pixelReadout">—</span>
+        <span id="targetReadout">src/StarterGui/BloomUI.model.json</span>
+      </footer>
+    </main>
+
+    <aside class="sidebar right">
+      <div class="panel-head">
+        <div><strong>Inspector</strong><small id="selectionKind">Ничего не выбрано</small></div>
+      </div>
+      <div id="inspector" class="inspector empty">
+        <div class="empty-state">Выбери объект на canvas или в иерархии.</div>
+      </div>
+    </aside>
+  </section>
+</div>
+
+<input id="fileInput" type="file" accept=".json,.model.json" hidden>
+<div id="toast" class="toast"></div>
+
+<dialog id="jsonDialog">
+  <div class="dialog-head"><strong>Roblox / Rojo JSON</strong><button id="dialogClose">×</button></div>
+  <textarea id="jsonArea" spellcheck="false"></textarea>
+  <div class="dialog-actions">
+    <button id="dialogCopy" class="btn">Копировать</button>
+    <button id="dialogApply" class="btn primary">Применить JSON</button>
+  </div>
+</dialog>
+
+<script src="./app.js"></script>
+</body>
+</html>

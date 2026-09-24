@@ -1,0 +1,496 @@
+(()=>{
+"use strict";
+
+const $=s=>document.querySelector(s);
+const els={
+ tree:$("#tree"),inspector:$("#inspector"),device:$("#device"),guiRoot:$("#guiRoot"),overlay:$("#selectionOverlay"),
+ stageScroller:$("#stageScroller"),status:$("#statusText"),pixels:$("#pixelReadout"),target:$("#targetReadout"),
+ toast:$("#toast"),fileInput:$("#fileInput"),jsonDialog:$("#jsonDialog"),jsonArea:$("#jsonArea")
+};
+
+const MODIFIERS=new Set(["UICorner","UIStroke","UIPadding","UIListLayout","UIGridLayout","UIAspectRatioConstraint","UIScale","UIGradient"]);
+const TEXT_CLASSES=new Set(["TextLabel","TextButton","TextBox"]);
+const IMAGE_CLASSES=new Set(["ImageLabel","ImageButton"]);
+const CONTAINERS=new Set(["ScreenGui","Frame","ScrollingFrame","TextButton","ImageButton"]);
+const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
+
+const state={
+ root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:true,grid:true,inset:36,
+ projectHandle:null,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
+ history:[],future:[],dirty:false,drag:null,collapsed:new Set()
+};
+
+let idCounter=1;
+const uid=()=> "ui_"+(idCounter++).toString(36)+"_"+Date.now().toString(36).slice(-4);
+const deepClone=x=>JSON.parse(JSON.stringify(x));
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const finite=(v,d=0)=>Number.isFinite(+v)?+v:d;
+const roundOffset=v=>Math.round(finite(v));
+const c3=(r=1,g=1,b=1)=>[r,g,b];
+const ud=(s=0,o=0)=>({UDim:[s,o]});
+const u2=(xs=0,xo=0,ys=0,yo=0)=>({UDim2:[[xs,xo],[ys,yo]]});
+const v2=(x=0,y=0)=>({Vector2:[x,y]});
+
+function normalizeNode(node){
+ const n={
+  ClassName:node.ClassName||"Frame",
+  Name:node.Name||node.ClassName||"Object",
+  Properties:deepClone(node.Properties||{}),
+  Children:(node.Children||[]).map(normalizeNode),
+  __id:uid()
+ };
+ return n;
+}
+function stripNode(node){
+ return {
+  ClassName:node.ClassName,
+  Name:node.Name,
+  Properties:sanitizeProperties(deepClone(node.Properties||{})),
+  ...(node.Children&&node.Children.length?{Children:node.Children.map(stripNode)}:{})
+ };
+}
+function sanitizeProperties(props){
+ const walk=v=>{
+  if(!v||typeof v!=="object") return v;
+  if(Array.isArray(v)) return v.map(walk);
+  if(v.UDim&&Array.isArray(v.UDim)){v.UDim=[finite(v.UDim[0]),roundOffset(v.UDim[1])];return v}
+  if(v.UDim2&&Array.isArray(v.UDim2)){
+   v.UDim2=[
+    [finite(v.UDim2[0]?.[0]),roundOffset(v.UDim2[0]?.[1])],
+    [finite(v.UDim2[1]?.[0]),roundOffset(v.UDim2[1]?.[1])]
+   ];return v
+  }
+  Object.keys(v).forEach(k=>v[k]=walk(v[k]));
+  return v;
+ };
+ return walk(props);
+}
+function serialize(pretty=true){return JSON.stringify(stripNode(state.root),null,pretty?2:0)}
+function setRoot(raw,label="Модель загружена"){
+ try{
+  state.root=normalizeNode(raw);
+  state.selectedId=state.root.__id;
+  state.history=[];state.future=[];state.dirty=false;
+  syncInsetFromRoot();renderAll();toast(label);
+ }catch(e){toast("Ошибка модели: "+e.message,true)}
+}
+function syncInsetFromRoot(){
+ if(state.root?.ClassName==="ScreenGui"){
+  const ignore=state.root.Properties?.IgnoreGuiInset===true;
+  if(ignore) state.inset=0;
+  $("#insetInput").value=state.inset;
+ }
+}
+
+function walk(node,fn,parent=null){fn(node,parent);for(const c of node.Children||[])walk(c,fn,node)}
+function findNode(id){let out=null;walk(state.root,n=>{if(n.__id===id)out=n});return out}
+function findParent(id){let out=null;walk(state.root,(n,p)=>{if(n.__id===id)out=p});return out}
+function selected(){return findNode(state.selectedId)}
+function pushHistory(){
+ if(!state.root)return;
+ state.history.push(serialize(false));
+ if(state.history.length>60)state.history.shift();
+ state.future=[];
+}
+function restoreSnapshot(json){
+ const raw=JSON.parse(json);state.root=normalizeNode(raw);state.selectedId=state.root.__id;state.dirty=true;renderAll()
+}
+function undo(){if(!state.history.length)return;state.future.push(serialize(false));restoreSnapshot(state.history.pop());toast("Undo")}
+function redo(){if(!state.future.length)return;state.history.push(serialize(false));restoreSnapshot(state.future.pop());toast("Redo")}
+function changed(){state.dirty=true;renderAll()}
+
+function prop(node,key,fallback){return node?.Properties?.[key]??fallback}
+function u2v(node,key,def=u2()){const v=prop(node,key,def);return v?.UDim2||def.UDim2}
+function udv(node,key,def=ud()){const v=prop(node,key,def);return v?.UDim||def.UDim}
+function v2v(node,key,def=v2()){const v=prop(node,key,def);return v?.Vector2||def.Vector2}
+function color(v,trans=0){
+ const a=clamp(1-finite(trans),0,1);const c=Array.isArray(v)?v:[1,1,1];
+ return `rgba(${Math.round(clamp(c[0],0,1)*255)},${Math.round(clamp(c[1],0,1)*255)},${Math.round(clamp(c[2],0,1)*255)},${a})`;
+}
+function colorHex(v){
+ const c=Array.isArray(v)?v:[1,1,1];
+ return "#"+c.slice(0,3).map(x=>Math.round(clamp(x,0,1)*255).toString(16).padStart(2,"0")).join("");
+}
+function hexColor(h){const x=h.replace("#","");return [0,2,4].map(i=>parseInt(x.slice(i,i+2),16)/255)}
+function cssUDim2(v,axis){const a=v?.UDim2||v||[[0,0],[0,0]];const p=axis===0?a[0]:a[1];return `calc(${finite(p[0])*100}% + ${roundOffset(p[1])}px)`}
+
+function layoutChildNodes(n){return (n.Children||[]).filter(x=>!MODIFIERS.has(x.ClassName))}
+function modifier(n,kind){return (n.Children||[]).find(x=>x.ClassName===kind)}
+function getPadding(n){
+ const p=modifier(n,"UIPadding");if(!p)return null;
+ return {
+  l:udv(p,"PaddingLeft")[1],r:udv(p,"PaddingRight")[1],
+  t:udv(p,"PaddingTop")[1],b:udv(p,"PaddingBottom")[1]
+ };
+}
+function imageUrl(src){
+ if(!src)return "";
+ const m=String(src).match(/(?:id=|rbxassetid:\/\/)(\d+)/i)||String(src).match(/^(\d{6,})$/);
+ if(!m)return src.startsWith("http")?src:"";
+ return `https://www.roblox.com/asset-thumbnail/image?assetId=${m[1]}&width=420&height=420&format=png`;
+}
+
+function renderAll(){
+ renderViewport();renderTree();renderInspector();updateOverlay();updateStatus();
+}
+function renderViewport(){
+ if(!state.root)return;
+ const fullW=state.viewport.w,fullH=state.viewport.h;
+ els.device.style.width=fullW+"px";els.device.style.height=fullH+"px";
+ els.device.style.transform=`scale(${state.zoom})`;
+ $("#stage").style.width=(fullW*state.zoom+128)+"px";
+ $("#stage").style.height=(fullH*state.zoom+128)+"px";
+ $(".roblox-topbar").style.height=state.inset+"px";
+ $(".roblox-topbar").style.display=state.inset>0?"flex":"none";
+ els.guiRoot.style.top=state.inset+"px";
+ els.guiRoot.innerHTML="";
+ const children=state.root.ClassName==="ScreenGui"?state.root.Children:[state.root];
+ for(const c of children) if(!MODIFIERS.has(c.ClassName)) renderGuiNode(c,els.guiRoot,null);
+}
+function renderGuiNode(n,parentEl,parentNode){
+ const el=document.createElement("div");el.className="gui-node";el.dataset.id=n.__id;el.dataset.class=n.ClassName;
+ const p=n.Properties||{};
+ el.style.width=cssUDim2(p.Size||u2(0,100,0,100),0);
+ el.style.height=cssUDim2(p.Size||u2(0,100,0,100),1);
+ el.style.left=cssUDim2(p.Position||u2(),0);el.style.top=cssUDim2(p.Position||u2(),1);
+ const ap=v2v(n,"AnchorPoint",[0,0]);const rot=finite(p.Rotation,0);
+ el.style.transform=`translate(${-ap[0]*100}%,${-ap[1]*100}%) rotate(${rot}deg)`;
+ el.style.transformOrigin=`${ap[0]*100}% ${ap[1]*100}%`;
+ el.style.zIndex=finite(p.ZIndex,1);
+ el.style.display=p.Visible===false?"none":"";
+ el.style.overflow=p.ClipsDescendants?"hidden":"visible";
+ el.style.background=color(p.BackgroundColor3||[1,1,1],p.BackgroundTransparency??0);
+ if(p.BorderSizePixel>0){el.style.border=`${p.BorderSizePixel}px solid ${color(p.BorderColor3||[0,0,0],0)}`}
+ const corner=modifier(n,"UICorner");
+ if(corner){const cr=udv(corner,"CornerRadius",[0,8]);el.style.borderRadius=cr[0]?`${clamp(cr[0]*100,0,50)}%`:`${roundOffset(cr[1])}px`}
+ const stroke=modifier(n,"UIStroke");
+ if(stroke){
+  const sp=stroke.Properties||{},th=Math.max(0,finite(sp.Thickness,1)),sc=color(sp.Color||[0,0,0],sp.Transparency??0);
+  el.style.boxShadow=sp.ApplyStrokeMode==="Contextual"?`0 0 0 ${th}px ${sc}`:`inset 0 0 0 ${th}px ${sc},0 0 0 ${Math.max(0,th-1)}px ${sc}`;
+ }
+ const padding=getPadding(n);if(padding)el.style.padding=`${padding.t}px ${padding.r}px ${padding.b}px ${padding.l}px`;
+ if(TEXT_CLASSES.has(n.ClassName)){
+  const t=document.createElement("span");t.className="gui-text";t.textContent=p.Text??n.Name;
+  t.style.color=color(p.TextColor3||[1,1,1],p.TextTransparency??0);t.style.fontSize=finite(p.TextSize,14)+"px";
+  t.style.fontWeight=/Bold|Black/i.test(p.Font||"")?"700":"400";
+  t.style.fontFamily=/Code/i.test(p.Font||"")?"Consolas,monospace":"Gotham,Montserrat,Segoe UI,Arial,sans-serif";
+  t.style.justifyContent=({Left:"flex-start",Center:"center",Right:"flex-end"})[p.TextXAlignment]||"flex-start";
+  t.style.alignItems=({Top:"flex-start",Center:"center",Bottom:"flex-end"})[p.TextYAlignment]||"center";
+  t.style.textAlign=({Left:"left",Center:"center",Right:"right"})[p.TextXAlignment]||"left";
+  t.style.whiteSpace=p.TextWrapped===false?"nowrap":"pre-wrap";
+  if(p.TextStrokeTransparency<1)t.style.textShadow=`0 0 1px ${color(p.TextStrokeColor3||[0,0,0],p.TextStrokeTransparency??1)}`;
+  el.appendChild(t);
+ }
+ if(IMAGE_CLASSES.has(n.ClassName)){
+  const img=document.createElement("img");img.className="gui-image";img.draggable=false;img.src=imageUrl(p.Image||"");
+  img.style.opacity=1-clamp(finite(p.ImageTransparency,0),0,1);img.style.objectFit=p.ScaleType==="Crop"?"cover":p.ScaleType==="Stretch"?"fill":"contain";
+  if(p.ImageColor3)img.style.filter="none";el.appendChild(img);
+ }
+ if(state.labels){
+  const tag=document.createElement("div");tag.className="node-tag";tag.textContent=`${n.Name} · ${n.ClassName}`;el.appendChild(tag)
+ }
+ if(n.__id===state.selectedId)el.classList.add("selected");
+ el.addEventListener("pointerdown",ev=>startMove(ev,n));
+ el.addEventListener("click",ev=>{ev.stopPropagation();select(n.__id)});
+ parentEl.appendChild(el);
+
+ const list=modifier(n,"UIListLayout"),grid=modifier(n,"UIGridLayout");
+ if(list){
+  el.classList.add("list-layout");
+  el.style.flexDirection=prop(list,"FillDirection","Vertical")==="Horizontal"?"row":"column";
+  const gap=udv(list,"Padding",[0,0]);el.style.gap=roundOffset(gap[1])+"px";
+  el.style.alignItems=({Left:"flex-start",Center:"center",Right:"flex-end"})[prop(list,"HorizontalAlignment","Left")]||"stretch";
+ }
+ if(grid){
+  el.classList.add("grid-layout");
+  const cs=u2v(grid,"CellSize",u2(0,64,0,64)),cp=u2v(grid,"CellPadding",u2(0,6,0,6));
+  el.style.gridTemplateColumns=`repeat(auto-fill,${Math.max(1,roundOffset(cs[0][1]))}px)`;
+  el.style.gridAutoRows=Math.max(1,roundOffset(cs[1][1]))+"px";
+  el.style.columnGap=roundOffset(cp[0][1])+"px";el.style.rowGap=roundOffset(cp[1][1])+"px";
+ }
+ for(const c of layoutChildNodes(n)){
+  const child=renderGuiNode(c,el,n);
+  if((list||grid)&&child)child.classList.add("layout-child");
+ }
+ return el;
+}
+els.guiRoot.addEventListener("pointerdown",ev=>{if(ev.target===els.guiRoot)select(state.root.__id)});
+
+function renderTree(){
+ els.tree.innerHTML="";if(!state.root)return;
+ const recur=(n,depth)=>{
+  const row=document.createElement("div");row.className="tree-row"+(n.__id===state.selectedId?" selected":"")+(MODIFIERS.has(n.ClassName)?" modifier":"");
+  const kids=n.Children||[],collapsed=state.collapsed.has(n.__id);
+  row.innerHTML=`<span class="tree-indent" style="width:${depth*13}px"></span><span class="tree-toggle">${kids.length?(collapsed?"▸":"▾"):""}</span><span class="tree-icon">${classIcon(n.ClassName)}</span><span class="tree-name"></span><span class="tree-kind"></span>`;
+  row.querySelector(".tree-name").textContent=n.Name;row.querySelector(".tree-kind").textContent=n.ClassName;
+  row.querySelector(".tree-toggle").onclick=e=>{e.stopPropagation();collapsed?state.collapsed.delete(n.__id):state.collapsed.add(n.__id);renderTree()};
+  row.onclick=()=>select(n.__id);els.tree.appendChild(row);
+  if(!collapsed)for(const c of kids)recur(c,depth+1);
+ };
+ recur(state.root,0);
+}
+function classIcon(k){return ({ScreenGui:"▱",Frame:"▣",TextLabel:"T",TextButton:"▤",ImageLabel:"◈",ImageButton:"◇",ScrollingFrame:"↕",UICorner:"◜",UIStroke:"□",UIListLayout:"☷",UIGridLayout:"▦",UIPadding:"↔"})[k]||"·"}
+
+function select(id){state.selectedId=id;renderTree();renderInspector();updateOverlay();updateStatus()}
+function updateOverlay(){
+ const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName)){els.overlay.classList.add("hidden");return}
+ const nodeEl=els.guiRoot.querySelector(`[data-id="${n.__id}"]`);if(!nodeEl||nodeEl.style.display==="none"){els.overlay.classList.add("hidden");return}
+ const dr=els.device.getBoundingClientRect(),rr=nodeEl.getBoundingClientRect(),z=state.zoom;
+ els.overlay.classList.remove("hidden");
+ els.overlay.style.left=((rr.left-dr.left)/z)+"px";els.overlay.style.top=((rr.top-dr.top)/z)+"px";
+ els.overlay.style.width=(rr.width/z)+"px";els.overlay.style.height=(rr.height/z)+"px";
+ els.overlay.querySelector(".sel-caption").textContent=`${n.Name} · ${n.ClassName}`;
+}
+
+function renderInspector(){
+ const n=selected();if(!n){els.inspector.className="inspector empty";els.inspector.innerHTML='<div class="empty-state">Выбери объект.</div>';return}
+ els.inspector.className="inspector";$("#selectionKind").textContent=n.ClassName;
+ const groups=[];
+ groups.push(group("INSTANCE",[
+  textProp("Name",n.Name,v=>{n.Name=v;changed()}),
+  readonly("Class",n.ClassName),
+  boolProp("Visible",prop(n,"Visible",true),v=>setProp(n,"Visible",v)),
+  numProp("ZIndex",prop(n,"ZIndex",1),v=>setProp(n,"ZIndex",v)),
+ ]));
+ if(n.ClassName==="ScreenGui"){
+  groups.push(group("SCREENGUI",[
+   boolProp("IgnoreGuiInset",prop(n,"IgnoreGuiInset",false),v=>{setProp(n,"IgnoreGuiInset",v);state.inset=v?0:36;$("#insetInput").value=state.inset;renderAll()}),
+   boolProp("ResetOnSpawn",prop(n,"ResetOnSpawn",false),v=>setProp(n,"ResetOnSpawn",v)),
+   numProp("DisplayOrder",prop(n,"DisplayOrder",0),v=>setProp(n,"DisplayOrder",v))
+  ]));
+ }else if(!MODIFIERS.has(n.ClassName)){
+  groups.push(group("TRANSFORM",[
+   udim2Prop("Position",u2v(n,"Position"),v=>setProp(n,"Position",{UDim2:v})),
+   udim2Prop("Size",u2v(n,"Size",u2(0,100,0,100)),v=>setProp(n,"Size",{UDim2:v})),
+   vector2Prop("AnchorPoint",v2v(n,"AnchorPoint"),v=>setProp(n,"AnchorPoint",{Vector2:v})),
+   numProp("Rotation",prop(n,"Rotation",0),v=>setProp(n,"Rotation",v))
+  ]));
+  groups.push(group("APPEARANCE",[
+   colorProp("Background",prop(n,"BackgroundColor3",[1,1,1]),v=>setProp(n,"BackgroundColor3",v)),
+   numProp("Transparency",prop(n,"BackgroundTransparency",0),v=>setProp(n,"BackgroundTransparency",clamp(v,0,1)),.01),
+   numProp("Border",prop(n,"BorderSizePixel",0),v=>setProp(n,"BorderSizePixel",Math.max(0,v))),
+   boolProp("Clips",prop(n,"ClipsDescendants",false),v=>setProp(n,"ClipsDescendants",v))
+  ]));
+ }
+ if(TEXT_CLASSES.has(n.ClassName))groups.push(group("TEXT",[
+  textareaProp("Text",prop(n,"Text",""),v=>setProp(n,"Text",v)),
+  numProp("TextSize",prop(n,"TextSize",14),v=>setProp(n,"TextSize",v)),
+  colorProp("TextColor",prop(n,"TextColor3",[1,1,1]),v=>setProp(n,"TextColor3",v)),
+  selectProp("Align X",prop(n,"TextXAlignment","Left"),["Left","Center","Right"],v=>setProp(n,"TextXAlignment",v)),
+  selectProp("Align Y",prop(n,"TextYAlignment","Center"),["Top","Center","Bottom"],v=>setProp(n,"TextYAlignment",v)),
+  boolProp("Wrapped",prop(n,"TextWrapped",true),v=>setProp(n,"TextWrapped",v)),
+  textProp("Font",prop(n,"Font","Gotham"),v=>setProp(n,"Font",v))
+ ]));
+ if(IMAGE_CLASSES.has(n.ClassName))groups.push(group("IMAGE",[
+  textProp("Image",prop(n,"Image",""),v=>setProp(n,"Image",v)),
+  numProp("Transparency",prop(n,"ImageTransparency",0),v=>setProp(n,"ImageTransparency",clamp(v,0,1)),.01),
+  selectProp("ScaleType",prop(n,"ScaleType","Fit"),["Fit","Crop","Stretch","Tile","Slice"],v=>setProp(n,"ScaleType",v))
+ ]));
+ if(n.ClassName==="UICorner")groups.push(group("UICORNER",[udimProp("CornerRadius",udv(n,"CornerRadius",[0,8]),v=>setProp(n,"CornerRadius",{UDim:v}))]));
+ if(n.ClassName==="UIStroke")groups.push(group("UISTROKE",[
+  colorProp("Color",prop(n,"Color",[0,0,0]),v=>setProp(n,"Color",v)),numProp("Thickness",prop(n,"Thickness",1),v=>setProp(n,"Thickness",v),.5),
+  numProp("Transparency",prop(n,"Transparency",0),v=>setProp(n,"Transparency",clamp(v,0,1)),.01),selectProp("Mode",prop(n,"ApplyStrokeMode","Border"),["Border","Contextual"],v=>setProp(n,"ApplyStrokeMode",v))
+ ]));
+ if(n.ClassName==="UIListLayout")groups.push(group("LIST LAYOUT",[
+  selectProp("Direction",prop(n,"FillDirection","Vertical"),["Vertical","Horizontal"],v=>setProp(n,"FillDirection",v)),
+  udimProp("Padding",udv(n,"Padding",[0,0]),v=>setProp(n,"Padding",{UDim:v})),
+  selectProp("H Align",prop(n,"HorizontalAlignment","Left"),["Left","Center","Right"],v=>setProp(n,"HorizontalAlignment",v))
+ ]));
+ if(n.ClassName==="UIGridLayout")groups.push(group("GRID LAYOUT",[
+  udim2Prop("CellSize",u2v(n,"CellSize",u2(0,64,0,64)),v=>setProp(n,"CellSize",{UDim2:v})),
+  udim2Prop("CellPadding",u2v(n,"CellPadding",u2(0,6,0,6)),v=>setProp(n,"CellPadding",{UDim2:v}))
+ ]));
+ if(n.ClassName==="UIPadding")groups.push(group("PADDING",["PaddingLeft","PaddingRight","PaddingTop","PaddingBottom"].map(k=>udimProp(k,udv(n,k,[0,0]),v=>setProp(n,k,{UDim:v})))));
+ if(!MODIFIERS.has(n.ClassName)&&n!==state.root)groups.push(computedGroup(n));
+ groups.push(rawGroup(n));
+ els.inspector.innerHTML=groups.join("");
+ bindInspectorHandlers(n);
+}
+function group(title,rows){return `<section class="ins-group"><div class="ins-title">${title}</div><div class="ins-body">${rows.join("")}</div></section>`}
+function row(label,html){return `<div class="prop-row"><label>${label}</label>${html}</div>`}
+let handlerSeq=1,handlers={};
+function h(fn){const id="h"+handlerSeq++;handlers[id]=fn;return id}
+function textProp(l,v,fn){return row(l,`<input data-handler="${h(fn)}" value="${esc(v)}">`)}
+function textareaProp(l,v,fn){return row(l,`<textarea data-handler="${h(fn)}">${esc(v)}</textarea>`)}
+function readonly(l,v){return row(l,`<input value="${esc(v)}" disabled>`)}
+function numProp(l,v,fn,step=1){return row(l,`<input type="number" step="${step}" data-handler="${h(fn)}" value="${finite(v)}">`)}
+function boolProp(l,v,fn){return row(l,`<input type="checkbox" data-handler="${h(fn)}" ${v?"checked":""}>`)}
+function selectProp(l,v,opts,fn){return row(l,`<select data-handler="${h(fn)}">${opts.map(o=>`<option ${o===v?"selected":""}>${o}</option>`).join("")}</select>`)}
+function colorProp(l,v,fn){return row(l,`<input type="color" data-handler="${h(fn)}" value="${colorHex(v)}">`)}
+function udim2Prop(l,v,fn){
+ const id=h(fn);return row(l,`<div class="quad" data-udim2-handler="${id}"><input type="number" step=".01" value="${v[0][0]}" title="X Scale"><input type="number" value="${v[0][1]}" title="X Offset"><input type="number" step=".01" value="${v[1][0]}" title="Y Scale"><input type="number" value="${v[1][1]}" title="Y Offset"></div>`)
+}
+function vector2Prop(l,v,fn){const id=h(fn);return row(l,`<div class="xy" data-v2-handler="${id}"><input type="number" step=".01" value="${v[0]}"><input type="number" step=".01" value="${v[1]}"></div>`)}
+function udimProp(l,v,fn){const id=h(fn);return row(l,`<div class="xy" data-udim-handler="${id}"><input type="number" step=".01" value="${v[0]}"><input type="number" value="${v[1]}"></div>`)}
+function computedGroup(n){
+ setTimeout(updatePixelReadout,0);
+ return group("COMPUTED PIXELS",[`<div id="computedBox" class="computed"><div><small>X</small><strong>—</strong></div><div><small>Y</small><strong>—</strong></div><div><small>W</small><strong>—</strong></div><div><small>H</small><strong>—</strong></div></div>`])
+}
+function rawGroup(n){return group("RAW PROPERTIES",[`<textarea id="rawProps" class="raw-json" spellcheck="false">${esc(JSON.stringify(n.Properties||{},null,2))}</textarea><button id="applyRaw" class="btn">Применить свойства</button>`])}
+function esc(x){return String(x??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;")}
+function bindInspectorHandlers(n){
+ els.inspector.querySelectorAll("[data-handler]").forEach(input=>{
+  input.addEventListener("change",()=>{pushHistory();const fn=handlers[input.dataset.handler];fn(input.type==="checkbox"?input.checked:input.type==="number"?finite(input.value):input.type==="color"?hexColor(input.value):input.value)})
+ });
+ els.inspector.querySelectorAll("[data-udim2-handler]").forEach(box=>box.addEventListener("change",()=>{pushHistory();const a=[...box.querySelectorAll("input")].map(x=>finite(x.value));handlers[box.dataset.udim2Handler]([[a[0],roundOffset(a[1])],[a[2],roundOffset(a[3])]])}));
+ els.inspector.querySelectorAll("[data-v2-handler]").forEach(box=>box.addEventListener("change",()=>{pushHistory();const a=[...box.querySelectorAll("input")].map(x=>finite(x.value));handlers[box.dataset.v2Handler]([a[0],a[1]])}));
+ els.inspector.querySelectorAll("[data-udim-handler]").forEach(box=>box.addEventListener("change",()=>{pushHistory();const a=[...box.querySelectorAll("input")].map(x=>finite(x.value));handlers[box.dataset.udimHandler]([a[0],roundOffset(a[1])])}));
+ $("#applyRaw")?.addEventListener("click",()=>{try{pushHistory();n.Properties=JSON.parse($("#rawProps").value);changed()}catch(e){toast("Неверный JSON свойств",true)}});
+}
+function setProp(n,k,v){n.Properties=n.Properties||{};n.Properties[k]=v;changed()}
+
+function updatePixelReadout(){
+ const n=selected(),nodeEl=n&&els.guiRoot.querySelector(`[data-id="${n.__id}"]`),box=$("#computedBox");if(!n||!nodeEl)return;
+ const dr=els.guiRoot.getBoundingClientRect(),rr=nodeEl.getBoundingClientRect(),z=state.zoom;
+ const vals=[(rr.left-dr.left)/z,(rr.top-dr.top)/z,rr.width/z,rr.height/z].map(x=>Math.round(x*10)/10);
+ els.pixels.textContent=`X ${vals[0]}  Y ${vals[1]}  W ${vals[2]}  H ${vals[3]}`;
+ if(box)[...box.querySelectorAll("strong")].forEach((s,i)=>s.textContent=vals[i]);
+}
+function updateStatus(){
+ const n=selected();els.status.textContent=(state.dirty?"● ":"")+(state.projectHandle?"Project connected":"Local preview")+" · "+(n?`${n.Name} [${n.ClassName}]`:"");
+ els.target.textContent=state.targetPath;
+}
+
+function isLayoutParent(n){return !!n&&(modifier(n,"UIListLayout")||modifier(n,"UIGridLayout"))}
+function startMove(ev,n){
+ if(ev.button!==0||MODIFIERS.has(n.ClassName))return;ev.stopPropagation();select(n.__id);
+ if(isLayoutParent(findParent(n.__id))){toast("Позиция управляется Layout. Меняй размер или LayoutOrder.");return}
+ pushHistory();
+ const pos=deepClone(u2v(n,"Position")),startX=ev.clientX,startY=ev.clientY;
+ state.drag={type:"move",n,startX,startY,pos};
+ ev.currentTarget.setPointerCapture?.(ev.pointerId);
+}
+window.addEventListener("pointermove",ev=>{
+ const d=state.drag;if(!d)return;const dx=(ev.clientX-d.startX)/state.zoom,dy=(ev.clientY-d.startY)/state.zoom,s=state.snap;
+ if(d.type==="move"){
+  const p=deepClone(d.pos);p[0][1]=roundOffset(p[0][1]+Math.round(dx/s)*s);p[1][1]=roundOffset(p[1][1]+Math.round(dy/s)*s);d.n.Properties.Position={UDim2:p};renderViewport();updateOverlay();updatePixelReadout();state.dirty=true;updateStatus()
+ }else if(d.type==="resize")resizeFromDrag(d,dx,dy);
+});
+window.addEventListener("pointerup",()=>{if(state.drag){state.drag=null;renderTree();renderInspector()}});
+
+els.overlay.querySelectorAll("i").forEach(handle=>handle.addEventListener("pointerdown",ev=>{
+ ev.stopPropagation();ev.preventDefault();const n=selected();if(!n)return;pushHistory();
+ state.drag={type:"resize",n,dir:handle.dataset.dir,startX:ev.clientX,startY:ev.clientY,size:deepClone(u2v(n,"Size",u2(0,100,0,100))),pos:deepClone(u2v(n,"Position")),anchor:deepClone(v2v(n,"AnchorPoint"))}
+}));
+function resizeFromDrag(d,dx,dy){
+ const dir=d.dir,s=state.snap,rx=Math.round(dx/s)*s,ry=Math.round(dy/s)*s;
+ const sz=deepClone(d.size),ps=deepClone(d.pos),a=d.anchor;
+ if(dir.includes("e")){sz[0][1]=Math.max(1,roundOffset(d.size[0][1]+rx));ps[0][1]=roundOffset(d.pos[0][1]+rx*a[0])}
+ if(dir.includes("w")){sz[0][1]=Math.max(1,roundOffset(d.size[0][1]-rx));ps[0][1]=roundOffset(d.pos[0][1]+rx*(1-a[0]))}
+ if(dir.includes("s")){sz[1][1]=Math.max(1,roundOffset(d.size[1][1]+ry));ps[1][1]=roundOffset(d.pos[1][1]+ry*a[1])}
+ if(dir.includes("n")){sz[1][1]=Math.max(1,roundOffset(d.size[1][1]-ry));ps[1][1]=roundOffset(d.pos[1][1]+ry*(1-a[1]))}
+ d.n.Properties.Size={UDim2:sz};d.n.Properties.Position={UDim2:ps};state.dirty=true;renderViewport();updateOverlay();updatePixelReadout();updateStatus();
+}
+
+function defaultObject(kind){
+ const common={Size:u2(0,160,0,60),Position:u2(0,24,0,24),AnchorPoint:v2(0,0),BackgroundColor3:c3(.10,.14,.19),BackgroundTransparency:0,BorderSizePixel:0,ZIndex:1,Visible:true};
+ const m={
+  Frame:{...common},
+  TextLabel:{...common,BackgroundTransparency:1,Text:"TextLabel",TextColor3:c3(1,1,1),TextSize:14,TextWrapped:true,TextXAlignment:"Center",TextYAlignment:"Center",Font:"Gotham"},
+  TextButton:{...common,Text:"Button",TextColor3:c3(1,1,1),TextSize:14,TextWrapped:true,TextXAlignment:"Center",TextYAlignment:"Center",Font:"GothamBold",AutoButtonColor:false},
+  ImageLabel:{...common,BackgroundTransparency:1,Image:"",ScaleType:"Fit"},
+  ImageButton:{...common,BackgroundTransparency:1,Image:"",ScaleType:"Fit",AutoButtonColor:false},
+  ScrollingFrame:{...common,Size:u2(0,280,0,220),CanvasSize:u2(0,0,0,500),ScrollBarThickness:6,ClipsDescendants:true},
+  UICorner:{CornerRadius:ud(0,12)},
+  UIStroke:{Color:c3(.05,.08,.12),Thickness:2,Transparency:.1,ApplyStrokeMode:"Border"},
+  UIListLayout:{Padding:ud(0,6),FillDirection:"Vertical",HorizontalAlignment:"Left",SortOrder:"LayoutOrder"},
+  UIGridLayout:{CellSize:u2(0,64,0,64),CellPadding:u2(0,6,0,6),SortOrder:"LayoutOrder"},
+  UIPadding:{PaddingLeft:ud(0,8),PaddingRight:ud(0,8),PaddingTop:ud(0,8),PaddingBottom:ud(0,8)}
+ };
+ return normalizeNode({ClassName:kind,Name:uniqueName(kind),Properties:m[kind]||common,Children:[]});
+}
+function uniqueName(base){let i=1,name=base;const names=new Set();walk(state.root,n=>names.add(n.Name));while(names.has(name))name=base+(++i);return name}
+function addObject(kind){
+ if(!state.root)return;pushHistory();let parent=selected();
+ if(!parent||!CONTAINERS.has(parent.ClassName))parent=findParent(state.selectedId)||state.root;
+ if(MODIFIERS.has(kind)&&parent.ClassName==="ScreenGui"){toast("Выбери GuiObject для "+kind,true);return}
+ const n=defaultObject(kind);parent.Children=parent.Children||[];parent.Children.push(n);state.selectedId=n.__id;changed();toast(kind+" создан")
+}
+function deleteSelected(){
+ const n=selected();if(!n||n===state.root)return;const p=findParent(n.__id);if(!p)return;pushHistory();p.Children=p.Children.filter(x=>x!==n);state.selectedId=p.__id;changed()
+}
+function duplicateSelected(){
+ const n=selected();if(!n||n===state.root)return;const p=findParent(n.__id);pushHistory();const copy=normalizeNode(stripNode(n));copy.Name=uniqueName(n.Name);const pos=u2v(copy,"Position");if(pos){pos[0][1]+=12;pos[1][1]+=12;copy.Properties.Position={UDim2:pos}}p.Children.push(copy);state.selectedId=copy.__id;changed()
+}
+
+async function connectProject(){
+ if(!window.showDirectoryPicker){toast("Нужен Chrome/Edge на localhost",true);return}
+ try{
+  state.projectHandle=await window.showDirectoryPicker({mode:"readwrite"});
+  await saveHandle(state.projectHandle);updateStatus();toast("Проект подключён: "+state.projectHandle.name)
+ }catch(e){if(e.name!=="AbortError")toast(e.message,true)}
+}
+async function getFile(path,create=false){
+ if(!state.projectHandle)throw new Error("Сначала подключи C:\\Bloom_RNG");
+ const parts=path.replace(/\\/g,"/").split("/").filter(Boolean),file=parts.pop();let dir=state.projectHandle;
+ for(const part of parts)dir=await dir.getDirectoryHandle(part,{create});
+ return dir.getFileHandle(file,{create});
+}
+async function pullProject(){
+ try{const h=await getFile(state.targetPath,false),f=await h.getFile(),raw=JSON.parse(await f.text());setRoot(raw,"Загружено из Roblox/Rojo файла")}
+ catch(e){toast("Не удалось прочитать: "+e.message,true)}
+}
+async function pushProject(){
+ try{
+  const h=await getFile(state.targetPath,true),w=await h.createWritable();await w.write(serialize(true)+"\n");await w.close();
+  state.dirty=false;updateStatus();toast("Записано в "+state.targetPath+" — Rojo может синхронизировать")
+ }catch(e){toast("Не удалось записать: "+e.message,true)}
+}
+function download(){
+ const blob=new Blob([serialize(true)+"\n"],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(state.root?.Name||"BloomUI")+".model.json";a.click();URL.revokeObjectURL(a.href)
+}
+async function copyModel(){await navigator.clipboard.writeText(serialize(true));toast("Полная Roblox-модель скопирована для ChatGPT")}
+function importFile(file){const r=new FileReader();r.onload=()=>{try{setRoot(JSON.parse(r.result),"JSON импортирован")}catch(e){toast(e.message,true)}};r.readAsText(file)}
+
+function toast(msg,error=false){els.toast.textContent=msg;els.toast.style.borderColor=error?"#a94455":"#45617c";els.toast.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>els.toast.classList.remove("show"),2600)}
+async function saveHandle(handle){
+ try{const db=await idb();const tx=db.transaction("kv","readwrite");tx.objectStore("kv").put(handle,"projectHandle")}catch{}
+}
+async function loadHandle(){
+ try{const db=await idb();return await new Promise((res,rej)=>{const q=db.transaction("kv").objectStore("kv").get("projectHandle");q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}catch{return null}
+}
+function idb(){return new Promise((res,rej)=>{const q=indexedDB.open("BloomUIStudio",1);q.onupgradeneeded=()=>q.result.createObjectStore("kv");q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
+
+async function loadInitial(){
+ state.projectHandle=await loadHandle();
+ try{
+  const r=await fetch("/src/StarterGui/BloomUI.model.json",{cache:"no-store"});
+  if(r.ok){setRoot(await r.json(),"Текущий BloomUI открыт");return}
+ }catch{}
+ setRoot({ClassName:"ScreenGui",Name:"BloomUI",Properties:{ResetOnSpawn:false,IgnoreGuiInset:false,DisplayOrder:20,ZIndexBehavior:"Sibling"},Children:[]},"Новая модель")
+}
+
+$("#palette").addEventListener("click",e=>{const b=e.target.closest("[data-add]");if(b)addObject(b.dataset.add)});
+$("#deleteBtn").onclick=deleteSelected;$("#duplicateBtn").onclick=duplicateSelected;
+$("#connectBtn").onclick=connectProject;$("#pullBtn").onclick=pullProject;$("#pushBtn").onclick=pushProject;
+$("#exportBtn").onclick=download;$("#copyBtn").onclick=copyModel;$("#importBtn").onclick=()=>els.fileInput.click();
+els.fileInput.onchange=()=>els.fileInput.files[0]&&importFile(els.fileInput.files[0]);
+$("#presetSelect").onchange=e=>{const [w,h]=e.target.value.split("x").map(Number);state.viewport={w,h};$("#viewportW").value=w;$("#viewportH").value=h;renderAll()};
+$("#viewportW").onchange=e=>{state.viewport.w=Math.max(100,+e.target.value);renderAll()};$("#viewportH").onchange=e=>{state.viewport.h=Math.max(100,+e.target.value);renderAll()};
+$("#zoomRange").oninput=e=>{state.zoom=+e.target.value/100;$("#zoomLabel").textContent=e.target.value+"%";renderAll()};
+$("#snapSelect").onchange=e=>state.snap=+e.target.value;
+$("#labelsToggle").onchange=e=>{state.labels=e.target.checked;renderViewport();updateOverlay()};
+$("#gridToggle").onchange=e=>{state.grid=e.target.checked;els.stageScroller.classList.toggle("no-grid",!state.grid)};
+$("#insetInput").onchange=e=>{state.inset=Math.max(0,+e.target.value);renderAll()};
+$("#dialogClose").onclick=()=>els.jsonDialog.close();$("#dialogCopy").onclick=()=>navigator.clipboard.writeText(els.jsonArea.value);
+$("#dialogApply").onclick=()=>{try{setRoot(JSON.parse(els.jsonArea.value),"JSON применён");els.jsonDialog.close()}catch(e){toast(e.message,true)}};
+$("#addMenuBtn").onclick=()=>$("#palette").scrollIntoView({behavior:"smooth"});
+window.addEventListener("resize",()=>{updateOverlay();updatePixelReadout()});
+window.addEventListener("keydown",e=>{
+ const tag=document.activeElement?.tagName;if(["INPUT","TEXTAREA","SELECT"].includes(tag))return;
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();e.shiftKey?redo():undo();return}
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="y"){e.preventDefault();redo();return}
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="d"){e.preventDefault();duplicateSelected();return}
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){e.preventDefault();state.projectHandle?pushProject():download();return}
+ if(e.key==="Delete"){deleteSelected();return}
+ const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName))return;
+ const step=e.shiftKey?state.snap:1,p=u2v(n,"Position");
+ if(e.key==="ArrowLeft"){pushHistory();p[0][1]-=step}
+ else if(e.key==="ArrowRight"){pushHistory();p[0][1]+=step}
+ else if(e.key==="ArrowUp"){pushHistory();p[1][1]-=step}
+ else if(e.key==="ArrowDown"){pushHistory();p[1][1]+=step}else return;
+ e.preventDefault();n.Properties.Position={UDim2:p};changed()
+});
+
+loadInitial();
+})();
