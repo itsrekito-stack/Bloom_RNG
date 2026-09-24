@@ -3,7 +3,7 @@
 
 const $=s=>document.querySelector(s);
 const els={
- tree:$("#tree"),inspector:$("#inspector"),device:$("#device"),guiRoot:$("#guiRoot"),overlay:$("#selectionOverlay"),
+ tree:$("#tree"),inspector:$("#inspector"),device:$("#device"),guiRoot:$("#guiRoot"),overlay:$("#selectionOverlay"),geometry:$("#geometryLayer"),
  stageScroller:$("#stageScroller"),status:$("#statusText"),pixels:$("#pixelReadout"),target:$("#targetReadout"),
  toast:$("#toast"),fileInput:$("#fileInput"),jsonDialog:$("#jsonDialog"),jsonArea:$("#jsonArea")
 };
@@ -15,7 +15,7 @@ const CONTAINERS=new Set(["ScreenGui","Frame","ScrollingFrame","TextButton","Ima
 const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 
 const state={
- root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,inset:36,mode:"design",previewScene:"gameplay",
+ root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,geometry:true,inset:36,mode:"design",previewScene:"gameplay",
  projectHandle:null,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
  history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null
 };
@@ -41,6 +41,7 @@ function loadPrefs(){
   if(typeof p.labels==="boolean")state.labels=p.labels;
   if(typeof p.grid==="boolean")state.grid=p.grid;
   if(typeof p.showHidden==="boolean")state.showHidden=p.showHidden;
+  if(typeof p.geometry==="boolean")state.geometry=p.geometry;
   if(Number.isFinite(p.inset))state.inset=p.inset;
   if(["design","preview"].includes(p.mode))state.mode=p.mode;
   if(["gameplay","seedbag","reward","toast"].includes(p.previewScene))state.previewScene=p.previewScene;
@@ -49,14 +50,14 @@ function loadPrefs(){
 function savePrefs(){
  localStorage.setItem(PREFS_KEY,JSON.stringify({
   viewport:state.viewport,zoom:state.zoom,snap:state.snap,labels:state.labels,grid:state.grid,
-  showHidden:state.showHidden,inset:state.inset,mode:state.mode,previewScene:state.previewScene
+  showHidden:state.showHidden,geometry:state.geometry,inset:state.inset,mode:state.mode,previewScene:state.previewScene
  }));
 }
 function syncToolbarFromState(){
  $("#viewportW").value=state.viewport.w;$("#viewportH").value=state.viewport.h;
  $("#zoomRange").value=Math.round(state.zoom*100);$("#zoomLabel").textContent=Math.round(state.zoom*100)+"%";
  $("#snapSelect").value=String(state.snap);
- $("#labelsToggle").checked=state.labels;$("#gridToggle").checked=state.grid;$("#hiddenToggle").checked=state.showHidden;
+ $("#labelsToggle").checked=state.labels;$("#gridToggle").checked=state.grid;$("#hiddenToggle").checked=state.showHidden;$("#geometryToggle").checked=state.geometry;
  $("#insetInput").value=state.inset;$("#modeSelect").value=state.mode;$("#sceneSelect").value=state.previewScene;
  $("#sceneSelect").disabled=!isPreview();$("#modeSelect").classList.toggle("preview-active",isPreview());
  els.stageScroller.classList.toggle("no-grid",!state.grid);
@@ -324,6 +325,145 @@ function renameSelected(){
  pushHistory();n.Name=name;changed();
 }
 
+
+const GEOM_TOLERANCE=6;
+function localRect(el){
+ if(!el)return null;
+ const dr=els.device.getBoundingClientRect(),rr=el.getBoundingClientRect(),z=state.zoom||1;
+ const left=(rr.left-dr.left)/z,top=(rr.top-dr.top)/z,w=rr.width/z,h=rr.height/z;
+ return {left,top,right:left+w,bottom:top+h,w,h,cx:left+w/2,cy:top+h/2};
+}
+function renderGeometryBase(){
+ const g=els.geometry;if(!g)return;
+ g.innerHTML="";g.classList.toggle("off",!state.geometry);
+ if(!state.geometry)return;
+ const corner=document.createElement("div");corner.className="geom-corner";g.appendChild(corner);
+ const top=document.createElement("div");top.className="geom-ruler top";
+ const left=document.createElement("div");left.className="geom-ruler left";
+ const step=state.viewport.w>=1800?200:100;
+ for(let x=0;x<=state.viewport.w;x+=step){
+  const t=document.createElement("span");t.className="geom-tick";t.style.left=x+"px";t.textContent=x;top.appendChild(t)
+ }
+ for(let y=0;y<=state.viewport.h;y+=step){
+  const t=document.createElement("span");t.className="geom-tick";t.style.top=y+"px";t.textContent=y;left.appendChild(t)
+ }
+ g.appendChild(top);g.appendChild(left);
+ const vx=document.createElement("div");vx.className="geom-axis vertical";vx.style.left=(state.viewport.w/2)+"px";g.appendChild(vx);
+ const hy=document.createElement("div");hy.className="geom-axis horizontal";hy.style.top=(state.viewport.h/2)+"px";g.appendChild(hy);
+ if(state.inset>0){
+  const safe=document.createElement("div");safe.className="geom-safe";safe.style.top=state.inset+"px";safe.innerHTML="<span>Inset "+state.inset+"px</span>";g.appendChild(safe)
+ }
+}
+function clearSmartGuides(){
+ if(!els.geometry)return;
+ els.geometry.querySelectorAll(".geom-smart").forEach(x=>x.remove());
+}
+function showSmartGuides(xInfo,yInfo){
+ if(!state.geometry||!els.geometry)return;
+ clearSmartGuides();
+ if(xInfo){
+  const l=document.createElement("div");l.className="geom-smart vertical";l.style.left=xInfo.value+"px";
+  l.innerHTML='<span class="geom-guide-label">'+esc(xInfo.label||Math.round(xInfo.value)+"px")+'</span>';els.geometry.appendChild(l)
+ }
+ if(yInfo){
+  const l=document.createElement("div");l.className="geom-smart horizontal";l.style.top=yInfo.value+"px";
+  l.innerHTML='<span class="geom-guide-label">'+esc(yInfo.label||Math.round(yInfo.value)+"px")+'</span>';els.geometry.appendChild(l)
+ }
+}
+function addMeasureLine(x1,y1,x2,y2,label){
+ if(!els.geometry)return;
+ const line=document.createElement("div"),lab=document.createElement("div");
+ const horizontal=Math.abs(y2-y1)<=Math.abs(x2-x1);
+ line.className="geom-measure-line "+(horizontal?"horizontal":"vertical");
+ if(horizontal){line.style.left=Math.min(x1,x2)+"px";line.style.top=y1+"px";line.style.width=Math.abs(x2-x1)+"px"}
+ else{line.style.left=x1+"px";line.style.top=Math.min(y1,y2)+"px";line.style.height=Math.abs(y2-y1)+"px"}
+ lab.className="geom-measure-label";lab.textContent=Math.max(0,Math.round(label))+" px";
+ lab.style.left=((x1+x2)/2)+"px";lab.style.top=((y1+y2)/2)+"px";
+ els.geometry.appendChild(line);els.geometry.appendChild(lab)
+}
+function updateGeometrySelection(){
+ if(!els.geometry)return;
+ els.geometry.querySelectorAll(".geom-measure-line,.geom-measure-label,.geom-size-badge").forEach(x=>x.remove());
+ if(!state.geometry)return;
+ const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName))return;
+ const el=els.guiRoot.querySelector(`[data-id="${n.__id}"]`);if(!el||el.style.display==="none")return;
+ const r=localRect(el),parent=findParent(n.__id);
+ let pel=parent&&parent!==state.root?els.guiRoot.querySelector(`[data-id="${parent.__id}"]`):els.guiRoot;
+ const pr=localRect(pel);if(!r||!pr)return;
+ const badge=document.createElement("div");badge.className="geom-size-badge";badge.textContent=Math.round(r.w)+" × "+Math.round(r.h);
+ badge.style.left=(r.right+8)+"px";badge.style.top=(r.bottom+8)+"px";els.geometry.appendChild(badge);
+ const dl=Math.max(0,r.left-pr.left),dr=Math.max(0,pr.right-r.right),dt=Math.max(0,r.top-pr.top),db=Math.max(0,pr.bottom-r.bottom);
+ if(dl>=4)addMeasureLine(pr.left,r.cy,r.left,r.cy,dl);
+ if(dr>=4)addMeasureLine(r.right,r.cy,pr.right,r.cy,dr);
+ if(dt>=4)addMeasureLine(r.cx,pr.top,r.cx,r.top,dt);
+ if(db>=4)addMeasureLine(r.cx,r.bottom,r.cx,pr.bottom,db);
+}
+function collectGuideTargets(n){
+ const el=els.guiRoot.querySelector(`[data-id="${n.__id}"]`);if(!el)return null;
+ const base=localRect(el),parent=findParent(n.__id);
+ let pel=parent&&parent!==state.root?els.guiRoot.querySelector(`[data-id="${parent.__id}"]`):els.guiRoot;
+ const pr=localRect(pel);if(!base||!pr)return null;
+ const xs=[
+  {value:pr.left,label:"Parent L"},{value:pr.cx,label:"Parent CX"},{value:pr.right,label:"Parent R"},
+  {value:state.viewport.w/2,label:"Viewport CX"}
+ ];
+ const ys=[
+  {value:pr.top,label:"Parent T"},{value:pr.cy,label:"Parent CY"},{value:pr.bottom,label:"Parent B"},
+  {value:state.viewport.h/2,label:"Viewport CY"}
+ ];
+ for(const s of parent?.Children||[]){
+  if(s===n||MODIFIERS.has(s.ClassName))continue;
+  const se=els.guiRoot.querySelector(`[data-id="${s.__id}"]`);if(!se||se.style.display==="none")continue;
+  const r=localRect(se);if(!r)continue;
+  xs.push({value:r.left,label:s.Name+" L"},{value:r.cx,label:s.Name+" CX"},{value:r.right,label:s.Name+" R"});
+  ys.push({value:r.top,label:s.Name+" T"},{value:r.cy,label:s.Name+" CY"},{value:r.bottom,label:s.Name+" B"});
+ }
+ return {base,xs,ys};
+}
+function nearestGuide(candidates,targets){
+ let best=null;
+ for(const c of candidates)for(const t of targets){
+  const delta=t.value-c.value,ad=Math.abs(delta);
+  if(ad<=GEOM_TOLERANCE&&(!best||ad<best.ad))best={delta,ad,target:t,candidate:c}
+ }
+ return best;
+}
+function smartSnapMove(geom,rx,ry){
+ if(!state.geometry||!geom)return {rx,ry,x:null,y:null};
+ const b=geom.base;
+ const bx=nearestGuide([{value:b.left+rx},{value:b.cx+rx},{value:b.right+rx}],geom.xs);
+ const by=nearestGuide([{value:b.top+ry},{value:b.cy+ry},{value:b.bottom+ry}],geom.ys);
+ if(bx)rx+=bx.delta;if(by)ry+=by.delta;
+ return {rx,ry,x:bx?.target||null,y:by?.target||null};
+}
+function smartSnapResize(d,rx,ry){
+ if(!state.geometry||!d.geometry)return {rx,ry,x:null,y:null};
+ let bx=null,by=null,b=d.geometry.base;
+ if(d.dir.includes("e"))bx=nearestGuide([{value:b.right+rx}],d.geometry.xs);
+ else if(d.dir.includes("w"))bx=nearestGuide([{value:b.left+rx}],d.geometry.xs);
+ if(d.dir.includes("s"))by=nearestGuide([{value:b.bottom+ry}],d.geometry.ys);
+ else if(d.dir.includes("n"))by=nearestGuide([{value:b.top+ry}],d.geometry.ys);
+ if(bx)rx+=bx.delta;if(by)ry+=by.delta;
+ return {rx,ry,x:bx?.target||null,y:by?.target||null};
+}
+function alignSelected(mode){
+ const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName))return;
+ const el=els.guiRoot.querySelector(`[data-id="${n.__id}"]`);if(!el)return;
+ const r=localRect(el),a=v2v(n,"AnchorPoint",[0,0]),p=deepClone(u2v(n,"Position"));
+ pushHistory();
+ const x=m=>{if(m==="left")p[0]=[0,roundOffset(a[0]*r.w)];if(m==="center")p[0]=[.5,roundOffset((a[0]-.5)*r.w)];if(m==="right")p[0]=[1,roundOffset((a[0]-1)*r.w)]};
+ const y=m=>{if(m==="top")p[1]=[0,roundOffset(a[1]*r.h)];if(m==="middle")p[1]=[.5,roundOffset((a[1]-.5)*r.h)];if(m==="bottom")p[1]=[1,roundOffset((a[1]-1)*r.h)]};
+ if(mode==="left"||mode==="center"||mode==="right")x(mode);
+ else if(mode==="top"||mode==="middle"||mode==="bottom")y(mode);
+ else if(mode==="centerboth"){x("center");y("middle")}
+ n.Properties.Position={UDim2:p};changed();
+}
+function geometryInspectorGroup(){
+ return group("GEOMETRY",[
+  '<div class="align-tools"><button data-align="left" title="К левому краю родителя">L</button><button data-align="center" title="По центру X">CX</button><button data-align="right" title="К правому краю родителя">R</button><button data-align="top" title="К верхнему краю родителя">T</button><button data-align="middle" title="По центру Y">CY</button><button data-align="bottom" title="К нижнему краю родителя">B</button><button data-align="centerboth" title="Точно в центр родителя" style="grid-column:1/4">CENTER BOTH</button></div><div class="align-help">Smart snap: центр и края родителя/соседей. Удерживай Alt при drag, чтобы временно отключить магнит.</div>'
+ ]);
+}
+
 function hasDrawableGui(){
  let count=0;
  walk(state.root,n=>{
@@ -356,6 +496,7 @@ function renderViewport(){
  }
  const children=state.root.ClassName==="ScreenGui"?state.root.Children:[state.root];
  for(const c of children) if(!MODIFIERS.has(c.ClassName)) renderGuiNode(c,els.guiRoot,null);
+ renderGeometryBase();
 }
 function renderGuiNode(n,parentEl,parentNode){
  const el=document.createElement("div");el.className="gui-node";el.dataset.id=n.__id;el.dataset.class=n.ClassName;
@@ -471,13 +612,15 @@ function classIcon(k){return ({ScreenGui:"▱",Frame:"▣",TextLabel:"T",TextBut
 
 function select(id){state.selectedId=id;renderTree();renderInspector();updateOverlay();updateStatus()}
 function updateOverlay(){
- const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName)){els.overlay.classList.add("hidden");return}
- const nodeEl=els.guiRoot.querySelector(`[data-id="${n.__id}"]`);if(!nodeEl||nodeEl.style.display==="none"){els.overlay.classList.add("hidden");return}
+ const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName)){els.overlay.classList.add("hidden");updateGeometrySelection();return}
+ const nodeEl=els.guiRoot.querySelector(`[data-id="${n.__id}"]`);if(!nodeEl||nodeEl.style.display==="none"){els.overlay.classList.add("hidden");updateGeometrySelection();return}
  const dr=els.device.getBoundingClientRect(),rr=nodeEl.getBoundingClientRect(),z=state.zoom;
  els.overlay.classList.remove("hidden");
  els.overlay.style.left=((rr.left-dr.left)/z)+"px";els.overlay.style.top=((rr.top-dr.top)/z)+"px";
  els.overlay.style.width=(rr.width/z)+"px";els.overlay.style.height=(rr.height/z)+"px";
- els.overlay.querySelector(".sel-caption").textContent=`${n.Name} · ${n.ClassName}`;
+ const lr=localRect(nodeEl);
+ els.overlay.querySelector(".sel-caption").textContent=`${n.Name} · ${n.ClassName} · X ${Math.round(lr.left)} Y ${Math.round(lr.top)} · ${Math.round(lr.w)}×${Math.round(lr.h)}`;
+ updateGeometrySelection();
 }
 
 function renderInspector(){
@@ -505,7 +648,8 @@ function renderInspector(){
    vector2Prop("AnchorPoint",v2v(n,"AnchorPoint"),v=>setProp(n,"AnchorPoint",{Vector2:v})),
    numProp("Rotation",prop(n,"Rotation",0),v=>setProp(n,"Rotation",v))
   ]));
-  groups.push(group("APPEARANCE",[
+  groups.push(geometryInspectorGroup());
+   groups.push(group("APPEARANCE",[
    colorProp("Background",prop(n,"BackgroundColor3",[1,1,1]),v=>setProp(n,"BackgroundColor3",v)),
    numProp("Transparency",prop(n,"BackgroundTransparency",0),v=>setProp(n,"BackgroundTransparency",clamp(v,0,1)),.01),
    numProp("Border",prop(n,"BorderSizePixel",0),v=>setProp(n,"BorderSizePixel",Math.max(0,v))),
@@ -576,6 +720,7 @@ function bindInspectorHandlers(n){
  els.inspector.querySelectorAll("[data-v2-handler]").forEach(box=>box.addEventListener("change",()=>{pushHistory();const a=[...box.querySelectorAll("input")].map(x=>finite(x.value));handlers[box.dataset.v2Handler]([a[0],a[1]])}));
  els.inspector.querySelectorAll("[data-udim-handler]").forEach(box=>box.addEventListener("change",()=>{pushHistory();const a=[...box.querySelectorAll("input")].map(x=>finite(x.value));handlers[box.dataset.udimHandler]([a[0],roundOffset(a[1])])}));
  $("#applyRaw")?.addEventListener("click",()=>{try{pushHistory();n.Properties=JSON.parse($("#rawProps").value);changed()}catch(e){toast("Неверный JSON свойств",true)}});
+ els.inspector.querySelectorAll("[data-align]").forEach(b=>b.addEventListener("click",()=>alignSelected(b.dataset.align)));
 }
 function setProp(n,k,v){n.Properties=n.Properties||{};n.Properties[k]=v;changed()}
 
@@ -597,29 +742,34 @@ function startMove(ev,n){
  if(isLayoutParent(findParent(n.__id))){toast("Позиция управляется Layout. Меняй размер или LayoutOrder.");return}
  pushHistory();
  const pos=deepClone(u2v(n,"Position")),startX=ev.clientX,startY=ev.clientY;
- state.drag={type:"move",n,startX,startY,pos};
+ state.drag={type:"move",n,startX,startY,pos,geometry:collectGuideTargets(n)};
  ev.currentTarget.setPointerCapture?.(ev.pointerId);
 }
 window.addEventListener("pointermove",ev=>{
  const d=state.drag;if(!d)return;const dx=(ev.clientX-d.startX)/state.zoom,dy=(ev.clientY-d.startY)/state.zoom,s=state.snap;
  if(d.type==="move"){
-  const p=deepClone(d.pos);p[0][1]=roundOffset(p[0][1]+Math.round(dx/s)*s);p[1][1]=roundOffset(p[1][1]+Math.round(dy/s)*s);d.n.Properties.Position={UDim2:p};renderViewport();updateOverlay();updatePixelReadout();state.dirty=true;updateStatus()
- }else if(d.type==="resize")resizeFromDrag(d,dx,dy);
+  let rx=Math.round(dx/s)*s,ry=Math.round(dy/s)*s,guide={rx,ry,x:null,y:null};
+  if(!ev.altKey)guide=smartSnapMove(d.geometry,rx,ry);
+  const p=deepClone(d.pos);p[0][1]=roundOffset(p[0][1]+guide.rx);p[1][1]=roundOffset(p[1][1]+guide.ry);
+  d.n.Properties.Position={UDim2:p};renderViewport();updateOverlay();showSmartGuides(guide.x,guide.y);updatePixelReadout();state.dirty=true;updateStatus()
+ }else if(d.type==="resize")resizeFromDrag(d,dx,dy,ev.altKey);
 });
-window.addEventListener("pointerup",()=>{if(state.drag){state.drag=null;renderTree();renderInspector()}});
+window.addEventListener("pointerup",()=>{if(state.drag){state.drag=null;clearSmartGuides();renderTree();renderInspector();updateGeometrySelection()}});
 
 els.overlay.querySelectorAll("i").forEach(handle=>handle.addEventListener("pointerdown",ev=>{
  ev.stopPropagation();ev.preventDefault();const n=selected();if(!n)return;pushHistory();
- state.drag={type:"resize",n,dir:handle.dataset.dir,startX:ev.clientX,startY:ev.clientY,size:deepClone(u2v(n,"Size",u2(0,100,0,100))),pos:deepClone(u2v(n,"Position")),anchor:deepClone(v2v(n,"AnchorPoint"))}
+ state.drag={type:"resize",n,dir:handle.dataset.dir,startX:ev.clientX,startY:ev.clientY,size:deepClone(u2v(n,"Size",u2(0,100,0,100))),pos:deepClone(u2v(n,"Position")),anchor:deepClone(v2v(n,"AnchorPoint")),geometry:collectGuideTargets(n)}
 }));
-function resizeFromDrag(d,dx,dy){
- const dir=d.dir,s=state.snap,rx=Math.round(dx/s)*s,ry=Math.round(dy/s)*s;
+function resizeFromDrag(d,dx,dy,bypassGuides=false){
+ const dir=d.dir,s=state.snap;let rx=Math.round(dx/s)*s,ry=Math.round(dy/s)*s,guide={rx,ry,x:null,y:null};
+ if(!bypassGuides)guide=smartSnapResize(d,rx,ry);
+ rx=guide.rx;ry=guide.ry;
  const sz=deepClone(d.size),ps=deepClone(d.pos),a=d.anchor;
  if(dir.includes("e")){sz[0][1]=Math.max(1,roundOffset(d.size[0][1]+rx));ps[0][1]=roundOffset(d.pos[0][1]+rx*a[0])}
  if(dir.includes("w")){sz[0][1]=Math.max(1,roundOffset(d.size[0][1]-rx));ps[0][1]=roundOffset(d.pos[0][1]+rx*(1-a[0]))}
  if(dir.includes("s")){sz[1][1]=Math.max(1,roundOffset(d.size[1][1]+ry));ps[1][1]=roundOffset(d.pos[1][1]+ry*a[1])}
  if(dir.includes("n")){sz[1][1]=Math.max(1,roundOffset(d.size[1][1]-ry));ps[1][1]=roundOffset(d.pos[1][1]+ry*(1-a[1]))}
- d.n.Properties.Size={UDim2:sz};d.n.Properties.Position={UDim2:ps};state.dirty=true;renderViewport();updateOverlay();updatePixelReadout();updateStatus();
+ d.n.Properties.Size={UDim2:sz};d.n.Properties.Position={UDim2:ps};state.dirty=true;renderViewport();updateOverlay();showSmartGuides(guide.x,guide.y);updatePixelReadout();updateStatus();
 }
 
 function defaultObject(kind){
@@ -716,6 +866,7 @@ $("#zoomRange").oninput=e=>setZoom(+e.target.value/100);
 $("#snapSelect").onchange=e=>{state.snap=+e.target.value;savePrefs()};
 $("#labelsToggle").onchange=e=>{state.labels=e.target.checked;renderViewport();updateOverlay();savePrefs()};
 $("#gridToggle").onchange=e=>{state.grid=e.target.checked;els.stageScroller.classList.toggle("no-grid",!state.grid);savePrefs()};
+$("#geometryToggle").onchange=e=>{state.geometry=e.target.checked;renderViewport();updateOverlay();savePrefs();toast(state.geometry?"Geometry helpers включены":"Geometry helpers выключены")};
 $("#hiddenToggle").onchange=e=>{state.showHidden=e.target.checked;renderViewport();renderTree();updateOverlay();toast(state.showHidden?"Скрытые Roblox-объекты показаны только в редакторе":"Скрытые Roblox-объекты спрятаны");savePrefs()};
 $("#modeSelect").onchange=e=>{
  state.mode=e.target.value;
