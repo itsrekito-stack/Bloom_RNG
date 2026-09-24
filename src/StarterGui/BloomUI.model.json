@@ -7832,7 +7832,7 @@
                           "Children": [
                             {
                               "ClassName": "Frame",
-                              "Name": "Connections",
+                              "Name": "PanMap",
                               "Properties": {
                                 "Size": {
                                   "UDim2": [
@@ -7850,11 +7850,11 @@
                                   "UDim2": [
                                     [
                                       0,
-                                      0
+                                      -570
                                     ],
                                     [
                                       0,
-                                      0
+                                      -405
                                     ]
                                   ]
                                 },
@@ -10431,49 +10431,7 @@
                                       "Children": []
                                     }
                                   ]
-                                }
-                              ]
-                            },
-                            {
-                              "ClassName": "Frame",
-                              "Name": "Nodes",
-                              "Properties": {
-                                "Size": {
-                                  "UDim2": [
-                                    [
-                                      0,
-                                      1760
-                                    ],
-                                    [
-                                      0,
-                                      1320
-                                    ]
-                                  ]
                                 },
-                                "Position": {
-                                  "UDim2": [
-                                    [
-                                      0,
-                                      0
-                                    ],
-                                    [
-                                      0,
-                                      0
-                                    ]
-                                  ]
-                                },
-                                "BackgroundColor3": [
-                                  0,
-                                  0,
-                                  0
-                                ],
-                                "BackgroundTransparency": 1,
-                                "BorderSizePixel": 0,
-                                "ZIndex": 56,
-                                "Visible": true,
-                                "ClipsDescendants": false
-                              },
-                              "Children": [
                                 {
                                   "ClassName": "TextButton",
                                   "Name": "Node_CORE",
