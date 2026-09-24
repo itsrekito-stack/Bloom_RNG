@@ -119,3 +119,19 @@ dialog::backdrop{background:rgba(0,0,0,.62)}.dialog-head{height:44px;display:fle
 .empty-canvas strong{font-size:15px}
 .empty-canvas span{color:#8799ad;font-size:10px}
 .empty-canvas .btn{margin-top:4px}
+
+/* Stable canvas geometry: transformed Roblox viewport must not participate in grid centering. */
+.stage{
+  position:relative!important;
+  display:block!important;
+  place-items:initial!important;
+  padding:0!important;
+  min-width:100%;
+  min-height:100%;
+}
+.device{
+  position:absolute!important;
+  left:64px!important;
+  top:64px!important;
+  transform-origin:top left!important;
+}
