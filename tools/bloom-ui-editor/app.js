@@ -163,7 +163,7 @@ function imageUrl(src){
   s.match(/[?&]id=(\d+)/i)||
   s.match(/^(\d{6,})$/);
  if(!m)return /^https?:\/\//i.test(s)?s:"";
- return `https://www.roblox.com/asset-thumbnail/image?assetId=${m[1]}&width=420&height=420&format=png`;
+ return `/api/thumbnail?id=${encodeURIComponent(m[1])}`;
 }
 
 function hasDrawableGui(){
