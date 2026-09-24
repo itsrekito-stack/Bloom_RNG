@@ -825,9 +825,12 @@ function renderGuiNode(n,parentEl,parentNode){
 
  const list=modifier(n,"UIListLayout"),grid=modifier(n,"UIGridLayout");
  let childHost=el;
- if(list||grid){
+ // Roblox UIPadding does not change the outer GuiObject AbsoluteSize,
+ // but it DOES change the content rectangle used by child GuiObjects.
+ // Therefore even a parent without UIListLayout/UIGridLayout needs an inner host.
+ if(padding||list||grid){
   childHost=document.createElement("div");
-  childHost.className="layout-host "+(list?"list-layout":"grid-layout");
+  childHost.className="layout-host"+(list?" list-layout":"")+(grid?" grid-layout":"")+(padding?" padded-host":"");
   if(padding){
    childHost.style.left=padding.l+"px";childHost.style.right=padding.r+"px";
    childHost.style.top=padding.t+"px";childHost.style.bottom=padding.b+"px";
