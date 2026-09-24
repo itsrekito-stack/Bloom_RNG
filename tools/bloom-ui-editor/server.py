@@ -8,6 +8,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import subprocess
 from collections import OrderedDict
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -90,6 +91,36 @@ def roblox_thumbnail(asset_id: str) -> Optional[tuple[bytes, str]]:
     return result
 
 
+def run_git(*args: str, timeout: float = 20.0) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["git", *args],
+        cwd=str(ROOT),
+        text=True,
+        capture_output=True,
+        timeout=timeout,
+        check=False,
+    )
+
+
+def git_status_payload() -> dict:
+    inside = run_git("rev-parse", "--is-inside-work-tree")
+    if inside.returncode != 0 or inside.stdout.strip() != "true":
+        return {"ok": False, "error": "Project root is not a Git working tree"}
+
+    head = run_git("rev-parse", "HEAD")
+    subject = run_git("log", "-1", "--pretty=%s")
+    branch = run_git("branch", "--show-current")
+    status = run_git("status", "--porcelain")
+    return {
+        "ok": True,
+        "head": head.stdout.strip() if head.returncode == 0 else "",
+        "subject": subject.stdout.strip() if subject.returncode == 0 else "",
+        "branch": branch.stdout.strip() if branch.returncode == 0 else "",
+        "dirty": bool(status.stdout.strip()),
+        "changes": status.stdout.splitlines()[:30],
+    }
+
+
 class BloomHandler(SimpleHTTPRequestHandler):
     server_version = "BloomUIStudio/1.0"
 
@@ -106,6 +137,16 @@ class BloomHandler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/health":
             body = b'{"ok":true,"server":"Bloom UI Studio"}'
             self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        if parsed.path == "/api/git/status":
+            payload = git_status_payload()
+            body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+            self.send_response(200 if payload.get("ok") else 503)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
@@ -134,6 +175,71 @@ class BloomHandler(SimpleHTTPRequestHandler):
             return
 
         super().do_GET()
+
+
+    def do_POST(self) -> None:
+        parsed = urllib.parse.urlparse(self.path)
+
+        if parsed.path != "/api/git/pull":
+            self.send_error(404, "Unknown endpoint")
+            return
+
+        status_before = git_status_payload()
+        if not status_before.get("ok"):
+            body = json.dumps(status_before, ensure_ascii=False).encode("utf-8")
+            self.send_response(503)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        if status_before.get("dirty"):
+            payload = {
+                "ok": False,
+                "error": "Local Git working tree has changes; refusing to overwrite them.",
+                "changes": status_before.get("changes", []),
+            }
+            body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+            self.send_response(409)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        old_head = status_before.get("head", "")
+        try:
+            pull = run_git("pull", "--ff-only", timeout=45.0)
+        except (subprocess.TimeoutExpired, OSError) as exc:
+            payload = {"ok": False, "error": str(exc)}
+            body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        status_after = git_status_payload()
+        new_head = status_after.get("head", "")
+        output = "\n".join(x for x in [pull.stdout.strip(), pull.stderr.strip()] if x)
+        payload = {
+            "ok": pull.returncode == 0,
+            "changed": bool(old_head and new_head and old_head != new_head),
+            "head": new_head,
+            "subject": status_after.get("subject", ""),
+            "output": output[-6000:],
+        }
+        if pull.returncode != 0:
+            payload["error"] = output or "git pull --ff-only failed"
+
+        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        self.send_response(200 if payload["ok"] else 500)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
 
 def main() -> None:
