@@ -420,7 +420,11 @@ function updateGeometrySelection(){
  let pel=parent&&parent!==state.root?els.guiRoot.querySelector(`[data-id="${parent.__id}"]`):els.guiRoot;
  const pr=localRect(pel);if(!r||!pr)return;
  const badge=document.createElement("div");badge.className="geom-size-badge";badge.textContent=Math.round(r.w)+" × "+Math.round(r.h);
- badge.style.left=(r.right+8)+"px";badge.style.top=(r.bottom+8)+"px";els.geometry.appendChild(badge);
+ const compact=r.w<=40||r.h<=40;
+ badge.style.left=(compact?r.right+18:r.right+8)+"px";
+ badge.style.top=(compact?r.cy:r.bottom+8)+"px";
+ els.geometry.appendChild(badge);
+ if(compact)return;
  const dl=Math.max(0,r.left-pr.left),dr=Math.max(0,pr.right-r.right),dt=Math.max(0,r.top-pr.top),db=Math.max(0,pr.bottom-r.bottom);
  if(dl>=4)addMeasureLine(pr.left,r.cy,r.left,r.cy,dl);
  if(dr>=4)addMeasureLine(r.right,r.cy,pr.right,r.cy,dr);
@@ -897,6 +901,8 @@ function updateOverlay(){
  els.overlay.style.left=((rr.left-dr.left)/z)+"px";els.overlay.style.top=((rr.top-dr.top)/z)+"px";
  els.overlay.style.width=(rr.width/z)+"px";els.overlay.style.height=(rr.height/z)+"px";
  const lr=localRect(nodeEl);
+ const compact=lr.w<=40||lr.h<=40;
+ els.overlay.classList.toggle("precision-small",compact);
  els.overlay.querySelector(".sel-caption").textContent=`${n.Name} · ${n.ClassName} · X ${Math.round(lr.left)} Y ${Math.round(lr.top)} · ${Math.round(lr.w)}×${Math.round(lr.h)}`;
  updateGeometrySelection();
 }
