@@ -17,7 +17,7 @@ const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 const state={
  root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,geometry:true,inset:36,mode:"design",previewScene:"gameplay",
  projectHandle:null,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
- history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[],assistantSyncing:false
+ history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[],assistantSyncing:false,bridgeBase:""
 };
 
 let idCounter=1;
@@ -1515,32 +1515,80 @@ function duplicateSelected(){
 }
 
 
-async function assistantStatus(){
+async function apiJson(url,options={}){
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),options.timeout||1500);
  try{
-  const r=await fetch("/api/git/status",{cache:"no-store"});
-  const data=await r.json();
-  const badge=$("#aiBridgeStatus");
-  if(!badge)return data;
-  if(!r.ok||!data.ok){
-   badge.textContent="AI offline";
-   badge.className="ai-bridge-status error";
-   return data;
+  const r=await fetch(url,{...options,signal:controller.signal,cache:"no-store"});
+  const type=(r.headers.get("content-type")||"").toLowerCase();
+  const raw=await r.text();
+  if(!type.includes("application/json")){
+   const preview=raw.trim().slice(0,60).replace(/\s+/g," ");
+   throw new Error("Bloom UI Server устарел или запущен не тот сервер"+(preview?" · ответ: "+preview:""));
   }
-  badge.textContent=(data.dirty?"LOCAL CHANGES · ":"")+((data.head||"").slice(0,7)||"AI ready");
-  badge.className="ai-bridge-status "+(data.dirty?"warn":"ready");
-  badge.title=data.subject||"Assistant bridge ready";
-  return data;
+  let data;
+  try{data=JSON.parse(raw)}catch{throw new Error("Сервер вернул повреждённый JSON")}
+  return {r,data};
+ }finally{clearTimeout(timer)}
+}
+async function discoverAssistantBridge(){
+ const candidates=[];
+ const current=location.origin;
+ candidates.push(current);
+ if(location.hostname==="127.0.0.1"||location.hostname==="localhost"){
+  for(const port of [8765,8766,8767]){
+   const base=`${location.protocol}//127.0.0.1:${port}`;
+   if(!candidates.includes(base))candidates.push(base);
+  }
+ }
+ for(const base of candidates){
+  try{
+   const {r,data}=await apiJson(base+"/api/health",{timeout:700});
+   if(r.ok&&data?.ok&&Number(data.bridge)>=2){
+    state.bridgeBase=base;
+    return {ok:true,base,data};
+   }
+  }catch{}
+ }
+ state.bridgeBase="";
+ return {ok:false,error:"Новый Assistant Bridge не найден. Закрой старое окно Bloom UI Studio Server и снова запусти Start Bloom UI Editor.bat"};
+}
+async function assistantStatus(){
+ const badge=$("#aiBridgeStatus");
+ try{
+  let bridge=state.bridgeBase?{ok:true,base:state.bridgeBase}:await discoverAssistantBridge();
+  if(!bridge.ok)throw new Error(bridge.error);
+  let result;
+  try{result=await apiJson(bridge.base+"/api/git/status",{timeout:1800})}
+  catch{
+   bridge=await discoverAssistantBridge();
+   if(!bridge.ok)throw new Error(bridge.error);
+   result=await apiJson(bridge.base+"/api/git/status",{timeout:1800});
+  }
+  const {r,data}=result;
+  if(!r.ok||!data.ok)throw new Error(data.error||("HTTP "+r.status));
+  if(badge){
+   const port=new URL(bridge.base).port||"80";
+   badge.textContent=(data.dirty?"LOCAL CHANGES · ":"")+((data.head||"").slice(0,7)||"AI ready");
+   badge.className="ai-bridge-status "+(data.dirty?"warn":"ready");
+   badge.title=(data.subject||"Assistant bridge ready")+" · port "+port;
+  }
+  return {...data,bridgeBase:bridge.base};
  }catch(e){
-  const badge=$("#aiBridgeStatus");
-  if(badge){badge.textContent="AI offline";badge.className="ai-bridge-status error"}
-  return {ok:false,error:String(e)};
+  if(badge){badge.textContent="RESTART SERVER";badge.className="ai-bridge-status error";badge.title=e.message}
+  return {ok:false,error:e.message};
  }
 }
 async function reloadModelFromServer(label="AI изменения загружены"){
- const r=await fetch("/src/StarterGui/BloomUI.model.json?ts="+Date.now(),{cache:"no-store"});
+ const base=state.bridgeBase||location.origin;
+ const r=await fetch(base+"/src/StarterGui/BloomUI.model.json?ts="+Date.now(),{cache:"no-store"});
  if(!r.ok)throw new Error("BloomUI.model.json не найден после синхронизации");
- const raw=await r.json();
- setRoot(raw,label);
+ const type=(r.headers.get("content-type")||"").toLowerCase();
+ const raw=await r.text();
+ if(raw.trim().startsWith("<"))throw new Error("Сервер вернул HTML вместо BloomUI.model.json");
+ let model;
+ try{model=JSON.parse(raw)}catch{throw new Error("BloomUI.model.json содержит неверный JSON")}
+ setRoot(model,label);
 }
 async function assistantSync(){
  if(state.assistantSyncing)return;
@@ -1553,13 +1601,17 @@ async function assistantSync(){
  if(btn){btn.disabled=true;btn.textContent="AI SYNC…"}
  try{
   const status=await assistantStatus();
-  if(status?.dirty){
+  if(!status?.ok)throw new Error(status?.error||"Assistant Bridge недоступен");
+  if(status.dirty){
    toast("Локальный Git содержит изменения. AI SYNC не будет их перезаписывать.",true);
    return;
   }
-  const r=await fetch("/api/git/pull",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
-  const data=await r.json();
+  const base=status.bridgeBase||state.bridgeBase;
+  const {r,data}=await apiJson(base+"/api/git/pull",{
+   method:"POST",headers:{"Content-Type":"application/json"},body:"{}",timeout:50000
+  });
   if(!r.ok||!data.ok)throw new Error(data.error||data.output||("HTTP "+r.status));
+  state.bridgeBase=base;
   await reloadModelFromServer(data.changed?"AI UI обновлён из GitHub":"AI SYNC: уже актуально");
   await assistantStatus();
   if(data.changed)requestAnimationFrame(()=>focusSelected());
