@@ -7791,6 +7791,84 @@
                           "Children": []
                         }
                       ]
+                    },
+                    {
+                      "ClassName": "TextButton",
+                      "Name": "RespecButton",
+                      "Properties": {
+                        "Size": {
+                          "UDim2": [
+                            [
+                              0,
+                              76
+                            ],
+                            [
+                              0,
+                              22
+                            ]
+                          ]
+                        },
+                        "Position": {
+                          "UDim2": [
+                            [
+                              1,
+                              -182
+                            ],
+                            [
+                              0.5,
+                              -11
+                            ]
+                          ]
+                        },
+                        "BackgroundColor3": [
+                          0.078,
+                          0.13,
+                          0.19
+                        ],
+                        "BackgroundTransparency": 0.04,
+                        "BorderSizePixel": 0,
+                        "Text": "RESPEC",
+                        "TextColor3": [
+                          0.69,
+                          0.77,
+                          0.84
+                        ],
+                        "TextSize": 8,
+                        "Font": "GothamBold",
+                        "AutoButtonColor": false,
+                        "ZIndex": 54,
+                        "Visible": true
+                      },
+                      "Children": [
+                        {
+                          "ClassName": "UICorner",
+                          "Name": "UICorner",
+                          "Properties": {
+                            "CornerRadius": {
+                              "UDim": [
+                                0,
+                                8
+                              ]
+                            }
+                          },
+                          "Children": []
+                        },
+                        {
+                          "ClassName": "UIStroke",
+                          "Name": "UIStroke",
+                          "Properties": {
+                            "Color": [
+                              0.1647,
+                              0.3373,
+                              0.5176
+                            ],
+                            "Thickness": 1,
+                            "Transparency": 0.42,
+                            "ApplyStrokeMode": "Border"
+                          },
+                          "Children": []
+                        }
+                      ]
                     }
                   ]
                 },
