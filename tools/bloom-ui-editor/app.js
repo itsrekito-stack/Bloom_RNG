@@ -1544,14 +1544,14 @@ async function discoverAssistantBridge(){
  for(const base of candidates){
   try{
    const {r,data}=await apiJson(base+"/api/health",{timeout:700});
-   if(r.ok&&data?.ok&&Number(data.bridge)>=3){
+   if(r.ok&&data?.ok&&Number(data.bridge)>=4){
     state.bridgeBase=base;
     return {ok:true,base,data};
    }
   }catch{}
  }
  state.bridgeBase="";
- return {ok:false,error:"Assistant Bridge v3 не найден. Один раз перезапусти Bloom UI Studio Server через Start Bloom UI Editor.bat"};
+ return {ok:false,error:"Assistant Bridge v4 не найден. Один раз перезапусти Bloom UI Studio Server через Start Bloom UI Editor.bat"};
 }
 async function assistantStatus(){
  const badge=$("#aiBridgeStatus");
