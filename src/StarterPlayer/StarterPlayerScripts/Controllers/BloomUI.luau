@@ -870,7 +870,8 @@ function UI:BindStaticUI()
 
  self.RollHUD=root:WaitForChild("RollHUD")
  self.RouletteViewport=root:WaitForChild("VerticalRoulette")
- self.RouletteStrip=self.RouletteViewport:WaitForChild("ReelStrip")
+ self.RouletteClip=self.RouletteViewport:FindFirstChild("RouletteClip")
+ self.RouletteStrip=self.RouletteClip and self.RouletteClip:WaitForChild("ReelStrip") or self.RouletteViewport:WaitForChild("ReelStrip")
  self.RouletteSlots={
   Next=self.RouletteStrip:WaitForChild("Next"),
   Current=self.RouletteStrip:WaitForChild("Current"),
