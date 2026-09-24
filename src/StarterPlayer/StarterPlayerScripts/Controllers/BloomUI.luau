@@ -94,6 +94,68 @@ local function compact(v)
  return NumberFormatter.Compact(tonumber(v) or 0)
 end
 
+local WORKSHOP_FEATURE_TEXT={
+ PityDetails="Показывает pity и гарантию нового открытия",
+ RepeatPlant="Повторная посадка последнего семени",
+ PatternHints="Подсказки цветочных паттернов",
+ AutoDissolve="Авторастворение дубликатов",
+ DissolveFilters="Фильтры авторастворения по редкости",
+ SeedMutation="Открывает мутации семян",
+ EventRadar="Показывает мировые события",
+ LaunchPads="Открывает быстрые переходы",
+ KeepSeasonCard="Сохраняет карту между сезонами",
+ MemoryMutation="Сохраняет мутацию в памяти",
+ AdvancedTrials="Открывает усиленные испытания",
+ ThirdMemory="Открывает дополнительную память",
+}
+
+local function workshopEffectText(rules)
+ if not rules or next(rules)==nil then return "Центральный узел дерева улучшений" end
+ local out={}
+ for key,value in pairs(rules) do
+  local text
+  if key=="Feature" then text=WORKSHOP_FEATURE_TEXT[tostring(value)] or tostring(value)
+  elseif key=="RollCooldown" then text="Roll cooldown → "..tostring(value).."с"
+  elseif key=="Reserve" then text="Запас Bloom +"..tostring(value)
+  elseif key=="RevealScale" then text="Reveal time ×"..tostring(value)
+  elseif key=="FlowerSlots" then text="Слоты цветов +"..tostring(value)
+  elseif key=="Adjacency" then text="Радиус соседства +"..tostring(value)
+  elseif key=="SynergyXP" then text="Synergy XP ×"..tostring(value)
+  elseif key=="BeeSlots" then text="Слоты пчёл +"..tostring(value)
+  elseif key=="TokenChance" then text="Шанс ability token +"..math.floor((tonumber(value) or 0)*100+.5).."%"
+  elseif key=="BeeXP" then text="Bee XP ×"..tostring(value)
+  elseif key=="TraitCooldown" then text="Trait cooldown ×"..tostring(value)
+  elseif key=="AbilityYield" then text="Награды способностей ×"..tostring(value)
+  elseif key=="DustYield" then text="Petal Dust ×"..tostring(value)
+  elseif key=="MilestoneCoins" then text="Milestone Coins +"..tostring(value)
+  elseif key=="StudyDiscount" then text="Цена Mastery −"..math.floor((tonumber(value) or 0)*100+.5).."%"
+  elseif key=="CoinYield" then text="Coins ×"..tostring(value)
+  elseif key=="ManualCharge" then text="Bloom charge ×"..tostring(value)
+  elseif key=="NewWeight" then text="Вес новых находок ×"..tostring(value)
+  elseif key=="MutationChance" then text="Шанс мутации +"..math.floor((tonumber(value) or 0)*100+.5).."%"
+  elseif key=="SignatureWeight" then text="Signature weight ×"..tostring(value)
+  elseif key=="RouteCharge" then text="Route charge ×"..tostring(value)
+  elseif key=="CrystalSeconds" then text="Crystal interaction "..tostring(value).."с"
+  elseif key=="WildInterval" then text="Wild interval ×"..tostring(value)
+  elseif key=="EclipseWeight" then text="Eclipse weight ×"..tostring(value)
+  elseif key=="MemoryMastery" then text="Memory Mastery +"..tostring(value)
+  elseif key=="SeasonNectar" then text="Ancient Nectar за сезон +"..tostring(value)
+  else text=key.." "..tostring(value) end
+  table.insert(out,text)
+ end
+ table.sort(out)
+ return table.concat(out," • ")
+end
+
+local function workshopCostText(node)
+ if not node or node.Id=="CORE" then return "CORE" end
+ local parts={tostring(node.Cost or 0).." POINT"}
+ if (node.Coins or 0)>0 then table.insert(parts,compact(node.Coins).." COINS") end
+ if (node.Dust or 0)>0 then table.insert(parts,compact(node.Dust).." DUST") end
+ if (node.Nectar or 0)>0 then table.insert(parts,compact(node.Nectar).." NECTAR") end
+ return table.concat(parts,"  •  ")
+end
+
 function UI:Text(parent,text,size,props)
  props=props or {}
  local label=make("TextLabel",parent,{
@@ -632,20 +694,55 @@ function UI:RenderMenu()
 
    local top=shell:WaitForChild("WorkshopTop")
    self.WorkshopZoomLabel=top:FindFirstChild("Zoom")
+   local controlsHint=top:FindFirstChild("ControlsHint")
+   if controlsHint and controlsHint:IsA("TextLabel") then
+    controlsHint.Text="LMB DRAG  •  WHEEL ZOOM  •  CLICK SELECT  •  CLICK AGAIN UPGRADE"
+   end
+
    local workshopUI=ui.Workshop
    top.Points.Text=tostring(workshopUI and workshopUI.Points or p.WorkshopV5.Points).." POINTS"
+
+   local respecButton=top:FindFirstChild("RespecButton")
+   if respecButton and respecButton:IsA("TextButton") then
+    local canRespec=not workshopUI or workshopUI.CanRespec==true
+    respecButton.Active=canRespec
+    respecButton.TextColor3=canRespec and C.Muted or C.Faint
+    local base=respecButton.BackgroundColor3
+    respecButton.MouseEnter:Connect(function()
+     if canRespec then TweenService:Create(respecButton,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelHover}):Play() end
+    end)
+    respecButton.MouseLeave:Connect(function()
+     TweenService:Create(respecButton,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=base}):Play()
+    end)
+    respecButton.Activated:Connect(function()
+     if canRespec then self:Send("Respec") end
+    end)
+   end
+
    local body=shell:WaitForChild("WorkshopBody")
-   local canvas=body.TreePanel.TreeCanvas
+   local treePanel=body:WaitForChild("TreePanel")
+   local canvas=treePanel:WaitForChild("TreeCanvas")
    local panMap=canvas:FindFirstChild("PanMap")
    if panMap and panMap:IsA("GuiObject") then
-    -- Bloom UI Studio stores its editor-only map offset on PanMap.
-    -- Runtime panning is handled by ScrollingFrame.CanvasPosition instead.
+    -- Editor-only positioning never affects the runtime map.
     panMap.Position=UDim2.fromOffset(0,0)
    end
+
    local nodes=canvas:FindFirstChild("Nodes") or panMap
    local links=canvas:FindFirstChild("Connections") or panMap
    if not nodes or not links then error("[BloomUI] Workshop tree containers missing") end
-   local details=body.DetailsPanel
+
+   local tooltip=body:WaitForChild("NodeTooltip")
+   tooltip.Visible=false
+   tooltip.Active=false
+   local tooltipTitle=tooltip:WaitForChild("Title")
+   local tooltipBranch=tooltip:WaitForChild("Branch")
+   local tooltipEffect=tooltip:WaitForChild("Effect")
+   local tooltipCost=tooltip:WaitForChild("Cost")
+   local tooltipHint=tooltip:WaitForChild("Hint")
+   local tooltipAccent=tooltip:WaitForChild("Accent")
+   local tooltipStroke=tooltip:FindFirstChildOfClass("UIStroke")
+
    local effects=require(RS.Config.WorkshopEffectsConfig)
 
    self.SelectedNode=self.SelectedNode or "ROLL_1"
@@ -662,6 +759,43 @@ function UI:RenderMenu()
     EXPLORATION=C.Nectar,
     LEGACY=C.Danger,
    }
+
+   local function moveTooltip(screenX,screenY)
+    if not tooltip.Parent then return end
+    local localX=screenX-body.AbsolutePosition.X+16
+    local localY=screenY-body.AbsolutePosition.Y+16
+    local maxX=math.max(8,body.AbsoluteSize.X-tooltip.AbsoluteSize.X-8)
+    local maxY=math.max(8,body.AbsoluteSize.Y-tooltip.AbsoluteSize.Y-8)
+    tooltip.Position=UDim2.fromOffset(math.clamp(localX,8,maxX),math.clamp(localY,8,maxY))
+   end
+
+   local function showTooltip(id,node,backend,owned,available,branchColor)
+    local reasonText=backend and backend.ReasonText
+    tooltipTitle.Text=node.Name
+    tooltipBranch.Text=node.Branch.."  •  "..(owned and "OWNED" or available and "AVAILABLE" or "LOCKED")
+    tooltipEffect.Text=workshopEffectText(effects[id])
+    tooltipCost.Text=workshopCostText(node)
+    tooltipAccent.BackgroundColor3=branchColor
+    if tooltipStroke then tooltipStroke.Color=branchColor end
+
+    if id=="CORE" then
+     tooltipHint.Text="CORE NODE"
+     tooltipHint.TextColor3=C.Muted
+    elseif owned then
+     tooltipHint.Text="OWNED"
+     tooltipHint.TextColor3=C.Green
+    elseif not available then
+     tooltipHint.Text=reasonText or "LOCKED"
+     tooltipHint.TextColor3=C.Faint
+    elseif self.SelectedNode==id then
+     tooltipHint.Text="CLICK AGAIN TO UPGRADE"
+     tooltipHint.TextColor3=C.Green
+    else
+     tooltipHint.Text="CLICK TO SELECT"
+     tooltipHint.TextColor3=C.Blue
+    end
+    tooltip.Visible=true
+   end
 
    for id,n in pairs(W.Nodes) do
     local node=nodes:FindFirstChild("Node_"..id)
@@ -704,14 +838,10 @@ function UI:RenderMenu()
       selectionGlow.Parent=node
      end
 
-     if label and label:IsA("TextLabel") then
-      label.Visible=false
-     end
-     if level and level:IsA("TextLabel") then
-      level.Visible=false
-     end
+     if label and label:IsA("TextLabel") then label.Visible=false end
+     if level and level:IsA("TextLabel") then level.Visible=false end
 
-     local baseTransparency=owned and 0 or available and .06 or .38
+     local baseTransparency=owned and 0 or available and .06 or .40
      if icon and icon:IsA("ImageLabel") then
       icon.Image=Icons.GetWorkshopNodeIcon(id)
       icon.ImageColor3=selected and C.Gold or owned and C.Green or available and branchColor or C.Faint
@@ -720,39 +850,49 @@ function UI:RenderMenu()
      if selectionGlow and selectionGlow:IsA("ImageLabel") then
       selectionGlow.Image=icon and icon:IsA("ImageLabel") and icon.Image or Icons.GetWorkshopNodeIcon(id)
       selectionGlow.ImageColor3=C.Gold
-      selectionGlow.ImageTransparency=.56
+      selectionGlow.ImageTransparency=.52
       selectionGlow.Visible=selected
      end
 
      local baseScale=selected and 1.12 or 1
      nodeScale.Scale=baseScale
      node.ZIndex=selected and 60 or 57
-
      local nodeId=id
      local isSelected=selected
-     node.MouseEnter:Connect(function()
+
+     node.MouseEnter:Connect(function(x,y)
       if not node.Parent then return end
       TweenService:Create(nodeScale,TweenInfo.new(Theme.Motion.Fast,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
-       Scale=isSelected and 1.17 or 1.08,
+       Scale=isSelected and 1.18 or 1.09,
       }):Play()
       if icon and icon.Parent then
-       TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{
-        ImageTransparency=math.max(0,baseTransparency-.10),
-       }):Play()
+       TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{ImageTransparency=math.max(0,baseTransparency-.12)}):Play()
       end
+      showTooltip(nodeId,n,backend,owned,available,branchColor)
+      if typeof(x)=="number" and typeof(y)=="number" then moveTooltip(x,y) else
+       local mouse=UIS:GetMouseLocation()
+       moveTooltip(mouse.X,mouse.Y)
+      end
+     end)
+     node.MouseMoved:Connect(function(x,y)
+      if tooltip.Visible then moveTooltip(x,y) end
      end)
      node.MouseLeave:Connect(function()
       if not node.Parent then return end
-      TweenService:Create(nodeScale,TweenInfo.new(Theme.Motion.Fast,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
-       Scale=baseScale,
-      }):Play()
-      if icon and icon.Parent then
-       TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{
-        ImageTransparency=baseTransparency,
-       }):Play()
-      end
+      TweenService:Create(nodeScale,TweenInfo.new(Theme.Motion.Fast,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Scale=baseScale}):Play()
+      if icon and icon.Parent then TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{ImageTransparency=baseTransparency}):Play() end
+      tooltip.Visible=false
      end)
      node.Activated:Connect(function()
+      if nodeId=="CORE" then
+       self.SelectedNode=nodeId
+       self:RenderMenu()
+       return
+      end
+      if self.SelectedNode==nodeId then
+       if available and not owned then self:Send("WorkshopBuy",nodeId) end
+       return
+      end
       self.SelectedNode=nodeId
       self:RenderMenu()
      end)
@@ -766,78 +906,11 @@ function UI:RenderMenu()
        and n.Branch==selectedNode.Branch
        and (n.Index or 0)<=(selectedNode.Index or 0)
       link.BackgroundColor3=onSelectedPath and C.Gold or parentOwned and branchColor or C.BorderSoft
-      link.BackgroundTransparency=onSelectedPath and .08 or parentOwned and (owned and .10 or available and .28 or .46) or .70
+      link.BackgroundTransparency=onSelectedPath and .08 or parentOwned and (owned and .10 or available and .30 or .48) or .72
       link.Size=UDim2.new(link.Size.X.Scale,link.Size.X.Offset,0,onSelectedPath and 6 or 4)
      end
     end
    end
-
-   local n=W.Nodes[selectedId]
-   if n then
-    local detailIcon=details:WaitForChild("Icon")
-    local detailName=details:WaitForChild("Name")
-    local detailBranch=details:WaitForChild("Branch")
-    local detailEffect=details:WaitForChild("Effect")
-    local detailCost=details:WaitForChild("Cost")
-    local detailRequirement=details:WaitForChild("Requirement")
-    detailIcon.Image=Icons.GetWorkshopNodeIcon(n.Id)
-    local selectedBranchColor=branchColors[n.Branch] or C.Blue
-    detailIcon.ImageColor3=selectedBranchColor
-    local branchAccent=details:FindFirstChild("BranchAccent")
-    if branchAccent and branchAccent:IsA("Frame") then branchAccent.BackgroundColor3=selectedBranchColor end
-    detailName.Text=n.Name
-    detailBranch.Text=n.Branch
-    local rules=effects[n.Id] or {}
-    local descriptions={}
-    for key,value in pairs(rules) do table.insert(descriptions,key.."  "..tostring(value)) end
-    table.sort(descriptions)
-    detailEffect.Text=#descriptions>0 and table.concat(descriptions,"\n") or "Core progression node"
-    detailCost.Text=tostring(n.Cost or 0).." point  •  "..compact(n.Coins or 0).." coins"..((n.Dust or 0)>0 and "  •  "..compact(n.Dust).." dust" or "")..((n.Nectar or 0)>0 and "  •  "..compact(n.Nectar).." nectar" or "")
-    local backend=workshopUI and workshopUI.Nodes and workshopUI.Nodes[n.Id]
-    local owned=backend and backend.Owned==true or p.WorkshopV5.Nodes[n.Id]==true
-    local available=backend and backend.Available==true or (backend==nil and not owned)
-    local reasonText=backend and backend.ReasonText
-    detailRequirement.Text="Hive "..tostring(n.Hive or 0)..(n.Parent and "  •  Parent "..n.Parent or "")..(reasonText and "  •  "..reasonText or "")
-    details.BuyButton.Text=owned and "OWNED" or available and "UPGRADE" or "LOCKED"
-    details.BuyButton.BackgroundColor3=owned and C.GreenDeep or available and C.Gold or C.PanelRaised
-    details.BuyButton.TextColor3=owned and C.Text or available and C.Black or C.Faint
-    details.BuyButton.Active=available and not owned
-    details.BuyButton.Activated:Connect(function()
-     if available and not owned then self:Send("WorkshopBuy",n.Id) end
-    end)
-   end
-   details.RespecButton.Active=not workshopUI or workshopUI.CanRespec==true
-   details.RespecButton.Activated:Connect(function()
-    if not workshopUI or workshopUI.CanRespec==true then self:Send("Respec") end
-   end)
-
-   local buyBase=details.BuyButton.BackgroundColor3
-   details.BuyButton.MouseEnter:Connect(function()
-    if details.BuyButton.Active then
-     TweenService:Create(details.BuyButton,TweenInfo.new(Theme.Motion.Fast),{
-      BackgroundColor3=C.Honey,
-     }):Play()
-    end
-   end)
-   details.BuyButton.MouseLeave:Connect(function()
-    TweenService:Create(details.BuyButton,TweenInfo.new(Theme.Motion.Fast),{
-     BackgroundColor3=buyBase,
-    }):Play()
-   end)
-
-   local respecBase=details.RespecButton.BackgroundColor3
-   details.RespecButton.MouseEnter:Connect(function()
-    if details.RespecButton.Active then
-     TweenService:Create(details.RespecButton,TweenInfo.new(Theme.Motion.Fast),{
-      BackgroundColor3=C.PanelHover,
-     }):Play()
-    end
-   end)
-   details.RespecButton.MouseLeave:Connect(function()
-    TweenService:Create(details.RespecButton,TweenInfo.new(Theme.Motion.Fast),{
-     BackgroundColor3=respecBase,
-    }):Play()
-   end)
 
    if self.WorkshopCanvasPosition then
     canvas.CanvasPosition=self.WorkshopCanvasPosition
@@ -856,7 +929,7 @@ function UI:RenderMenu()
       )*zoom
       position=coreCenter-canvas.AbsoluteSize*.5
      else
-      position=Vector2.new(520,430)
+      position=Vector2.new(650,500)
      end
     end
     position=self:ClampWorkshopCanvasPosition(canvas,position)
@@ -864,7 +937,6 @@ function UI:RenderMenu()
     self.WorkshopCanvasPosition=position
    end)
   end
-
  elseif name=="FieldGuide" then
   self:Section(self.Content,"Коллекция и реальные шансы")
   self:Label(self.Content,"Шансы учитывают текущие модификаторы и гарантию нового открытия.",48)
