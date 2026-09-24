@@ -572,3 +572,25 @@ dialog::backdrop{background:rgba(0,0,0,.62)}.dialog-head{height:44px;display:fle
 }
 .arrange-check input{width:auto!important;height:auto!important}
 #fitParentBtn{border-color:#36536b}
+
+/* Roblox Visible semantics helper */
+.visibility-warning{
+  padding:8px 9px;
+  border:1px solid #6c5526;
+  border-radius:7px;
+  background:#2a2212;
+  color:#e9d28e;
+  font-size:9px;
+  line-height:1.45;
+}
+.visibility-warning b{color:#ffd76c}
+.visibility-fix-btn{
+  margin-top:7px;
+  width:100%;
+  border-color:#6d8d45!important;
+  background:#18301d!important;
+  color:#ccebb4!important;
+  font-size:9px!important;
+  font-weight:800!important;
+}
+.visibility-fix-btn:hover{background:#214126!important;border-color:#8db75a!important}
