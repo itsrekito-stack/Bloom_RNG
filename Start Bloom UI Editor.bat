@@ -1,5 +1,5 @@
 @echo off
-setlocal EnableExtensions
+setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 
 set "PORT=8765"
@@ -34,6 +34,28 @@ echo ============================================================
 echo   Project: %CD%
 echo   URL:     %URL%
 echo.
+
+rem Keep only the local Assistant Bridge core current.
+rem This never touches BloomUI.model.json or any gameplay/UI source files.
+where git.exe >nul 2>&1
+if not errorlevel 1 (
+  git rev-parse --is-inside-work-tree >nul 2>&1
+  if not errorlevel 1 (
+    echo Checking Assistant Bridge core...
+    git fetch origin main --quiet >nul 2>&1
+    if not errorlevel 1 (
+      set "BRIDGE_TMP=%TEMP%\BloomUIStudio.server.%RANDOM%.py"
+      git show origin/main:tools/bloom-ui-editor/server.py > "!BRIDGE_TMP!" 2>nul
+      if exist "!BRIDGE_TMP!" (
+        copy /Y "!BRIDGE_TMP!" "%~dp0tools\bloom-ui-editor\server.py" >nul
+        del /Q "!BRIDGE_TMP!" >nul 2>&1
+        echo Assistant Bridge core is current.
+      )
+    ) else (
+      echo [INFO] Could not reach GitHub; using installed Bridge core.
+    )
+  )
+)
 
 where py.exe >nul 2>&1
 if not errorlevel 1 (
