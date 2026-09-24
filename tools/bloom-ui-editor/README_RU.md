@@ -6,7 +6,7 @@
 
 - Читает настоящий Rojo `*.model.json`, без промежуточного формата.
 - Визуализирует Roblox `UDim2`, `AnchorPoint`, `ZIndex`, transparency, colors, text, images, `UICorner`, `UIStroke`, `UIPadding`, `UIListLayout` и `UIGridLayout`.
-- Canvas имеет реальные разрешения устройств: 1366×768, 1920×1080, 1280×720, mobile и custom.
+- Canvas имеет реальные разрешения устройств: 1366×768, 1920×1080, 1280×720, mobile и custom.\n- **Фон Roblox** загружает скриншот из Studio прямо под HUD и автоматически выставляет viewport по реальному размеру изображения — можно сравнивать интерфейс поверх настоящего кадра игры.
 - На каждом элементе можно показывать `Name · ClassName`.
 - Drag, resize, exact property inspector, raw properties JSON, undo/redo, duplicate/delete.
 - Проверяет/округляет UDim/UDim2 offsets до целых чисел при экспорте, чтобы Rojo не получил invalid UnresolvedValue.
