@@ -249,8 +249,10 @@ function renderInspector(){
  groups.push(group("INSTANCE",[
   textProp("Name",n.Name,v=>{n.Name=v;changed()}),
   readonly("Class",n.ClassName),
-  boolProp("Visible",prop(n,"Visible",true),v=>setProp(n,"Visible",v)),
-  numProp("ZIndex",prop(n,"ZIndex",1),v=>setProp(n,"ZIndex",v)),
+  ...(n.ClassName==="ScreenGui"?[]:[
+   boolProp("Visible",prop(n,"Visible",true),v=>setProp(n,"Visible",v)),
+   numProp("ZIndex",prop(n,"ZIndex",1),v=>setProp(n,"ZIndex",v))
+  ])
  ]));
  if(n.ClassName==="ScreenGui"){
   groups.push(group("SCREENGUI",[
@@ -472,6 +474,23 @@ $("#snapSelect").onchange=e=>state.snap=+e.target.value;
 $("#labelsToggle").onchange=e=>{state.labels=e.target.checked;renderViewport();updateOverlay()};
 $("#gridToggle").onchange=e=>{state.grid=e.target.checked;els.stageScroller.classList.toggle("no-grid",!state.grid)};
 $("#insetInput").onchange=e=>{state.inset=Math.max(0,+e.target.value);renderAll()};
+$("#bgBtn").onclick=()=>$("#bgInput").click();
+$("#bgClearBtn").onclick=()=>{els.device.style.backgroundImage="";els.device.style.backgroundColor="#182332";toast("Фон убран")};
+$("#bgInput").onchange=()=>{
+ const file=$("#bgInput").files?.[0];if(!file)return;
+ const url=URL.createObjectURL(file),img=new Image();
+ img.onload=()=>{
+  els.device.style.backgroundImage=`url("${url}")`;
+  els.device.style.backgroundSize="cover";els.device.style.backgroundPosition="center";
+  if(img.naturalWidth>100&&img.naturalHeight>100){
+   state.viewport={w:img.naturalWidth,h:img.naturalHeight};
+   $("#viewportW").value=img.naturalWidth;$("#viewportH").value=img.naturalHeight;
+   $("#presetSelect").value="";
+  }
+  renderAll();toast("Скриншот Roblox установлен как фон");
+ };
+ img.src=url;
+};
 $("#dialogClose").onclick=()=>els.jsonDialog.close();$("#dialogCopy").onclick=()=>navigator.clipboard.writeText(els.jsonArea.value);
 $("#dialogApply").onclick=()=>{try{setRoot(JSON.parse(els.jsonArea.value),"JSON применён");els.jsonDialog.close()}catch(e){toast(e.message,true)}};
 $("#addMenuBtn").onclick=()=>$("#palette").scrollIntoView({behavior:"smooth"});
