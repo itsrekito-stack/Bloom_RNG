@@ -1,0 +1,21 @@
+PASS default profile
+PASS legacy mapping, dust, planted ownership
+PASS empty garden stays empty
+PASS migration rejects NaN without mutation
+PASS malformed nested containers repaired
+PASS all registries valid, Workshop 43
+PASS odds normalized, 10000 samples known
+PASS discovery guarantee only undiscovered
+PASS all-discovered guarantee safe fallback
+PASS ownership, dissolve protection, remaining copy
+PASS season dry run deterministic and preserves mastery
+PASS trait copies cannot be equipped beyond ownership
+PASS synergies use physical adjacency, not equipped legacy
+PASS roll independent players, 100 cycles, cooldown and one-time Bloom
+PASS activity owner, distance, order, expiry, duplicate rejection
+PASS Nectar hold cannot finish immediately
+PASS Workshop purchase prerequisites, balance, idempotence
+PASS tutorial has 18 steps, reconnect progress, unlocks
+PASS one-time point source and preservation of Nectar
+TOTAL PASS 19
+Lua 5.4-compatible source syntax checks: 50 (not a Luau typecheck)

@@ -1,0 +1,106 @@
+{
+  "name": "Bloom RNG",
+  "tree": {
+    "$className": "DataModel",
+    "Workspace": {
+      "$className": "Workspace",
+      "$path": "src/Workspace",
+      "$ignoreUnknownInstances": true,
+      "$properties": {
+        "Gravity": 196.2,
+        "StreamingEnabled": true,
+        "StreamingIntegrityMode": "PauseOutsideLoadedArea",
+        "SignalBehavior": "Deferred"
+      }
+    },
+    "ReplicatedFirst": {
+      "$className": "ReplicatedFirst",
+      "$path": "src/ReplicatedFirst"
+    },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "$path": "src/ReplicatedStorage"
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "$path": "src/ServerScriptService"
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "$path": "src/ServerStorage"
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "CameraMaxZoomDistance": 128,
+        "CharacterBreakJointsOnDeath": false,
+        "CharacterUseJumpPower": false
+      },
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "$path": "src/StarterPlayer/StarterPlayerScripts"
+      },
+      "StarterCharacterScripts": {
+        "$className": "StarterCharacterScripts"
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$properties": {
+        "ScreenOrientation": "Sensor"
+      },
+      "$path": "src/StarterGui"
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$path": "src/Lighting",
+      "$properties": {
+        "Ambient": [
+          0.34,
+          0.39,
+          0.49
+        ],
+        "Brightness": 2.2,
+        "EnvironmentDiffuseScale": 0.85,
+        "EnvironmentSpecularScale": 0.35,
+        "FogColor": [
+          0.83,
+          0.9,
+          1.0
+        ],
+        "GlobalShadows": true,
+        "OutdoorAmbient": [
+          0.6,
+          0.68,
+          0.78
+        ],
+        "ShadowSoftness": 0.45,
+        "Technology": "ShadowMap",
+        "TimeOfDay": "15:00:00",
+        "ExposureCompensation": -0.08
+      }
+    },
+    "SoundService": {
+      "$className": "SoundService",
+      "$properties": {
+        "RespectFilteringEnabled": true
+      }
+    },
+    "TextChatService": {
+      "$className": "TextChatService",
+      "$path": "src/TextChatService",
+      "$properties": {
+        "ChatVersion": "TextChatService"
+      }
+    },
+    "Chat": {
+      "$className": "Chat",
+      "$properties": {
+        "BubbleChatEnabled": true
+      }
+    },
+    "MaterialService": {
+      "$className": "MaterialService"
+    }
+  }
+}

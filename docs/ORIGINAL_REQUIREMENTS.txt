@@ -1,0 +1,2037 @@
+BLOOM RNG — ПОЛНЫЙ ПОЭТАПНЫЙ НАБОР ПРОМПТОВ ДЛЯ CHATGPT / CODEX
+Основа: Bloom_RNG_Game_Rebuild_Blueprint_2026-09-24.pdf
+Формат: каждый блок ниже — отдельный промпт. Отправляй их по порядку.
+Цель: полностью выполнить ТЗ из blueprint, не пытаясь перестроить весь проект одним запросом.
+
+======================================================================
+ОБЩИЙ КОНТЕКСТ ДЛЯ НОВОГО ЧАТА
+======================================================================
+
+PROMPT 0 — ЗАКРЕПИТЬ ПРАВИЛА РАБОТЫ С ПРОЕКТОМ
+
+Ты работаешь с существующим Roblox-проектом на Luau/Rojo. Это не проект с нуля.
+
+Главная цель rebuild:
+ROLL -> FLOWER SEED / BEE -> посадка/рой -> пчёлы работают -> игрок ловит короткие активные окна -> BLOOM METER -> SPECIAL BLOOM ROLL -> HIVE / WORKSHOP -> новая зона -> SEASON TURN -> новое правило сезона.
+
+Главные архитектурные правила:
+1. Сервер всегда authoritative для RNG, выдачи наград, валют, прогрессии, Garden state, Workshop purchases, Trials, world events, Season Turn и data migration.
+2. Клиент отвечает за UI, анимации, локальную рулетку, камеры, VFX, подсказки, ввод и presentation.
+3. Не создавай shared Workspace roulette.
+4. Не делай механический Find/Replace Fruit -> Flower. Старая Fruit domain должна быть логически удалена/мигрирована.
+5. Не создавай параллельные сервисы с тем же назначением, если можно безопасно расширить существующий.
+6. Не ломай DataService и reconnect.
+7. Все migration должны быть idempotent.
+8. Не оставляй nil references, dead requires, старые remotes и обращения к удалённым profile fields.
+9. Не меняй Packages/React-Lua без прямой необходимости.
+10. Все magic numbers выноси в Config.
+11. Все Tweens/Connections/temporary Instances должны иметь cleanup.
+12. UI должен работать на desktop и mobile.
+13. Не добавляй paid RNG, скрытые odds и fake near-miss.
+14. После каждого этапа проект должен запускаться в Studio.
+
+Перед каждым изменением:
+- сначала прочитай реальные файлы проекта;
+- найди source of truth;
+- перечисли файлы, которые будешь менять;
+- если реальные имена отличаются от названий в ТЗ — используй существующие эквиваленты, а не создавай бессмысленные дубликаты.
+
+После каждого этапа обязательно:
+- перечисли изменённые/созданные/удалённые файлы;
+- перечисли конкретно сделанные изменения;
+- укажи риски;
+- дай 5–10 конкретных Studio tests;
+- не переходи к следующему этапу сам.
+
+======================================================================
+ЭТАП 0. АУДИТ И БЕЗОПАСНАЯ ПОДГОТОВКА
+======================================================================
+
+PROMPT 1 — ПОЛНЫЙ ТЕХНИЧЕСКИЙ АУДИТ ПРОЕКТА
+
+Не меняй gameplay. Сначала сделай полный аудит текущего проекта перед rebuild.
+
+Найди:
+- Data/DefaultProfile и текущий SchemaVersion;
+- все migration;
+- RollService и RollPoolConfig;
+- FruitsConfig;
+- FlowersConfig;
+- FruitProgressionConfig/Service;
+- FruitCombinationConfig/Service;
+- InventoryService;
+- StatsService;
+- ResearchConfig;
+- MetaProgressionService;
+- RemoteService;
+- QuestConfig;
+- EconomyConfig;
+- Workshop Config/Frontend/Backend;
+- TutorialConfig/Controller/Guide;
+- MenuDock;
+- Roulette;
+- RewardReveal;
+- LocationsConfig/MapService;
+- GardenPlotService;
+- Bee config/service;
+- Hive config/service;
+- все места, где используются:
+  EquippedFruitIds,
+  FruitDust,
+  FruitMastery,
+  DiscoveredFruits,
+  FruitCombos,
+  ResearchNodes,
+  ResearchEffects,
+  ResearchPurchaseRequest,
+  ActiveLocationTheme.
+
+Отдельно:
+- посчитай все собственные файлы вне Packages, где встречается Fruit;
+- найди циклические require;
+- найди дублирующие источники rarity;
+- найди дублирующие источники capacity;
+- найди несовпадающие thresholds Workshop/Hive/Locations;
+- найди UI, который напрямую ждёт MetaState.Research;
+- найди все remotes, которые могут стать dead после rebuild.
+
+Создай файл MIGRATION_MAP.md:
+для каждой системы:
+CURRENT SOURCE OF TRUTH
+TARGET SOURCE OF TRUTH
+KEEP / MODIFY / REPLACE / DELETE LATER
+DEPENDENCIES
+MIGRATION RISK
+
+Ничего функционально не удаляй.
+
+Acceptance tests:
+- проект запускается так же, как до аудита;
+- нет новых runtime errors;
+- MIGRATION_MAP использует реальные пути файлов;
+- не создано новых duplicate services.
+
+----------------------------------------------------------------------
+PROMPT 2 — НОВАЯ SCHEMA VERSION И MIGRATION FOUNDATION
+
+Подними SchemaVersion/DataVersion и подготовь профиль к Bloom Rework.
+
+Добавь новый migration marker:
+Migrations.BloomReworkV1 = true после успешной миграции.
+
+Подготовь целевые разделы профиля:
+Currencies:
+- Coins
+- PetalDust
+- AncientNectar
+
+RollState:
+- TotalRolls
+- BloomCharge
+- DiscoveryPity
+- SpecialRollReady
+
+FlowerCollection:
+- OwnedSeedCopies
+- DiscoveredFlowers
+- FlowerMastery
+- LockedFlowers
+- FavoriteFlowers
+
+Garden:
+- UnlockedSlots
+- Slots
+- для каждого slot: SpeciesId, Level, XP, Mutation, TotalPollination
+
+GardenSynergies:
+- Discovered
+- Mastery
+
+Pollinators:
+- BeeInventory
+- DiscoveredBees
+- EquippedBeeSlots
+- BeeMastery
+
+Hive:
+- Level
+- Honey
+- TotalHoney
+
+WorkshopV5:
+- Points
+- Nodes
+- LegacyNodes
+
+World:
+- UnlockedSectors
+- LandmarkDiscoveries
+- EventStats
+
+Season:
+- Count
+- ActiveCard
+- Keepsakes
+- CompletedGoals
+
+Tutorial:
+- Version
+- Step
+- FeatureUnlocks
+
+Quests:
+- JourneyStep
+- Claimed
+- Trials
+
+Settings:
+- ReducedEffects
+- ShowOtherPollinators
+- HideOtherPlayersTokens
+- RareFeed
+- TokenSoundVolume
+
+Пока не удаляй старые Fruit/Research fields из старых профилей.
+Добавь safe defaults.
+Migration должна быть idempotent.
+Повторный load не должен конвертировать данные повторно.
+Unknown legacy fields не должны ломать профиль.
+Не делай wipe.
+
+Acceptance tests:
+- fresh profile создаётся;
+- старый профиль загружается;
+- reconnect не повторяет migration;
+- failed load не оставляет профиль полусконвертированным;
+- DataService не kick'ает игрока.
+
+======================================================================
+ЭТАП 1. УДАЛЕНИЕ RESEARCH
+======================================================================
+
+PROMPT 3 — ПОЛНОСТЬЮ УДАЛИТЬ RESEARCH
+
+Research больше не должен существовать как отдельная progression system.
+
+Сделай:
+- удалить Config/ResearchConfig.luau из active code;
+- удалить ResearchPurchaseRequest из RemoteService;
+- удалить listeners ResearchPurchaseRequest;
+- убрать runtime profile.ResearchNodes;
+- StatsService:
+  убрать require ResearchConfig;
+  убрать Research.GetEffects();
+  убрать ResearchEffects;
+  убрать ResearchPowerBonus;
+- MetaProgressionService:
+  убрать researchState;
+  убрать BuyResearch();
+  убрать ResearchPurchaseRequest handler;
+  убрать quest.Kind == "Research";
+- EconomyConfig:
+  убрать DefaultResearchPowerBonus;
+- Tutorial:
+  убрать ResearchBaseline из active logic;
+- QuestConfig:
+  удалить/заменить V002_RESEARCH_5;
+- UI:
+  убрать все ожидания MetaState.Research.
+
+Что переносить:
+- только интересные mechanic unlock из Research;
+- переносить их в Workshop как Unlock/Keystone node;
+- простые +% Research bonuses не копировать один в один.
+
+Migration:
+- старый ResearchNodes можно ignore;
+- либо один раз конвертировать в строго заданную compensation;
+- compensation не должна повторяться.
+
+Не трогать:
+- Roll;
+- Bee system;
+- Garden;
+- Workshop geometry;
+- DataStore keys без необходимости.
+
+Acceptance tests:
+- проект запускается без ResearchConfig;
+- нет infinite yield ResearchPurchaseRequest;
+- нет nil MetaState.Research;
+- старый save с ResearchNodes грузится;
+- fresh profile не создаёт ResearchNodes;
+- Workshop работает.
+
+----------------------------------------------------------------------
+PROMPT 4 — CLEANUP THRESHOLDS, RARITY И CAPACITY
+
+До следующей миграции убери числовые противоречия.
+
+Проверь и унифицируй:
+- rarity bands Fruits/Flowers/Bees/RollPool;
+- Bee slot capacity;
+- Flower slot capacity;
+- Hive level gates;
+- Workshop requirements;
+- Location unlock thresholds;
+- mastery caps;
+- duplicated economy constants.
+
+Сделай:
+- один canonical rarity vocabulary;
+- config validation на duplicate rarity;
+- validation неизвестных IDs;
+- validation отрицательных weights;
+- validation slot index;
+- validation broken recipe references;
+- validation неизвестных biome IDs.
+
+Не делай полный rebalance.
+Только исправь несовместимости, которые помешают rebuild.
+
+Acceptance tests:
+- все config require проходят;
+- RollPool validation проходит;
+- нет unknown species/bee IDs;
+- один и тот же threshold не определяется в двух независимых местах.
+
+======================================================================
+ЭТАП 2. ЕДИНЫЙ FLOWER DOMAIN
+======================================================================
+
+PROMPT 5 — СДЕЛАТЬ FLOWERSCONFIG ЕДИНСТВЕННЫМ FLOWER REGISTRY
+
+Не переименовывай Fruit в Flower механически.
+Слей Fruit domain с уже существующими физическими Flowers.
+
+FlowersConfig должен стать единственным authoritative registry.
+
+Для каждого Flower Species добавь:
+- Id
+- DisplayName
+- Rarity
+- DropWeight
+- AllowedBiomes
+- BaseYield
+- GrowthProfile
+- Tags
+- PollinationEffect
+- AdjacencyRules
+- MutationPool
+- Model
+- Colors
+- VFX
+
+Один и тот же SpeciesId используется:
+- в roulette;
+- в Garden;
+- в Field Guide;
+- в Quests;
+- в save data;
+- в world model;
+- в synergies.
+
+Создай явный mapping:
+OLD FRUIT ID -> NEW FLOWER SPECIES ID
+
+Не делай случайную конверсию.
+
+Перенеси старые fruit roles в world mechanics, например:
+- Apple +Power -> Meadow/Daisy neighbour boost после Nectar window;
+- Lemon +WorkSpeed -> Sunburst сокращает work time после active trigger;
+- Grape +Luck -> Moon Orchid создаёт Luck Dew;
+- Pineapple +Coins -> Golden Clover создаёт coin pod;
+- Starfruit +Luck -> Star Bloom Astral state;
+- Dragonfruit +Power -> Ember Dahlia pulse pollination ticks.
+
+FruitsConfig пока не удаляй.
+Он остаётся только migration source.
+
+Acceptance:
+- registry валиден;
+- нет duplicate IDs;
+- world flower может строиться из registry;
+- roulette может читать тот же registry;
+- old Fruit IDs имеют явный mapping или явную compensation policy.
+
+----------------------------------------------------------------------
+PROMPT 6 — МИГРАЦИЯ FRUIT SAVE DATA -> FLOWER SAVE DATA
+
+Реализуй BloomReworkV1 migration.
+
+Конверсия:
+- old inventory fruit copies -> OwnedSeedCopies по mapping;
+- если mapping нет -> заранее заданная PetalDust compensation;
+- DiscoveredFruits -> DiscoveredFlowers;
+- FruitMastery -> FlowerMastery;
+- mastery clamp по новому cap;
+- FruitDust -> PetalDust 1:1 на alpha, если EconomyConfig не задаёт другое;
+- EquippedFruitIds НЕ переносить как equip;
+- EquippedFruitIds можно использовать только как подсказку initial garden layout;
+- FruitCombos переносить только если новая Garden Synergy логически эквивалентна;
+- иначе one-time compensation;
+- AncientSeeds -> AncientNectar только если это явно безопасно по текущим данным;
+- иначе controlled reset с migration marker.
+
+Обязательные свойства:
+- idempotent;
+- unknown legacy ID не ломает load;
+- migration summary логируется один раз;
+- no duplicate compensation;
+- Migrations.BloomReworkV1=true только после успешного commit.
+
+Acceptance:
+- старый профиль успешно мигрируется;
+- reconnect не повторяет конверсию;
+- PetalDust не удваивается;
+- SeedCopies не становятся отрицательными;
+- unknown legacy fruit пропускается безопасно.
+
+----------------------------------------------------------------------
+PROMPT 7 — SEED COPIES И SEED OWNERSHIP
+
+Создай новую модель владения Flower Seeds.
+
+Правило:
+1 Seed Copy = право одновременно посадить 1 копию species.
+
+Сделай:
+- OwnedSeedCopies[SpeciesId];
+- planted count;
+- available count = owned - planted;
+- duplicate Flower reward увеличивает copies;
+- выкопанный flower возвращает доступность copy;
+- planting не уничтожает seed навсегда;
+- Locked/Favorite flags;
+- Locked/Favorite нельзя auto-dissolve;
+- server validates all ownership changes.
+
+Добавь PetalDust dissolve:
+- duplicate можно превратить в PetalDust;
+- manual dissolve;
+- Auto-Dissolve foundation;
+- Auto-Dissolve пока feature-locked;
+- filters по rarity;
+- new discovery не auto-dissolve;
+- locked/favorite защищены.
+
+Не открывай Seed Satchel автоматически при каждом reward.
+
+Acceptance:
+- нельзя посадить больше copies, чем owned;
+- replace возвращает старый copy;
+- locked/favorite не dissolves;
+- client не может подарить себе seed;
+- reconnect сохраняет ownership.
+
+----------------------------------------------------------------------
+PROMPT 8 — PHYSICAL PLANT / REPLACE
+
+Перестрой Garden так, чтобы build игрока существовал физически.
+
+Сделай:
+- стартовые 3 flower slots;
+- архитектура поддерживает расширение примерно до 15;
+- каждый slot хранит:
+  SpeciesId,
+  Level,
+  XP,
+  Mutation,
+  TotalPollination;
+- Plant/Replace через world interaction;
+- использовать ProximityPrompt или существующий interaction framework;
+- не заставлять игрока открывать большое Inventory;
+- server проверяет:
+  slot unlocked,
+  seed copy owned,
+  species exists,
+  player owns this garden;
+- replace возвращает старый seed copy;
+- world model берётся из Flower Species registry;
+- flower level визуально увеличивает scale;
+- garden change вызывает event для GardenSynergyService.
+
+Удалить зависимость garden build от EquippedFruitIds.
+
+Acceptance:
+- plant;
+- replace;
+- remove;
+- invalid species rejected;
+- чужой garden нельзя менять;
+- reconnect восстанавливает layout.
+
+----------------------------------------------------------------------
+PROMPT 9 — FLOWER MASTERY И PETAL DUST
+
+Замени FruitProgression runtime на FlowerProgression.
+
+Сделай:
+- FruitProgressionConfig -> FlowerProgressionConfig;
+- FruitProgressionService -> FlowerProgressionService;
+- либо безопасно переименуй существующие реальные файлы;
+- FruitMastery больше не используется runtime;
+- FlowerMastery растёт от:
+  pollination,
+  duplicate processing,
+  реального использования,
+  world activities — по config;
+- PetalDust расходуется на Flower progression и разрешённые Workshop ECONOMY/BLOOM nodes;
+- не давать mastery только за наличие item в inventory;
+- server validates costs и XP;
+- backward compatibility только в migration layer.
+
+Acceptance:
+- mastery растёт;
+- PetalDust списывается;
+- negative currency impossible;
+- reconnect сохраняет progress;
+- старые Fruit stats не влияют на новые formulas.
+
+======================================================================
+ЭТАП 3. GARDEN SYNERGIES
+======================================================================
+
+PROMPT 10 — FRUIT COMBINATIONS -> GARDEN SYNERGIES
+
+Полностью перестрой Fruit Combination system.
+
+Сделай:
+- FruitCombinationConfig -> GardenSynergyConfig;
+- FruitCombinationService -> GardenSynergyService;
+- удалить dependency от EquippedFruitIds;
+- source = реальные planted flower slots.
+
+Добавь типы synergy:
+1. Pair — два конкретных species рядом.
+2. Family — 3+ flowers одного tag в соседнем cluster.
+3. Pattern — line / triangle / ring / opposite positions.
+4. Bee-linked — Flower tag + Bee Trait breakpoint.
+5. Biome Resonance — работает только в конкретной зоне/event.
+6. Signature Bloom — редкая композиция 4–5 species, меняющая ability или Special Roll.
+
+Сделай adjacency graph для garden slots.
+
+UI/world:
+- active adjacency подсвечивается тонкой линией/аурой;
+- Pair не требует открытия меню;
+- Pattern hint можно показывать в Field Guide;
+- discovery/mastery synergy сохраняются.
+
+Баланс:
+- не делай artificial UI cap на high-tier synergies;
+- ограничение должно идти от физического layout.
+
+Acceptance:
+- перестановка flowers меняет synergies;
+- Pair работает;
+- Pattern работает;
+- Bee-linked работает;
+- reconnect сохраняет discovered/mastery;
+- EquippedFruitIds нигде не участвует.
+
+======================================================================
+ЭТАП 4. НОВАЯ РУЛЕТКА
+======================================================================
+
+PROMPT 11 — ROLLPOOL = FLOWERSEED + BEE
+
+Перестрой RollPoolConfig.
+
+Runtime result kinds:
+- FlowerSeed
+- Bee
+
+Убрать Fruit из active pool.
+
+Сделай:
+- единый rarity vocabulary;
+- DropWeight берётся из authoritative Flower/Bee config;
+- validate каждый ID;
+- transparent odds;
+- payload:
+  Kind,
+  Id,
+  DisplayName,
+  Rarity,
+  Odds,
+  IsNew,
+  IsSpecialRoll.
+
+Не делай:
+- paid hidden modifiers;
+- fake odds;
+- client-side result selection.
+
+Acceptance:
+- pool валиден;
+- 10k simulated rolls не дают unknown ID;
+- Flower и Bee используют общие rarity names;
+- odds вычисляются сервером.
+
+----------------------------------------------------------------------
+PROMPT 12 — SERVER-AUTHORITATIVE LOCAL ROULETTE
+
+Переключи RollService на FlowerSeed/Bee.
+
+Сделай:
+- RollRequest от конкретного player;
+- server рассчитывает Luck/pity/unlocked pool;
+- server выбирает reward;
+- server сразу записывает reward в профиль;
+- RollResult отправляется только FireClient этому игроку;
+- client играет только свою animation;
+- никаких shared roulette Workspace objects;
+- FlowerSeed -> discovery + SeedCopy;
+- Bee -> Bee inventory/discovery;
+- RewardReveal понимает оба Kind;
+- FieldGuide понимает оба Kind;
+- SeedSatchel понимает FlowerSeed;
+- другой игрок не влияет на cadence.
+
+AutoRoll:
+- пока сохранить, но не допускать parallel requests.
+
+Acceptance:
+- 2 игрока одновременно roll;
+- награды независимы;
+- чужая animation не тормозит;
+- disconnect после server reward не теряет item;
+- reconnect не выдаёт reward второй раз.
+
+----------------------------------------------------------------------
+PROMPT 13 — BLOOM METER
+
+Добавь Bloom Meter как мост Garden -> RNG.
+
+Хранить BloomCharge на сервере.
+
+Источники charge вынести в config:
+- Bee delivery: ориентир +2;
+- Ability token: +4;
+- Nectar window: +6;
+- Biome activity: +8..15;
+- Server event contribution: +10..20.
+
+При 100%:
+- SpecialRollReady=true;
+- следующий roll становится Bloom Roll;
+- UI ROLL меняется на BLOOM ROLL;
+- ring/arc вокруг Roll = meter;
+- лёгкая pulse animation.
+
+Bloom Roll:
+- отдельный server modifier;
+- повышает high rarity chance;
+- повышает chance undiscovered item;
+- повышает mutation chance;
+- не ухудшает hidden pity;
+- meter сбрасывается только после successful result.
+
+Acceptance:
+- client не может добавить charge;
+- charge сохраняется;
+- Bloom Roll расходуется один раз;
+- disconnect не дюпает Bloom Roll;
+- обычный roll не сбрасывает meter.
+
+----------------------------------------------------------------------
+PROMPT 14 — DISCOVERY METER / PITY
+
+Добавь один Discovery Meter.
+
+Сделай:
+- server-side DiscoveryPity;
+- increment per roll;
+- threshold config;
+- при guarantee выбирать undiscovered Flower/Bee из допустимого unlocked pool;
+- если undiscovered item нет — safe fallback;
+- Special Bloom Roll не ухудшает pity;
+- один UI meter;
+- не создавать отдельные pity bars по rarity.
+
+Acceptance:
+- forced test до guarantee;
+- no-new-item case;
+- reconnect;
+- client не выбирает guaranteed reward.
+
+----------------------------------------------------------------------
+PROMPT 15 — REWARD PRESENTATION PIPELINE
+
+Создай:
+ReplicatedStorage/Config/RewardPresentationConfig.luau
+StarterPlayer/StarterPlayerScripts/Controllers/RewardPresentationController.luau
+
+Payload:
+{Kind,Id,DisplayName,Rarity,Odds,IsNew,IsSpecialRoll}
+
+Presentation tiers:
+Common: 0.35–0.45s, compact card
+Uncommon: 0.45–0.6s
+Rare: 0.7–0.9s
+Epic: 1.0–1.3s, dim background
+Legendary: 1.5–2.0s, particles + FOV pulse
+Mythic: 2.2–2.8s, staged reveal
+Celestial: 3.0–4.0s, unique local sequence
+
+Сделай:
+- local queue;
+- Common/Uncommon compact;
+- адаптировать текущий RewardReveal как final card stage;
+- server reward не ждёт animation;
+- Legendary+ может приостановить только локальный AutoRoll cadence;
+- SkipAfterMinTime;
+- ReducedEffects;
+- cleanup tweens/connections/VFX;
+- no fake near-miss.
+
+Acceptance:
+- queue из 2–3 rewards;
+- effects cleanup;
+- skip;
+- ReducedEffects;
+- AutoRoll не создаёт parallel requests;
+- reward уже в профиле до конца reveal.
+
+----------------------------------------------------------------------
+PROMPT 16 — AUTO ROLL
+
+Перепиши Auto Roll под новую architecture.
+
+Сделай:
+- AutoRoll hidden/locked до unlock;
+- один active RollRequest per player;
+- pending flag;
+- следующий request только после ответа server + разрешения presentation cadence;
+- Common/Uncommon не тормозят;
+- Legendary+ только локально ставят pause;
+- AutoRoll не останавливается после 3 циклов;
+- открытие Workshop/Satchel не должно само ломать AutoRoll;
+- OFF отменяет следующий request;
+- server anti-spam.
+
+Acceptance:
+- 100+ rolls;
+- no parallel requests;
+- ON/OFF;
+- menu open;
+- simulated latency;
+- reconnect;
+- второй player не влияет.
+
+======================================================================
+ЭТАП 5. PROGRESSIVE UI И TUTORIAL
+======================================================================
+
+PROMPT 17 — FEATURE UNLOCK CONFIG
+
+Создай FeatureUnlockConfig.
+
+Features:
+- Roll
+- SeedSatchel
+- Workshop
+- FieldGuide
+- Map
+- Trials
+- AutoRoll
+
+Unlock source:
+- TutorialStep;
+- HiveLevel;
+- Workshop mechanic node;
+- first world visit/activity.
+
+Сделай:
+- FeatureUnlockController;
+- MenuDock не рендерит locked button вообще;
+- hotkeys тоже locked;
+- server является source of truth unlock state;
+- reconnect сохраняет/восстанавливает state;
+- optional local unlock animation.
+
+Acceptance:
+- fresh player почти без меню;
+- нельзя открыть locked menu hotkey;
+- нельзя открыть locked menu remote exploit;
+- reconnect работает.
+
+----------------------------------------------------------------------
+PROMPT 18 — TUTORIAL V2: 18 ШАГОВ
+
+Перепиши TutorialConfig/Controller на 18 steps:
+
+1. Проснуться у personal Hive.
+2. Получить Starter Bee.
+3. Посмотреть первую работу Bee.
+4. Подобрать первый Pollen Spark.
+5. Дождаться delivery.
+6. Первый локальный ROLL.
+7. Получить Flower Seed.
+8. Посадить seed.
+9. Открыть Seed Satchel.
+10. Сделать несколько deliveries, открыть Bloom Meter.
+11. Первый Bloom Roll.
+12. Hive milestone.
+13. Физически посетить Workshop.
+14. Купить первый Workshop node.
+15. Первая Garden Synergy.
+16. Первый Bee Trait breakpoint.
+17. Выйти в Sunny public sector.
+18. Завершить world activity.
+
+Правила:
+- один step = одна понятная цель;
+- прогресс сохраняется после meaningful step;
+- Replay не выдаёт starter rewards повторно;
+- Skip выставляет безопасные FeatureUnlocks;
+- неправильные действия не блокировать без причины;
+- не открывать большие menu автоматически;
+- UI появляется постепенно.
+
+Acceptance:
+- fresh profile проходит 18 steps;
+- reconnect на step 4/6/8/13/17;
+- Skip;
+- Replay;
+- no duplicate rewards.
+
+----------------------------------------------------------------------
+PROMPT 19 — TUTORIAL GUIDE SYSTEM
+
+Расширь guide layer.
+
+TargetType:
+- GUI
+- WorldPart
+- DynamicToken
+- Condition
+
+Сделай:
+- GUI spotlight;
+- безопасная сторона arrow;
+- mobile safe area;
+- WorldBeam к далёкому объекту;
+- рядом beam -> overhead arrow/highlight;
+- dynamic token target;
+- fallback, если target исчез;
+- ждать replacement event;
+- cleanup;
+- respawn support.
+
+Acceptance:
+- resize;
+- mobile emulator;
+- target destroyed;
+- token expired;
+- respawn;
+- reconnect;
+- no orphan beams/highlights.
+
+----------------------------------------------------------------------
+PROMPT 20 — MAIN JOURNEY
+
+Упростить quests.
+
+На старте:
+- только одна основная Journey Objective;
+- side goals открывать после public zone.
+
+Первые 20 Journey goals:
+1 Starter Bee
+2 Pollen Spark
+3 first delivery
+4 first roll
+5 plant first Flower
+6 fill Bloom Meter
+7 first Bloom Roll
+8 Hive level 2
+9 unlock Workshop
+10 buy Workshop node
+11 Garden Synergy
+12 second Bee slot
+13 Bee Trait breakpoint
+14 Sunny sector
+15 Solar Bloom activity
+16 discover 6 Flowers
+17 Crystal gate
+18 first Build Trial
+19 Crystal sector
+20 prepare first Season Goal
+
+Удалить Research quest.
+Награды server-side.
+No double claim.
+
+Acceptance:
+- fresh profile;
+- old save;
+- Research objective не появляется;
+- claim idempotent;
+- objective HUD обновляется live.
+
+======================================================================
+ЭТАП 6. ACTIVE GARDEN
+======================================================================
+
+PROMPT 21 — GARDEN ACTIVITY FRAMEWORK + POLLEN SPARK
+
+Создай:
+Config/ActivityConfig.luau
+Services/GardenActivityService.luau
+Controllers/ActivityController.luau
+
+Сначала реализуй только Pollen Spark end-to-end.
+
+Pollen Spark:
+- появляется после Bee work/ability;
+- lifetime 6–8 sec config;
+- server создаёт authoritative offer;
+- client показывает visual;
+- pickup server validates player/token/distance/time;
+- reward:
+  BloomCharge;
+  небольшой Bee Mastery XP;
+- пропуск не уменьшает baseline Honey/Coins;
+- максимум 2 visible micro opportunities;
+- mobile hitbox > visual;
+- HideOtherPlayersTokens support;
+- ReducedEffects support;
+- analytics offered/engaged/completed.
+
+Acceptance:
+- collect;
+- expire;
+- double collect rejected;
+- fake far pickup rejected;
+- player leave cleanup;
+- baseline сохраняется при пропуске.
+
+----------------------------------------------------------------------
+PROMPT 22 — NECTAR BUD
+
+Добавь Nectar Bud.
+
+Механика:
+- flower начинает светиться;
+- окно примерно 10 sec;
+- player подходит;
+- hold E примерно 0.6 sec;
+- success:
+  immediate yield burst;
+  небольшой mutation progress chance;
+- cancel hold безопасен;
+- timeout безопасен;
+- не мешает Bee baseline.
+
+Все числа через ActivityConfig.
+
+Acceptance:
+- success;
+- cancel;
+- timeout;
+- death;
+- reconnect;
+- no duplicate reward.
+
+----------------------------------------------------------------------
+PROMPT 23 — DEW DROP
+
+Добавь Dew Drop.
+
+Механика:
+- появляется на flower/leaf;
+- pickup даёт temporary luck stack;
+- stack применяется только к следующему server roll;
+- после successful roll stack расходуется;
+- server validates stack;
+- stack не превращать в permanent currency;
+- ясно определить reconnect behavior.
+
+Acceptance:
+- collect;
+- next roll modifier;
+- consumes once;
+- no client spoof;
+- multiple stack policy obeyed.
+
+----------------------------------------------------------------------
+PROMPT 24 — POLLEN TRAIL
+
+Добавь Pollen Trail.
+
+Механика:
+- возвращающаяся Bee оставляет 3–5 orb по дуге к Hive;
+- игрок следует траектории;
+- server validates sequence/proximity;
+- client рисует визуальные orbs;
+- low server part count;
+- timeout + cleanup.
+
+Acceptance:
+- правильный маршрут;
+- пропуск orb;
+- timeout;
+- player death;
+- 10 players stress.
+
+----------------------------------------------------------------------
+PROMPT 25 — CROSS-POLLINATION CHAIN
+
+Добавь Cross-Pollination Chain.
+
+Механика:
+- 3 flower slots подсвечиваются по очереди;
+- player должен пройти/активировать их в правильном порядке;
+- reward временно усиливает соседние flowers;
+- неправильный порядок не режет baseline;
+- server validates order.
+
+Acceptance:
+- success;
+- wrong order;
+- timeout;
+- garden changes during event;
+- reconnect cleanup.
+
+----------------------------------------------------------------------
+PROMPT 26 — OVERCHARGE TOKEN
+
+Добавь Ability Overcharge Token.
+
+Правила:
+- только у подходящих rare Bee abilities;
+- более крупный token;
+- reward влияет на следующий ability cooldown/cycle;
+- rarity Bee ощущается через world behaviour;
+- cooldown/bonus через config;
+- no permanent uncontrolled stacking.
+
+Acceptance:
+- eligible Bee;
+- ineligible Bee;
+- cooldown modifier once;
+- exploit rejected.
+
+----------------------------------------------------------------------
+PROMPT 27 — BLOOM SURGE
+
+Добавь meso event Bloom Surge.
+
+Механика:
+- группа flowers получает aura;
+- Bees сами приоритизируют hotspot;
+- player собирает возникающие tokens;
+- 30–90 sec;
+- VFX local where possible;
+- server state authoritative.
+
+Acceptance:
+- hotspot selection;
+- Bee priority;
+- event end;
+- player leaves garden;
+- 10 players.
+
+----------------------------------------------------------------------
+PROMPT 28 — POLLEN WIND
+
+Добавь Pollen Wind.
+
+Механика:
+- видимый поток pollen-orbs идёт по карте;
+- выгодно двигаться по маршруту;
+- не использовать тяжёлую physics simulation, если path nodes достаточно;
+- server validates progress;
+- reward = BloomCharge/temp bonus.
+
+Acceptance:
+- follow route;
+- route missed;
+- event cleanup;
+- mobile;
+- 10 players.
+
+======================================================================
+ЭТАП 7. ФИЗИЧЕСКАЯ КАРТА
+======================================================================
+
+PROMPT 29 — PUBLIC SECTORS И PHYSICAL GATES
+
+Перестрой map progression.
+
+Структура:
+- Center: Great Hive/Bloom Core;
+- ring personal gardens;
+- Sunny Orchard;
+- Crystal Greenhouse;
+- Twilight Grove.
+
+Сделай:
+- сохранить personal plots;
+- LocationsConfig = data;
+- MapService = physical sector/gate state;
+- sector unlock сохраняется server-side;
+- player физически идёт в сектор;
+- ActiveLocationTheme больше не gameplay substitute;
+- garden theme может оставаться cosmetic;
+- gates/bridges/flower walls = physical progression;
+- не teleport автоматически.
+
+Acceptance:
+- fresh player;
+- gate unlock;
+- reconnect;
+- locked gate exploit check;
+- plots продолжают работать.
+
+----------------------------------------------------------------------
+PROMPT 30 — SUNNY ORCHARD RULES
+
+Sunny Orchard:
+- simple chain windows;
+- wild dew;
+- pollen trails между landmarks;
+- Solar Bloom;
+- Dew stack влияет на следующий roll.
+
+Сделай:
+- activity spawn points;
+- 2–3 landmarks;
+- короткие маршруты;
+- zone rule через config;
+- server validation.
+
+Acceptance:
+- enter zone;
+- activity;
+- dew -> roll;
+- landmark discovery;
+- reconnect.
+
+----------------------------------------------------------------------
+PROMPT 31 — CRYSTAL GREENHOUSE RULES
+
+Crystal Greenhouse:
+- Crystal Resonance;
+- 3 crystals/mirrors;
+- sequence;
+- correct sequence усиливает chain pollination;
+- Crystal Charge повышает mutation chance Special Roll;
+- charge = temporary state, не HUD currency.
+
+Acceptance:
+- correct sequence;
+- wrong sequence;
+- timeout;
+- Special Roll modifier;
+- reconnect policy.
+
+----------------------------------------------------------------------
+PROMPT 32 — TWILIGHT GROVE RULES
+
+Twilight Grove:
+- Eclipse state;
+- ability windows;
+- Firefly route;
+- Shadow Blooms;
+- Eclipse Charge повышает rare Bee/Flower weighting одного Bloom Roll;
+- temporary state only.
+
+Acceptance:
+- firefly route;
+- eclipse start/end;
+- charge consumed once;
+- no permanent currency.
+
+----------------------------------------------------------------------
+PROMPT 33 — LANDMARKS И EXPLORATION REWARDS
+
+Добавь:
+- 2–3 landmarks per sector;
+- first visit save;
+- Field Guide note;
+- small one-time reward;
+- Wild Bloom reward = BloomCharge/PetalDust/temp buff;
+- very rare world find = cosmetic mutation/title;
+- shortcut/launch pad после первого unlock;
+- никакого teleport к каждому token;
+- Map UI отражает discoveries.
+
+Acceptance:
+- one-time landmark reward;
+- shortcut locked/unlocked;
+- Map sync;
+- no repeat farming.
+
+----------------------------------------------------------------------
+PROMPT 34 — BIOME PULSE
+
+Добавь Biome Pulse.
+
+Механика:
+- одна зона на 60–120 sec получает special rule;
+- rare Wild Blooms;
+- server-wide event state;
+- reward player-specific;
+- late join supported;
+- event end cleanup.
+
+Acceptance:
+- start;
+- late join;
+- leave;
+- end;
+- 10 players.
+
+======================================================================
+ЭТАП 8. WORKSHOP V5
+======================================================================
+
+PROMPT 35 — ПЕРЕСТРОИТЬ WORKSHOP В 43 УЗЛА V5
+
+Сохрани существующую hex geometry:
+1 Core + 7 branches по 6 nodes = 43.
+
+Branches:
+ROLL
+GARDEN
+BEES
+ECONOMY
+BLOOM
+EXPLORATION
+LEGACY
+
+Удалить:
+- Loadout branch;
+- Fruit-specific branch naming;
+- Research dependency.
+
+Минимум 2 mechanic/QoL nodes на branch.
+
+Примеры:
+ROLL:
+- Auto Roll
+- Bloom Reserve
+- faster reveal
+- pity visibility
+- Overclock keystone
+
+GARDEN:
+- flower slot
+- adjacency range
+- replant QoL
+- synergy capacity/mechanic
+
+BEES:
+- Bee slot
+- ability token chance
+- mastery mechanic
+- trait depth
+
+ECONOMY:
+- Auto-Dissolve
+- filters
+- duplicate conversion
+- milestone chest
+
+BLOOM:
+- mutation slot
+- Bloom charge mechanic
+- rare seed rule
+
+EXPLORATION:
+- event radar
+- route bonus
+- biome interaction unlock
+
+LEGACY:
+- season card slot
+- keepsake
+- legacy mutation
+- advanced Trial unlock
+
+Workshop Points:
+- Hive milestones;
+- Collection milestones;
+- first-time Trials;
+- Season goals.
+
+Не давать point за каждую мелочь.
+Alpha respec разрешить.
+
+Acceptance:
+- 43 nodes;
+- prerequisites work;
+- server purchase;
+- respec;
+- no Research;
+- LEGACY locked before Season Turn.
+
+======================================================================
+ЭТАП 9. BUILD TRIALS
+======================================================================
+
+PROMPT 36 — BUILD TRIAL SYSTEM
+
+Создай:
+Config/BuildTrialConfig.luau
+Services/BuildTrialService.luau
+
+Physical shrine/totem in each biome.
+
+Alpha templates:
+1. Meadow Circuit
+2. Swift Route
+3. Crystal Triangle
+4. No-Celestial Trial
+5. Signature Bloom
+6. Twilight Pulse
+7. Minimal Garden
+8. Mutation Study
+
+Примеры условий:
+- Meadow Circuit:
+  Meadow Bee Trait + 2 Pair synergies + 12 deliveries;
+- Swift Route:
+  sequence tokens under 60 sec;
+- Crystal Triangle:
+  3 Crystal flowers triangle + Resonance chain;
+- No-Celestial:
+  complete event without Celestial Bee;
+- Signature Bloom:
+  activate Signature Garden Synergy;
+- Twilight Pulse:
+  5 Fireflies + 3 Bee abilities during Eclipse;
+- Minimal Garden:
+  Honey target with 3 flower slots;
+- Mutation Study:
+  obtain mutation through world activity.
+
+Rewards:
+- first clear: Workshop Point/cosmetic/title/Legacy progress;
+- repeat: small currency;
+- не выдавать лучший Bee/Flower напрямую.
+
+Server validates everything.
+
+Acceptance:
+- минимум 6 fully working;
+- movement Trial;
+- garden pattern Trial;
+- ability timing Trial;
+- fake completion rejected;
+- first-clear reward not duplicated.
+
+======================================================================
+ЭТАП 10. SEASON TURN
+======================================================================
+
+PROMPT 37 — SEASON CONFIG + DRY RUN SIMULATOR
+
+Создай Config/SeasonConfig.luau.
+
+Eligibility:
+- final alpha Hive milestone;
+- Sunny/Crystal/Twilight unlocked;
+- 2–3 key Build Trials;
+- minimum discovered Flower species;
+- minimum discovered Bees.
+
+KEEP:
+- Discovered Flowers/Bees;
+- Flower/Bee Mastery;
+- Workshop permanent nodes;
+- Field Guide;
+- achievements/cosmetics;
+- unlocked core mechanics;
+- Legacy unlocks.
+
+RESET/REBUILD:
+- Coins;
+- seasonal Honey stock;
+- Hive level;
+- seasonal garden slot expansions;
+- physical garden layout;
+- local zone progress;
+- temporary event buffs;
+- season objectives.
+
+Создай pure function:
+BuildSeasonTurnPlan(profile)
+
+Она должна:
+- ничего не менять;
+- вернуть exact before/after diff;
+- показать keep/reset;
+- быть deterministic.
+
+Пока не делай реальный reset.
+
+Acceptance:
+- dry run не изменяет profile;
+- same input -> same output;
+- no nil;
+- report понятный.
+
+----------------------------------------------------------------------
+PROMPT 38 — TRANSACTIONAL SEASON TURN
+
+Создай Services/SeasonService.luau.
+
+Flow:
+- physical Ancient Tree / Great Bloom trigger;
+- server validates eligibility;
+- client видит exact keep/reset;
+- первый Season Turn имеет double confirmation;
+- server заново проверяет state перед commit;
+- commit максимально transaction-safe;
+- partial reset недопустим;
+- Season.Count += 1;
+- AncientNectar reward;
+- starting state rebuild;
+- save.
+
+Не доверять client selected reset list.
+
+Acceptance:
+- successful turn;
+- failed eligibility;
+- double request;
+- simulated error during commit;
+- reconnect after turn;
+- permanent data preserved.
+
+----------------------------------------------------------------------
+PROMPT 39 — KEEPSAKES
+
+Добавь:
+Flower Memory
+Bee Memory
+
+Правила:
+- один Flower Keepsake;
+- один Bee Keepsake;
+- поздний Legacy node может открыть третий slot;
+- не давать огромный multiplier.
+
+Flower Memory:
+- выбранный species доступен раньше
+ИЛИ
+- стартует с mutation.
+
+Bee Memory:
+- ранний mastery perk
+ИЛИ
+- ability token сразу доступен.
+
+Server validates choice.
+
+Acceptance:
+- locked slot;
+- valid choice;
+- invalid choice;
+- reconnect.
+
+----------------------------------------------------------------------
+PROMPT 40 — SEASON CARDS
+
+При начале нового сезона предложи 1 из 3 rules.
+
+Карты:
+Spring Resonance:
+- +1 adjacency range;
+- Wild Blooms чаще.
+
+Summer Swarm:
+- Bee abilities чаще создают active tokens;
+- Bloom Meter сильнее зависит от manual collection.
+
+Autumn Fortune:
+- duplicates дают больше PetalDust;
+- Special Roll сильнее тянется к undiscovered species.
+
+Crystal Season:
+- Crystal Resonance может создать temporary mutation.
+
+Twilight Season:
+- Eclipse чаще;
+- abilities сильнее;
+- baseline немного медленнее.
+
+Карты:
+- должны менять правила;
+- не только multiplier;
+- ActiveCard сохраняется;
+- server validates selection;
+- services реально читают ActiveCard.
+
+Acceptance:
+- selection 1/3;
+- reconnect;
+- effect реально применяется;
+- cannot change mid-season without allowed mechanic.
+
+----------------------------------------------------------------------
+PROMPT 41 — ANCIENT NECTAR И LEGACY
+
+Ancient Seeds переименовать в Ancient Nectar.
+
+Источник:
+- Season Turn;
+- очень редкие first-time Trial milestones.
+
+Расход:
+- только LEGACY Workshop branch.
+
+Правила:
+- не показывать currency до первого Season Turn;
+- server validates spend;
+- no negative balance;
+- migration старого AncientSeeds только если mapping безопасен.
+
+Acceptance:
+- earn;
+- spend;
+- locked before first Season;
+- no spend outside Legacy.
+
+======================================================================
+ЭТАП 11. HUD / WORLD-FIRST UX
+======================================================================
+
+PROMPT 42 — ПОЛНЫЙ REDESIGN HUD И MENUDOCK
+
+На старте игрок видит:
+- current objective;
+- минимальный contextual Coins/Hive indicator;
+- позже ROLL;
+- никаких Satchel/Workshop/Guide/Map/Trials до unlock.
+
+После полного onboarding MenuDock:
+- Seed Satchel;
+- Workshop;
+- Field Guide;
+- Map/Trials;
+- Settings.
+
+Сделай:
+- Roll button снизу;
+- Bloom Meter ring вокруг Roll;
+- Workshop не блокирует Roll;
+- compact roulette можно показывать сверху;
+- currency indicators не дублируются;
+- один source of truth для каждого числа;
+- mobile scaling;
+- dark translucent minimal UI;
+- аккуратные rounded frames;
+- без Hive&Garden menu.
+
+Переименовать UI:
+Fruit Index -> Field Guide
+Inventory -> Seed Satchel + Hive roster
+Fruit Dust -> Petal Dust
+Fruit Mastery -> Flower Mastery
+Fruit Combos -> Garden Synergies
+HIVE & RESEARCH -> HIVE & EXPLORATION/JOURNEY
+Active Location Theme -> Unlocked World Sector/Garden Theme
+Collection -> Field Guide
+
+Acceptance:
+- fresh UI;
+- endgame UI;
+- 1366x768;
+- 1920x1080;
+- mobile emulator;
+- no overlapping controls.
+
+----------------------------------------------------------------------
+PROMPT 43 — WORLD-FIRST INTERACTION
+
+Перенеси ключевые действия из меню в мир.
+
+Сделай:
+- Plant/Replace -> world flower slot;
+- Hive level-up -> interaction/ceremony at Hive;
+- first Workshop unlock -> physical Workshop/Bloom Core;
+- later unlock HUD shortcut;
+- first Trials -> shrine;
+- location unlock -> physical gate;
+- world arrows/tutorial guide к этим объектам.
+
+Не убирай shortcuts после первого знакомства.
+
+Acceptance:
+- можно понять core loop без постоянного открытия больших меню;
+- first-time physical interactions работают;
+- shortcuts появляются только после знакомства.
+
+======================================================================
+ЭТАП 12. SOCIAL
+======================================================================
+
+PROMPT 44 — RARE DROP FEED
+
+Добавь server rare feed:
+- только Mythic/Celestial;
+- маленькая строка;
+- RareFeed setting;
+- можно отключить;
+- common/rare spam запрещён;
+- feed появляется после server-confirmed reward.
+
+Acceptance:
+- Mythic;
+- Celestial;
+- opt-out;
+- no fake client message.
+
+----------------------------------------------------------------------
+PROMPT 45 — GARDEN VISITS И BLESSING
+
+Добавь:
+Garden Visit:
+- можно посмотреть layout;
+- можно увидеть active synergies;
+- нельзя забирать ресурсы.
+
+Blessing:
+- visitor может оставить pollen blessing;
+- максимум один раз за session или жёсткий cap;
+- небольшой temporary bonus;
+- server validates.
+
+Не добавлять:
+- stealing;
+- trading;
+- auction;
+- mandatory clan buffs.
+
+Acceptance:
+- read-only visit;
+- cap;
+- no stealing;
+- exploit rejected.
+
+----------------------------------------------------------------------
+PROMPT 46 — SERVER BLOOM / CO-OP ANCIENT FLOWER
+
+Создай macro social event.
+
+Server Bloom:
+- central flower;
+- общий progress;
+- contribution = pollination/world activities;
+- personal rewards;
+- minimum reward за реальное участие;
+- reward scales with contribution;
+- join/leave safe;
+- no pay-to-boost.
+
+Можно также использовать Co-op Ancient Flower.
+
+Acceptance:
+- 10 players;
+- late join;
+- leave before finish;
+- contribution spoof rejected;
+- event cleanup.
+
+======================================================================
+ЭТАП 13. PRESENTATION CEREMONIES
+======================================================================
+
+PROMPT 47 — HIVE / LOCATION / SEASON CEREMONIES
+
+Добавь локальные presentation sequences:
+- Hive milestone;
+- location unlock;
+- Season Turn.
+
+Правила:
+- server сначала меняет authoritative state;
+- client только показывает;
+- ReducedEffects;
+- SkipAfterMinTime;
+- cleanup camera/FOV/UI/VFX;
+- disconnect during ceremony не теряет reward/progress.
+
+Acceptance:
+- skip;
+- disconnect;
+- reconnect;
+- reduced effects;
+- no duplicate rewards.
+
+======================================================================
+ЭТАП 14. ANALYTICS
+======================================================================
+
+PROMPT 48 — ONBOARDING FUNNEL TELEMETRY
+
+Добавь события:
+tutorial_started
+first_bee_granted
+first_pollination_work
+first_active_token_collected
+first_hive_delivery
+first_roll
+first_flower_discovered
+first_flower_planted
+first_bloom_roll
+first_workshop_open
+first_workshop_purchase
+first_garden_synergy
+first_bee_trait
+first_public_zone_entered
+first_world_activity_complete
+tutorial_completed
+
+Правила:
+- event name central config;
+- не дублировать one-time event;
+- analytics failure не ломает gameplay;
+- no personal route logging.
+
+Acceptance:
+- fresh tutorial emits expected order;
+- reconnect does not duplicate one-time events;
+- disabled analytics safe.
+
+----------------------------------------------------------------------
+PROMPT 49 — MOVEMENT VS HUD METRICS
+
+Измеряй:
+- active_world_seconds;
+- menu_open_seconds;
+- idle_seconds;
+- rolls_per_minute;
+- AutoRoll share;
+- activity_offer -> activity_engaged conversion;
+- average distance from personal Hive during meso event;
+- session time outside personal plot;
+- Bloom Roll frequency;
+- garden layout diversity;
+- synergy diversity;
+- Bee Trait diversity;
+- time to each zone;
+- Season eligibility time.
+
+Не записывать точный маршрут.
+Только агрегированные seconds/counters.
+
+Acceptance:
+- values update;
+- no per-frame spam to backend;
+- analytics outage safe;
+- session flush safe.
+
+======================================================================
+ЭТАП 15. SETTINGS / PERFORMANCE
+======================================================================
+
+PROMPT 50 — SETTINGS ДЛЯ VFX И TOKENS
+
+Добавь/доведи Settings:
+- ReducedEffects;
+- HideOtherPlayersTokens;
+- TokenSoundVolume;
+- RareFeed;
+- ShowOtherPollinators.
+
+ReducedEffects должен реально:
+- уменьшать blur;
+- уменьшать flashes;
+- уменьшать FOV/camera movement;
+- уменьшать particles;
+- уменьшать effect sound intensity.
+
+Важно:
+- gameplay hit validation не меняется;
+- own tokens не скрывать;
+- mobile hitbox больше visual.
+
+Acceptance:
+- persistence;
+- mobile;
+- own/other token visibility;
+- ReducedEffects во всех controllers.
+
+----------------------------------------------------------------------
+PROMPT 51 — PERFORMANCE PASS ДЛЯ 10+ ИГРОКОВ
+
+Проведи performance audit.
+
+Проверь:
+- Bees;
+- flower models;
+- activity tokens;
+- world events;
+- UI connections;
+- remote frequency;
+- path calculations;
+- temporary parts;
+- particle counts;
+- server heartbeat loops.
+
+Сделай:
+- object reuse/pooling там, где это действительно нужно;
+- local-only VFX;
+- no per-player full-map loops every frame;
+- no leaked connections;
+- no duplicate listeners;
+- no hundreds of replicated token Parts.
+
+Acceptance:
+- 10 players with gardens;
+- Bees active;
+- activities active;
+- Server Bloom;
+- AutoRoll;
+- no major server degradation;
+- cleanup after leave.
+
+======================================================================
+ЭТАП 16. УДАЛЕНИЕ LEGACY FRUIT RUNTIME
+======================================================================
+
+PROMPT 52 — УДАЛИТЬ СТАРЫЙ FRUIT RUNTIME
+
+Теперь Flower domain уже должен быть стабильным.
+
+Найди все runtime Fruit references.
+
+Удалить/заменить:
+- FruitsConfig runtime use;
+- FruitService;
+- FruitProgressionService;
+- FruitCombinationService;
+- Fruit Inventory UI;
+- Fruit Index UI;
+- useFruitState;
+- Fruit remotes;
+- EquippedFruitIds runtime;
+- Fruit stat modifiers;
+- Fruit mastery/dust runtime.
+
+Оставить только:
+- explicit legacy migration mapping;
+- compatibility code, если он реально нужен для старых saves.
+
+Не переименовывать старые DataStore keys слепо.
+
+После удаления:
+- проверить all requires;
+- проверить Rojo paths;
+- проверить recursive require;
+- проверить remotes.
+
+Acceptance:
+- fresh profile не содержит Fruit runtime fields;
+- old profile still migrates;
+- project boots;
+- no nil require;
+- no Fruit mechanic accessible to player.
+
+======================================================================
+ЭТАП 17. IDENTITY CLEANUP
+======================================================================
+
+PROMPT 53 — FRUIT RNG -> BLOOM RNG
+
+Очисти player-facing identity.
+
+Переименовать:
+- game title;
+- loading screen;
+- logo labels;
+- UI strings;
+- quest text;
+- config comments, где они описывают актуальную систему;
+- menu icon themes.
+
+Термины:
+- Flower Species
+- Seed Copy
+- Petal Dust
+- Bloom Roll
+- Garden Synergy
+- Hive
+- Workshop
+- Season Turn
+- Ancient Nectar
+
+Убрать fruit-only imagery из menu icons.
+
+Не ломать legacy migration keys.
+
+Acceptance:
+- игрок нигде не видит старую Fruit progression;
+- save migration still works;
+- no broken asset/config references.
+
+======================================================================
+ЭТАП 18. BALANCE PASS
+======================================================================
+
+PROMPT 54 — ПЕРВЫЙ ALPHA BALANCE PASS
+
+Не меняй архитектуру.
+Только числа/config.
+
+Цели:
+- baseline Bee automation жизнеспособна;
+- active play даёт примерно 15–40% дополнительной эффективности;
+- active windows необязательны;
+- Bloom Meter обычно заполняется за несколько минут активной игры;
+- first Roll приходит достаточно рано;
+- first Seed -> Plant быстро объясняет связь RNG -> Garden;
+- Workshop не должен заставлять сидеть в меню;
+- world movement meaningful;
+- нет 90 sec пустого бега;
+- Workshop Points редкие;
+- Ancient Nectar endgame;
+- repeat Trial rewards маленькие;
+- Special Roll ценен, но не делает обычный Roll бесполезным;
+- AutoRoll не ломает economy.
+
+Перед изменениями:
+1. собери таблицу текущих значений;
+2. покажи proposed values;
+3. объясни изменение;
+4. только затем внеси.
+
+Acceptance:
+- 20-minute active session содержит:
+  automation;
+  roll;
+  planting/build decision;
+  несколько active windows;
+  movement;
+  хотя бы одно meaningful progression decision.
+
+======================================================================
+ЭТАП 19. ПОЛНЫЙ QA
+======================================================================
+
+PROMPT 55 — INTEGRATION QA
+
+Не добавляй новую большую механику.
+Проверь всю alpha.
+
+Проверить:
+- Research удалён;
+- EquippedFruitIds не central mechanic;
+- FlowerSeed/Bee roll;
+- server authoritative rewards;
+- local roulette;
+- Bloom Meter;
+- Special Roll;
+- Discovery Meter;
+- Seed Copies;
+- Plant/Replace;
+- Flower Mastery;
+- PetalDust;
+- Garden Synergies;
+- Bee work;
+- минимум 4 micro/meso activities;
+- Sunny/Crystal/Twilight physical sectors;
+- unique rule each sector;
+- 18-step tutorial;
+- progressive MenuDock;
+- Workshop v5;
+- минимум 6 Build Trials;
+- Season Turn;
+- Season Cards;
+- Keepsakes;
+- Ancient Nectar;
+- rare presentation;
+- social layer;
+- analytics;
+- mobile;
+- settings;
+- reconnect.
+
+Stress tests:
+- 2 players simultaneous roll;
+- 10 players gardens/bees/activities;
+- AutoRoll 100+;
+- simulated lag;
+- disconnect during roll;
+- disconnect during tutorial;
+- disconnect during Season Turn;
+- reconnect after migration;
+- server restart;
+- mobile touch;
+- ReducedEffects;
+- no parallel RollRequest;
+- no duplicate reward;
+- no client reward authority.
+
+Создай FINAL_QA_REPORT.md.
+
+Разделы:
+BLOCKER
+HIGH
+MEDIUM
+LOW
+
+Исправь все BLOCKER/HIGH.
+После исправлений повтори тесты.
+Не объявляй alpha готовой, пока BLOCKER/HIGH > 0.
+
+======================================================================
+ЭТАП 20. ФИНАЛЬНАЯ ПРОВЕРКА ГОТОВНОСТИ
+======================================================================
+
+PROMPT 56 — DEFINITION OF DONE
+
+Проверь текущий проект по каждому пункту.
+Для каждого дай:
+PASS / FAIL
+ФАЙЛ/СИСТЕМА-ДОКАЗАТЕЛЬСТВО
+ЧТО НУЖНО ИСПРАВИТЬ
+
+Критерии:
+1. Новый игрок видит максимум одну новую крупную систему за раз.
+2. Core onboarding проходится без внешнего объяснения.
+3. Roll визуально локален.
+4. Другой игрок не влияет на roll cadence.
+5. Roll reward = Flower Seed или Bee.
+6. Оба reward имеют физический смысл.
+7. Research tree отсутствует.
+8. EquippedFruitIds не является центральной mechanic.
+9. Workshop — единственное большое progression tree.
+10. Минимум 4 active micro/meso activities реально заставляют двигаться.
+11. Пропуск activity не режет baseline.
+12. Sunny/Crystal/Twilight физически посещаемы.
+13. Каждая зона имеет уникальное gameplay rule.
+14. Bloom Meter связывает Garden/World с Special Roll.
+15. Garden Synergies зависят от planted layout.
+16. Legendary/Mythic/Celestial имеют разные presentation tiers.
+17. Feature buttons появляются постепенно.
+18. Есть минимум 6 Build Trials.
+19. Есть минимум один movement Trial.
+20. Season Turn транзакционный.
+21. Permanent data не теряется.
+22. Season Turn открывает новое rule/Legacy feature.
+23. Analytics показывает world/menu/idle.
+24. 10 игроков одновременно работают без заметной деградации.
+25. Все rewards server-authoritative.
+26. Нет paid random roll.
+27. Нет скрытого изменения odds.
+28. Нет fake near-miss.
+29. Игрок может описать игру так:
+"Я роллю цветы и пчёл, строю сад и рой, бегаю за активными бустами, развиваю улей и меняю сезон."
+
+Если любой пункт FAIL:
+- исправь;
+- повтори проверку;
+- только потом дай финальный статус.
+
+В финале выведи:
+- финальную архитектуру;
+- список удалённых legacy systems;
+- известные non-blocking alpha issues;
+- 5 следующих задач только для polish/content.

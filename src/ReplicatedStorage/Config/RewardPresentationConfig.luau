@@ -1,0 +1,1 @@
+return {Common={Duration=.4,Min=.2},Uncommon={Duration=.55,Min=.25},Rare={Duration=.8,Min=.35},Epic={Duration=1.2,Min=.5},Legendary={Duration=1.8,Min=.7},Mythic={Duration=2.5,Min=1},Celestial={Duration=3.5,Min=1.2}}

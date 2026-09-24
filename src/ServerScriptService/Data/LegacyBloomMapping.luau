@@ -1,0 +1,1 @@
+return {Apple="Daisy",Banana="Tulip",Lemon="Sunflower",Pear="Clover",Kiwi="FrostLily",Watermelon="CrystalRose",Coconut="PrismBloom",Pomegranate="Nightshade",Dragonfruit="EmberDahlia",Peach="Daisy",Grape="MoonOrchid",Pineapple="Clover",Starfruit="StarBloom"}

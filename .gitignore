@@ -1,0 +1,16 @@
+# Bloom RNG generated build
+BloomRNG.rbxl
+*.rbxl.lock
+
+# Local tools
+rojo.exe
+*.log
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Historical Studio place backup - source lives in Rojo files
+reference/*.rbxl

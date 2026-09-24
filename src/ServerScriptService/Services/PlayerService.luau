@@ -1,0 +1,84 @@
+local RS=game:GetService("ReplicatedStorage") local Players=game:GetService("Players") local U=require(RS.Shared.BloomUtil) local C=require(RS.Config.BloomConfig) local T=require(RS.Config.TutorialConfig) local L=require(RS.Config.LocationsConfig)
+local X={Temp={},Busy={},Revisions={},Connections={},U=U}
+function X:Profile(player) if self.Busy[player] then return nil end return self.DataService:GetProfile(player) end
+function X:Send(player,kind,payload) if player.Parent==Players then self.RemoteService.Event:FireClient(player,kind,payload) end end
+function X:Broadcast(kind,payload) for _,p in ipairs(Players:GetPlayers()) do self:Send(p,kind,payload) end end
+function X:Emit(player,event,n)
+ local p=self:Profile(player) if not p then return end p.Tutorial.Events[event]=(p.Tutorial.Events[event] or 0)+(n or 1) self.Revisions[player]=(self.Revisions[player] or 0)+1
+ self.AnalyticsService:Event(player,event,n or 1) if event=="ActivityCompleted" then self:Send(player,"TokenCollected",true) end self.TutorialService:Refresh(player)
+ if event~="Trial" then self.BuildTrialService:Event(player,event,n or 1) end
+end
+function X:EmitOnce(player,event) local p=self:Profile(player) if p and not p.Tutorial.Events[event] then self:Emit(player,event,1) end end
+function X:Part(parent,name,pos,size,color,collide)
+ local part=Instance.new("Part") part.Name=name part.Anchored=true part.Size=size part.Position=pos part.Color=color part.CanCollide=collide part.CanTouch=false part.Material=Enum.Material.SmoothPlastic part.Parent=parent return part
+end
+function X:Prompt(part,text,callback)
+ local prompt=Instance.new("ProximityPrompt") prompt.ActionText=text prompt.ObjectText=part.Name prompt.RequiresLineOfSight=false prompt.MaxActivationDistance=12 prompt.Parent=part
+ prompt.Triggered:Connect(function(player) if self:Profile(player) and U.Near(player,part.Position,C.InteractionDistance) and self.RemoteService:Accept(player) then callback(player) self:Push(player) end end) return prompt
+end
+function X:Push(player)
+ local p=self:Profile(player) if not p then return end self.TutorialService:Refresh(player)
+ local public={Profile=U.Copy(p),Synergies=self.GardenSynergyService.Active[player] or {},BeeCapacity=self.StatsService:BeeCapacity(p),HivePosition=self.GardenPlotService:HivePosition(player),Trial=self.BuildTrialService.Active[player],ServerBloom=self.SocialService.Progress,Pulse=self.SocialService.Pulse,Cards=self.SeasonService:Offers(p),Odds=self.RollService:Odds(player)}
+ public.Profile.LegacyArchive=nil public.Profile.Telemetry=nil public.Profile.Migrations=nil self:Send(player,"State",public)
+ local leader=player:FindFirstChild("leaderstats") if leader then leader.Coins.Value=math.floor(p.Currencies.Coins) leader.Hive.Value=p.Hive.Level end
+end
+function X:Request(player,action,a,b,c)
+ local p=self:Profile(player) if not p then return false end
+ if action=="SeasonCancel" then self.SeasonService.Pending[player]=nil return true end
+ if self.SeasonService.Pending[player] and action~="SeasonConfirm" and action~="Menu" and action~="Ready" then return false,"SEASON_PREVIEW_OPEN" end
+ if action=="Ready" then self.GardenActivityService:Push(player) return true
+ elseif action=="Roll" then return self.RollService:Roll(player,a==true)
+ elseif action=="Plant" then return self.GardenPlotService:Plant(player,a,b)
+ elseif action=="EquipBee" then return self.InventoryService:EquipBee(player,a,b)
+ elseif action=="Dissolve" then return p.Tutorial.FeatureUnlocks.SeedSatchel and self.InventoryService:Dissolve(player,a,b)
+ elseif action=="FlowerUpgrade" then return p.Tutorial.FeatureUnlocks.SeedSatchel and self.FlowerProgressionService:Upgrade(player,a)
+ elseif action=="Flag" then if not p.FlowerCollection.DiscoveredFlowers[a] or b~="LockedFlowers" and b~="FavoriteFlowers" then return false end p.FlowerCollection[b][a]=not p.FlowerCollection[b][a] return true
+ elseif action=="Activity" then return self.GardenActivityService:Collect(player,a,b,c)
+ elseif action=="WorkshopBuy" then return self.WorkshopService:Buy(player,a)
+ elseif action=="Respec" then return self.WorkshopService:Respec(player)
+ elseif action=="Trial" then return self.BuildTrialService:StartTrial(player,a)
+ elseif action=="SeasonConfirm" then return self.SeasonService:Confirm(player,a)
+ elseif action=="Card" then return self.SeasonService:Card(player,a)
+ elseif action=="Keepsake" then return self.SeasonService:Keepsake(player,a,b)
+ elseif action=="Skip" then self.TutorialService:Skip(player) return true
+ elseif action=="Replay" then self.TutorialService:Replay(player) return true
+ elseif action=="Menu" then if a==false then self.Temp[player].MenuOpen=false return true end if a~="Settings" and not p.Tutorial.FeatureUnlocks[a] then return false end self.Temp[player].MenuOpen=true if a=="SeedSatchel" then self:Emit(player,"SatchelOpen",1) end return true
+ elseif action=="Setting" then if a=="TokenSoundVolume" and type(b)=="number" and b==b then p.Settings[a]=math.clamp(b,0,1) return true elseif ({ReducedEffects=true,ShowOtherPollinators=true,HideOtherPlayersTokens=true,RareFeed=true,AutoDissolve=true})[a] and type(b)=="boolean" then if a=="AutoDissolve" and not p.WorkshopV5.Nodes.ECONOMY_1 then return false end p.Settings[a]=b return true end return false
+ elseif action=="DissolveFilter" then local R=require(RS.Config.RarityConfig) if not p.WorkshopV5.Nodes.ECONOMY_2 or not R.Rank[a] then return false end p.Settings.DissolveRarities[a]=not p.Settings.DissolveRarities[a] return true end return false
+end
+function X:Loaded(player)
+ if self.Temp[player] then return end local p=self:Profile(player) if not p then return end player:SetAttribute("BloomGameplayReady",false) self.Temp[player]={} self.Revisions[player]=0
+ local leader=Instance.new("Folder") leader.Name="leaderstats" leader.Parent=player for _,name in ipairs({"Coins","Hive"}) do local v=Instance.new("IntValue") v.Name=name v.Parent=leader end
+ self.GardenPlotService:Build(player)
+ if p.StarterBeeGranted and next(p.Pollinators.BeeInventory) then p.Tutorial.Events.StarterBee=math.max(1,p.Tutorial.Events.StarterBee or 0) else p.StarterBeeGranted=false end
+ local function spawn() task.delay(.3,function() if not self:Profile(player) then return end local char=player.Character local root=char and char:FindFirstChild("HumanoidRootPart") if root then root.CFrame=CFrame.new(self.GardenPlotService:HivePosition(player)+Vector3.new(0,4,8)) end end) end
+ self.Connections[player]=player.CharacterAdded:Connect(spawn) spawn() self:EmitOnce(player,"Wake") player:SetAttribute("BloomGameplayReady",true) self:Push(player)
+ if p.Migrations.BloomSummary and not p.Migrations.BloomSummaryLogged then print("[Bloom] migrated",player.UserId,p.Migrations.BloomSummary.PetalDust) p.Migrations.BloomSummaryLogged=true end
+end
+function X:Remove(player)
+ self.AnalyticsService:Flush(player)
+ for _,name in ipairs(self.ServiceNames) do local s=self[name] if s.Remove then s:Remove(player) end end
+ if self.Connections[player] then self.Connections[player]:Disconnect() self.Connections[player]=nil end self.Temp[player]=nil self.Busy[player]=nil self.Revisions[player]=nil
+end
+function X:Start(data,services,names)
+ self.DataService=data self.ServiceNames=names for _,name in ipairs(names) do self[name]=services[name] end
+ local center=workspace:FindFirstChild("Garden") local marker=center and center:FindFirstChild("GardenCenter") self.Origin=(marker and marker.Position or Vector3.zero)+Vector3.new(0,5,0)
+ local world=Instance.new("Folder") world.Name="BloomWorld" world.Parent=workspace self.World=world
+ self:Part(world,"CentralMeadow",self.Origin-Vector3.new(0,2,0),Vector3.new(440,2,440),Color3.fromRGB(97,155,88),true)
+ for _,name in ipairs(names) do local s=self[name] if s.Init then s:Init(self) end end
+ self.MapService:Build() self.RemoteService:Start()
+ data:GetProfileLoadedSignal():Connect(function(player) self:Loaded(player) end)
+ Players.PlayerRemoving:Connect(function(player) self:Remove(player) end)
+ for _,player in ipairs(Players:GetPlayers()) do if data:IsLoaded(player) then self:Loaded(player) end end
+ task.spawn(function() local sync=0 while true do task.wait(C.TickSeconds) sync=sync+C.TickSeconds self.SocialService:Tick()
+  for _,player in ipairs(Players:GetPlayers()) do if self:Profile(player) and self.Temp[player] then local ok,err=xpcall(function()
+   if self.SeasonService.Pending[player] and os.clock()>self.SeasonService.Pending[player].Expires then self.SeasonService.Pending[player]=nil end
+   if not self.SeasonService.Pending[player] then self.MapService:Tick(player) self.PollinatorService:Tick(player,C.TickSeconds) self.GardenActivityService:Tick(player) self.MetaProgressionService:Tick(player) self.AnalyticsService:Tick(player,C.TickSeconds) end
+   if sync>=C.SyncSeconds then self:Push(player) end
+  end,debug.traceback) if not ok then warn("[Bloom] Tick",err) end end end if sync>=C.SyncSeconds then sync=0 end
+ end end)
+ task.spawn(function() while true do task.wait(1) local frames={} for player,states in pairs(self.PollinatorService.States) do if self:Profile(player) then for slot,s in pairs(states) do table.insert(frames,{Owner=player.UserId,Index=slot,Id=s.Id,From=self.GardenPlotService:HivePosition(player),To=self.GardenPlotService:Position(player,s.Slot),Phase=s.Elapsed/C.DeliverySeconds}) end end end self:Broadcast("Bees",frames)
+ local tokenFrames={} for owner,offers in pairs(self.GardenActivityService.Offers) do for id,o in pairs(offers) do table.insert(tokenFrames,{Id=id,Owner=owner.UserId,Position=o.Nodes[o.Index],Kind=o.Kind}) end end self:Broadcast("OtherTokens",tokenFrames)
+ end end)
+end
+return X

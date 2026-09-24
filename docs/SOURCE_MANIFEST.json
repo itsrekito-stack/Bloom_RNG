@@ -1,0 +1,1482 @@
+[
+  {
+    "path": "src/Lighting/Atmosphere.model.json",
+    "sha256": "987fec9b76c865ce0a19380d2dc2c932bf152ddda25a2ce55e74e8f444da1570"
+  },
+  {
+    "path": "src/Lighting/Bloom.model.json",
+    "sha256": "616b77f105353cd9a00f1056962d510fc9aeb47304db719b46d70ce1f557010d"
+  },
+  {
+    "path": "src/Lighting/DepthOfField.model.json",
+    "sha256": "7e3ed99ce80d594f14c9a5239fa75d33512fa092f9315921ab685c0ab3f23669"
+  },
+  {
+    "path": "src/Lighting/Sky.model.json",
+    "sha256": "333a58d05380a1ac7e0e3e8c5db3a3a64b8dc053357244c0ce35a092a51d91a9"
+  },
+  {
+    "path": "src/Lighting/SunRays.model.json",
+    "sha256": "c8dee2ede2776ec22ce3ff5ce91c6574ed4150ca34228f9550df95c66401f824"
+  },
+  {
+    "path": "src/ReplicatedFirst/LoadingScreen.client.luau",
+    "sha256": "373caa3d4bb90396065909301445d3e968a505d1c28dee3418a68f5d2841d04b"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/ActivityConfig.luau",
+    "sha256": "ef42d3cf2f2bc025bcbf2a3d15c5738426c62f3aede2e0adab10e2359538be65"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/AnalyticsConfig.luau",
+    "sha256": "695d23cd0dc40599d3c90ee43d99354b9002eb2efcde211605c081ca64677d73"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/BeesConfig.luau",
+    "sha256": "9c2931695761703808e8e98df538e1067ff393c564e6013c06c9454ccd54d913"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/BloomConfig.luau",
+    "sha256": "a731deb77562d4304cca033ab663d4c39279a1ef9afd7574ed607f1fd3118ddf"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/BuildTrialConfig.luau",
+    "sha256": "e063dc43f3a179b0a1575b28d7c16b3e3f7edfe7c7734f0583ae189bbedd64e8"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/FeatureUnlockConfig.luau",
+    "sha256": "aff1802c0aa4223fd4716700bd9cae2e1a4f66e224e9ddd8b991e1508d2652d4"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/FlowersConfig.luau",
+    "sha256": "c3372c18cc3b8e1394a2ff5d7a63368b4449b7c18c67cb1e4cad65f14b7b87fd"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/GardenSynergyConfig.luau",
+    "sha256": "7e46ecb36a42da5f90cb4661ee2cbd5db9fb9fec5300cf2dc82cc21cfbcbf426"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/IconsConfig.luau",
+    "sha256": "d845f7a70210415a1e6b7997f926324365dd381bdffe4b1f048999c4248720bc"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/LocationsConfig.luau",
+    "sha256": "2cd60055a057ea4e516efd5eace955ba6acf6f3bd9fdcaae509fd73a254b82f2"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/RarityConfig.luau",
+    "sha256": "0c0a070e9303943c88bf1abc1b1d5f2bd2f2778defe1f19a9d9cbe12809a66e0"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/RewardPresentationConfig.luau",
+    "sha256": "34d77abe394d69d75afa4d374a21e54649685da6b079484815889365e73d42f9"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/RollPoolConfig.luau",
+    "sha256": "dc438f7c9f7a210fdd641fa35f948dc2d6e027bfeba2824d54e10aa1e8586b99"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/SeasonConfig.luau",
+    "sha256": "e21ae0e454821713e5effe0b6a5521c627004bdf769c2ded2f5fbc28ea0bb9f3"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/TutorialConfig.luau",
+    "sha256": "c60e46d071dd23b066b170644a058d6c59d8e7f3282c208fdc2482f91d4c3075"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/UIAssetsConfig.luau",
+    "sha256": "6ca010cb903c3eebcfd3f9b72a0d75a65119ec8471f26624066090def2f7d7ec"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/WorkshopConfig.luau",
+    "sha256": "0ba961f113be039dac74b9684fa2eb348c1840dc250f1af8845400c76bf154e4"
+  },
+  {
+    "path": "src/ReplicatedStorage/Config/WorkshopEffectsConfig.luau",
+    "sha256": "03a0d12ee1022c195ba7ad0bce2ce95efab245214fa339aa8eff33b45293ecbb"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/React.luau",
+    "sha256": "0361273ffe59f1138daa6b8efd0aed1cb52b0ef635f9730770d7ba284d6a09f1"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/ReactRoblox.luau",
+    "sha256": "633a41b7657cba939f52c9003bd21f5bb4c64340d741ebd3be03ce583ae16665"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_boolean@1.2.7/boolean/init.luau",
+    "sha256": "4c6d1132780629da3f4ccda991c92f1caa00d867fa7f13073cebf0b7cce181de"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_boolean@1.2.7/boolean/toJSBoolean.luau",
+    "sha256": "91ec3466cb781267c6cdc31beece464c56ebfc6ed75f0a3970b1185455909dd3"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_boolean@1.2.7/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_boolean@1.2.7/number.luau",
+    "sha256": "cc5ad1337618a838cc38aa6225c13c3a65c941e5f8c3c81b352cb1f6c2b8eefc"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/concat.luau",
+    "sha256": "9a76b1be9b83a14381ed61c1d42c36538a9a6bd1b247e66417e84a7d014be201"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/every.luau",
+    "sha256": "ef464e2c22a6ce7bf9307cde33437396019853f9674116da37b5f05fe359327e"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/filter.luau",
+    "sha256": "fb1d68eea25746fe7f960b189d7fe552a15c185f654ce12df101e81210aa7994"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/find.luau",
+    "sha256": "22e8a3f072b5f6489cfe9b6653daddb4e35f2addd27aa0868978aa6d1bd45fb7"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/findIndex.luau",
+    "sha256": "b6ac08717573891cfcb5be81359928e98819f1e148dc2a6541af73393881d2bc"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/flat.luau",
+    "sha256": "3ea154427e0a1b847b2d02444fa6e0032c017c6e1d250d8bd73c8420af044b60"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/flatMap.luau",
+    "sha256": "81330a7398932accb4c15395699253085cf813b865d2e216050fc306984bc481"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/forEach.luau",
+    "sha256": "7fe3bf811792843e75f52ee425b55835f62643e09d15081fce11be335eb92ec4"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/from/fromArray.luau",
+    "sha256": "514077c5c97b3a6ea6ab301c3fb9701c7ccf8a53d6c795ed987ee89ebf7ea003"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/from/fromMap.luau",
+    "sha256": "57e4205996496af0c564153bc1e14943efedf6fba47e48e5d42b5dde343c95b4"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/from/fromSet.luau",
+    "sha256": "0a12a041f92420fa5c0dcacd7dae4bc58b1d9286523f37657091581551bde1c2"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/from/fromString.luau",
+    "sha256": "71c22a7d9cda8ec11274c67185d34f5168228c280c664d3f977bd8d1543e74a5"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/from/init.luau",
+    "sha256": "36087ba9a355283725f9f6b243a5229b4407025a9b4deeba93cb92a669f25080"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/includes.luau",
+    "sha256": "60efe8e2b4685e5e8cc6dd8c7cd0a014411bc4757a0c52276725dea99a440cfa"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/indexOf.luau",
+    "sha256": "53302d630df9789f8866a6c1a341b136a768e49fc8d881e4d3ed9e9c41f0c262"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/init.luau",
+    "sha256": "75fecc69cb48cf3205cd82f02c1db8d1d665d5bd2727fc9d808fd81687ac4727"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/isArray.luau",
+    "sha256": "4dc76a7a970835223becfaeda74a89f93a408fa97e3ab3e3973687d0c2533a52"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/join.luau",
+    "sha256": "f6e7d37074468d281cfbebb11de912e7c8dfebc2cc7f4d85362cf358310e24b8"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/map.luau",
+    "sha256": "00ce764ab6c0facf93aa3796ac9262e7b1d2fda812dfba231ff3c9236f3da37f"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/reduce.luau",
+    "sha256": "93e8e8df248df6f9cc34f1bbef86e2a0316e41f6d7bf68057f64946c61811094"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/reverse.luau",
+    "sha256": "f84fba4014464efef2f749c25e1be5c3b8e4f9f29bdb096da2e414a0420591a5"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/shift.luau",
+    "sha256": "c1dc6c8628f1dd2c56411895f25c6e9e393d35ef2cec265aac18c6bb0cd3afe3"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/slice.luau",
+    "sha256": "81194f74db7ec0d587a50c4607a9d9124ab1987401bfce35f439d4eba7799e83"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/some.luau",
+    "sha256": "c1e76cbfd2d835ba1a7a34c033e9e0cf6132f71cbf4369d3e3bac165256ce444"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/sort.luau",
+    "sha256": "e7285c3c89d1266362d6fb5bf0febcfc1ee55f24dadaa6b85ccbc412f435761e"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/splice.luau",
+    "sha256": "682a4f92ad52ca788f65c2de54d6e432efaeb427444afa335a6cf44032403242"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Array/unshift.luau",
+    "sha256": "89cbac3646531f892dfd7c0580e9f395bce83483cf0591fb96ae59bebeef116b"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Map/Map.luau",
+    "sha256": "450ad77a6807bc4bd803332d085c5c8618eba17bb5351492965cfa14cdaef932"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Map/coerceToMap.luau",
+    "sha256": "709798eb3cee0a78b294fae4af50e1543cd8a78f8c140244f2ac0711aa77f712"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Map/coerceToTable.luau",
+    "sha256": "7022e955cbba45eadeace222c422883c7e98bd85c01649743b288cf2c01ca6d4"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Map/init.luau",
+    "sha256": "325931158a0c8a02cacca8cf6a74b2c1af640b10c7ba25929bc649d35e5e2dd6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Object/None.luau",
+    "sha256": "755d44a729faeb91ebf60d2444143148bdf5cc29e64b3aee32982e4c097cc49f"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Object/assign.luau",
+    "sha256": "5b5e3e2c55bc629f67ce5e0f8da0235710a6a129c61372d6ef91bc08aa2e2dec"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Object/entries.luau",
+    "sha256": "e8e8074dc0957fa43f04d5dfb6e387336006a553ed075dd2f259c6d9ce37db57"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Object/freeze.luau",
+    "sha256": "970c39f310a9a412fad5f9b256cf37d0977c49d3ac4d304a883c85a996f6716e"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Object/init.luau",
+    "sha256": "9703646195fe7da69bc51aa3741f04541403d76397e45470adb6c36f8de59b65"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Object/is.luau",
+    "sha256": "0ea3a8ccfd09d4803d807f9481d83185b1e76774115aab3735cf3441be73412b"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Object/isFrozen.luau",
+    "sha256": "923ca3f92c672ee0805d22dc022b8c9a2e62223d83ee395da2ba31eced15ba4f"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Object/keys.luau",
+    "sha256": "b8d8c1eaaaa62ded6f20bc0eef69d833a94eba83811493742c451e807d80f623"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Object/preventExtensions.luau",
+    "sha256": "25525388e7f000f9cff9ec76a1919078f155f9758c68ba0773524d56b750f900"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Object/seal.luau",
+    "sha256": "970c39f310a9a412fad5f9b256cf37d0977c49d3ac4d304a883c85a996f6716e"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Object/values.luau",
+    "sha256": "97ad9a704b1ee073e5c78d36dba456bb665e5048061b9b667521a4f1f9b96980"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/Set.luau",
+    "sha256": "75e4ab996edd7753309848dfc0204b143e7e3f3ceeb2a2d005d75b502d995f02"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/WeakMap.luau",
+    "sha256": "bba73274937a51b438a96939a953d9da0087ff62f2040e55b071c77ee023eaff"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/init.luau",
+    "sha256": "5e6097a30018f92c9b5ea1fefa5e809934b5a5ca4638353c7f7da30706eda5a7"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/collections/inspect.luau",
+    "sha256": "0d3f590e99358bd05d31086de9c675ec50648a2afc34068139bc0b12ae06dd99"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/es7-types.luau",
+    "sha256": "459624a89da2b743a92dfc28d13d9a4d87946948f3ea99fd6b5a77d9d73ae772"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_collections@1.2.7/instance-of.luau",
+    "sha256": "e694ca438c687c6e836e272ba7d8308a88b36e247ca924d46f49f1482cedff21"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_console@1.2.7/collections.luau",
+    "sha256": "8e46ea853a2f3933629ee7c1bcb4f875fc94be2ee2d1d857fde95cd73bcbea53"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_console@1.2.7/console/init.luau",
+    "sha256": "9688bcc1508fbd941d74a9daf6ef6e45de5daf752f295e434e5d34035a7f9584"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_console@1.2.7/console/makeConsoleImpl.luau",
+    "sha256": "b6fd33ea7cf6739347c96b59a40a9b12284ebd90d2abe60a01df1af29c26ed51"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_console@1.2.7/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_es7-types@1.2.7/es7-types.luau",
+    "sha256": "654261f99bd7d05a9e0b6e67c8cde603eaf30b11d6725773bb2bac4ed77b2024"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_es7-types@1.2.7/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_instance-of@1.2.7/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_instance-of@1.2.7/instance-of/init.luau",
+    "sha256": "0d25c3df68ef61c0cc6af117328d7f804f0ba155f2618dc5a46c0413dea26048"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_instance-of@1.2.7/instance-of/instanceof.luau",
+    "sha256": "299d9f2a7a198547804c008327771fa559f85b1f1b95701a2f1d09f870ad3ce5"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/boolean.luau",
+    "sha256": "713341090fe993b0a21615b9f33031e7ca571a7aa521c15331f6ea6431ec4484"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/collections.luau",
+    "sha256": "8e46ea853a2f3933629ee7c1bcb4f875fc94be2ee2d1d857fde95cd73bcbea53"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/console.luau",
+    "sha256": "84a4f40bee1b7e30b49f415f46e13de6383efdce5fc0bfb0e207bdefbad20c6b"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/es7-types.luau",
+    "sha256": "459624a89da2b743a92dfc28d13d9a4d87946948f3ea99fd6b5a77d9d73ae772"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/instance-of.luau",
+    "sha256": "e694ca438c687c6e836e272ba7d8308a88b36e247ca924d46f49f1482cedff21"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/luau-polyfill/AssertionError/AssertionError.global.luau",
+    "sha256": "4dcaae57a0473460a62ae97994161f6b62d0ba8bc3fda210808c83ffafd0cf03"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/luau-polyfill/AssertionError/init.luau",
+    "sha256": "78610fbe32a0014295e755960b82f9f14dd564f5de9d186b550243d5c0bb5bdd"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/luau-polyfill/Error/Error.global.luau",
+    "sha256": "bc796704c1ee91ac98ced8c50c5508eb72627a7073f07530e37cd29933f8c14f"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/luau-polyfill/Error/init.luau",
+    "sha256": "e5ff0fcee30862967e5b95ec6df03e5d03ba37ba10096551c5c58d0e26ad81a1"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/luau-polyfill/Promise.luau",
+    "sha256": "c5a8b7be372a1c6085b51620801de64019eaad5af6525fc59ec3bc2f17e45114"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/luau-polyfill/encodeURIComponent.luau",
+    "sha256": "20dc255d2b95e006dca3fa589454c1810ffc6a2f548e0754d562b2e3fa507884"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/luau-polyfill/extends.luau",
+    "sha256": "35ae10ae57e82e137697d818d66ad3ad7e643705243219042b6c58b52c525bc7"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/luau-polyfill/init.luau",
+    "sha256": "d844965f3d6cbb30a94d1a68d663e27de739d2f615b6bc338ea8297dd1663df7"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/math.luau",
+    "sha256": "8815c44f50547c120cfeb4e86709733a4d75114331ce5b7e01fd8f78a45c5de5"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/number.luau",
+    "sha256": "cc5ad1337618a838cc38aa6225c13c3a65c941e5f8c3c81b352cb1f6c2b8eefc"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/string.luau",
+    "sha256": "5949895a123b937917a3eae0046d0408c25807da3048f2483aa4f44fdd027358"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/symbol-luau.luau",
+    "sha256": "3bb9cb5cf134367d124bbc01103975fbb49a41bb41b1d119f6c1a1cfbf4fee84"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_luau-polyfill@1.2.7/timers.luau",
+    "sha256": "7961eb18b0b7c05f70ebf721eec7cfec96a33f3ce5fee8fd2ce2e07bef0a9ca1"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_math@1.2.7/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_math@1.2.7/math/clz32.luau",
+    "sha256": "a254fa56fbf3ed76b97bf2f42e025247278da95eee002f8196d52dbc4517d4d6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_math@1.2.7/math/init.luau",
+    "sha256": "f536916649214d7b20f438c8c64eb6965b6a44d115555e73519ae26344c60169"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_number@1.2.7/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_number@1.2.7/number/MAX_SAFE_INTEGER.luau",
+    "sha256": "8eab4e907cc0146bbd47563749376b8b23bc9c897c0315d9ab0cc99f3d66f3c1"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_number@1.2.7/number/MIN_SAFE_INTEGER.luau",
+    "sha256": "fd67e6619f84c1a1e6886078fdaa9122c749f841655b14cdd4ca928cb399ce24"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_number@1.2.7/number/init.luau",
+    "sha256": "8356427c5c4d08d97ed1c6403d7ca88d150bc9b5ab8dbdc343a4f6ac427ceb30"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_number@1.2.7/number/isFinite.luau",
+    "sha256": "9582b564c50925660d20628d72b60d7660b28ffb394b8af667d1d1615aa1506e"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_number@1.2.7/number/isInteger.luau",
+    "sha256": "3ae6db1d5d5f51105ec723a78c1529c7d85359d106a87ed1a24d0b643541a7a5"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_number@1.2.7/number/isNaN.luau",
+    "sha256": "d918f0f4ff34ffc96973b19b86d7883fc0996264762fb8210581d4a6a1624b68"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_number@1.2.7/number/isSafeInteger.luau",
+    "sha256": "12ce3b54e79998c8d8dc152d52deafe7fbfc433a669ae272b0638050577b3f2b"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_number@1.2.7/number/toExponential.luau",
+    "sha256": "d4dcfb053ddda202da9dba20513fdadcc817c373decc1a0e957ed45dd9e10f6e"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_promise@3.5.2/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_promise@3.5.2/promise/init.luau",
+    "sha256": "d9c16975c35d9f0aa02e98351b8127240a8f2570dd540c0ff29c00de51aadd4f"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_promise@3.5.2/promise/init.spec.luau",
+    "sha256": "7881044dccaf71a49e30c1299b6a4852ea7990633ad88fbd98ee8854be84003a"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/luau-polyfill.luau",
+    "sha256": "c82fd93d16a4c8f7a94ce690f67158cfe0dad17f85deb683981b53026b5891bf"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/promise.luau",
+    "sha256": "a2fb5dd67f45a35dd3189f7167d2823d3e6c14ebde6347f5d882e4d0c6b84faa"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/DebugTracing.luau",
+    "sha256": "f3b7b7b5b665b4fc3b421e6e35336d12bcf9eac575e5c753947ca8e43265193a"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/MaxInts.luau",
+    "sha256": "a42597e7b46f3f9c8e07539b47ed1ebc8f31acfbd36d1375454a8278ac137a8a"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactCapturedValue.luau",
+    "sha256": "deed5d45a74b41df35fd4485a36cbf7a4a32c6f2d881c39cd535cece86234477"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactChildFiber.new.luau",
+    "sha256": "7d7563eda3d21b1d91e39aa8dd3b1908b38b25cda1377044cafab4411bf22748"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactCurrentFiber.luau",
+    "sha256": "8a0c12381af2b16f42eab463954cf6adacbe09e2fd6cbbad2a690d9484697514"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiber.new.luau",
+    "sha256": "1b88906bd1fd045c2302c63bba10f8e6e814f710f03c16e476e844f78105c068"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberBeginWork.new.luau",
+    "sha256": "6955ec3bb4c83ffa39b0625768adda0d39c0246ea77522f8351855b5066c2a33"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberClassComponent.new.luau",
+    "sha256": "9f4f9ede24c72fdd426ec9fded62bf8d0b72dfc83565c50e0136fdce75dbf294"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberCommitWork.new.luau",
+    "sha256": "e60f310c332caa0f053f8f17d7f8ff6f91954d071b4c4ef5b06b3aa7a2270e52"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberCompleteWork.new.luau",
+    "sha256": "77ac82936dc9031546d08d71872e39b63e303b377c140021489d1624c7faff48"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberComponentStack.luau",
+    "sha256": "cf3c0ad94ec13fbe9b86862e8ba8865520793ddb2d05cb236db633ef6ce72cf3"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberContext.new.luau",
+    "sha256": "eb7a364b1989cec6288f7b2358546f110269f64774b1965e720d9e472d8d5901"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberDevToolsHook.new.luau",
+    "sha256": "4a39281d1d7fdc0c000dfac7912ad97bf7c9ee8306f330a04919bd82d33fb3a7"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberErrorDialog.luau",
+    "sha256": "685b9b88a14f6f6ecdf54154311b86f38e4648529ac7dcdd0c63644995e6a709"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberErrorLogger.luau",
+    "sha256": "0dca2a2afb5b2d2181ff07466dae71b6abac07ac0b4b747b03704710b8881f52"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberFlags.luau",
+    "sha256": "4f83a3c3a90935546b15e599017d69f11b758f9bc959e462c4c26b0482ff8a0d"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberHooks.new.luau",
+    "sha256": "435b102b934674931e70732748929ec278c4336481978d7c264a52bb68d5199c"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberHostConfig.luau",
+    "sha256": "a4ce8d3822f6cdfbaf9a428bf54e1bfc4c10f1b7c8e320aebbaa95c658977877"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberHostContext.new.luau",
+    "sha256": "fb56fc68f7ee0632c1f593e44eaf907f8cd18ba56b84567ecec8ee1f2075be6b"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberHotReloading.new.luau",
+    "sha256": "152f54e439f95fea0db6e01f6ecff7e5d99ba7476ab0409aa9107233e05b0b42"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberHydrationContext.new.luau",
+    "sha256": "f6ca96a102dd767165ebf730d19d1a6c42e50bc7fdd9febad8356cd8d8bbd00d"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberLane.luau",
+    "sha256": "83de3114e10504b5fb54473b1db97709fd66ecbbf446038f7037e1f3166588fb"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberLazyComponent.new.luau",
+    "sha256": "59a186000c1a4cb52d3741cfc101162a0a815744b0bfda85aa19750ff3258821"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberNewContext.new.luau",
+    "sha256": "4340f06af1affcb93c1bbefc9cc2dbfe3512280c02c0ab9c7ee82db7732ad3c6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberOffscreenComponent.luau",
+    "sha256": "3aad33fd2df2f8d0e6be52bb23dad59a194db229c5804e96983f279fd4a03ecf"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberReconciler.luau",
+    "sha256": "4f799c0afadfcf5d04113aa3a32fa3fbe573c5d3c2fd0624af0bc61dfff0503a"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberReconciler.new.luau",
+    "sha256": "b216f0bf913af07ec19604bd846c909e65249547a5e66e305b7cb0ee1a822327"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberRoot.new.luau",
+    "sha256": "11d6598e3735f985e556e0f55c6e41e050b8de7aecf53492f0cb4c032c3bad08"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberSchedulerPriorities.roblox.luau",
+    "sha256": "81d96670412c0217ae8bf8c5843d3c28c0127a826507c5ee73c6e87b6c962241"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberStack.new.luau",
+    "sha256": "7824bb32342c0962cae0e7ed10436294786db1a4d7915165dfa268467f982a8f"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberSuspenseComponent.new.luau",
+    "sha256": "ca3bebcb4d5bdefa7b851fa240f750edc58e4968684b46495ea2c6ed64aeb410"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberSuspenseContext.new.luau",
+    "sha256": "4e0882c8870007a2ad1eeea4f4a82f3514deea58a6755e39b1b99a83692cab8f"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberThrow.new.luau",
+    "sha256": "fed7ebc6e174d0ebeb76e8b9c91a55fc22761a91b1741439704d15a416134052"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberTransition.luau",
+    "sha256": "9dc80bad125aeef79f2a7d6a009ddc05ff211552c1ebdae8ecf89b5449f95753"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberTreeReflection.luau",
+    "sha256": "fffc3d7088010ee5d067c271b1e557a7d2443621a7baa48cffc1a4e2fef41b9c"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberUnwindWork.new.luau",
+    "sha256": "53d38a3ab6669e1472afaf04d1b06769186027528837145f6d833e6712d6c0ca"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberWorkInProgress.luau",
+    "sha256": "7fc912ab1431341ca070598fdcc8638f8f592f93ed42ae1a8f033267db56f257"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactFiberWorkLoop.new.luau",
+    "sha256": "d7732b092f3a90c637a42bf2e13b45e3bfbcaae3b278e155c4cb15b28a6255b5"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactHookEffectTags.luau",
+    "sha256": "fb5bab05da920e39cd939f87ba64e7ef17f48ccbc1c21873940dc6dda78c01d6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactInternalTypes.luau",
+    "sha256": "7b2b8b8002f2d928977e9182ef64e485a0d53de2e7cf8c25f5f6fbf73731f701"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactMutableSource.new.luau",
+    "sha256": "dba4e642e96e645199e70e7258ddb1b8570f93edc9819146b8d5592873d843cc"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactPortal.luau",
+    "sha256": "20232288ed6c2e1fb8ebe624de042e7e302e80f1dffe0dc63f535278e412a03e"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactProfilerTimer.new.luau",
+    "sha256": "9d78b071855df337c98d2460876e212e06fdc886ab0da4f4e794dc8f242606fe"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactRootTags.luau",
+    "sha256": "8705e87dcf2b50b55a36a47ef14a16d2aa746a9171f324a84bf5294d13b3458e"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactStrictModeWarnings.new.luau",
+    "sha256": "b9e7770ff1f175388c92f6ac8c20b0adf9b9cf6a0d9b7c90743caf0784e09e88"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactTestSelectors.luau",
+    "sha256": "f9ed6bdf574b035069067b4e2052fd2947e0f4b8f93f721b7a6230192bfb4ee0"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactTypeOfMode.luau",
+    "sha256": "92c74e56fb86f65f4b9faf486b67f989ea9d2875962a7309523d5822cf6f985d"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactUpdateQueue.new.luau",
+    "sha256": "d95474357420c765455b9bed2ac9e3af4d8cf6312e0f62fc7d301de29bb59ae9"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/ReactWorkTags.luau",
+    "sha256": "e0034094c9cce33db836de4d288412e7ab68af3bb16d8b65d0d1c3ac882ff043"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/RobloxReactProfiling.luau",
+    "sha256": "da99598089237563fdeb22129191402b2e940b68b15db8bd496c65ab0c2224d6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/SchedulerWithReactIntegration.new.luau",
+    "sha256": "8e81bd30ed8550689e49d15fb9977a1964d2b85b6c7923adbfa73311123e6b38"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/SchedulingProfiler.luau",
+    "sha256": "5e8d7bcb398af91211d97b1fe1feb407df788b6e5eeb9210f5f02f3d1b3c4334"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/forks/ReactFiberHostConfig.test.luau",
+    "sha256": "44310018d0c30f00655894ed242dfc568531ac5c170d0d0f2ae266b4ededae9f"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/forks/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react-reconciler/init.luau",
+    "sha256": "efb09a159fde44c9e8c7a538ec918845f4313960a5d1556447079ab037ed5c26"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/react.luau",
+    "sha256": "1a83439d429dcdf96e6e7bd9ebd4caf2b4facddf9833bf3f63f1240d773e10d9"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/scheduler.luau",
+    "sha256": "4e37e86cf80a1a5275c7aba71c1b2b5ae1acf977460426dc7e0c5940239d8001"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-reconciler@17.2.1/shared.luau",
+    "sha256": "60bd7e94ecb130f7555c8b0be998ee7c8279bda5052d15e547434411a8ee36c2"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/luau-polyfill.luau",
+    "sha256": "c82fd93d16a4c8f7a94ce690f67158cfe0dad17f85deb683981b53026b5891bf"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react-reconciler.luau",
+    "sha256": "c7999c55042bf61d3e3d4e5b0761f8cd12770cc334d710b45ae15a30261f0389"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react-roblox/ReactReconciler.roblox.luau",
+    "sha256": "a1382daf2f6aeb71b4bd8d300150808ca0f9deab4c64efcb4f7d974e148bc437"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react-roblox/client/ReactRoblox.luau",
+    "sha256": "cc90d16842c2211ea993d330dc82ab4be4e40c045ee140c8b39e917c97837cfe"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react-roblox/client/ReactRobloxComponent.luau",
+    "sha256": "745b2d601916f8a9f204ca093d9b67f0414535d2673b948aa78d9383c04fdf6a"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react-roblox/client/ReactRobloxComponentTree.luau",
+    "sha256": "74aa27aeae777b27b3d4d8df22db7ebfde262ee15b09ce890934bc4bf588297d"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react-roblox/client/ReactRobloxHostConfig.luau",
+    "sha256": "6c45a20199865f81314af54b5417bf915b7560f095659caeaffaa2af855a58fe"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react-roblox/client/ReactRobloxHostTypes.roblox.luau",
+    "sha256": "1ba8abd9555140f62ca148a6df06b1a60956161f83e5d82e5fb137033277db5f"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react-roblox/client/ReactRobloxRoot.luau",
+    "sha256": "c7a6f30f2d5c38941186e659819674a2223e2c8b9b972ae5485d9025ac6e5a77"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react-roblox/client/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react-roblox/client/roblox/RobloxComponentProps.luau",
+    "sha256": "620274f4220019939b5d4927ade2a714647ed91a488d8963918f2c0da32f88f7"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react-roblox/client/roblox/SingleEventManager.luau",
+    "sha256": "961053b80ad3a915bf68f047bd8572e1f8538670bf525e4422852b1160e8b786"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react-roblox/client/roblox/getDefaultInstanceProperty.luau",
+    "sha256": "dd2bf58d458e5a24cd74d08f230cc9a263f23841c399c1c220c6a554be1e3970"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react-roblox/client/roblox/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react-roblox/init.luau",
+    "sha256": "26386171acfaa066ed8fc9c9b50d4af0f08074cf0b928f443156bfef88dec6c2"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/react.luau",
+    "sha256": "1a83439d429dcdf96e6e7bd9ebd4caf2b4facddf9833bf3f63f1240d773e10d9"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/scheduler.luau",
+    "sha256": "4e37e86cf80a1a5275c7aba71c1b2b5ae1acf977460426dc7e0c5940239d8001"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react-roblox@17.2.1/shared.luau",
+    "sha256": "60bd7e94ecb130f7555c8b0be998ee7c8279bda5052d15e547434411a8ee36c2"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/luau-polyfill.luau",
+    "sha256": "c82fd93d16a4c8f7a94ce690f67158cfe0dad17f85deb683981b53026b5891bf"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/None.roblox.luau",
+    "sha256": "15f6ae99f3d64c0b4054faf062325e5784fc7f595c067e7fb85d33452b29d301"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/React.luau",
+    "sha256": "3422428da0a20934f2ea83165b1a2c7fdc453b51f89ce1d210a5c876e257e321"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/ReactBaseClasses.luau",
+    "sha256": "5b4cab3f72af69e200e1ebf646e6e79e737aa02e44ddebcf54fc10086dc8cfa4"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/ReactBinding.roblox.luau",
+    "sha256": "51b845aca72926f8262235819483e3b6d6cad0a791bf3e55e3c7246f92801c25"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/ReactChildren.luau",
+    "sha256": "d96e35cdc07d824e1d7ee1e62ed804b66155ad3c12cdcb05b52c0f62e2ee5dd3"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/ReactContext.luau",
+    "sha256": "f89706d850303b0b6abb866a54d8fa1c288394754ac1a0f4460832997886cf8b"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/ReactCreateRef.luau",
+    "sha256": "5826acf32d4ad38608d6c8abb9e30f248740bd900afc64f93eb1622b35669288"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/ReactElement.luau",
+    "sha256": "627f8280559bc45c00bd1fc5dd80fddbf37f85e9b0ba1ff64978c99592735628"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/ReactElementValidator.luau",
+    "sha256": "3dacecba77d181064353c960817ec994cd17dc8467f47995e30bda53ca07c219"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/ReactForwardRef.luau",
+    "sha256": "643f5089ed4815bf4e27fa2fdc804f2f1c0aaa6f3cc827f5def6948e0cab19f1"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/ReactHooks.luau",
+    "sha256": "b3dca69c7752a5225708cd155114ee33570a375682adf5e35d43adc1bf41594c"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/ReactLazy.luau",
+    "sha256": "bb944fec5a2728cc94999a99ae449b2a4467afe5774a757c936a7e63a9ef7f73"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/ReactMemo.luau",
+    "sha256": "cec6cfce659a408951a78e95d6093f547201ca9574640d0c20bc841fb475a310"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/ReactMutableSource.luau",
+    "sha256": "bb62e48b4f33983370fa1285c2d50de6994daf1eda904c8870b5da8ec13da94f"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/ReactNoopUpdateQueue.luau",
+    "sha256": "b39918f29d33e39f7ec6d01a83e9361578090b14204df1cdc949a98c16631dce"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/createSignal.roblox.luau",
+    "sha256": "f41d17cde462a3756be724d6661cc7be75d3b11087638b4d56ae62860c8d9829"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/react/init.luau",
+    "sha256": "c36622febbcefc9404c87591f309b3089e3b8db1dd2f703ef6da44007b2b8239"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_react@17.2.1/shared.luau",
+    "sha256": "60bd7e94ecb130f7555c8b0be998ee7c8279bda5052d15e547434411a8ee36c2"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/luau-polyfill.luau",
+    "sha256": "c82fd93d16a4c8f7a94ce690f67158cfe0dad17f85deb683981b53026b5891bf"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/scheduler/Scheduler.luau",
+    "sha256": "423740098fb8b700674b203b01f6873148e0ade2678317c7a90150db5418b5f6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/scheduler/SchedulerFeatureFlags.luau",
+    "sha256": "38749c428a8c17feb6570be989fe5c8fa4d7460963058a75f489029cb6b438a2"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/scheduler/SchedulerHostConfig.luau",
+    "sha256": "fb267f33afae218299cd6bb583a4f3b78dea442daf4afdf23ce9f6f347ffb9d2"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/scheduler/SchedulerMinHeap.luau",
+    "sha256": "4653f4a64a49af359d0a60a439bd86c9b35fc7f479b385f19a26990468e878f0"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/scheduler/SchedulerPriorities.luau",
+    "sha256": "b3a730a8ffeb88b5feb14150e9462ec101c05745df5687a0a7d7df32d43894c3"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/scheduler/SchedulerProfiling.luau",
+    "sha256": "16bfae888c7a9283d4530050103e8b99562193eca2b7f2f0eb0865ab8f4ab124"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/scheduler/Tracing.luau",
+    "sha256": "1d7324e8a66af2db64e54b4b1db9bdbe0d89c9c8eb669bd524e7cbf1f5269ad0"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/scheduler/TracingSubscriptions.luau",
+    "sha256": "f9ecb945730d331dd18a7dde0b66124f22d44dac257c8784696f6f7c63a46ad1"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/scheduler/forks/SchedulerHostConfig.default.luau",
+    "sha256": "781483d3015e74e72ff79c486227b481bbc522c6385f0fbf43cf387c5e0ddb59"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/scheduler/forks/SchedulerHostConfig.mock.luau",
+    "sha256": "319f92f632ba926f86be8b4237205bd97dfad2fc8e40f65d9807640d377e8ca7"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/scheduler/forks/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/scheduler/init.luau",
+    "sha256": "800a1d11e84a2ba5a36a8e1bf448fcbae9bce6e26396ffb72a5e2db365281b82"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/scheduler/unstable_mock.luau",
+    "sha256": "878acf6439b9f9f081dec0d9a66d6cc6e56e85af25756d702679d93613a34fab"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_scheduler@17.2.1/shared.luau",
+    "sha256": "60bd7e94ecb130f7555c8b0be998ee7c8279bda5052d15e547434411a8ee36c2"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/luau-polyfill.luau",
+    "sha256": "c82fd93d16a4c8f7a94ce690f67158cfe0dad17f85deb683981b53026b5891bf"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ConsolePatchingDev.roblox.luau",
+    "sha256": "14c1fc12d8f87d38ce60f6aec6d1fb8966b821354fe061a2b3df34cf334d5cd9"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ErrorHandling.roblox.luau",
+    "sha256": "e3b9468e4505fe3f43aee5940076c5358a9765cc1bb43d3378ab1cbd5f00b59b"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ExecutionEnvironment.luau",
+    "sha256": "0ac649c5ddd981483879fafb2c6764bfd2823bec8f76604458851fbba81ce911"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/PropMarkers/Change.luau",
+    "sha256": "924d3addbedde6f95aea49903e840e5e77855293425e07d4db48e741b6169717"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/PropMarkers/Event.luau",
+    "sha256": "7e1c3db3456335b63f940cfb184bbaef0986bb076b262e2f1f8926544eb106b2"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/PropMarkers/Tag.luau",
+    "sha256": "d066fd6b66fa6e03343450a52767ca0a432ffc4777aa7fb7b54335731690a2de"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/PropMarkers/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactComponentStackFrame.luau",
+    "sha256": "b4c32f5f80c72e55575bfd172cf06d0a62341c5d9128dee06cedd15f0d6f9734"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactElementType.luau",
+    "sha256": "f0d34e72f61d2884b0189ad1dad0c202f3a4273e982489a0b51f3806060e663b"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactErrorUtils.luau",
+    "sha256": "4db5d42bc4dd5b2e2f0d0480e491f99955bae352eee1973073af63c144e656e7"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactFeatureFlags.luau",
+    "sha256": "d02eabe05ffb7f813677b7217819acea9264bb674b682676c974f13691591f3f"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactFiberHostConfig/WithNoHydration.luau",
+    "sha256": "e46d2a940920c6a0e38ff8fd8a5d47a2cf20689d0157215012df42b669b14ed8"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactFiberHostConfig/WithNoPersistence.luau",
+    "sha256": "559034b2b839124c5decbfd280c5b9675c0ec1d1e3a230592388f90ad5bdcb8e"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactFiberHostConfig/WithNoTestSelectors.luau",
+    "sha256": "5ef9124eaa2b8423620f75d7e07a93e81657eb99b71070c5fc433c1b6b8d3831"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactFiberHostConfig/init.luau",
+    "sha256": "e330430accae29b20f7e3ebd23bfd98bc4947bac57272b173e7267d5afb049a1"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactInstanceMap.luau",
+    "sha256": "c25b8c3acc03f70f61cb891d8e845e22cc56b3d1d2040b70425adcfce4b695dd"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactSharedInternals/IsSomeRendererActing.luau",
+    "sha256": "2dc7f9fdf252fa6555d175679a07154602ae5464a40cc6ab106e5f25054ce279"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactSharedInternals/ReactCurrentBatchConfig.luau",
+    "sha256": "0168e1b74c6353d91ebe12ad3c4e0601953ba996c4bcd35970167125fe4c97ef"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactSharedInternals/ReactCurrentDispatcher.luau",
+    "sha256": "987bb589848edf3bcabeee9821efe196559fdf52f94cd3119ba871ef66113338"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactSharedInternals/ReactCurrentOwner.luau",
+    "sha256": "878650e6632e4c52fc53ef6d928c31a2de6f7205ca8677d9fbc2328a8fbf8329"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactSharedInternals/ReactDebugCurrentFrame.luau",
+    "sha256": "cb8b354993a8893ace6a20c6ddee980472dccac4443909eac5cd717e5b98db02"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactSharedInternals/init.luau",
+    "sha256": "90a76bb8465ea8770deba9d1119948c082460a07cfc704d221e041f7744768c8"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactSymbols.luau",
+    "sha256": "8db637701aab570249c91598a544ad04411107288ef693274c8e602cbb7ba56e"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactTypes.luau",
+    "sha256": "ec638a33a8634247278690be3c6b1657226803dfdcda2e9d3bcc9f5131eb3037"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/ReactVersion.luau",
+    "sha256": "cf97c1541a2174940a4af4b471fc7a83f8a38938c96db4c871ce8c97f1e2de30"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/Symbol.roblox.luau",
+    "sha256": "065d577473245d86f739e2c8c6a7d30abf735b0585e74e76cfd8c9144f06ad09"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/Type.roblox.luau",
+    "sha256": "41f22ffa7e85702b2b033568ee45b2185fd60b4cd277f6a30b29c40dd53c7eb2"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/UninitializedState.roblox.luau",
+    "sha256": "4b69a3b16fdd06d1194acb8141c37b3fb7e5621135cc28176e135f8d23b43162"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/checkPropTypes.luau",
+    "sha256": "c62c20424d76d3ef280d42457337f6931701170b333a692954db67ce01fc097a"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/console.luau",
+    "sha256": "44856926f070d36e851b4fff4cf7eb3463c0d69204a8f4b4100ef1ebfe7ec9cc"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/consoleWithStackDev.luau",
+    "sha256": "55cc314072a91f6e5c7da4d9c05673ee242d78c67ebab6e570a06492f7aa5649"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/enqueueTask.roblox.luau",
+    "sha256": "b558a1fb01b1037d6b5fc0f978481cba629e9fba9a4f05ba55509a9de0dd2916"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/flowtypes.roblox.luau",
+    "sha256": "64a5a6229f064b698a5b4a284c89fb51ab3f166ae56d1514ebd4a116f3a6097e"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/formatProdErrorMessage.luau",
+    "sha256": "0a6436321c9650c0514b6cbcb03e71858822d7cfcb23e30b622dc63fed4a3dbf"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/getComponentName.luau",
+    "sha256": "b8181081ecdcb34be6c24b63c7e345627741da4f342def7ec717a611612c9386"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/init.luau",
+    "sha256": "71c52787b532c91638c91157898ad5e6d0b7e2be306a69eeb5fc5f437ec3a80d"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/invariant.luau",
+    "sha256": "49d74517fb2b2ba18b387e0bc1c262df14869414fbb1abfc31ebdc319cb97c16"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/invokeGuardedCallbackImpl.luau",
+    "sha256": "a05b11040c0e3b0defb98022e2aeee0112624d9d1b8d24ca496bccaf4869c48a"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/isValidElementType.luau",
+    "sha256": "7fe03c99b8e21618fcb74e9975144925ee957743d1026f353cb29fa5b7963de2"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/objectIs.luau",
+    "sha256": "6b8ffddf709fa756740f1080d4359c87af5f396dbb7bcea9c0adb8aa0b539a25"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_shared@17.2.1/shared/shallowEqual.luau",
+    "sha256": "364b7270749c834016b2d592dc3db6e50ec46f82917187206c9e08e93fe4354c"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/es7-types.luau",
+    "sha256": "459624a89da2b743a92dfc28d13d9a4d87946948f3ea99fd6b5a77d9d73ae772"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/number.luau",
+    "sha256": "cc5ad1337618a838cc38aa6225c13c3a65c941e5f8c3c81b352cb1f6c2b8eefc"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/string/charCodeAt.luau",
+    "sha256": "d21748d8a20a6e96e3520aec1c025b272fe77a782c2ca01f0078fcb1d764d39d"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/string/endsWith.luau",
+    "sha256": "bdad701869196ec4f87393a9692db305308fdfa55c1e9a215111fcc6647d7d95"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/string/findOr.luau",
+    "sha256": "9690ecfcc9b8da6a538a4e49d3053035663909e9d3cfeaf43272c83afb747bab"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/string/includes.luau",
+    "sha256": "cfffe935be5b31b7119c85142266a8d626a6c5e355b693cdc4df31704631e0ba"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/string/indexOf.luau",
+    "sha256": "d10c4bb9ae9d777b51da2b0d135944df3c620ced30eaf38c9a0356eaa1c1f737"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/string/init.luau",
+    "sha256": "561b90b98b1aaf3296a77d6efcae8d34a0da3a175c4356d4fab5c2efb3d47368"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/string/lastIndexOf.luau",
+    "sha256": "da536cd16f3337e1ed3c30dd133417f93d415184564fe3c2a9d0eafe55b51cd0"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/string/slice.luau",
+    "sha256": "1d96317359a029c9cf862c6d4f2abf66b2974657bca057535255700a19e0c0b1"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/string/split.luau",
+    "sha256": "a6ddb1803d864bb2a6d6c589f0a74fef6dac3dc708182006b226bd2ad4b129c7"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/string/startsWith.luau",
+    "sha256": "f1d71e3c48d3f47783b9c7939c7ebd82829b2fcb6ab095cf7d2c56f27a89098e"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/string/substr.luau",
+    "sha256": "aae60baf33dd234dac0bde6c83d4f5f3635c6788175d1218d1c26a2e5ed89bb7"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/string/trim.luau",
+    "sha256": "036d08d23140ad0d14a14431396ade73e33c78359160bed9241bb3adec4a8015"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/string/trimEnd.luau",
+    "sha256": "8f5f7a347f1b18aead4a75066414e148cd43942590d43c65351f55980e53f264"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_string@1.2.7/string/trimStart.luau",
+    "sha256": "1d864fe952f53632925b7a440430e9b450f8015b8658eb9429c8367ab8639029"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_symbol-luau@1.0.1/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_symbol-luau@1.0.1/symbol-luau/Registry.global.luau",
+    "sha256": "2ab49280ff8a57a3b1856410c1f63001ecd3adb1f522f68cc69996e4969dfbf5"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_symbol-luau@1.0.1/symbol-luau/Symbol.luau",
+    "sha256": "412894774e79ccb050d04285b506026c99982a2af8e2d617f9d518834b39e2f9"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_symbol-luau@1.0.1/symbol-luau/init.luau",
+    "sha256": "4709d947df509cb6a778464aac8cc185e0b61e24cfd98d38bee6abae7fd1bbdb"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_timers@1.2.7/collections.luau",
+    "sha256": "8e46ea853a2f3933629ee7c1bcb4f875fc94be2ee2d1d857fde95cd73bcbea53"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_timers@1.2.7/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_timers@1.2.7/timers/init.luau",
+    "sha256": "c82d3d93addccd916151e28a538b8141427a91b22ab619f2dea0c2bf4f59a80f"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_timers@1.2.7/timers/makeIntervalImpl.luau",
+    "sha256": "b1da98e5b8ae5f6d6ca8510a0bf89136dc5e7dfe088296a2484edbeb6ed87dac"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/_Index/jsdotlua_timers@1.2.7/timers/makeTimerImpl.luau",
+    "sha256": "8a2ca852c72cda06c66690f9911693735205e204921861337c40ced31f16cd08"
+  },
+  {
+    "path": "src/ReplicatedStorage/Packages/init.meta.json",
+    "sha256": "66f93ee182150fb6c80c692022a7835f75e2228028f841c329329cf4dc8cddb6"
+  },
+  {
+    "path": "src/ReplicatedStorage/Shared/BloomUtil.luau",
+    "sha256": "a83c5dc6fb6e014d4c7a89780f203cb29233a2cbb02f18a0d9d3890ee9eb4344"
+  },
+  {
+    "path": "src/ReplicatedStorage/Shared/NumberFormatter.luau",
+    "sha256": "7f4dd2d44d7084e944c7c10050f8e7fd9f6ba8b3621ca0c157ff8375b1472cf7"
+  },
+  {
+    "path": "src/ReplicatedStorage/Shared/ReactPackages.luau",
+    "sha256": "de9b0f2c2886c23667a4b6ed398f094345df99e3f11ab49df51a0a04ee66c756"
+  },
+  {
+    "path": "src/ReplicatedStorage/Shared/SeasonPlan.luau",
+    "sha256": "353f930b92ede646cdf2f18ebd1439199996557439b2b60efc5cdee9108b9542"
+  },
+  {
+    "path": "src/ReplicatedStorage/Shared/TableUtil.luau",
+    "sha256": "5539088905a6e83d429011af92cbffe6568d9b28f1e023f7893a867b41091ad0"
+  },
+  {
+    "path": "src/ReplicatedStorage/Shared/WorkshopEffects.luau",
+    "sha256": "dbd2ce80487a679c842b9c98256fb79d2120067fdce5e2bfa05239b50fbfa33c"
+  },
+  {
+    "path": "src/ServerScriptService/Data/DataConfig.luau",
+    "sha256": "3786b77cefe82c1c960a7839a4ca43b368bf394feacf0202f03c713fe20d462a"
+  },
+  {
+    "path": "src/ServerScriptService/Data/DefaultProfile.luau",
+    "sha256": "95950d1e48e67e6c80ca0c12b101158f4195ea87754e28a1382b401672290777"
+  },
+  {
+    "path": "src/ServerScriptService/Data/LegacyBloomMapping.luau",
+    "sha256": "9e6649366f63b29e155df46f2d3533f3e8a3d25217af6aa79f3c27235d5712e3"
+  },
+  {
+    "path": "src/ServerScriptService/Data/ProfileSchema.luau",
+    "sha256": "cd17ce9d94f7e24471e3f3ac5f7c7eb575a6d743905c00a20ff428e06823d7c4"
+  },
+  {
+    "path": "src/ServerScriptService/ServerBootstrap.server.luau",
+    "sha256": "f9e530ab4ffab55c977da3a3780495e848880914b66e6be07d5d7dd03b5d60cf"
+  },
+  {
+    "path": "src/ServerScriptService/Services/AnalyticsService.luau",
+    "sha256": "f36a605db63bd2909b5bba49ebd89dc0e2b0ed489b3691115eff1781fa15af50"
+  },
+  {
+    "path": "src/ServerScriptService/Services/BuildTrialService.luau",
+    "sha256": "8c39fbb5849c2ade328f7f204d0f38ad322f865825541c2bd08aba1988bc91c3"
+  },
+  {
+    "path": "src/ServerScriptService/Services/DataService.luau",
+    "sha256": "53b5a79ca798e57322d9270385ff7b8d434bae39041b1802c00284615d5bd726"
+  },
+  {
+    "path": "src/ServerScriptService/Services/FlowerProgressionService.luau",
+    "sha256": "b830114108b095e9fbed77abfe668b7cdd580a6135efbcbcec53c02e477cebf3"
+  },
+  {
+    "path": "src/ServerScriptService/Services/FlowerService.luau",
+    "sha256": "17a584bbab0fd436b1f539ef77f3b3f625d74fe5e8f9f54f63a40e4f8bda7934"
+  },
+  {
+    "path": "src/ServerScriptService/Services/GardenActivityService.luau",
+    "sha256": "e9c9cf689ca990c7b14efe71d21df5526cfad252d81407c2c4db581595193420"
+  },
+  {
+    "path": "src/ServerScriptService/Services/GardenPlotService.luau",
+    "sha256": "fcaec6512ca052ebd0c5a1e49916475f83a9a46669fc73cc975184145b418f17"
+  },
+  {
+    "path": "src/ServerScriptService/Services/GardenSynergyService.luau",
+    "sha256": "63f026230c54058446597d48ceb6dc326b3e89d08f9051869c0a2429f4216aa5"
+  },
+  {
+    "path": "src/ServerScriptService/Services/HiveService.luau",
+    "sha256": "20e6da43a0b825b6079d1ecf027861b041b40e86184863ddad9ef1a914cc9d19"
+  },
+  {
+    "path": "src/ServerScriptService/Services/InventoryService.luau",
+    "sha256": "1af0eeaafd5359bfd0ef5e6f7512dc458c58e1d6a22a66d2bc0d7de25eeacf50"
+  },
+  {
+    "path": "src/ServerScriptService/Services/MapService.luau",
+    "sha256": "ed540b90a235f7e750c0c93b84cf47881cf922100fe33dcb78534b219bc06555"
+  },
+  {
+    "path": "src/ServerScriptService/Services/MetaProgressionService.luau",
+    "sha256": "e12ed32eaa739b5c3f1643b4c50ee91041422bc2fd86b09a19e30a9c707f5358"
+  },
+  {
+    "path": "src/ServerScriptService/Services/PlayerService.luau",
+    "sha256": "ec7ac0ffb19a89947176aa289e3902875f610c2f074366889f952f071a709d11"
+  },
+  {
+    "path": "src/ServerScriptService/Services/PollinatorService.luau",
+    "sha256": "5c7b98157745ca73f2397c600d299bdac07b7fefa3a3bf96081f10d1e99a0320"
+  },
+  {
+    "path": "src/ServerScriptService/Services/RemoteService.luau",
+    "sha256": "8c36616d4e237e61d7fe35c2f2213b5946bd994752263af9c31e3fd0b40164dd"
+  },
+  {
+    "path": "src/ServerScriptService/Services/RollService.luau",
+    "sha256": "37c43f7e80b14552c5acc4a135e732c8bfca5ee21932062dfc580d51cfd82812"
+  },
+  {
+    "path": "src/ServerScriptService/Services/SeasonService.luau",
+    "sha256": "31c3dc06ae58032aa91836374fccc84b139bb521393395ed6e51c78f64095bb7"
+  },
+  {
+    "path": "src/ServerScriptService/Services/SocialService.luau",
+    "sha256": "7ce4c8f60591ac8ac7d3969b1a095f51bd306d51f5ea26a6fa29f16f900d71ab"
+  },
+  {
+    "path": "src/ServerScriptService/Services/StatsService.luau",
+    "sha256": "bc358a9d0a8768fea64d99299aa733dd1b3a661ea9e81fce7d0928bd70809035"
+  },
+  {
+    "path": "src/ServerScriptService/Services/TutorialService.luau",
+    "sha256": "4393184c36fd629c355452c14b6c2248d2fd8fcc897d796e48bb7ac81969374d"
+  },
+  {
+    "path": "src/ServerScriptService/Services/WorkshopService.luau",
+    "sha256": "89317ff3f505edc7653c9f800d513c443b0a03a694930f6188371c765138fd0b"
+  },
+  {
+    "path": "src/ServerScriptService/Tests/ConfigValidation.luau",
+    "sha256": "164b3e701d3441cbb9d06ef31569e7aa752a9955adf6a766e7ee2698a2356265"
+  },
+  {
+    "path": "src/ServerScriptService/Tests/SmokeTests.luau",
+    "sha256": "0f908ceb92356eaa5577ce546c777213a633845e367a7bdbfd80f44dd662c1a9"
+  },
+  {
+    "path": "src/ServerStorage/Models/Flowers/BasicFlower.rbxm",
+    "sha256": "cf519d729cf0388dee1bc4002bd235977d2ca821b8b8672167535dc495b72b58"
+  },
+  {
+    "path": "src/StarterPlayer/StarterPlayerScripts/ClientBootstrap.client.luau",
+    "sha256": "421d8d67771f193f615bd2b4af7ae2eca5cb5563df04e483b7f6033300a1a0f0"
+  },
+  {
+    "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/ActivityController.luau",
+    "sha256": "9e47a309e32c656f0a5e467967f471d1eafe32181c5e01986012b0ca9111882d"
+  },
+  {
+    "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau",
+    "sha256": "5b416b877a7b6efd9d8c26cf6bbe5ca4ce5b98980188e7c5ff7df575637f3d42"
+  },
+  {
+    "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/GardenPresentationController.luau",
+    "sha256": "82c142b91853dd3b32a509f4714c3a3a4d4f9be5f58faeddecd6a751f8ec7957"
+  },
+  {
+    "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/PollinatorController.luau",
+    "sha256": "baa07e0823921796223d84c6eeaf83e54dd9ad77d325b4ff085e1c414848dc45"
+  },
+  {
+    "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/RewardPresentationController.luau",
+    "sha256": "55cb0186cac9a96bd8922b0b3fbfd080d4249ad1c0378906cc7b58be008a322e"
+  },
+  {
+    "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/TutorialGuideController.luau",
+    "sha256": "058b4a784bffada2170343f49197794edcfc0efc24a0ef1af77463573c6105f3"
+  },
+  {
+    "path": "src/TextChatService/BubbleChatConfiguration/ImageLabel.rbxm",
+    "sha256": "458b34ce29689581cf59732ba864f414d2be23a3332ae203f2126a6824ece13d"
+  },
+  {
+    "path": "src/TextChatService/BubbleChatConfiguration/UICorner.rbxm",
+    "sha256": "92050ed0fd6bb59790ff0fb7e63e98f449ab00bde92133fcbd9abbe3d6431c39"
+  },
+  {
+    "path": "src/TextChatService/BubbleChatConfiguration/UIGradient.rbxm",
+    "sha256": "9ce223c7799dd1d40e30e43f7bc7fe1df12b875fd18d895500bc1d500e565418"
+  },
+  {
+    "path": "src/TextChatService/BubbleChatConfiguration/UIPadding.rbxm",
+    "sha256": "15081d1d0d5987b23e57acd9a3fc93884bda5c05c464ded5e99d0e40d5d59c20"
+  },
+  {
+    "path": "src/TextChatService/BubbleChatConfiguration/init.meta.json",
+    "sha256": "5e9afc248dd68d53513ecacba40b8d0eb5d15490db5dd27a1618be33b6f90653"
+  },
+  {
+    "path": "src/TextChatService/ChannelTabsConfiguration.model.json",
+    "sha256": "8363b0f78b0872b7f58d1b0a9be416ae0a2e83fc98c15210fce90ab752ed9466"
+  },
+  {
+    "path": "src/TextChatService/ChatInputBarConfiguration.model.json",
+    "sha256": "d9613c267703922bbb521943558401396e1397b4d53dc08417c581fff4d37885"
+  },
+  {
+    "path": "src/TextChatService/ChatWindowConfiguration.model.json",
+    "sha256": "ed1d5a3c7e6e9eac052dfb28a5a9e2edfb7df5f64c23c20cb787703c09b2dc9f"
+  },
+  {
+    "path": "src/Workspace/BrickCenter.rbxm",
+    "sha256": "24e0aa003e2a7979beb4b508d9ca3b15a90115b9167e6133c88875525388b50a"
+  },
+  {
+    "path": "src/Workspace/FruitOrchardHub.model.json",
+    "sha256": "1cd8675cc489a5547c3ba76448e3cdba7ae7546cca6af8b7630ddb73ecd1d943"
+  },
+  {
+    "path": "src/Workspace/Garden/GardenCenter.rbxm",
+    "sha256": "e0af9d6134aa8f8770c6c208e328adfb834f6f9b747d08452f6f3f5a069b5c14"
+  },
+  {
+    "path": "src/Workspace/Garden/LocationDecorTemplates/CrystalGreenhouseDecor.model.json",
+    "sha256": "fc24cb4126ea69e894b0a428c88ed14e17c8ee4dcca9ed29c2febb586e2853fa"
+  },
+  {
+    "path": "src/Workspace/Garden/LocationDecorTemplates/StarterOrchardDecor.model.json",
+    "sha256": "b2bb6eafb0fd06a4a116f3c125865fbf1c0006a959cac3e263797b158ecd5b3d"
+  },
+  {
+    "path": "src/Workspace/Garden/LocationDecorTemplates/TwilightGroveDecor.model.json",
+    "sha256": "612cf86e1e0a40ca5e48b9b600eb8beebf4d5f2ad8468ca91dd65b5b8cc6e249"
+  },
+  {
+    "path": "src/Workspace/Garden/LocationTemplates/CrystalGreenhouse.rbxm",
+    "sha256": "4332eaee126f2abb8e710c8ce384ba6b09eca7d638cfbeaa159ae115f882cafd"
+  },
+  {
+    "path": "src/Workspace/Garden/LocationTemplates/StarterOrchard.rbxm",
+    "sha256": "f380b98f9291127e81d941e0571d2c46f7932ff914cbbac8d8b5078b553010d2"
+  },
+  {
+    "path": "src/Workspace/Garden/LocationTemplates/TwilightGrove.rbxm",
+    "sha256": "9369c64f0853e546c2f158ce1ccea7f7dbed5e53ee6d8a0b43efa77e7e6d0ab5"
+  },
+  {
+    "path": "src/Workspace/ReferenceScenery.rbxm",
+    "sha256": "92984b5f5be3a719d2070993e5061f797b36e2ecbed678dc34c792f24679be59"
+  },
+  {
+    "path": "src/Workspace/SpawnLocation.rbxm",
+    "sha256": "7a6eb50a2bb8cd6ca864e9e5bdf6ba66339199eb563c6434ac38ce89509a5601"
+  }
+]

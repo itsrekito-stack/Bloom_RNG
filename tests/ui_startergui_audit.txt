@@ -1,0 +1,45 @@
+PASS StarterGui mapped to src/StarterGui
+PASS BloomUI declarative ScreenGui
+PASS ScreenGui uses sibling ZIndex for dynamic menus
+PASS roulette direct child of SafeRoot — BloomUI/SafeRoot/VerticalRoulette
+PASS roll button direct child of SafeRoot — BloomUI/SafeRoot/RollButton
+PASS Bloom meter independent — BloomUI/SafeRoot/RollHUD
+PASS roulette transparent
+PASS roulette clips to three visible rows
+PASS roulette Next
+PASS Next transparent
+PASS Next only icon/name/chance
+PASS roulette Current
+PASS Current transparent
+PASS Current only icon/name/chance
+PASS roulette Previous
+PASS Previous transparent
+PASS Previous only icon/name/chance
+PASS controller semantic roulette slots
+PASS top next / middle current / bottom previous logic
+PASS runtime buffer cloned locally
+PASS no authored Buffer required
+PASS fractional drop chance
+PASS long settle sequence
+PASS vertical downward tween
+PASS spin sound
+PASS reward sound
+PASS landing result animation
+PASS Roll is toggle
+PASS auto-roll blocks while landing
+PASS SeedSatchel unlocks on first seed
+PASS plant picker has explicit empty-state
+PASS dynamic controls inherit panel ZIndex
+PASS auto roll no longer Workshop-locked
+PASS roulette editable position exists
+PASS roll editable position exists
+PASS roulette top centered
+PASS current slot visibly marked
+PASS main panel compact
+PASS softer roulette audio
+PASS Pet-Sim seed grid
+PASS live-sync resolver exists
+PASS Studio prefers authored StarterGui template
+PASS Studio fallback clones StarterGui into PlayerGui
+PASS old PlayerGui clone error removed
+TOTAL 44/44 PASS
