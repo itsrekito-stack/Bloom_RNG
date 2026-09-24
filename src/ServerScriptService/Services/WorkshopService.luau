@@ -34,10 +34,10 @@ function S:Buy(player,id)
  if p.Currencies.PetalDust<(n.Dust or 0) then return false,"DUST_REQUIRED" end
  if p.Currencies.AncientNectar<(n.Nectar or 0) then return false,"NECTAR_REQUIRED" end
 
- w.Points-=n.Cost or 0
- p.Currencies.Coins-=n.Coins or 0
- p.Currencies.PetalDust-=n.Dust or 0
- p.Currencies.AncientNectar-=n.Nectar or 0
+ w.Points-=(n.Cost or 0)
+ p.Currencies.Coins-=(n.Coins or 0)
+ p.Currencies.PetalDust-=(n.Dust or 0)
+ p.Currencies.AncientNectar-=(n.Nectar or 0)
  w.Nodes[id]=true
  if n.Permanent then w.LegacyNodes[id]=true end
 
@@ -57,9 +57,9 @@ function S:Respec(player)
   local n=C.Nodes[id]
   if n and not n.Permanent then
    changed=true
-   p.WorkshopV5.Points+=n.Cost or 0
-   p.Currencies.Coins+=n.Coins or 0
-   p.Currencies.PetalDust+=n.Dust or 0
+   p.WorkshopV5.Points+=(n.Cost or 0)
+   p.Currencies.Coins+=(n.Coins or 0)
+   p.Currencies.PetalDust+=(n.Dust or 0)
    p.WorkshopV5.Nodes[id]=nil
   end
  end
