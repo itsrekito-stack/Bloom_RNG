@@ -74,16 +74,33 @@ def roblox_thumbnail(asset_id: str) -> Optional[tuple[bytes, str]]:
                 return None
         time.sleep(0.2 + attempt * 0.15)
 
-    if not image_url:
-        return None
+    if image_url:
+        try:
+            image_bytes, content_type = fetch_url(image_url)
+        except Exception:
+            image_bytes, content_type = b"", ""
+    else:
+        image_bytes, content_type = b"", ""
 
-    try:
-        image_bytes, content_type = fetch_url(image_url)
-    except Exception:
-        return None
+    # Newly uploaded image assets can spend a while in the thumbnail service
+    # even though the raw asset is already available. Try Asset Delivery so
+    # Bloom UI Studio can preview fresh Workshop icons immediately.
+    if not image_bytes:
+        try:
+            asset_url = "https://assetdelivery.roblox.com/v1/asset/?" + urllib.parse.urlencode({"id": asset_id})
+            image_bytes, content_type = fetch_url(asset_url)
+        except Exception:
+            return None
 
     if not content_type.startswith("image/"):
-        content_type = "image/png"
+        if image_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+            content_type = "image/png"
+        elif image_bytes.startswith(b"\xff\xd8\xff"):
+            content_type = "image/jpeg"
+        elif image_bytes[:4] in {b"RIFF"} and b"WEBP" in image_bytes[:16]:
+            content_type = "image/webp"
+        else:
+            content_type = "image/png"
 
     result = (image_bytes, content_type)
     _thumbnail_cache[asset_id] = result
