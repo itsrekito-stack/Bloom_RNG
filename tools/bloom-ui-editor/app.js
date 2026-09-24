@@ -998,6 +998,19 @@ function updateOverlay(){
  updateGeometrySelection();
 }
 
+
+function hasGuiChildren(n){
+ return (n?.Children||[]).some(c=>!MODIFIERS.has(c.ClassName));
+}
+function visibilityHelpGroup(n){
+ if(!n||n.ClassName==="ScreenGui"||MODIFIERS.has(n.ClassName)||!hasGuiChildren(n))return "";
+ if(prop(n,"Visible",true)!==false)return "";
+ return group("VISIBILITY WARNING",[
+  '<div class="visibility-warning">В Roblox <b>Visible = false</b> скрывает этот объект и всех его GUI-детей. Если нужен невидимый контейнер, оставь Visible включённым и сделай фон прозрачным.</div>'+
+  '<button id="childrenVisibleBtn" class="btn visibility-fix-btn">СКРЫТЬ ФОН · ОСТАВИТЬ ДЕТЕЙ</button>'
+ ]);
+}
+
 function renderInspector(){
  const n=selected();if(!n){els.inspector.className="inspector empty";els.inspector.innerHTML='<div class="empty-state">Выбери объект.</div>';return}
  els.inspector.className="inspector";const selectionCount=state.selectedIds.size;$("#selectionKind").textContent=selectionCount>1?`${selectionCount} объектов · ${n.ClassName}`:n.ClassName;
@@ -1010,6 +1023,8 @@ function renderInspector(){
    numProp("ZIndex",prop(n,"ZIndex",1),v=>setProp(n,"ZIndex",v))
   ])
  ]));
+ const visibilityWarning=visibilityHelpGroup(n);
+ if(visibilityWarning)groups.push(visibilityWarning);
  if(n.ClassName==="ScreenGui"){
   groups.push(group("SCREENGUI",[
    boolProp("IgnoreGuiInset",prop(n,"IgnoreGuiInset",false),v=>{setProp(n,"IgnoreGuiInset",v);state.inset=v?0:36;$("#insetInput").value=state.inset;renderAll()}),
@@ -1100,6 +1115,14 @@ function bindInspectorHandlers(n){
    if(TEXT_CLASSES.has(n.ClassName)&&!Object.prototype.hasOwnProperty.call(next,"Text"))next.Text="";
    pushHistory();n.Properties=next;changed();toast("Свойства применены");
   }catch(e){toast("Неверный JSON свойств",true)}
+ });
+ $("#childrenVisibleBtn")?.addEventListener("click",()=>{
+  pushHistory();
+  n.Properties=n.Properties||{};
+  n.Properties.Visible=true;
+  n.Properties.BackgroundTransparency=1;
+  changed();
+  toast("Контейнер видим, фон прозрачный — дети останутся видимыми");
  });
  els.inspector.querySelectorAll("[data-align]").forEach(b=>b.addEventListener("click",()=>alignSelected(b.dataset.align)));
  $("#tidyBtn")?.addEventListener("click",()=>tidySiblings(finite($("#arrangeColumns")?.value,3),finite($("#arrangeGap")?.value,8)));
