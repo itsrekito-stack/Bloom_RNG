@@ -124,6 +124,17 @@ function selected(){return findNode(state.selectedId)}
 function selectedNodes(){
  return [...state.selectedIds].map(findNode).filter(Boolean);
 }
+function selectedMoveRoots(){
+ const picked=selectedNodes().filter(n=>n&&n!==state.root&&!MODIFIERS.has(n.ClassName));
+ return picked.filter(n=>{
+  let p=findParent(n.__id);
+  while(p){
+   if(state.selectedIds.has(p.__id))return false;
+   p=findParent(p.__id);
+  }
+  return true;
+ });
+}
 function isSelectedId(id){return state.selectedIds.has(id)}
 function setPrimarySelection(id){
  if(!id)return;
@@ -392,8 +403,17 @@ function addMeasureLine(x1,y1,x2,y2,label){
 }
 function updateGeometrySelection(){
  if(!els.geometry)return;
- els.geometry.querySelectorAll(".geom-measure-line,.geom-measure-label,.geom-size-badge").forEach(x=>x.remove());
+ els.geometry.querySelectorAll(".geom-measure-line,.geom-measure-label,.geom-size-badge,.geom-group-box").forEach(x=>x.remove());
  if(!state.geometry)return;
+ const moveRoots=selectedMoveRoots();
+ if(moveRoots.length>1){
+  const r=groupBounds(moveRoots);if(!r)return;
+  const box=document.createElement("div");box.className="geom-group-box";
+  box.style.left=r.left+"px";box.style.top=r.top+"px";box.style.width=r.w+"px";box.style.height=r.h+"px";
+  box.innerHTML='<span>'+moveRoots.length+' объектов · '+Math.round(r.w)+' × '+Math.round(r.h)+'</span>';
+  els.geometry.appendChild(box);
+  return;
+ }
  const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName))return;
  const el=els.guiRoot.querySelector(`[data-id="${n.__id}"]`);if(!el||el.style.display==="none")return;
  const r=localRect(el),parent=findParent(n.__id);
@@ -429,6 +449,41 @@ function collectGuideTargets(n){
  }
  return {base,xs,ys};
 }
+
+function groupBounds(nodes){
+ const rects=nodes.map(n=>localRect(els.guiRoot.querySelector(`[data-id="${n.__id}"]`))).filter(Boolean);
+ if(!rects.length)return null;
+ const left=Math.min(...rects.map(r=>r.left)),top=Math.min(...rects.map(r=>r.top));
+ const right=Math.max(...rects.map(r=>r.right)),bottom=Math.max(...rects.map(r=>r.bottom));
+ return {left,top,right,bottom,w:right-left,h:bottom-top,cx:(left+right)/2,cy:(top+bottom)/2};
+}
+function collectGroupGuideTargets(nodes){
+ const base=groupBounds(nodes);if(!base)return null;
+ const selectedSet=new Set(nodes.map(n=>n.__id));
+ const xs=[
+  {value:0,label:"Viewport L"},{value:state.viewport.w/2,label:"Viewport CX"},{value:state.viewport.w,label:"Viewport R"}
+ ];
+ const ys=[
+  {value:0,label:"Viewport T"},{value:state.viewport.h/2,label:"Viewport CY"},{value:state.viewport.h,label:"Viewport B"}
+ ];
+ const parentIds=new Set();
+ for(const n of nodes){
+  const p=findParent(n.__id);if(!p||parentIds.has(p.__id))continue;parentIds.add(p.__id);
+  const pel=p===state.root?els.guiRoot:els.guiRoot.querySelector(`[data-id="${p.__id}"]`);
+  const pr=localRect(pel);if(!pr)continue;
+  xs.push({value:pr.left,label:"Parent L"},{value:pr.cx,label:"Parent CX"},{value:pr.right,label:"Parent R"});
+  ys.push({value:pr.top,label:"Parent T"},{value:pr.cy,label:"Parent CY"},{value:pr.bottom,label:"Parent B"});
+  for(const s of p.Children||[]){
+   if(selectedSet.has(s.__id)||MODIFIERS.has(s.ClassName))continue;
+   const se=els.guiRoot.querySelector(`[data-id="${s.__id}"]`);if(!se||se.style.display==="none")continue;
+   const r=localRect(se);if(!r)continue;
+   xs.push({value:r.left,label:s.Name+" L"},{value:r.cx,label:s.Name+" CX"},{value:r.right,label:s.Name+" R"});
+   ys.push({value:r.top,label:s.Name+" T"},{value:r.cy,label:s.Name+" CY"},{value:r.bottom,label:s.Name+" B"});
+  }
+ }
+ return {base,xs,ys};
+}
+
 function nearestGuide(candidates,targets){
  let best=null;
  for(const c of candidates)for(const t of targets){
@@ -900,8 +955,9 @@ function updateStatus(){
 }
 
 function isLayoutParent(n){return !!n&&(modifier(n,"UIListLayout")||modifier(n,"UIGridLayout"))}
-function bakeLayout(parent){
+function bakeLayout(parent,options={}){
  if(!parent)return false;
+ const record=options.record!==false,rerender=options.render!==false,notify=options.notify!==false;
  const layout=modifier(parent,"UIListLayout")||modifier(parent,"UIGridLayout");
  if(!layout)return false;
  const parentEl=parent===state.root?els.guiRoot:els.guiRoot.querySelector(`[data-id="${parent.__id}"]`);
@@ -917,7 +973,7 @@ function bakeLayout(parent){
  }
  if(!snapshots.length)return false;
 
- pushHistory();
+ if(record)pushHistory();
  for(const {child,r} of snapshots){
   child.Properties=child.Properties||{};
   const a=v2v(child,"AnchorPoint",[0,0]);
@@ -927,8 +983,8 @@ function bakeLayout(parent){
  }
  parent.Children=(parent.Children||[]).filter(c=>c!==layout);
  state.dirty=true;
- renderAll();
- toast((layout.ClassName||"Layout")+" запечён — теперь элементы полностью свободны");
+ if(rerender)renderAll();
+ if(notify)toast((layout.ClassName||"Layout")+" запечён — теперь элементы полностью свободны");
  return true;
 }
 function startMove(ev,n){
@@ -937,12 +993,30 @@ function startMove(ev,n){
  if(ev.shiftKey){select(n.__id,true);return}
  if(!isSelectedId(n.__id))select(n.__id,false);
  else if(state.selectedId!==n.__id){setPrimarySelection(n.__id);renderTree();renderInspector();updateOverlay();updateStatus()}
- const parent=findParent(n.__id);
- if(isLayoutParent(parent)){
-  if(!bakeLayout(parent))return;
+
+ let nodes=selectedMoveRoots();
+ if(!nodes.length)return;
+
+ // One undo snapshot for the entire operation, including automatic layout baking.
+ pushHistory();
+
+ const layoutParents=[];
+ const seenParents=new Set();
+ for(const item of nodes){
+  const p=findParent(item.__id);
+  if(p&&isLayoutParent(p)&&!seenParents.has(p.__id)){seenParents.add(p.__id);layoutParents.push(p)}
  }
- const pos=deepClone(u2v(n,"Position")),startX=ev.clientX,startY=ev.clientY;
- state.drag={type:"move",n,startX,startY,pos,geometry:collectGuideTargets(n)};
+ let baked=false;
+ for(const p of layoutParents)baked=bakeLayout(p,{record:false,render:false,notify:false})||baked;
+ if(baked){
+  renderAll();
+  nodes=selectedMoveRoots();
+  toast("Layout запечён · групповое перемещение свободно");
+ }
+
+ const items=nodes.map(item=>({n:item,pos:deepClone(u2v(item,"Position"))}));
+ const geometry=nodes.length>1?collectGroupGuideTargets(nodes):collectGuideTargets(n);
+ state.drag={type:"move",n,startX:ev.clientX,startY:ev.clientY,items,geometry,group:nodes.length>1};
  ev.currentTarget.setPointerCapture?.(ev.pointerId);
 }
 window.addEventListener("pointermove",ev=>{
@@ -950,8 +1024,13 @@ window.addEventListener("pointermove",ev=>{
  if(d.type==="move"){
   let rx=Math.round(dx/s)*s,ry=Math.round(dy/s)*s,guide={rx,ry,x:null,y:null};
   if(!ev.altKey)guide=smartSnapMove(d.geometry,rx,ry);
-  const p=deepClone(d.pos);p[0][1]=roundOffset(p[0][1]+guide.rx);p[1][1]=roundOffset(p[1][1]+guide.ry);
-  d.n.Properties.Position={UDim2:p};renderViewport();updateOverlay();showSmartGuides(guide.x,guide.y);updatePixelReadout();state.dirty=true;updateStatus()
+  for(const item of d.items||[]){
+   const p=deepClone(item.pos);
+   p[0][1]=roundOffset(p[0][1]+guide.rx);
+   p[1][1]=roundOffset(p[1][1]+guide.ry);
+   item.n.Properties.Position={UDim2:p};
+  }
+  renderViewport();updateOverlay();showSmartGuides(guide.x,guide.y);updatePixelReadout();state.dirty=true;updateStatus()
  }else if(d.type==="resize")resizeFromDrag(d,dx,dy,ev.altKey);
 });
 window.addEventListener("pointerup",()=>{if(state.drag){state.drag=null;clearSmartGuides();renderTree();renderInspector();updateGeometrySelection()}});
@@ -1169,13 +1248,19 @@ window.addEventListener("keydown",e=>{
  if(code==="Digit0"||code==="Numpad0"){e.preventDefault();fitViewport();return}
  if(mod&&code==="KeyS"){e.preventDefault();state.projectHandle?pushProject():download();return}
  if(code==="Delete"){deleteSelected();return}
- const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName))return;
- const step=e.shiftKey?state.snap:1,p=u2v(n,"Position");
- if(code==="ArrowLeft"){pushHistory();p[0][1]-=step}
- else if(code==="ArrowRight"){pushHistory();p[0][1]+=step}
- else if(code==="ArrowUp"){pushHistory();p[1][1]-=step}
- else if(code==="ArrowDown"){pushHistory();p[1][1]+=step}else return;
- e.preventDefault();n.Properties.Position={UDim2:p};changed()
+ const nodes=selectedMoveRoots();if(!nodes.length)return;
+ const step=e.shiftKey?state.snap:1;
+ let dx=0,dy=0;
+ if(code==="ArrowLeft")dx=-step;
+ else if(code==="ArrowRight")dx=step;
+ else if(code==="ArrowUp")dy=-step;
+ else if(code==="ArrowDown")dy=step;
+ else return;
+ e.preventDefault();pushHistory();
+ for(const n of nodes){
+  const p=u2v(n,"Position");p[0][1]+=dx;p[1][1]+=dy;n.Properties.Position={UDim2:p};
+ }
+ changed()
 });
 
 loadPrefs();
