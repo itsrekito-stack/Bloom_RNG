@@ -1,45 +1,51 @@
 PASS StarterGui mapped to src/StarterGui
 PASS BloomUI declarative ScreenGui
-PASS ScreenGui uses sibling ZIndex for dynamic menus
+PASS ScreenGui uses Sibling ZIndex
 PASS roulette direct child of SafeRoot — BloomUI/SafeRoot/VerticalRoulette
-PASS roll button direct child of SafeRoot — BloomUI/SafeRoot/RollButton
-PASS Bloom meter independent — BloomUI/SafeRoot/RollHUD
-PASS roulette transparent
-PASS roulette clips to three visible rows
+PASS roll direct child of SafeRoot — BloomUI/SafeRoot/RollButton
+PASS meter direct child of SafeRoot — BloomUI/SafeRoot/RollHUD
+PASS ObjectiveCard authored hidden before data
+PASS CurrencyHUD authored hidden before data
+PASS MenuDock authored hidden before data
+PASS RollHUD authored hidden before data
+PASS VerticalRoulette authored hidden before data
+PASS RollButton authored hidden before data
+PASS MainPanel authored hidden before data
+PASS Toast authored hidden before data
+PASS RewardReveal authored hidden before data
+PASS objective compact
+PASS currency compact
+PASS dock compact
+PASS roulette top centered
+PASS roulette compact viewport
+PASS main panel compact
+PASS roll button compact
+PASS toast moved off center HUD
 PASS roulette Next
 PASS Next transparent
-PASS Next only icon/name/chance
 PASS roulette Current
 PASS Current transparent
-PASS Current only icon/name/chance
 PASS roulette Previous
 PASS Previous transparent
-PASS Previous only icon/name/chance
-PASS controller semantic roulette slots
-PASS top next / middle current / bottom previous logic
+PASS no authored Buffer
 PASS runtime buffer cloned locally
-PASS no authored Buffer required
-PASS fractional drop chance
-PASS long settle sequence
-PASS vertical downward tween
-PASS spin sound
-PASS reward sound
-PASS landing result animation
-PASS Roll is toggle
-PASS auto-roll blocks while landing
-PASS SeedSatchel unlocks on first seed
-PASS plant picker has explicit empty-state
-PASS dynamic controls inherit panel ZIndex
-PASS auto roll no longer Workshop-locked
-PASS roulette editable position exists
-PASS roll editable position exists
-PASS roulette top centered
-PASS current slot visibly marked
-PASS main panel compact
-PASS softer roulette audio
-PASS Pet-Sim seed grid
+PASS 42px roulette step
+PASS current slot clearly marked
+PASS Templates folder authored
+PASS ButtonTemplate authored
+PASS LabelTemplate authored
+PASS SectionTemplate authored
+PASS InventoryTileTemplate authored
+PASS menu helpers clone authored templates
+PASS Pet-Sim inventory tile clones template
 PASS live-sync resolver exists
-PASS Studio prefers authored StarterGui template
-PASS Studio fallback clones StarterGui into PlayerGui
-PASS old PlayerGui clone error removed
-TOTAL 44/44 PASS
+PASS authoritative HUD guard exists
+PASS late duplicate watcher exists
+PASS guard starts before static binding
+PASS first state reveals HUD
+PASS state request handshake retained
+PASS localized dock tooltips
+PASS dynamic header icon
+PASS soft roulette audio
+PASS roll is toggle
+TOTAL 50/50 PASS
