@@ -5,12 +5,14 @@ local Workshop=require(RS.Config.WorkshopConfig)
 local Trials=require(RS.Config.BuildTrialConfig)
 local Locations=require(RS.Config.LocationsConfig)
 local Bloom=require(RS.Config.BloomConfig)
+local Rarity=require(RS.Config.RarityConfig)
 
 local S={}
 
 local REASONS={
  PROFILE_LOADING="Профиль ещё загружается",
  SERVER_ERROR="Ошибка сервера",
+ RATE_LIMITED="Слишком много запросов, попробуй ещё раз",
  LOCKED="Функция пока закрыта",
  FEATURE_LOCKED="Функция пока закрыта",
  INVALID_ACTION="Неизвестное действие",
@@ -113,8 +115,7 @@ function S:Inventory(player,profile)
  end
  table.sort(flowers,function(a,b)
   if a.Rarity==b.Rarity then return a.DisplayName<b.DisplayName end
-  local rank=require(RS.Config.RarityConfig).Rank
-  return (rank[a.Rarity] or 0)<(rank[b.Rarity] or 0)
+  return (Rarity.Rank[a.Rarity] or 0)<(Rarity.Rank[b.Rarity] or 0)
  end)
 
  local bees={}
