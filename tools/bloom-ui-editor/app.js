@@ -323,6 +323,7 @@ function previewImage(n,parentNode){
 }
 function previewSize(n){
  if(!isPreview())return null;
+ if(n.Name==="MainPanel"&&MENU_PREVIEW_SCENES.has(state.previewScene))return [[0,760],[0,560]];
  if(n.Name==="ObjectiveProgressFill")return [[.38,0],[1,0]];
  if(n.Name==="BloomFill")return [[.38,0],[1,0]];
  return null;
@@ -358,7 +359,7 @@ function injectRuntimePreview(n,el,parentNode){
       <div class="preview-action blue">FLOWER MEMORY</div>
      </div>
     </div>
-    <div class="preview-pollinators"><b>POLLINATORS</b><span>Worker Bee ×2 • Royal Bee ×1</span></div>
+    <div class="preview-pollinators"><b>POLLINATORS</b><span>Worker Bee ×2 • Royal Bee ×1</span><em>3 OWNED</em></div>
    </div>`;
  }else{
   const meta=PREVIEW_META[state.previewScene];
