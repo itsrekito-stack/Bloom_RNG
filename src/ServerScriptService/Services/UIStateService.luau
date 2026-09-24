@@ -155,8 +155,10 @@ end
 
 function S:Workshop(player,profile)
  local nodes={}
+ local canRespec=false
  for id,node in pairs(Workshop.Nodes) do
   local reason=workshopReason(profile,node)
+  if id~="CORE" and profile.WorkshopV5.Nodes[id] and not node.Permanent then canRespec=true end
   nodes[id]={
    Id=id,
    Owned=id=="CORE" or profile.WorkshopV5.Nodes[id]==true,
@@ -172,7 +174,7 @@ function S:Workshop(player,profile)
    Permanent=node.Permanent==true,
   }
  end
- return {Points=profile.WorkshopV5.Points,Nodes=nodes}
+ return {Points=profile.WorkshopV5.Points,Nodes=nodes,CanRespec=canRespec}
 end
 
 function S:Map(player,profile)
@@ -186,7 +188,7 @@ function S:Map(player,profile)
    Unlocked=profile.World.UnlockedSectors[id]==true,
    HiveRequired=cfg.Hive,
    Current=current==id,
-   CanUnlock=profile.Hive.Level>=cfg.Hive,
+   CanUnlock=profile.World.UnlockedSectors[id]~=true and profile.Hive.Level>=cfg.Hive,
   }
  end
  return {
@@ -203,7 +205,8 @@ function S:Trials(player,profile)
  for id,cfg in pairs(Trials) do
   local unlocked=profile.World.UnlockedSectors[cfg.Sector]==true
   local reason=nil
-  if not profile.Tutorial.FeatureUnlocks.Trials then reason="TRIAL_LOCKED"
+  if self.X.BuildTrialService.Active[player] then reason="TRIAL_RUNNING"
+  elseif not profile.Tutorial.FeatureUnlocks.Trials then reason="TRIAL_LOCKED"
   elseif not unlocked then reason="SECTOR_LOCKED"
   elseif current~=cfg.Sector then reason="WRONG_SECTOR"
   else
@@ -254,6 +257,7 @@ function S:Snapshot(player)
  local profile=self.X:Profile(player)
  if not profile then return nil end
  return {
+  Version=1,
   Inventory=self:Inventory(player,profile),
   Workshop=self:Workshop(player,profile),
   Map=self:Map(player,profile),
