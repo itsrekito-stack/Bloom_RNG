@@ -17,7 +17,7 @@ const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 const state={
  root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,geometry:true,inset:36,mode:"design",previewScene:"gameplay",
  projectHandle:null,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
- history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null
+ history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set()
 };
 
 let idCounter=1;
@@ -121,6 +121,15 @@ function walk(node,fn,parent=null){fn(node,parent);for(const c of node.Children|
 function findNode(id){let out=null;walk(state.root,n=>{if(n.__id===id)out=n});return out}
 function findParent(id){let out=null;walk(state.root,(n,p)=>{if(n.__id===id)out=p});return out}
 function selected(){return findNode(state.selectedId)}
+function selectedNodes(){
+ return [...state.selectedIds].map(findNode).filter(Boolean);
+}
+function isSelectedId(id){return state.selectedIds.has(id)}
+function setPrimarySelection(id){
+ if(!id)return;
+ state.selectedId=id;
+ if(!state.selectedIds.has(id))state.selectedIds.add(id);
+}
 function pushHistory(){
  if(!state.root)return;
  state.history.push(serialize(false));
@@ -128,7 +137,7 @@ function pushHistory(){
  state.future=[];
 }
 function restoreSnapshot(json){
- const raw=JSON.parse(json);state.root=normalizeNode(raw);state.selectedId=state.root.__id;state.dirty=true;renderAll()
+ const raw=JSON.parse(json);state.root=normalizeNode(raw);state.selectedId=state.root.__id;state.selectedIds=new Set([state.selectedId]);state.dirty=true;renderAll()
 }
 function undo(){if(!state.history.length)return;state.future.push(serialize(false));restoreSnapshot(state.history.pop());toast("Undo")}
 function redo(){if(!state.future.length)return;state.history.push(serialize(false));restoreSnapshot(state.future.pop());toast("Redo")}
@@ -316,7 +325,7 @@ function pasteObject(){
  pushHistory();
  const copy=normalizeNode(deepClone(state.clipboard));copy.Name=uniqueName(copy.Name||copy.ClassName);
  const pos=u2v(copy,"Position");pos[0][1]+=12;pos[1][1]+=12;copy.Properties.Position={UDim2:pos};
- parent.Children=parent.Children||[];parent.Children.push(copy);state.selectedId=copy.__id;changed();toast(copy.Name+" вставлен");
+ parent.Children=parent.Children||[];parent.Children.push(copy);state.selectedId=copy.__id;state.selectedIds=new Set([copy.__id]);changed();toast(copy.Name+" вставлен");
 }
 function renameSelected(){
  const n=selected();if(!n)return;
@@ -656,9 +665,12 @@ function renderGuiNode(n,parentEl,parentNode){
  if(state.labels){
   const tag=document.createElement("div");tag.className="node-tag";tag.textContent=`${n.Name} · ${n.ClassName}`;el.appendChild(tag)
  }
- if(n.__id===state.selectedId)el.classList.add("selected");
+ if(isSelectedId(n.__id)){
+   el.classList.add("multi-selected");
+   if(n.__id===state.selectedId)el.classList.add("selected","primary-selected");
+  }
  el.addEventListener("pointerdown",ev=>startMove(ev,n));
- el.addEventListener("click",ev=>{ev.stopPropagation();select(n.__id)});
+ el.addEventListener("click",ev=>ev.stopPropagation());
  parentEl.appendChild(el);
 
  const list=modifier(n,"UIListLayout"),grid=modifier(n,"UIGridLayout");
@@ -690,7 +702,7 @@ function renderGuiNode(n,parentEl,parentNode){
  injectRuntimePreview(n,el,parentNode);
  return el;
 }
-els.guiRoot.addEventListener("pointerdown",ev=>{if(ev.target===els.guiRoot)select(state.root.__id)});
+els.guiRoot.addEventListener("pointerdown",ev=>{if(ev.target===els.guiRoot)select(state.root.__id,false)});
 
 function renderTree(){
  els.tree.innerHTML="";if(!state.root)return;
@@ -707,13 +719,13 @@ function renderTree(){
  const recur=(n,depth)=>{
   if(q&&!matched.has(n.__id)&&!ancestors.has(n.__id))return;
   shown++;
-  const row=document.createElement("div");row.className="tree-row"+(n.__id===state.selectedId?" selected":"")+(MODIFIERS.has(n.ClassName)?" modifier":"")+(n.Properties?.Visible===false?" runtime-hidden":"")+(matched.has(n.__id)?" search-match":"");
+  const row=document.createElement("div");row.className="tree-row"+(isSelectedId(n.__id)?" selected":"")+(n.__id===state.selectedId?" primary-selected":"")+(MODIFIERS.has(n.ClassName)?" modifier":"")+(n.Properties?.Visible===false?" runtime-hidden":"")+(matched.has(n.__id)?" search-match":"");
   const kids=n.Children||[],collapsed=state.collapsed.has(n.__id)&&!q;
   row.dataset.id=n.__id;row.innerHTML=`<span class="tree-indent" style="width:${depth*13}px"></span><span class="tree-toggle">${kids.length?(collapsed?"▸":"▾"):""}</span><span class="tree-icon">${classIcon(n.ClassName)}</span><span class="tree-name"></span><span class="tree-kind"></span>`;
   row.querySelector(".tree-name").textContent=n.Name;row.querySelector(".tree-kind").textContent=n.ClassName;
   row.querySelector(".tree-toggle").onclick=e=>{e.stopPropagation();collapsed?state.collapsed.delete(n.__id):state.collapsed.add(n.__id);renderTree()};
-  row.ondblclick=()=>{select(n.__id);renameSelected()};
-  row.onclick=()=>select(n.__id);els.tree.appendChild(row);
+  row.ondblclick=e=>{e.preventDefault();select(n.__id,false);renameSelected()};
+  row.onclick=e=>select(n.__id,e.shiftKey);els.tree.appendChild(row);
   if(!collapsed)for(const c of kids)recur(c,depth+1);
  };
  recur(state.root,0);
@@ -731,8 +743,26 @@ function scrollTreeToSelected(){
   if(row)row.scrollIntoView({block:"nearest",inline:"nearest"});
  });
 }
-function select(id){
- state.selectedId=id;revealTreePath(id);renderTree();renderInspector();updateOverlay();updateStatus();scrollTreeToSelected();
+function select(id,additive=false){
+ if(!findNode(id))return;
+ if(additive){
+  if(state.selectedIds.has(id)){
+   state.selectedIds.delete(id);
+   if(state.selectedId===id){
+    const next=[...state.selectedIds].pop();
+    state.selectedId=next||null;
+   }
+  }else{
+   state.selectedIds.add(id);
+   state.selectedId=id;
+  }
+ }else{
+  state.selectedIds=new Set([id]);
+  state.selectedId=id;
+ }
+ if(state.selectedId)revealTreePath(state.selectedId);
+ renderTree();renderInspector();updateOverlay();updateStatus();
+ if(state.selectedId)scrollTreeToSelected();
 }
 function updateOverlay(){
  const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName)){els.overlay.classList.add("hidden");updateGeometrySelection();return}
@@ -748,7 +778,7 @@ function updateOverlay(){
 
 function renderInspector(){
  const n=selected();if(!n){els.inspector.className="inspector empty";els.inspector.innerHTML='<div class="empty-state">Выбери объект.</div>';return}
- els.inspector.className="inspector";$("#selectionKind").textContent=n.ClassName;
+ els.inspector.className="inspector";const selectionCount=state.selectedIds.size;$("#selectionKind").textContent=selectionCount>1?`${selectionCount} объектов · ${n.ClassName}`:n.ClassName;
  const groups=[];
  groups.push(group("INSTANCE",[
   textProp("Name",n.Name,v=>{n.Name=v;changed()}),
@@ -865,7 +895,7 @@ function updatePixelReadout(){
  if(box)[...box.querySelectorAll("strong")].forEach((s,i)=>s.textContent=vals[i]);
 }
 function updateStatus(){
- const n=selected();const mode=isPreview()?`PREVIEW · ${state.previewScene} · mock data`:(state.projectHandle?"Project connected":"Design");els.status.textContent=(state.dirty?"● ":"")+mode+" · "+(n?`${n.Name} [${n.ClassName}]`:"");
+ const n=selected(),count=state.selectedIds.size;const mode=isPreview()?`PREVIEW · ${state.previewScene} · mock data`:(state.projectHandle?"Project connected":"Design");els.status.textContent=(state.dirty?"● ":"")+mode+" · "+(count>1?`${count} объектов выбрано · `:"")+(n?`${n.Name} [${n.ClassName}]`:"");
  els.target.textContent=state.targetPath;
 }
 
@@ -902,7 +932,11 @@ function bakeLayout(parent){
  return true;
 }
 function startMove(ev,n){
- if(ev.button!==0||MODIFIERS.has(n.ClassName))return;ev.stopPropagation();select(n.__id);
+ if(ev.button!==0||MODIFIERS.has(n.ClassName))return;
+ ev.stopPropagation();
+ if(ev.shiftKey){select(n.__id,true);return}
+ if(!isSelectedId(n.__id))select(n.__id,false);
+ else if(state.selectedId!==n.__id){setPrimarySelection(n.__id);renderTree();renderInspector();updateOverlay();updateStatus()}
  const parent=findParent(n.__id);
  if(isLayoutParent(parent)){
   if(!bakeLayout(parent))return;
@@ -992,13 +1026,21 @@ function addObject(kind){
  }
  if(!parent||!CONTAINERS.has(parent.ClassName))parent=findParent(state.selectedId)||state.root;
  if(MODIFIERS.has(kind)&&parent.ClassName==="ScreenGui"){toast("Выбери GuiObject для "+kind,true);return}
- const n=defaultObject(kind);parent.Children=parent.Children||[];parent.Children.push(n);state.selectedId=n.__id;changed();toast(kind+" создан")
+ const n=defaultObject(kind);parent.Children=parent.Children||[];parent.Children.push(n);state.selectedId=n.__id;state.selectedIds=new Set([n.__id]);changed();toast(kind+" создан")
 }
 function deleteSelected(){
- const n=selected();if(!n||n===state.root)return;const p=findParent(n.__id);if(!p)return;pushHistory();p.Children=p.Children.filter(x=>x!==n);state.selectedId=p.__id;changed()
+ const nodes=selectedNodes().filter(n=>n&&n!==state.root);
+ if(!nodes.length)return;
+ const ids=new Set(nodes.map(n=>n.__id));
+ const primary=selected(),fallback=primary&&findParent(primary.__id);
+ pushHistory();
+ walk(state.root,n=>{if(n.Children)n.Children=n.Children.filter(c=>!ids.has(c.__id))});
+ const next=(fallback&&!ids.has(fallback.__id)?fallback:state.root);
+ state.selectedId=next.__id;state.selectedIds=new Set([next.__id]);changed();
+ toast(nodes.length>1?nodes.length+" объектов удалено":"Объект удалён");
 }
 function duplicateSelected(){
- const n=selected();if(!n||n===state.root)return;const p=findParent(n.__id);pushHistory();const copy=normalizeNode(stripNode(n));copy.Name=uniqueName(n.Name);const pos=u2v(copy,"Position");if(pos){pos[0][1]+=12;pos[1][1]+=12;copy.Properties.Position={UDim2:pos}}p.Children.push(copy);state.selectedId=copy.__id;changed()
+ const n=selected();if(!n||n===state.root)return;const p=findParent(n.__id);pushHistory();const copy=normalizeNode(stripNode(n));copy.Name=uniqueName(n.Name);const pos=u2v(copy,"Position");if(pos){pos[0][1]+=12;pos[1][1]+=12;copy.Properties.Position={UDim2:pos}}p.Children.push(copy);state.selectedId=copy.__id;state.selectedIds=new Set([copy.__id]);changed()
 }
 
 async function connectProject(){
@@ -1115,23 +1157,24 @@ $("#addMenuBtn").onclick=()=>$("#palette").scrollIntoView({behavior:"smooth"});
 window.addEventListener("resize",()=>{updateOverlay();updatePixelReadout()});
 window.addEventListener("keydown",e=>{
  const tag=document.activeElement?.tagName;if(["INPUT","TEXTAREA","SELECT"].includes(tag))return;
- if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();e.shiftKey?redo():undo();return}
- if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="y"){e.preventDefault();redo();return}
- if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="d"){e.preventDefault();duplicateSelected();return}
- if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="c"){e.preventDefault();copySelectedObject();return}
- if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="v"){e.preventDefault();pasteObject();return}
- if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="f"){e.preventDefault();$("#treeSearch").focus();$("#treeSearch").select();return}
- if(e.key==="F2"){e.preventDefault();renameSelected();return}
- if(e.key.toLowerCase()==="f"){e.preventDefault();focusSelected();return}
- if(e.key==="0"){e.preventDefault();fitViewport();return}
- if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){e.preventDefault();state.projectHandle?pushProject():download();return}
- if(e.key==="Delete"){deleteSelected();return}
+ const mod=e.ctrlKey||e.metaKey,code=e.code;
+ if(mod&&code==="KeyZ"){e.preventDefault();e.shiftKey?redo():undo();return}
+ if(mod&&code==="KeyY"){e.preventDefault();redo();return}
+ if(mod&&code==="KeyD"){e.preventDefault();duplicateSelected();return}
+ if(mod&&code==="KeyC"){e.preventDefault();copySelectedObject();return}
+ if(mod&&code==="KeyV"){e.preventDefault();pasteObject();return}
+ if(mod&&code==="KeyF"){e.preventDefault();$("#treeSearch").focus();$("#treeSearch").select();return}
+ if(code==="F2"){e.preventDefault();renameSelected();return}
+ if(code==="KeyF"){e.preventDefault();focusSelected();return}
+ if(code==="Digit0"||code==="Numpad0"){e.preventDefault();fitViewport();return}
+ if(mod&&code==="KeyS"){e.preventDefault();state.projectHandle?pushProject():download();return}
+ if(code==="Delete"){deleteSelected();return}
  const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName))return;
  const step=e.shiftKey?state.snap:1,p=u2v(n,"Position");
- if(e.key==="ArrowLeft"){pushHistory();p[0][1]-=step}
- else if(e.key==="ArrowRight"){pushHistory();p[0][1]+=step}
- else if(e.key==="ArrowUp"){pushHistory();p[1][1]-=step}
- else if(e.key==="ArrowDown"){pushHistory();p[1][1]+=step}else return;
+ if(code==="ArrowLeft"){pushHistory();p[0][1]-=step}
+ else if(code==="ArrowRight"){pushHistory();p[0][1]+=step}
+ else if(code==="ArrowUp"){pushHistory();p[1][1]-=step}
+ else if(code==="ArrowDown"){pushHistory();p[1][1]+=step}else return;
  e.preventDefault();n.Properties.Position={UDim2:p};changed()
 });
 
