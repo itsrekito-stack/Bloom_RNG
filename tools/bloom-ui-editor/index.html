@@ -20,6 +20,8 @@
       <span class="divider"></span>
       <button id="importBtn" class="icon-btn" title="Импорт JSON">⇧</button>
       <button id="exportBtn" class="icon-btn" title="Экспорт JSON">⇩</button>
+      <button id="undoBtn" class="icon-btn" title="Undo · Ctrl+Z">↶</button>
+      <button id="redoBtn" class="icon-btn" title="Redo · Ctrl+Y">↷</button>
       <button id="copyBtn" class="icon-btn" title="Копировать модель для ChatGPT">AI</button>
     </div>
   </header>
@@ -51,6 +53,8 @@
           <button id="deleteBtn" class="tiny danger" title="Удалить">⌫</button>
         </div>
       </div>
+      <div class="tree-search-wrap"><span>⌕</span><input id="treeSearch" type="search" placeholder="Найти объект..."><kbd>Ctrl F</kbd></div>
+      <div id="treeSearchMeta" class="tree-search-meta"></div>
       <div id="tree" class="tree"></div>
     </aside>
 
@@ -67,6 +71,9 @@
         <label>H <input id="viewportH" type="number" value="768"></label>
         <span class="divider"></span>
         <label>Zoom <input id="zoomRange" type="range" min="25" max="150" value="72"><b id="zoomLabel">72%</b></label>
+        <button id="fitBtn" class="tiny tool-btn" title="Вписать экран · 0">FIT</button>
+        <button id="zoom100Btn" class="tiny tool-btn" title="100%">1:1</button>
+        <button id="focusBtn" class="tiny tool-btn" title="Показать выбранный · F">◎</button>
         <label>Snap
           <select id="snapSelect">
             <option>1</option><option>2</option><option>4</option><option selected>8</option><option>16</option>
