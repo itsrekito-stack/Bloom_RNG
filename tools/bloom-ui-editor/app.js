@@ -289,6 +289,8 @@ function previewVisible(n){
  if(!isPreview())return null;
  const name=n.Name||"",p=parentName(n);
  if(name==="Templates"||p==="Templates"||name==="Tooltip")return false;
+ if(name==="SeedSatchelTemplate")return state.previewScene==="seedbag";
+ if(name==="Content"&&p==="MainPanel"&&state.previewScene==="seedbag")return false;
  if(["ObjectiveCard","CurrencyHUD","MenuDock","RollHUD","VerticalRoulette","RollButton"].includes(name))return true;
  if(name==="MainPanel")return MENU_PREVIEW_SCENES.has(state.previewScene);
  if(name==="RewardReveal")return state.previewScene==="reward";
@@ -323,7 +325,8 @@ function previewImage(n,parentNode){
 }
 function previewSize(n){
  if(!isPreview())return null;
- if(n.Name==="MainPanel"&&MENU_PREVIEW_SCENES.has(state.previewScene))return [[0,760],[0,560]];
+ if(n.Name==="MainPanel"&&state.previewScene==="seedbag")return [[0,640],[0,500]];
+ if(n.Name==="MainPanel"&&MENU_PREVIEW_SCENES.has(state.previewScene))return [[0,600],[0,420]];
  if(n.Name==="ObjectiveProgressFill")return [[.38,0],[1,0]];
  if(n.Name==="BloomFill")return [[.38,0],[1,0]];
  return null;
@@ -335,7 +338,7 @@ function injectRuntimePreview(n,el,parentNode){
  const wrap=document.createElement("div");wrap.className="preview-runtime";
  const img=id=>`/api/thumbnail?id=${id}`;
 
- if(state.previewScene==="seedbag"){
+ if(state.previewScene==="seedbag"){ return; }else{
   wrap.innerHTML=`
    <div class="preview-inventory-v2">
     <div class="preview-inv-summary"><b>FLOWER COLLECTION</b><span>12 TYPES</span></div>
@@ -361,7 +364,6 @@ function injectRuntimePreview(n,el,parentNode){
     </div>
     <div class="preview-pollinators"><b>POLLINATORS</b><span>Worker Bee ×2 • Royal Bee ×1</span><em>3 OWNED</em></div>
    </div>`;
- }else{
   const meta=PREVIEW_META[state.previewScene];
   const sceneCards={
    workshop:["WORKSHOP TREE","Hive Path","Bee Upgrades","Garden Efficiency"],
