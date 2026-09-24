@@ -19,7 +19,7 @@ end
 function X:Snapshot(player)
  local p=self:Profile(player) if not p then return nil end
  self.TutorialService:Refresh(player)
- local public={Profile=U.Copy(p),Synergies=self.GardenSynergyService.Active[player] or {},BeeCapacity=self.StatsService:BeeCapacity(p),HivePosition=self.GardenPlotService:HivePosition(player),Trial=self.BuildTrialService.Active[player],ServerBloom=self.SocialService.Progress,Pulse=self.SocialService.Pulse,Cards=self.SeasonService:Offers(p),Odds=self.RollService:Odds(player)}
+ local public={Profile=U.Copy(p),Synergies=self.GardenSynergyService.Active[player] or {},BeeCapacity=self.StatsService:BeeCapacity(p),HivePosition=self.GardenPlotService:HivePosition(player),Trial=self.BuildTrialService.Active[player],ServerBloom=self.SocialService.Progress,Pulse=self.SocialService.Pulse,Cards=self.SeasonService:Offers(p),Odds=self.RollService:Odds(player),UI=self.UIStateService:Snapshot(player)}
  public.Profile.LegacyArchive=nil public.Profile.Telemetry=nil public.Profile.Migrations=nil
  return public
 end
@@ -31,16 +31,24 @@ function X:Push(player)
  return true
 end
 function X:Request(player,action,a,b,c)
- local p=self:Profile(player) if not p then return false end
+ local p=self:Profile(player) if not p then return false,"PROFILE_LOADING" end
  if action=="SeasonCancel" then self.SeasonService.Pending[player]=nil return true end
  if self.SeasonService.Pending[player] and action~="SeasonConfirm" and action~="Menu" and action~="Ready" then return false,"SEASON_PREVIEW_OPEN" end
  if action=="Ready" then self.GardenActivityService:Push(player) return true
  elseif action=="Roll" then return self.RollService:Roll(player,a==true)
  elseif action=="Plant" then return self.GardenPlotService:Plant(player,a,b)
  elseif action=="EquipBee" then return self.InventoryService:EquipBee(player,a,b)
- elseif action=="Dissolve" then return p.Tutorial.FeatureUnlocks.SeedSatchel and self.InventoryService:Dissolve(player,a,b)
- elseif action=="FlowerUpgrade" then return p.Tutorial.FeatureUnlocks.SeedSatchel and self.FlowerProgressionService:Upgrade(player,a)
- elseif action=="Flag" then if not p.FlowerCollection.DiscoveredFlowers[a] or b~="LockedFlowers" and b~="FavoriteFlowers" then return false end p.FlowerCollection[b][a]=not p.FlowerCollection[b][a] return true
+ elseif action=="Dissolve" then
+  if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end
+  return self.InventoryService:Dissolve(player,a,b)
+ elseif action=="FlowerUpgrade" then
+  if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end
+  return self.FlowerProgressionService:Upgrade(player,a)
+ elseif action=="Flag" then
+  if not p.FlowerCollection.DiscoveredFlowers[a] then return false,"NOT_DISCOVERED" end
+  if b~="LockedFlowers" and b~="FavoriteFlowers" then return false,"INVALID_ACTION" end
+  p.FlowerCollection[b][a]=not p.FlowerCollection[b][a]
+  return true
  elseif action=="Activity" then return self.GardenActivityService:Collect(player,a,b,c)
  elseif action=="WorkshopBuy" then return self.WorkshopService:Buy(player,a)
  elseif action=="Respec" then return self.WorkshopService:Respec(player)
@@ -50,9 +58,33 @@ function X:Request(player,action,a,b,c)
  elseif action=="Keepsake" then return self.SeasonService:Keepsake(player,a,b)
  elseif action=="Skip" then self.TutorialService:Skip(player) return true
  elseif action=="Replay" then self.TutorialService:Replay(player) return true
- elseif action=="Menu" then if a==false then self.Temp[player].MenuOpen=false return true end if a~="Settings" and not p.Tutorial.FeatureUnlocks[a] then return false end self.Temp[player].MenuOpen=true if a=="SeedSatchel" then self:Emit(player,"SatchelOpen",1) end return true
- elseif action=="Setting" then if a=="TokenSoundVolume" and type(b)=="number" and b==b then p.Settings[a]=math.clamp(b,0,1) return true elseif ({ReducedEffects=true,ShowOtherPollinators=true,HideOtherPlayersTokens=true,RareFeed=true,AutoDissolve=true})[a] and type(b)=="boolean" then if a=="AutoDissolve" and not p.WorkshopV5.Nodes.ECONOMY_1 then return false end p.Settings[a]=b return true end return false
- elseif action=="DissolveFilter" then local R=require(RS.Config.RarityConfig) if not p.WorkshopV5.Nodes.ECONOMY_2 or not R.Rank[a] then return false end p.Settings.DissolveRarities[a]=not p.Settings.DissolveRarities[a] return true end return false
+ elseif action=="Menu" then
+  if a==false then self.Temp[player].MenuOpen=false return true end
+  if type(a)~="string" then return false,"INVALID_ACTION" end
+  if a~="Settings" and not p.Tutorial.FeatureUnlocks[a] then return false,"LOCKED" end
+  self.Temp[player].MenuOpen=true
+  if a=="SeedSatchel" then self:Emit(player,"SatchelOpen",1) end
+  return true
+ elseif action=="Setting" then
+  if a=="TokenSoundVolume" then
+   if type(b)~="number" or b~=b then return false,"INVALID_VALUE" end
+   p.Settings[a]=math.clamp(b,0,1)
+   return true
+  end
+  if not ({ReducedEffects=true,ShowOtherPollinators=true,HideOtherPlayersTokens=true,RareFeed=true,AutoDissolve=true})[a] or type(b)~="boolean" then
+   return false,"INVALID_SETTING"
+  end
+  if a=="AutoDissolve" and not p.WorkshopV5.Nodes.ECONOMY_1 then return false,"AUTO_DISSOLVE_LOCKED" end
+  p.Settings[a]=b
+  return true
+ elseif action=="DissolveFilter" then
+  local R=require(RS.Config.RarityConfig)
+  if not p.WorkshopV5.Nodes.ECONOMY_2 then return false,"FILTER_LOCKED" end
+  if type(a)~="string" or not R.Rank[a] then return false,"INVALID_VALUE" end
+  p.Settings.DissolveRarities[a]=not p.Settings.DissolveRarities[a]
+  return true
+ end
+ return false,"INVALID_ACTION"
 end
 function X:Loaded(player)
  if self.Temp[player] then return end local p=self:Profile(player) if not p then return end player:SetAttribute("BloomGameplayReady",false) self.Temp[player]={} self.Revisions[player]=0
