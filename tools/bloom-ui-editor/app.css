@@ -528,3 +528,40 @@ dialog::backdrop{background:rgba(0,0,0,.62)}.dialog-head{height:44px;display:fle
 }
 #outdentBtn{color:#9ecbeb}
 #outdentBtn:hover{color:#fff;border-color:#4c9bc9;background:#16344d}
+
+/* Precision selection for tiny UI objects: keep the actual asset visible. */
+.selection-overlay.precision-small{
+  border-color:#79c9ff;
+}
+.selection-overlay.precision-small .sel-caption{
+  left:50%;
+  bottom:calc(100% + 12px);
+  transform:translateX(-50%);
+  border-radius:5px;
+  padding:2px 5px;
+  max-width:220px;
+  opacity:.94;
+  box-shadow:0 2px 8px rgba(0,0,0,.28);
+}
+.selection-overlay.precision-small i{
+  width:7px;
+  height:7px;
+  border-radius:2px;
+}
+.selection-overlay.precision-small i[data-dir=n],
+.selection-overlay.precision-small i[data-dir=e],
+.selection-overlay.precision-small i[data-dir=s],
+.selection-overlay.precision-small i[data-dir=w]{
+  display:none;
+}
+.selection-overlay.precision-small i[data-dir=nw]{left:-9px;top:-9px}
+.selection-overlay.precision-small i[data-dir=ne]{right:-9px;top:-9px}
+.selection-overlay.precision-small i[data-dir=se]{right:-9px;bottom:-9px}
+.selection-overlay.precision-small i[data-dir=sw]{left:-9px;bottom:-9px}
+.selection-overlay.precision-small::after{
+  content:"";
+  position:absolute;
+  inset:-5px;
+  border:1px dashed rgba(99,181,255,.28);
+  pointer-events:none;
+}
