@@ -17,7 +17,7 @@ const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 const state={
  root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,geometry:true,inset:36,mode:"design",previewScene:"gameplay",
  projectHandle:null,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
- history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set()
+ history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null
 };
 
 let idCounter=1;
@@ -148,7 +148,7 @@ function pushHistory(){
  state.future=[];
 }
 function restoreSnapshot(json){
- const raw=JSON.parse(json);state.root=normalizeNode(raw);state.selectedId=state.root.__id;state.selectedIds=new Set([state.selectedId]);state.dirty=true;renderAll()
+ const raw=JSON.parse(json);state.root=normalizeNode(raw);state.selectedId=state.root.__id;state.selectedIds=new Set([state.selectedId]);state.selectionAnchorId=state.selectedId;state.dirty=true;renderAll()
 }
 function undo(){if(!state.history.length)return;state.future.push(serialize(false));restoreSnapshot(state.history.pop());toast("Undo")}
 function redo(){if(!state.future.length)return;state.history.push(serialize(false));restoreSnapshot(state.future.pop());toast("Redo")}
@@ -336,7 +336,7 @@ function pasteObject(){
  pushHistory();
  const copy=normalizeNode(deepClone(state.clipboard));copy.Name=uniqueName(copy.Name||copy.ClassName);
  const pos=u2v(copy,"Position");pos[0][1]+=12;pos[1][1]+=12;copy.Properties.Position={UDim2:pos};
- parent.Children=parent.Children||[];parent.Children.push(copy);state.selectedId=copy.__id;state.selectedIds=new Set([copy.__id]);changed();toast(copy.Name+" вставлен");
+ parent.Children=parent.Children||[];parent.Children.push(copy);state.selectedId=copy.__id;state.selectedIds=new Set([copy.__id]);state.selectionAnchorId=copy.__id;changed();toast(copy.Name+" вставлен");
 }
 function renameSelected(){
  const n=selected();if(!n)return;
@@ -780,7 +780,10 @@ function renderTree(){
   row.querySelector(".tree-name").textContent=n.Name;row.querySelector(".tree-kind").textContent=n.ClassName;
   row.querySelector(".tree-toggle").onclick=e=>{e.stopPropagation();collapsed?state.collapsed.delete(n.__id):state.collapsed.add(n.__id);renderTree()};
   row.ondblclick=e=>{e.preventDefault();select(n.__id,false);renameSelected()};
-  row.onclick=e=>select(n.__id,e.shiftKey);els.tree.appendChild(row);
+  row.onclick=e=>{
+   if(e.shiftKey)selectTreeRange(n.__id,e.ctrlKey||e.metaKey);
+   else select(n.__id,e.ctrlKey||e.metaKey);
+  };els.tree.appendChild(row);
   if(!collapsed)for(const c of kids)recur(c,depth+1);
  };
  recur(state.root,0);
@@ -798,6 +801,11 @@ function scrollTreeToSelected(){
   if(row)row.scrollIntoView({block:"nearest",inline:"nearest"});
  });
 }
+function finishSelection(){
+ if(state.selectedId)revealTreePath(state.selectedId);
+ renderTree();renderInspector();updateOverlay();updateStatus();
+ if(state.selectedId)scrollTreeToSelected();
+}
 function select(id,additive=false){
  if(!findNode(id))return;
  if(additive){
@@ -811,13 +819,45 @@ function select(id,additive=false){
    state.selectedIds.add(id);
    state.selectedId=id;
   }
+  state.selectionAnchorId=id;
  }else{
   state.selectedIds=new Set([id]);
   state.selectedId=id;
+  state.selectionAnchorId=id;
  }
- if(state.selectedId)revealTreePath(state.selectedId);
- renderTree();renderInspector();updateOverlay();updateStatus();
- if(state.selectedId)scrollTreeToSelected();
+ finishSelection();
+}
+function selectTreeRange(id,additive=false){
+ if(!findNode(id))return;
+ const rows=[...els.tree.querySelectorAll(".tree-row")];
+ const ids=rows.map(r=>r.dataset.id);
+ const anchor=state.selectionAnchorId||state.selectedId||id;
+ const a=ids.indexOf(anchor),b=ids.indexOf(id);
+ if(a<0||b<0){select(id,false);return}
+ const lo=Math.min(a,b),hi=Math.max(a,b);
+ if(!additive)state.selectedIds=new Set();
+ for(let i=lo;i<=hi;i++)if(ids[i])state.selectedIds.add(ids[i]);
+ state.selectedId=id;
+ // Keep the original anchor so repeated Shift-click behaves like Explorer/Figma.
+ state.selectionAnchorId=anchor;
+ finishSelection();
+}
+function selectAllSiblings(){
+ const n=selected();if(!n)return;
+ const p=findParent(n.__id);if(!p)return;
+ const ids=(p.Children||[]).filter(c=>!MODIFIERS.has(c.ClassName)).map(c=>c.__id);
+ if(!ids.length)return;
+ state.selectedIds=new Set(ids);
+ state.selectedId=n.__id;
+ state.selectionAnchorId=n.__id;
+ finishSelection();
+ toast(ids.length+" соседних объектов выбрано");
+}
+function collapseSelectionToPrimary(){
+ const n=selected();if(!n)return;
+ state.selectedIds=new Set([n.__id]);
+ state.selectionAnchorId=n.__id;
+ finishSelection();
 }
 function updateOverlay(){
  const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName)){els.overlay.classList.add("hidden");updateGeometrySelection();return}
@@ -990,9 +1030,9 @@ function bakeLayout(parent,options={}){
 function startMove(ev,n){
  if(ev.button!==0||MODIFIERS.has(n.ClassName))return;
  ev.stopPropagation();
- if(ev.shiftKey){select(n.__id,true);return}
+ if(ev.shiftKey||ev.ctrlKey||ev.metaKey){select(n.__id,true);return}
  if(!isSelectedId(n.__id))select(n.__id,false);
- else if(state.selectedId!==n.__id){setPrimarySelection(n.__id);renderTree();renderInspector();updateOverlay();updateStatus()}
+ else if(state.selectedId!==n.__id){setPrimarySelection(n.__id);state.selectionAnchorId=n.__id;renderTree();renderInspector();updateOverlay();updateStatus()}
 
  let nodes=selectedMoveRoots();
  if(!nodes.length)return;
@@ -1105,8 +1145,96 @@ function addObject(kind){
  }
  if(!parent||!CONTAINERS.has(parent.ClassName))parent=findParent(state.selectedId)||state.root;
  if(MODIFIERS.has(kind)&&parent.ClassName==="ScreenGui"){toast("Выбери GuiObject для "+kind,true);return}
- const n=defaultObject(kind);parent.Children=parent.Children||[];parent.Children.push(n);state.selectedId=n.__id;state.selectedIds=new Set([n.__id]);changed();toast(kind+" создан")
+ const n=defaultObject(kind);parent.Children=parent.Children||[];parent.Children.push(n);state.selectedId=n.__id;state.selectedIds=new Set([n.__id]);state.selectionAnchorId=n.__id;changed();toast(kind+" создан")
 }
+
+function groupSelected(){
+ let nodes=selectedMoveRoots();
+ if(nodes.length<2){toast("Для Group выбери минимум 2 объекта",true);return}
+ const parent=findParent(nodes[0].__id);
+ if(!parent||nodes.some(n=>findParent(n.__id)!==parent)){
+  toast("Group работает для объектов с одним родителем",true);return;
+ }
+
+ pushHistory();
+ if(isLayoutParent(parent))bakeLayout(parent,{record:false,render:false,notify:false});
+ renderViewport();
+
+ nodes=selectedMoveRoots();
+ const pr=localRect(parent===state.root?els.guiRoot:els.guiRoot.querySelector(`[data-id="${parent.__id}"]`));
+ const snapshots=nodes.map(n=>({n,r:localRect(els.guiRoot.querySelector(`[data-id="${n.__id}"]`))})).filter(x=>x.r);
+ if(!pr||snapshots.length<2){toast("Не удалось вычислить геометрию группы",true);return}
+
+ const left=Math.min(...snapshots.map(x=>x.r.left)),top=Math.min(...snapshots.map(x=>x.r.top));
+ const right=Math.max(...snapshots.map(x=>x.r.right)),bottom=Math.max(...snapshots.map(x=>x.r.bottom));
+ const selectedSet=new Set(nodes.map(n=>n.__id));
+ const original=parent.Children||[];
+ const insertAt=Math.min(...nodes.map(n=>original.indexOf(n)).filter(i=>i>=0));
+
+ const group=normalizeNode({
+  ClassName:"Frame",Name:uniqueName("Group"),
+  Properties:{
+   Size:u2(0,Math.max(1,roundOffset(right-left)),0,Math.max(1,roundOffset(bottom-top))),
+   Position:u2(0,roundOffset(left-pr.left),0,roundOffset(top-pr.top)),
+   AnchorPoint:v2(0,0),BackgroundTransparency:1,BorderSizePixel:0,ZIndex:1,Visible:true,ClipsDescendants:false
+  },
+  Children:[]
+ });
+
+ for(const {n,r} of snapshots){
+  const a=v2v(n,"AnchorPoint",[0,0]);
+  n.Properties=n.Properties||{};
+  n.Properties.Position={UDim2:[[0,roundOffset(r.left-left+a[0]*r.w)],[0,roundOffset(r.top-top+a[1]*r.h)]]};
+  n.Properties.Size={UDim2:[[0,Math.max(1,roundOffset(r.w))],[0,Math.max(1,roundOffset(r.h))]]};
+  group.Children.push(n);
+ }
+ const remaining=original.filter(c=>!selectedSet.has(c.__id));
+ remaining.splice(Math.max(0,insertAt),0,group);
+ parent.Children=remaining;
+
+ state.selectedId=group.__id;state.selectedIds=new Set([group.__id]);state.selectionAnchorId=group.__id;
+ state.dirty=true;renderAll();finishSelection();
+ toast(nodes.length+" объектов сгруппировано");
+}
+function ungroupSelected(){
+ const groups=selectedMoveRoots().filter(n=>n.ClassName==="Frame"&&n!==state.root&&(n.Children||[]).some(c=>!MODIFIERS.has(c.ClassName)));
+ if(!groups.length){toast("Выбери Frame-группу с дочерними объектами",true);return}
+
+ const plans=[];
+ for(const g of groups){
+  const parent=findParent(g.__id);if(!parent)continue;
+  const parentEl=parent===state.root?els.guiRoot:els.guiRoot.querySelector(`[data-id="${parent.__id}"]`);
+  const pr=localRect(parentEl);if(!pr)continue;
+  const children=layoutChildNodes(g);
+  const snaps=children.map(c=>({c,r:localRect(els.guiRoot.querySelector(`[data-id="${c.__id}"]`))})).filter(x=>x.r);
+  if(snaps.length)plans.push({g,parent,pr,snaps,index:(parent.Children||[]).indexOf(g)});
+ }
+ if(!plans.length){toast("Нечего разгруппировывать",true);return}
+
+ pushHistory();
+ const moved=[];
+ for(const plan of plans){
+  const {g,parent,pr,snaps,index}=plan;
+  const out=[];
+  for(const {c,r} of snaps){
+   const a=v2v(c,"AnchorPoint",[0,0]);
+   c.Properties=c.Properties||{};
+   c.Properties.Position={UDim2:[[0,roundOffset(r.left-pr.left+a[0]*r.w)],[0,roundOffset(r.top-pr.top+a[1]*r.h)]]};
+   c.Properties.Size={UDim2:[[0,Math.max(1,roundOffset(r.w))],[0,Math.max(1,roundOffset(r.h))]]};
+   out.push(c);moved.push(c);
+  }
+  const arr=(parent.Children||[]).filter(c=>c!==g);
+  arr.splice(Math.max(0,index),0,...out);
+  parent.Children=arr;
+ }
+ if(!moved.length)return;
+ state.selectedIds=new Set(moved.map(n=>n.__id));
+ state.selectedId=moved[moved.length-1].__id;
+ state.selectionAnchorId=moved[0].__id;
+ state.dirty=true;renderAll();finishSelection();
+ toast(groups.length+" групп разгруппировано · "+moved.length+" объектов выбрано");
+}
+
 function deleteSelected(){
  const nodes=selectedNodes().filter(n=>n&&n!==state.root);
  if(!nodes.length)return;
@@ -1115,11 +1243,11 @@ function deleteSelected(){
  pushHistory();
  walk(state.root,n=>{if(n.Children)n.Children=n.Children.filter(c=>!ids.has(c.__id))});
  const next=(fallback&&!ids.has(fallback.__id)?fallback:state.root);
- state.selectedId=next.__id;state.selectedIds=new Set([next.__id]);changed();
+ state.selectedId=next.__id;state.selectedIds=new Set([next.__id]);state.selectionAnchorId=next.__id;changed();
  toast(nodes.length>1?nodes.length+" объектов удалено":"Объект удалён");
 }
 function duplicateSelected(){
- const n=selected();if(!n||n===state.root)return;const p=findParent(n.__id);pushHistory();const copy=normalizeNode(stripNode(n));copy.Name=uniqueName(n.Name);const pos=u2v(copy,"Position");if(pos){pos[0][1]+=12;pos[1][1]+=12;copy.Properties.Position={UDim2:pos}}p.Children.push(copy);state.selectedId=copy.__id;state.selectedIds=new Set([copy.__id]);changed()
+ const n=selected();if(!n||n===state.root)return;const p=findParent(n.__id);pushHistory();const copy=normalizeNode(stripNode(n));copy.Name=uniqueName(n.Name);const pos=u2v(copy,"Position");if(pos){pos[0][1]+=12;pos[1][1]+=12;copy.Properties.Position={UDim2:pos}}p.Children.push(copy);state.selectedId=copy.__id;state.selectedIds=new Set([copy.__id]);state.selectionAnchorId=copy.__id;changed()
 }
 
 async function connectProject(){
@@ -1171,7 +1299,7 @@ async function loadInitial(){
 
 $("#palette").addEventListener("click",e=>{const b=e.target.closest("[data-add]");if(b)addObject(b.dataset.add)});
 $("#createFirstFrame").onclick=()=>addObject("Frame");
-$("#deleteBtn").onclick=deleteSelected;$("#duplicateBtn").onclick=duplicateSelected;
+$("#deleteBtn").onclick=deleteSelected;$("#duplicateBtn").onclick=duplicateSelected;$("#groupBtn").onclick=groupSelected;$("#ungroupBtn").onclick=ungroupSelected;
 $("#connectBtn").onclick=connectProject;$("#pullBtn").onclick=pullProject;$("#pushBtn").onclick=pushProject;
 $("#exportBtn").onclick=download;$("#copyBtn").onclick=copyModel;$("#importBtn").onclick=()=>els.fileInput.click();
 els.fileInput.onchange=()=>els.fileInput.files[0]&&importFile(els.fileInput.files[0]);
@@ -1243,6 +1371,9 @@ window.addEventListener("keydown",e=>{
  if(mod&&code==="KeyC"){e.preventDefault();copySelectedObject();return}
  if(mod&&code==="KeyV"){e.preventDefault();pasteObject();return}
  if(mod&&code==="KeyF"){e.preventDefault();$("#treeSearch").focus();$("#treeSearch").select();return}
+ if(mod&&code==="KeyG"){e.preventDefault();e.shiftKey?ungroupSelected():groupSelected();return}
+ if(mod&&code==="KeyA"){e.preventDefault();selectAllSiblings();return}
+ if(code==="Escape"&&state.selectedIds.size>1){e.preventDefault();collapseSelectionToPrimary();return}
  if(code==="F2"){e.preventDefault();renameSelected();return}
  if(code==="KeyF"){e.preventDefault();focusSelected();return}
  if(code==="Digit0"||code==="Numpad0"){e.preventDefault();fitViewport();return}
