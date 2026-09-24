@@ -326,7 +326,7 @@ function previewImage(n,parentNode){
 }
 function previewSize(n){
  if(!isPreview())return null;
- if(n.Name==="MainPanel"&&state.previewScene==="workshop")return [[0,940],[0,620]];
+ if(n.Name==="MainPanel"&&state.previewScene==="workshop")return [[1,0],[1,0]];
  if(n.Name==="MainPanel"&&state.previewScene==="seedbag")return [[0,640],[0,500]];
  if(n.Name==="MainPanel"&&MENU_PREVIEW_SCENES.has(state.previewScene))return [[0,600],[0,420]];
  if(n.Name==="ObjectiveProgressFill")return [[.38,0],[1,0]];
