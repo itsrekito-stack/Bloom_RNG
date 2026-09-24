@@ -4122,11 +4122,11 @@
               "UDim2": [
                 [
                   0,
-                  150
+                  80
                 ],
                 [
                   0,
-                  42
+                  80
                 ]
               ]
             },
@@ -4136,7 +4136,7 @@
               0.7764705882352941
             ],
             "BorderSizePixel": 0,
-            "Text": "AUTO ROLL",
+            "Text": "",
             "TextColor3": [
               0.9607843137254902,
               0.9725490196078431,
@@ -4165,7 +4165,8 @@
                 0.5,
                 1
               ]
-            }
+            },
+            "BackgroundTransparency": 1
           },
           "Children": [
             {
@@ -4175,12 +4176,12 @@
                 "Size": {
                   "UDim2": [
                     [
-                      0,
-                      24
+                      1,
+                      0
                     ],
                     [
-                      0,
-                      24
+                      1,
+                      0
                     ]
                   ]
                 },
@@ -4192,13 +4193,19 @@
                 "Position": {
                   "UDim2": [
                     [
-                      0,
-                      12
+                      0.5,
+                      0
                     ],
                     [
                       0.5,
-                      -12
+                      0
                     ]
+                  ]
+                },
+                "AnchorPoint": {
+                  "Vector2": [
+                    0.5,
+                    0.5
                   ]
                 }
               }
@@ -4227,7 +4234,7 @@
                 "BackgroundTransparency": 0,
                 "BorderSizePixel": 0,
                 "ZIndex": 29,
-                "Visible": true,
+                "Visible": false,
                 "ClipsDescendants": false,
                 "Position": {
                   "UDim2": [
@@ -4255,59 +4262,6 @@
                   }
                 }
               ]
-            },
-            {
-              "ClassName": "UICorner",
-              "Properties": {
-                "CornerRadius": {
-                  "UDim": [
-                    0,
-                    12
-                  ]
-                }
-              }
-            },
-            {
-              "ClassName": "UIStroke",
-              "Properties": {
-                "Color": [
-                  0.023529411764705882,
-                  0.03529411764705882,
-                  0.050980392156862744
-                ],
-                "Thickness": 1.5,
-                "Transparency": 0.05,
-                "ApplyStrokeMode": "Border"
-              }
-            },
-            {
-              "ClassName": "UIPadding",
-              "Properties": {
-                "PaddingLeft": {
-                  "UDim": [
-                    0,
-                    46
-                  ]
-                },
-                "PaddingRight": {
-                  "UDim": [
-                    0,
-                    12
-                  ]
-                },
-                "PaddingTop": {
-                  "UDim": [
-                    0,
-                    0
-                  ]
-                },
-                "PaddingBottom": {
-                  "UDim": [
-                    0,
-                    0
-                  ]
-                }
-              }
             }
           ]
         },
