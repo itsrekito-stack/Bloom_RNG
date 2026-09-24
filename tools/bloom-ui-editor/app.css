@@ -443,3 +443,23 @@ dialog::backdrop{background:rgba(0,0,0,.62)}.dialog-head{height:44px;display:fle
 }
 .layout-host.list-layout{display:flex!important}
 .layout-host.grid-layout{display:grid!important}
+
+/* Free-transform arrangement helpers */
+.arrange-box{
+  margin-top:8px;padding-top:8px;border-top:1px solid #29384a;display:grid;gap:6px
+}
+.arrange-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.arrange-row label{
+  display:grid;grid-template-columns:auto 1fr;align-items:center;gap:5px;
+  color:#8192a6;font-size:9px
+}
+.arrange-row input{
+  width:100%;height:26px;border:1px solid #304055;border-radius:6px;
+  background:#0d141d;color:#e8f3ff;padding:0 6px
+}
+.arrange-box .btn{height:28px;font-size:9px;font-weight:800}
+.arrange-primary{
+  border-color:#366f98!important;background:#12314a!important;color:#ccecff!important
+}
+.arrange-primary:hover{background:#19405f!important;border-color:#4b9bd1!important}
+.arrange-row.buttons .btn{width:100%}
