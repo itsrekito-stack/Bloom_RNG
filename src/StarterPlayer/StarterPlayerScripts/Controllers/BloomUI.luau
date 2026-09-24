@@ -1,7 +1,6 @@
 local RS=game:GetService("ReplicatedStorage")
 local Players=game:GetService("Players")
 local UIS=game:GetService("UserInputService")
-local GuiService=game:GetService("GuiService")
 local TweenService=game:GetService("TweenService")
 local Workspace=game:GetService("Workspace")
 local StarterGui=game:GetService("StarterGui")
@@ -241,13 +240,13 @@ function UI:BindWorkshopPan(canvas,nodes)
  end
 
  local function overNodeButton(position)
-  for _,gui in ipairs(GuiService:GetGuiObjectsAtPosition(position.X,position.Y)) do
-   local current=gui
-   while current and current~=canvas do
-    if current:IsA("GuiButton") and current:IsDescendantOf(nodes) then
+  for _,node in ipairs(nodes:GetChildren()) do
+   if node:IsA("GuiButton") and node.Visible then
+    local topLeft=node.AbsolutePosition
+    local size=node.AbsoluteSize
+    if position.X>=topLeft.X and position.X<=topLeft.X+size.X and position.Y>=topLeft.Y and position.Y<=topLeft.Y+size.Y then
      return true
     end
-    current=current.Parent
    end
   end
   return false
@@ -265,8 +264,8 @@ function UI:BindWorkshopPan(canvas,nodes)
   end
  end
 
- table.insert(connections,UIS.InputBegan:Connect(function(input,processed)
-  if processed or self.Menu~="Workshop" or not canvas.Parent or not canvas.Visible then return end
+ table.insert(connections,UIS.InputBegan:Connect(function(input)
+  if self.Menu~="Workshop" or not canvas.Parent or not canvas.Visible then return end
   if input.UserInputType~=Enum.UserInputType.MouseButton1 then return end
   local position=pointerPosition(input)
   if not insideCanvas(position) or overNodeButton(position) then return end
