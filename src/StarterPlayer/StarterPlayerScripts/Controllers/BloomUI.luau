@@ -648,41 +648,120 @@ function UI:RenderMenu()
    local selectedNode=W.Nodes[self.SelectedNode] or W.Nodes.ROLL_1
    local selectedId=selectedNode and selectedNode.Id or "ROLL_1"
 
+   local branchColors={
+    CORE=C.White,
+    ROLL=C.Blue,
+    GARDEN=C.Green,
+    BEES=C.Honey,
+    ECONOMY=C.Gold,
+    BLOOM=C.Dust,
+    EXPLORATION=C.Nectar,
+    LEGACY=C.Danger,
+   }
+
    for id,n in pairs(W.Nodes) do
     local node=nodes:FindFirstChild("Node_"..id)
+    local backend=workshopUI and workshopUI.Nodes and workshopUI.Nodes[id]
+    local owned
+    local available
+    if backend then
+     owned=backend.Owned==true
+     available=backend.Available==true
+    else
+     owned=id=="CORE" or p.WorkshopV5.Nodes[id]==true
+     local parentOwned=not n.Parent or n.Parent=="CORE" or p.WorkshopV5.Nodes[n.Parent]==true
+     available=not owned and parentOwned and p.Hive.Level>=(n.Hive or 0)
+    end
+
+    local selected=id==selectedId
+    local branchColor=branchColors[n.Branch] or C.Blue
+
     if node and node:IsA("TextButton") then
-     local backend=workshopUI and workshopUI.Nodes and workshopUI.Nodes[id]
-     local owned
-     local available
-     if backend then
-      owned=backend.Owned==true
-      available=backend.Available==true
-     else
-      owned=id=="CORE" or p.WorkshopV5.Nodes[id]==true
-      local parentOwned=not n.Parent or n.Parent=="CORE" or p.WorkshopV5.Nodes[n.Parent]==true
-      available=not owned and parentOwned and p.Hive.Level>=(n.Hive or 0)
-     end
-     local selected=id==selectedId
      local icon=node:FindFirstChild("HexIcon")
+     local label=node:FindFirstChild("NodeName")
+     local level=node:FindFirstChild("Level")
+     local nodeScale=node:FindFirstChild("NodeScale")
+     local selectionGlow=node:FindFirstChild("SelectionGlow")
+
+     if not nodeScale then
+      nodeScale=Instance.new("UIScale")
+      nodeScale.Name="NodeScale"
+      nodeScale.Parent=node
+     end
+     if not selectionGlow and icon and icon:IsA("ImageLabel") then
+      selectionGlow=icon:Clone()
+      selectionGlow.Name="SelectionGlow"
+      selectionGlow.Size=UDim2.new(1,18,1,18)
+      selectionGlow.Position=UDim2.fromOffset(-9,-9)
+      selectionGlow.ImageColor3=C.Gold
+      selectionGlow.ImageTransparency=.58
+      selectionGlow.ZIndex=math.max(1,icon.ZIndex-1)
+      selectionGlow.Visible=false
+      selectionGlow.Parent=node
+     end
+
+     if label and label:IsA("TextLabel") then
+      label.Visible=false
+     end
+     if level and level:IsA("TextLabel") then
+      level.Visible=false
+     end
+
+     local baseTransparency=owned and 0 or available and .06 or .38
      if icon and icon:IsA("ImageLabel") then
       icon.Image=Icons.GetWorkshopNodeIcon(id)
-      icon.ImageColor3=selected and C.Gold or owned and C.Green or available and C.Blue or C.Faint
-      icon.ImageTransparency=owned and 0 or available and .06 or .34
+      icon.ImageColor3=selected and C.Gold or owned and C.Green or available and branchColor or C.Faint
+      icon.ImageTransparency=baseTransparency
      end
-     local label=node:FindFirstChild("NodeName")
-     if label and label:IsA("TextLabel") then label.Text=n.Name label.TextColor3=selected and C.Gold or C.Text end
-     local level=node:FindFirstChild("Level")
-     if level and level:IsA("TextLabel") then level.Text=id=="CORE" and "CORE" or owned and "1/1" or "0/1" level.TextColor3=owned and C.Green or available and C.Blue or C.Faint end
+     if selectionGlow and selectionGlow:IsA("ImageLabel") then
+      selectionGlow.Image=icon and icon:IsA("ImageLabel") and icon.Image or Icons.GetWorkshopNodeIcon(id)
+      selectionGlow.ImageColor3=C.Gold
+      selectionGlow.ImageTransparency=.56
+      selectionGlow.Visible=selected
+     end
+
+     local baseScale=selected and 1.12 or 1
+     nodeScale.Scale=baseScale
+     node.ZIndex=selected and 60 or 57
+
+     local nodeId=id
+     local isSelected=selected
+     node.MouseEnter:Connect(function()
+      if not node.Parent then return end
+      TweenService:Create(nodeScale,TweenInfo.new(Theme.Motion.Fast,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
+       Scale=isSelected and 1.17 or 1.08,
+      }):Play()
+      if icon and icon.Parent then
+       TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{
+        ImageTransparency=math.max(0,baseTransparency-.10),
+       }):Play()
+      end
+     end)
+     node.MouseLeave:Connect(function()
+      if not node.Parent then return end
+      TweenService:Create(nodeScale,TweenInfo.new(Theme.Motion.Fast,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
+       Scale=baseScale,
+      }):Play()
+      if icon and icon.Parent then
+       TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{
+        ImageTransparency=baseTransparency,
+       }):Play()
+      end
+     end)
      node.Activated:Connect(function()
-      if id~="CORE" then self.SelectedNode=id self:RenderMenu() end
+      if nodeId~="CORE" then
+       self.SelectedNode=nodeId
+       self:RenderMenu()
+      end
      end)
     end
+
     if n.Parent then
      local link=links:FindFirstChild("Link_"..n.Parent.."_"..id)
      if link and link:IsA("Frame") then
       local parentOwned=n.Parent=="CORE" or p.WorkshopV5.Nodes[n.Parent]==true
-      link.BackgroundColor3=parentOwned and C.Blue or C.BorderSoft
-      link.BackgroundTransparency=parentOwned and .08 or .58
+      link.BackgroundColor3=parentOwned and branchColor or C.BorderSoft
+      link.BackgroundTransparency=parentOwned and (owned and .08 or available and .26 or .44) or .68
      end
     end
    end
@@ -696,6 +775,7 @@ function UI:RenderMenu()
     local detailCost=details:WaitForChild("Cost")
     local detailRequirement=details:WaitForChild("Requirement")
     detailIcon.Image=Icons.GetWorkshopNodeIcon(n.Id)
+    detailIcon.ImageColor3=branchColors[n.Branch] or C.Blue
     detailName.Text=n.Name
     detailBranch.Text=n.Branch
     local rules=effects[n.Id] or {}
@@ -722,15 +802,29 @@ function UI:RenderMenu()
     if not workshopUI or workshopUI.CanRespec==true then self:Send("Respec") end
    end)
 
-   local initialCanvasPosition=self.WorkshopCanvasPosition or Vector2.new(570,405)
-   canvas.CanvasPosition=initialCanvasPosition
+   if self.WorkshopCanvasPosition then
+    canvas.CanvasPosition=self.WorkshopCanvasPosition
+   end
    self:BindWorkshopPan(canvas,nodes)
    task.defer(function()
-    if canvas.Parent then
-     local position=self:ClampWorkshopCanvasPosition(canvas,canvas.CanvasPosition)
-     canvas.CanvasPosition=position
-     self.WorkshopCanvasPosition=position
+    if not canvas.Parent then return end
+    local position=self.WorkshopCanvasPosition
+    if not position then
+     local core=nodes:FindFirstChild("Node_CORE")
+     if core and core:IsA("GuiObject") then
+      local zoom=self.WorkshopZoom or 1
+      local coreCenter=Vector2.new(
+       core.Position.X.Offset+core.Size.X.Offset*.5,
+       core.Position.Y.Offset+core.Size.Y.Offset*.5
+      )*zoom
+      position=coreCenter-canvas.AbsoluteSize*.5
+     else
+      position=Vector2.new(520,430)
+     end
     end
+    position=self:ClampWorkshopCanvasPosition(canvas,position)
+    canvas.CanvasPosition=position
+    self.WorkshopCanvasPosition=position
    end)
   end
 
