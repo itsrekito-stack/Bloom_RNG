@@ -19,7 +19,7 @@ HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 ROOT = Path(os.environ.get("BLOOM_UI_ROOT", os.getcwd())).resolve()
 CACHE_LIMIT = 256
-BRIDGE_VERSION = 4
+BRIDGE_VERSION = 5
 
 _thumbnail_cache: "OrderedDict[str, tuple[bytes, str]]" = OrderedDict()
 
@@ -253,7 +253,19 @@ def write_model_json(model) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(model, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-def safe_sync_git() -> tuple[int, dict]:
+
+def backup_raw_model(label: str = "broken") -> str:
+    target = ROOT / MODEL_PATH
+    if not target.exists():
+        return ""
+    recovery = ROOT / ".recovery"
+    recovery.mkdir(parents=True, exist_ok=True)
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    out = recovery / f"BloomUI.model.{label}.{stamp}.json"
+    out.write_bytes(target.read_bytes())
+    return str(out.relative_to(ROOT)).replace("\\", "/")
+
+def safe_sync_git(editor_model=None) -> tuple[int, dict]:
     status_before = git_status_payload()
     if not status_before.get("ok"):
         return 503, status_before
@@ -265,16 +277,27 @@ def safe_sync_git() -> tuple[int, dict]:
     # Preserve the user's edited UI model outside Git's textual stash machinery.
     # BloomUI.model.json is huge and frequently causes false/ugly line conflicts.
     base_model = git_show_json("HEAD", model_rel)
-    local_model = read_json_file(model_abs)
+    disk_model = read_json_file(model_abs)
+    local_model = disk_model
     model_dirty_check = run_git("status", "--porcelain", "--", model_rel)
     model_dirty = bool(model_dirty_check.stdout.strip()) if model_dirty_check.returncode == 0 else False
+    recovered_from_editor = False
+    recovery_backup = ""
+
+    if model_dirty and disk_model is None and isinstance(editor_model, dict):
+        # The file on disk is malformed, but Bloom UI Studio still has a valid in-memory model.
+        # Preserve raw bytes first, then use the editor model as the user's local side of the merge.
+        recovery_backup = backup_raw_model("broken-before-ai-sync")
+        local_model = editor_model
+        recovered_from_editor = True
+
     model_saved = model_dirty and base_model is not None and local_model is not None
 
     if model_dirty and not model_saved:
         return 409, {
             "ok": False,
             "stage": "model-backup",
-            "error": "BloomUI.model.json изменён локально, но не удалось безопасно прочитать JSON. Исправь JSON перед AI SYNC.",
+            "error": "BloomUI.model.json повреждён и редактор не передал рабочую recovery-модель.",
         }
 
     if model_saved:
@@ -438,6 +461,8 @@ def safe_sync_git() -> tuple[int, dict]:
         "stashed": stashed,
         "restored": restored,
         "model_merged": model_merged,
+        "recovered_from_editor": recovered_from_editor,
+        "recovery_backup": recovery_backup,
         "output": pull_output[-6000:],
     }
 
@@ -512,7 +537,22 @@ class BloomHandler(SimpleHTTPRequestHandler):
             self.send_error(404, "Unknown endpoint")
             return
 
-        status_code, payload = safe_sync_git()
+        editor_model = None
+        try:
+            length = int(self.headers.get("Content-Length", "0") or "0")
+        except ValueError:
+            length = 0
+        if length > 0:
+            try:
+                request_body = self.rfile.read(min(length, 12_000_000))
+                request_json = json.loads(request_body.decode("utf-8"))
+                candidate = request_json.get("editor_model") if isinstance(request_json, dict) else None
+                if isinstance(candidate, dict):
+                    editor_model = candidate
+            except Exception:
+                editor_model = None
+
+        status_code, payload = safe_sync_git(editor_model=editor_model)
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status_code)
         self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -540,7 +580,7 @@ def main() -> None:
     print(f"Root: {root}")
     print(f"URL : http://{HOST}:{args.port}/tools/bloom-ui-editor/index.html")
     print("Roblox thumbnail proxy: enabled")
-    print(f"Assistant Bridge API: v{BRIDGE_VERSION} (model-aware safe sync)")
+    print(f"Assistant Bridge API: v{BRIDGE_VERSION} (editor-memory recovery + safe sync)")
     print("Close this window to stop the server.")
     print()
 
