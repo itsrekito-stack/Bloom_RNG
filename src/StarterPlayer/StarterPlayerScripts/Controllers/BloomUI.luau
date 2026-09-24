@@ -558,9 +558,16 @@ function UI:RenderMenu()
     local node=nodes:FindFirstChild("Node_"..id)
     if node and node:IsA("TextButton") then
      local backend=workshopUI and workshopUI.Nodes and workshopUI.Nodes[id]
-     local owned=backend and backend.Owned or id=="CORE" or p.WorkshopV5.Nodes[id]==true
-     local parentOwned=not n.Parent or n.Parent=="CORE" or p.WorkshopV5.Nodes[n.Parent]==true
-     local available=backend and backend.Available or (not owned and parentOwned and p.Hive.Level>=(n.Hive or 0))
+     local owned
+     local available
+     if backend then
+      owned=backend.Owned==true
+      available=backend.Available==true
+     else
+      owned=id=="CORE" or p.WorkshopV5.Nodes[id]==true
+      local parentOwned=not n.Parent or n.Parent=="CORE" or p.WorkshopV5.Nodes[n.Parent]==true
+      available=not owned and parentOwned and p.Hive.Level>=(n.Hive or 0)
+     end
      local selected=id==selectedId
      local icon=node:FindFirstChild("HexIcon")
      if icon and icon:IsA("ImageLabel") then
@@ -598,8 +605,8 @@ function UI:RenderMenu()
     details.Effect.Text=#descriptions>0 and table.concat(descriptions,"\n") or "Core progression node"
     details.Cost.Text=tostring(n.Cost or 0).." point  •  "..compact(n.Coins or 0).." coins"..((n.Dust or 0)>0 and "  •  "..compact(n.Dust).." dust" or "")..((n.Nectar or 0)>0 and "  •  "..compact(n.Nectar).." nectar" or "")
     local backend=workshopUI and workshopUI.Nodes and workshopUI.Nodes[n.Id]
-    local owned=backend and backend.Owned or p.WorkshopV5.Nodes[n.Id]==true
-    local available=backend and backend.Available or not owned
+    local owned=backend and backend.Owned==true or p.WorkshopV5.Nodes[n.Id]==true
+    local available=backend and backend.Available==true or (backend==nil and not owned)
     local reasonText=backend and backend.ReasonText
     details.Requirement.Text="Hive "..tostring(n.Hive or 0)..(n.Parent and "  •  Parent "..n.Parent or "")..(reasonText and "  •  "..reasonText or "")
     details.BuyButton.Text=owned and "OWNED" or available and "UPGRADE" or "LOCKED"
@@ -1249,6 +1256,7 @@ function UI:ApplyState(payload,source)
  end
  if not self.RouletteLanding then self:BuildRouletteVisualPool(true) end
  self:Render()
+ if self.Menu and not self.WorkshopPanDragging then self:RenderMenu() end
  if firstState then print("[BloomUI] State applied:",source or "Event") end
  return true
 end
