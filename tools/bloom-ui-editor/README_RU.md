@@ -42,3 +42,21 @@
 Позиции и размеры считаются из Roblox UDim2: `parentPixels * Scale + Offset`, с учётом AnchorPoint. Основные 2D GuiObject/UILayout свойства визуализируются напрямую.
 
 Разница с реальным Roblox возможна для вещей, зависящих от движка: точная растеризация Gotham, AutomaticSize, RichText, UIGradient sequences, некоторые image slicing/9-slice режимы, CoreGui safe insets разных устройств и asset moderation. Эти свойства модель не теряет: неизвестные Properties сохраняются и доступны через RAW PROPERTIES.
+
+
+## Геометрическая помощь
+
+Переключатель **Geometry** включает редакторские направляющие. Они существуют только в Bloom UI Studio и не записываются в Roblox.
+
+- Линейки X/Y по краям Roblox viewport.
+- Постоянные оси центра экрана.
+- Линия Roblox GUI inset.
+- Живые X/Y/W/H в подписи выбранного объекта.
+- Размер выбранного объекта прямо на canvas.
+- Расстояния от объекта до границ родителя.
+- Smart Snap при drag/resize к краям и центрам родителя, viewport и соседних объектов.
+- Розовые smart guides показывают, к чему именно произошёл snap.
+- Удерживай **Alt** во время drag/resize, чтобы временно отключить smart snap.
+- В Inspector блок **GEOMETRY** позволяет одним кликом выровнять объект Left / Center X / Right / Top / Center Y / Bottom или точно по центру родителя.
+
+Обычный **Snap** продолжает задавать шаг перемещения по пиксельной сетке, а Geometry добавляет поверх него смысловое выравнивание.
