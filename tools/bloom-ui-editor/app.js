@@ -1548,14 +1548,14 @@ async function discoverAssistantBridge(){
  for(const base of candidates){
   try{
    const {r,data}=await apiJson(base+"/api/health",{timeout:700});
-   if(r.ok&&data?.ok&&Number(data.bridge)>=4){
+   if(r.ok&&data?.ok&&Number(data.bridge)>=5){
     state.bridgeBase=base;
     return {ok:true,base,data};
    }
   }catch{}
  }
  state.bridgeBase="";
- return {ok:false,error:"Assistant Bridge v4 не найден. Один раз перезапусти Bloom UI Studio Server через Start Bloom UI Editor.bat"};
+ return {ok:false,error:"Assistant Bridge v5 не найден. Один раз перезапусти Bloom UI Studio Server через Start Bloom UI Editor.bat"};
 }
 async function assistantStatus(){
  const badge=$("#aiBridgeStatus");
@@ -1609,7 +1609,9 @@ async function assistantSync(){
   const base=status.bridgeBase||state.bridgeBase;
   if(status.dirty)toast("AI SYNC: сохраняю локальные изменения → pull → возвращаю их обратно");
   const {r,data}=await apiJson(base+"/api/git/pull",{
-   method:"POST",headers:{"Content-Type":"application/json"},body:"{}",timeout:50000
+   method:"POST",headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({editor_model:state.root?stripNode(state.root):null}),
+   timeout:50000
   });
   if(!r.ok||!data.ok){
    const conflicts=Array.isArray(data.conflicts)&&data.conflicts.length?" · Конфликты: "+data.conflicts.join(", "):"";
@@ -1619,7 +1621,8 @@ async function assistantSync(){
   state.bridgeBase=base;
   await reloadModelFromServer(data.changed?"AI UI обновлён из GitHub":"AI SYNC: уже актуально");
   await assistantStatus();
-  if(data.stashed&&data.restored)toast(data.changed?"AI SYNC готов · твои локальные изменения сохранены":"AI SYNC готов · локальные изменения возвращены");
+  if(data.recovered_from_editor)toast("AI SYNC восстановил повреждённый BloomUI из памяти редактора"+(data.recovery_backup?" · backup: "+data.recovery_backup:""));
+  else if(data.stashed&&data.restored)toast(data.changed?"AI SYNC готов · твои локальные изменения сохранены":"AI SYNC готов · локальные изменения возвращены");
   if(data.changed)requestAnimationFrame(()=>focusSelected());
  }catch(e){
   toast("AI SYNC: "+e.message,true);
