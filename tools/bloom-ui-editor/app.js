@@ -538,11 +538,18 @@ function siblingGuiObjects(n){
 function tidySiblings(columns=3,gap=8){
  const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName))return;
  const parent=findParent(n.__id);if(!parent)return;
+ const parentEl=parent===state.root?els.guiRoot:els.guiRoot.querySelector(`[data-id="${parent.__id}"]`);
+ const pr=localRect(parentEl);if(!pr)return;
+
  const siblings=siblingGuiObjects(n).filter(c=>{
   const el=els.guiRoot.querySelector(`[data-id="${c.__id}"]`);
   return el&&el.style.display!=="none";
  });
  if(siblings.length<2){toast("Недостаточно соседних объектов для Tidy",true);return}
+
+ // One undo for the whole tidy operation, including automatic layout baking.
+ pushHistory();
+ if(isLayoutParent(parent))bakeLayout(parent,{record:false,render:false,notify:false});
 
  const data=siblings.map(c=>{
   const el=els.guiRoot.querySelector(`[data-id="${c.__id}"]`);
@@ -556,8 +563,10 @@ function tidySiblings(columns=3,gap=8){
  columns=Math.max(1,Math.min(columns,data.length));
  gap=Math.max(0,Math.round(gap));
 
- const minLeft=Math.min(...data.map(x=>x.r.left));
- const minTop=Math.min(...data.map(x=>x.r.top));
+ // localRect() is viewport-relative; Roblox Position must be parent-relative.
+ // Preserve the group's current top-left inside its parent instead of teleporting it.
+ const startX=Math.max(0,Math.min(...data.map(x=>x.r.left))-pr.left);
+ const startY=Math.max(0,Math.min(...data.map(x=>x.r.top))-pr.top);
 
  const colW=Array(columns).fill(0);
  for(let i=0;i<data.length;i++)colW[i%columns]=Math.max(colW[i%columns],data[i].r.w);
@@ -566,12 +575,11 @@ function tidySiblings(columns=3,gap=8){
  const rowH=Array(rows).fill(0);
  for(let i=0;i<data.length;i++)rowH[Math.floor(i/columns)]=Math.max(rowH[Math.floor(i/columns)],data[i].r.h);
 
- const colX=[];let x=minLeft;
+ const colX=[];let x=startX;
  for(let i=0;i<columns;i++){colX[i]=x;x+=colW[i]+gap}
- const rowY=[];let y=minTop;
+ const rowY=[];let y=startY;
  for(let i=0;i<rows;i++){rowY[i]=y;y+=rowH[i]+gap}
 
- pushHistory();
  for(let i=0;i<data.length;i++){
   const {c,r}=data[i],col=i%columns,row=Math.floor(i/columns),a=v2v(c,"AnchorPoint",[0,0]);
   c.Properties=c.Properties||{};
@@ -580,22 +588,36 @@ function tidySiblings(columns=3,gap=8){
    [0,roundOffset(rowY[row]+a[1]*r.h)]
   ]};
  }
- state.dirty=true;renderAll();select(n.__id);
- toast(`Tidy: ${data.length} объектов · ${columns} кол. · gap ${gap}px`);
+
+ // Tidy is a batch operation: keep the arranged set selected so it can be moved immediately.
+ state.selectedIds=new Set(data.map(x=>x.c.__id));
+ state.selectedId=n.__id;
+ state.selectionAnchorId=data[0].c.__id;
+ state.dirty=true;
+ revealTreePath(state.selectedId);
+ renderAll();
+ scrollTreeToSelected();
+ toast(`Tidy: ${data.length} объектов · ${columns} кол. · gap ${gap}px · группа выделена`);
 }
 function distributeSiblings(axis="x",gap=8){
  const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName))return;
  const parent=findParent(n.__id);if(!parent)return;
+ const parentEl=parent===state.root?els.guiRoot:els.guiRoot.querySelector(`[data-id="${parent.__id}"]`);
+ const pr=localRect(parentEl);if(!pr)return;
+
+ pushHistory();
+ if(isLayoutParent(parent))bakeLayout(parent,{record:false,render:false,notify:false});
+
  const data=siblingGuiObjects(n).map(c=>{
   const el=els.guiRoot.querySelector(`[data-id="${c.__id}"]`);
   return {c,r:localRect(el)};
  }).filter(x=>x.r&&els.guiRoot.querySelector(`[data-id="${x.c.__id}"]`)?.style.display!=="none");
  if(data.length<2){toast("Недостаточно соседних объектов",true);return}
+
  gap=Math.max(0,Math.round(gap));
  data.sort((a,b)=>axis==="x"?a.r.left-b.r.left:a.r.top-b.r.top);
- const start=axis==="x"?data[0].r.left:data[0].r.top;
- pushHistory();
- let cursor=start;
+ let cursor=(axis==="x"?data[0].r.left-pr.left:data[0].r.top-pr.top);
+
  for(const {c,r} of data){
   const a=v2v(c,"AnchorPoint",[0,0]),p=deepClone(u2v(c,"Position"));
   if(axis==="x"){
@@ -607,8 +629,15 @@ function distributeSiblings(axis="x",gap=8){
   }
   c.Properties.Position={UDim2:p};
  }
- state.dirty=true;renderAll();select(n.__id);
- toast((axis==="x"?"Горизонтальный":"Вертикальный")+" gap = "+gap+"px");
+
+ state.selectedIds=new Set(data.map(x=>x.c.__id));
+ state.selectedId=n.__id;
+ state.selectionAnchorId=data[0].c.__id;
+ state.dirty=true;
+ revealTreePath(state.selectedId);
+ renderAll();
+ scrollTreeToSelected();
+ toast((axis==="x"?"Горизонтальный":"Вертикальный")+" gap = "+gap+"px · группа выделена");
 }
 
 function geometryInspectorGroup(){
