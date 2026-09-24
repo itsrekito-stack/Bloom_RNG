@@ -405,11 +405,11 @@
               "UDim2": [
                 [
                   0,
-                  142
+                  100
                 ],
                 [
                   0,
-                  221
+                  146
                 ]
               ]
             },
@@ -445,11 +445,11 @@
                   "UDim2": [
                     [
                       0,
-                      140
+                      100
                     ],
                     [
                       0,
-                      36
+                      26
                     ]
                   ]
                 },
@@ -458,7 +458,7 @@
                   0.09803921568627451,
                   0.13333333333333333
                 ],
-                "BackgroundTransparency": 0.08,
+                "BackgroundTransparency": 1,
                 "BorderSizePixel": 0,
                 "ZIndex": 20,
                 "Visible": true,
@@ -486,11 +486,11 @@
                       "UDim2": [
                         [
                           0,
-                          28
+                          24
                         ],
                         [
                           0,
-                          28
+                          24
                         ]
                       ]
                     },
@@ -499,7 +499,7 @@
                       0.12941176470588237,
                       0.17254901960784313
                     ],
-                    "BackgroundTransparency": 0,
+                    "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
                     "ZIndex": 21,
                     "Visible": true,
@@ -507,29 +507,17 @@
                     "Position": {
                       "UDim2": [
                         [
-                          0,
-                          12
+                          1,
+                          -24
                         ],
                         [
                           0.5,
-                          -14
+                          -12
                         ]
                       ]
                     }
                   },
                   "Children": [
-                    {
-                      "ClassName": "UICorner",
-                      "Name": "UICorner",
-                      "Properties": {
-                        "CornerRadius": {
-                          "UDim": [
-                            0,
-                            8
-                          ]
-                        }
-                      }
-                    },
                     {
                       "ClassName": "ImageLabel",
                       "Name": "Icon",
@@ -538,11 +526,11 @@
                           "UDim2": [
                             [
                               0,
-                              20
+                              22
                             ],
                             [
                               0,
-                              20
+                              22
                             ]
                           ]
                         },
@@ -555,14 +543,15 @@
                           "UDim2": [
                             [
                               0.5,
-                              -10
+                              -11
                             ],
                             [
                               0.5,
-                              -10
+                              -11
                             ]
                           ]
-                        }
+                        },
+                        "Visible": true
                       }
                     }
                   ]
@@ -585,7 +574,7 @@
                     },
                     "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
-                    "Text": "COINS",
+                    "Text": "",
                     "TextColor3": [
                       0.6509803921568628,
                       0.7215686274509804,
@@ -597,7 +586,7 @@
                     "TextYAlignment": "Center",
                     "Font": "GothamBold",
                     "ZIndex": 21,
-                    "Visible": true,
+                    "Visible": false,
                     "Position": {
                       "UDim2": [
                         [
@@ -619,12 +608,12 @@
                     "Size": {
                       "UDim2": [
                         [
-                          1,
-                          -86
+                          0,
+                          70
                         ],
                         [
-                          0,
-                          18
+                          1,
+                          0
                         ]
                       ]
                     },
@@ -636,7 +625,7 @@
                       0.9725490196078431,
                       0.9882352941176471
                     ],
-                    "TextSize": 13,
+                    "TextSize": 15,
                     "TextWrapped": true,
                     "TextXAlignment": "Left",
                     "TextYAlignment": "Center",
@@ -647,40 +636,14 @@
                       "UDim2": [
                         [
                           0,
-                          48
+                          0
                         ],
                         [
                           0,
-                          15
+                          0
                         ]
                       ]
                     }
-                  }
-                },
-                {
-                  "ClassName": "UICorner",
-                  "Name": "UICorner",
-                  "Properties": {
-                    "CornerRadius": {
-                      "UDim": [
-                        0,
-                        10
-                      ]
-                    }
-                  }
-                },
-                {
-                  "ClassName": "UIStroke",
-                  "Name": "UIStroke",
-                  "Properties": {
-                    "Color": [
-                      0.023529411764705882,
-                      0.03529411764705882,
-                      0.050980392156862744
-                    ],
-                    "Thickness": 1.5,
-                    "Transparency": 0.16,
-                    "ApplyStrokeMode": "Border"
                   }
                 }
               ]
@@ -693,11 +656,11 @@
                   "UDim2": [
                     [
                       0,
-                      140
+                      100
                     ],
                     [
                       0,
-                      36
+                      26
                     ]
                   ]
                 },
@@ -706,7 +669,7 @@
                   0.09803921568627451,
                   0.13333333333333333
                 ],
-                "BackgroundTransparency": 0.08,
+                "BackgroundTransparency": 1,
                 "BorderSizePixel": 0,
                 "ZIndex": 20,
                 "Visible": true,
@@ -720,7 +683,7 @@
                     ],
                     [
                       0,
-                      44
+                      30
                     ]
                   ]
                 }
@@ -734,11 +697,11 @@
                       "UDim2": [
                         [
                           0,
-                          28
+                          24
                         ],
                         [
                           0,
-                          28
+                          24
                         ]
                       ]
                     },
@@ -747,7 +710,7 @@
                       0.12941176470588237,
                       0.17254901960784313
                     ],
-                    "BackgroundTransparency": 0,
+                    "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
                     "ZIndex": 21,
                     "Visible": true,
@@ -755,29 +718,17 @@
                     "Position": {
                       "UDim2": [
                         [
-                          0,
-                          12
+                          1,
+                          -24
                         ],
                         [
                           0.5,
-                          -14
+                          -12
                         ]
                       ]
                     }
                   },
                   "Children": [
-                    {
-                      "ClassName": "UICorner",
-                      "Name": "UICorner",
-                      "Properties": {
-                        "CornerRadius": {
-                          "UDim": [
-                            0,
-                            8
-                          ]
-                        }
-                      }
-                    },
                     {
                       "ClassName": "ImageLabel",
                       "Name": "Icon",
@@ -786,11 +737,11 @@
                           "UDim2": [
                             [
                               0,
-                              20
+                              22
                             ],
                             [
                               0,
-                              20
+                              22
                             ]
                           ]
                         },
@@ -803,14 +754,15 @@
                           "UDim2": [
                             [
                               0.5,
-                              -10
+                              -11
                             ],
                             [
                               0.5,
-                              -10
+                              -11
                             ]
                           ]
-                        }
+                        },
+                        "Visible": true
                       }
                     }
                   ]
@@ -833,7 +785,7 @@
                     },
                     "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
-                    "Text": "HONEY",
+                    "Text": "",
                     "TextColor3": [
                       0.6509803921568628,
                       0.7215686274509804,
@@ -845,7 +797,7 @@
                     "TextYAlignment": "Center",
                     "Font": "GothamBold",
                     "ZIndex": 21,
-                    "Visible": true,
+                    "Visible": false,
                     "Position": {
                       "UDim2": [
                         [
@@ -867,12 +819,12 @@
                     "Size": {
                       "UDim2": [
                         [
-                          1,
-                          -86
+                          0,
+                          70
                         ],
                         [
-                          0,
-                          18
+                          1,
+                          0
                         ]
                       ]
                     },
@@ -884,7 +836,7 @@
                       0.9725490196078431,
                       0.9882352941176471
                     ],
-                    "TextSize": 13,
+                    "TextSize": 15,
                     "TextWrapped": true,
                     "TextXAlignment": "Left",
                     "TextYAlignment": "Center",
@@ -895,40 +847,14 @@
                       "UDim2": [
                         [
                           0,
-                          48
+                          0
                         ],
                         [
                           0,
-                          15
+                          0
                         ]
                       ]
                     }
-                  }
-                },
-                {
-                  "ClassName": "UICorner",
-                  "Name": "UICorner",
-                  "Properties": {
-                    "CornerRadius": {
-                      "UDim": [
-                        0,
-                        10
-                      ]
-                    }
-                  }
-                },
-                {
-                  "ClassName": "UIStroke",
-                  "Name": "UIStroke",
-                  "Properties": {
-                    "Color": [
-                      0.023529411764705882,
-                      0.03529411764705882,
-                      0.050980392156862744
-                    ],
-                    "Thickness": 1.5,
-                    "Transparency": 0.16,
-                    "ApplyStrokeMode": "Border"
                   }
                 }
               ]
@@ -941,11 +867,11 @@
                   "UDim2": [
                     [
                       0,
-                      140
+                      100
                     ],
                     [
                       0,
-                      36
+                      26
                     ]
                   ]
                 },
@@ -954,7 +880,7 @@
                   0.09803921568627451,
                   0.13333333333333333
                 ],
-                "BackgroundTransparency": 0.08,
+                "BackgroundTransparency": 1,
                 "BorderSizePixel": 0,
                 "ZIndex": 20,
                 "Visible": true,
@@ -968,7 +894,7 @@
                     ],
                     [
                       0,
-                      88
+                      60
                     ]
                   ]
                 }
@@ -982,11 +908,11 @@
                       "UDim2": [
                         [
                           0,
-                          28
+                          24
                         ],
                         [
                           0,
-                          28
+                          24
                         ]
                       ]
                     },
@@ -995,7 +921,7 @@
                       0.12941176470588237,
                       0.17254901960784313
                     ],
-                    "BackgroundTransparency": 0,
+                    "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
                     "ZIndex": 21,
                     "Visible": true,
@@ -1003,29 +929,17 @@
                     "Position": {
                       "UDim2": [
                         [
-                          0,
-                          12
+                          1,
+                          -24
                         ],
                         [
                           0.5,
-                          -14
+                          -12
                         ]
                       ]
                     }
                   },
                   "Children": [
-                    {
-                      "ClassName": "UICorner",
-                      "Name": "UICorner",
-                      "Properties": {
-                        "CornerRadius": {
-                          "UDim": [
-                            0,
-                            8
-                          ]
-                        }
-                      }
-                    },
                     {
                       "ClassName": "ImageLabel",
                       "Name": "Icon",
@@ -1034,11 +948,11 @@
                           "UDim2": [
                             [
                               0,
-                              20
+                              22
                             ],
                             [
                               0,
-                              20
+                              22
                             ]
                           ]
                         },
@@ -1051,14 +965,15 @@
                           "UDim2": [
                             [
                               0.5,
-                              -10
+                              -11
                             ],
                             [
                               0.5,
-                              -10
+                              -11
                             ]
                           ]
-                        }
+                        },
+                        "Visible": true
                       }
                     }
                   ]
@@ -1081,7 +996,7 @@
                     },
                     "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
-                    "Text": "HIVE",
+                    "Text": "",
                     "TextColor3": [
                       0.6509803921568628,
                       0.7215686274509804,
@@ -1093,7 +1008,7 @@
                     "TextYAlignment": "Center",
                     "Font": "GothamBold",
                     "ZIndex": 21,
-                    "Visible": true,
+                    "Visible": false,
                     "Position": {
                       "UDim2": [
                         [
@@ -1115,12 +1030,12 @@
                     "Size": {
                       "UDim2": [
                         [
-                          1,
-                          -86
+                          0,
+                          70
                         ],
                         [
-                          0,
-                          18
+                          1,
+                          0
                         ]
                       ]
                     },
@@ -1132,7 +1047,7 @@
                       0.9725490196078431,
                       0.9882352941176471
                     ],
-                    "TextSize": 13,
+                    "TextSize": 15,
                     "TextWrapped": true,
                     "TextXAlignment": "Left",
                     "TextYAlignment": "Center",
@@ -1143,40 +1058,14 @@
                       "UDim2": [
                         [
                           0,
-                          48
+                          0
                         ],
                         [
                           0,
-                          15
+                          0
                         ]
                       ]
                     }
-                  }
-                },
-                {
-                  "ClassName": "UICorner",
-                  "Name": "UICorner",
-                  "Properties": {
-                    "CornerRadius": {
-                      "UDim": [
-                        0,
-                        10
-                      ]
-                    }
-                  }
-                },
-                {
-                  "ClassName": "UIStroke",
-                  "Name": "UIStroke",
-                  "Properties": {
-                    "Color": [
-                      0.023529411764705882,
-                      0.03529411764705882,
-                      0.050980392156862744
-                    ],
-                    "Thickness": 1.5,
-                    "Transparency": 0.16,
-                    "ApplyStrokeMode": "Border"
                   }
                 }
               ]
@@ -1189,11 +1078,11 @@
                   "UDim2": [
                     [
                       0,
-                      140
+                      100
                     ],
                     [
                       0,
-                      36
+                      26
                     ]
                   ]
                 },
@@ -1202,7 +1091,7 @@
                   0.09803921568627451,
                   0.13333333333333333
                 ],
-                "BackgroundTransparency": 0.08,
+                "BackgroundTransparency": 1,
                 "BorderSizePixel": 0,
                 "ZIndex": 20,
                 "Visible": true,
@@ -1216,7 +1105,7 @@
                     ],
                     [
                       0,
-                      132
+                      90
                     ]
                   ]
                 }
@@ -1230,11 +1119,11 @@
                       "UDim2": [
                         [
                           0,
-                          28
+                          24
                         ],
                         [
                           0,
-                          28
+                          24
                         ]
                       ]
                     },
@@ -1243,7 +1132,7 @@
                       0.12941176470588237,
                       0.17254901960784313
                     ],
-                    "BackgroundTransparency": 0,
+                    "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
                     "ZIndex": 21,
                     "Visible": true,
@@ -1251,29 +1140,17 @@
                     "Position": {
                       "UDim2": [
                         [
-                          0,
-                          12
+                          1,
+                          -24
                         ],
                         [
                           0.5,
-                          -14
+                          -12
                         ]
                       ]
                     }
                   },
                   "Children": [
-                    {
-                      "ClassName": "UICorner",
-                      "Name": "UICorner",
-                      "Properties": {
-                        "CornerRadius": {
-                          "UDim": [
-                            0,
-                            8
-                          ]
-                        }
-                      }
-                    },
                     {
                       "ClassName": "ImageLabel",
                       "Name": "Icon",
@@ -1282,11 +1159,11 @@
                           "UDim2": [
                             [
                               0,
-                              20
+                              22
                             ],
                             [
                               0,
-                              20
+                              22
                             ]
                           ]
                         },
@@ -1299,14 +1176,15 @@
                           "UDim2": [
                             [
                               0.5,
-                              -10
+                              -11
                             ],
                             [
                               0.5,
-                              -10
+                              -11
                             ]
                           ]
-                        }
+                        },
+                        "Visible": true
                       }
                     }
                   ]
@@ -1329,7 +1207,7 @@
                     },
                     "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
-                    "Text": "PETAL DUST",
+                    "Text": "",
                     "TextColor3": [
                       0.6509803921568628,
                       0.7215686274509804,
@@ -1341,7 +1219,7 @@
                     "TextYAlignment": "Center",
                     "Font": "GothamBold",
                     "ZIndex": 21,
-                    "Visible": true,
+                    "Visible": false,
                     "Position": {
                       "UDim2": [
                         [
@@ -1363,12 +1241,12 @@
                     "Size": {
                       "UDim2": [
                         [
-                          1,
-                          -86
+                          0,
+                          70
                         ],
                         [
-                          0,
-                          18
+                          1,
+                          0
                         ]
                       ]
                     },
@@ -1380,7 +1258,7 @@
                       0.9725490196078431,
                       0.9882352941176471
                     ],
-                    "TextSize": 13,
+                    "TextSize": 15,
                     "TextWrapped": true,
                     "TextXAlignment": "Left",
                     "TextYAlignment": "Center",
@@ -1391,40 +1269,14 @@
                       "UDim2": [
                         [
                           0,
-                          48
+                          0
                         ],
                         [
                           0,
-                          15
+                          0
                         ]
                       ]
                     }
-                  }
-                },
-                {
-                  "ClassName": "UICorner",
-                  "Name": "UICorner",
-                  "Properties": {
-                    "CornerRadius": {
-                      "UDim": [
-                        0,
-                        10
-                      ]
-                    }
-                  }
-                },
-                {
-                  "ClassName": "UIStroke",
-                  "Name": "UIStroke",
-                  "Properties": {
-                    "Color": [
-                      0.023529411764705882,
-                      0.03529411764705882,
-                      0.050980392156862744
-                    ],
-                    "Thickness": 1.5,
-                    "Transparency": 0.16,
-                    "ApplyStrokeMode": "Border"
                   }
                 }
               ]
@@ -1437,11 +1289,11 @@
                   "UDim2": [
                     [
                       0,
-                      140
+                      100
                     ],
                     [
                       0,
-                      36
+                      26
                     ]
                   ]
                 },
@@ -1450,7 +1302,7 @@
                   0.09803921568627451,
                   0.13333333333333333
                 ],
-                "BackgroundTransparency": 0.08,
+                "BackgroundTransparency": 1,
                 "BorderSizePixel": 0,
                 "ZIndex": 20,
                 "Visible": true,
@@ -1464,7 +1316,7 @@
                     ],
                     [
                       0,
-                      176
+                      120
                     ]
                   ]
                 }
@@ -1478,11 +1330,11 @@
                       "UDim2": [
                         [
                           0,
-                          28
+                          24
                         ],
                         [
                           0,
-                          28
+                          24
                         ]
                       ]
                     },
@@ -1491,7 +1343,7 @@
                       0.12941176470588237,
                       0.17254901960784313
                     ],
-                    "BackgroundTransparency": 0,
+                    "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
                     "ZIndex": 21,
                     "Visible": true,
@@ -1499,29 +1351,17 @@
                     "Position": {
                       "UDim2": [
                         [
-                          0,
-                          12
+                          1,
+                          -24
                         ],
                         [
                           0.5,
-                          -14
+                          -12
                         ]
                       ]
                     }
                   },
                   "Children": [
-                    {
-                      "ClassName": "UICorner",
-                      "Name": "UICorner",
-                      "Properties": {
-                        "CornerRadius": {
-                          "UDim": [
-                            0,
-                            8
-                          ]
-                        }
-                      }
-                    },
                     {
                       "ClassName": "ImageLabel",
                       "Name": "Icon",
@@ -1530,11 +1370,11 @@
                           "UDim2": [
                             [
                               0,
-                              20
+                              22
                             ],
                             [
                               0,
-                              20
+                              22
                             ]
                           ]
                         },
@@ -1547,14 +1387,15 @@
                           "UDim2": [
                             [
                               0.5,
-                              -10
+                              -11
                             ],
                             [
                               0.5,
-                              -10
+                              -11
                             ]
                           ]
-                        }
+                        },
+                        "Visible": true
                       }
                     }
                   ]
@@ -1577,7 +1418,7 @@
                     },
                     "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
-                    "Text": "ANCIENT NECTAR",
+                    "Text": "",
                     "TextColor3": [
                       0.6509803921568628,
                       0.7215686274509804,
@@ -1589,7 +1430,7 @@
                     "TextYAlignment": "Center",
                     "Font": "GothamBold",
                     "ZIndex": 21,
-                    "Visible": true,
+                    "Visible": false,
                     "Position": {
                       "UDim2": [
                         [
@@ -1611,12 +1452,12 @@
                     "Size": {
                       "UDim2": [
                         [
-                          1,
-                          -86
+                          0,
+                          70
                         ],
                         [
-                          0,
-                          18
+                          1,
+                          0
                         ]
                       ]
                     },
@@ -1628,7 +1469,7 @@
                       0.9725490196078431,
                       0.9882352941176471
                     ],
-                    "TextSize": 13,
+                    "TextSize": 15,
                     "TextWrapped": true,
                     "TextXAlignment": "Left",
                     "TextYAlignment": "Center",
@@ -1639,40 +1480,14 @@
                       "UDim2": [
                         [
                           0,
-                          48
+                          0
                         ],
                         [
                           0,
-                          15
+                          0
                         ]
                       ]
                     }
-                  }
-                },
-                {
-                  "ClassName": "UICorner",
-                  "Name": "UICorner",
-                  "Properties": {
-                    "CornerRadius": {
-                      "UDim": [
-                        0,
-                        10
-                      ]
-                    }
-                  }
-                },
-                {
-                  "ClassName": "UIStroke",
-                  "Name": "UIStroke",
-                  "Properties": {
-                    "Color": [
-                      0.023529411764705882,
-                      0.03529411764705882,
-                      0.050980392156862744
-                    ],
-                    "Thickness": 1.5,
-                    "Transparency": 0.16,
-                    "ApplyStrokeMode": "Border"
                   }
                 }
               ]
