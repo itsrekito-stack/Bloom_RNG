@@ -220,6 +220,10 @@ function UI:BindWorkshopPan(canvas,nodes)
  if not canvas:IsA("ScrollingFrame") then return end
 
  canvas.Active=true
+ canvas.ScrollingEnabled=false
+ canvas.ScrollBarThickness=0
+ canvas.ElasticBehavior=Enum.ElasticBehavior.Never
+ canvas.Selectable=false
  local connections={}
  self.WorkshopPanConnections=connections
 
@@ -362,9 +366,11 @@ function UI:RenderMenu()
   self.Panel.Size=UDim2.fromScale(1,1)
   self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
   self.Content.CanvasSize=UDim2.fromOffset(0,0)
+  self.Content.ScrollingEnabled=false
   self.Content.ScrollBarThickness=0
  else
   self.Content.AutomaticCanvasSize=Enum.AutomaticSize.Y
+  self.Content.ScrollingEnabled=true
   self.Content.ScrollBarThickness=name=="SeedSatchel" and 0 or 5
   if not self.IsMobileLayout then
    self.Panel.Size=name=="SeedSatchel" and UDim2.fromOffset(640,500) or UDim2.fromOffset(600,420)
