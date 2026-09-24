@@ -514,8 +514,15 @@ function UI:RenderMenu()
    top.Points.Text=tostring(p.WorkshopV5.Points).." POINTS"
    local body=shell:WaitForChild("WorkshopBody")
    local canvas=body.TreePanel.TreeCanvas
-   local nodes=canvas.Nodes
-   local links=canvas.Connections
+   local panMap=canvas:FindFirstChild("PanMap")
+   if panMap and panMap:IsA("GuiObject") then
+    -- Bloom UI Studio stores its editor-only map offset on PanMap.
+    -- Runtime panning is handled by ScrollingFrame.CanvasPosition instead.
+    panMap.Position=UDim2.fromOffset(0,0)
+   end
+   local nodes=canvas:FindFirstChild("Nodes") or panMap
+   local links=canvas:FindFirstChild("Connections") or panMap
+   if not nodes or not links then error("[BloomUI] Workshop tree containers missing") end
    local details=body.DetailsPanel
    local effects=require(RS.Config.WorkshopEffectsConfig)
 
