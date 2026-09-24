@@ -75,6 +75,17 @@
         <label class="check"><input id="labelsToggle" type="checkbox" checked> Names</label>
         <label class="check"><input id="gridToggle" type="checkbox" checked> Grid</label>
         <label class="check show-hidden"><input id="hiddenToggle" type="checkbox" checked> Hidden</label>
+        <span class="divider"></span>
+        <select id="modeSelect" class="mode-select" title="Режим визуализации">
+          <option value="design">DESIGN</option>
+          <option value="preview">PREVIEW</option>
+        </select>
+        <select id="sceneSelect" class="scene-select" title="Runtime preview scene" disabled>
+          <option value="gameplay">Gameplay</option>
+          <option value="seedbag">Seed Bag</option>
+          <option value="reward">Reward</option>
+          <option value="toast">Toast</option>
+        </select>
         <label>Inset <input id="insetInput" type="number" value="36" min="0" max="120"></label>
         <button id="bgBtn" class="btn">Фон Roblox</button>
         <button id="bgClearBtn" class="tiny" title="Убрать фон">×</button>
