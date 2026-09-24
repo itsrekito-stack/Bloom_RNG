@@ -474,8 +474,8 @@ function UI:RenderMenu()
     local actionsMap={
      Favorite={Text=active.Favorite and "★ UNFAVORITE" or "★ FAVORITE",Fn=function() self:Send("Flag",active.Id,"FavoriteFlowers") end,Visible=true},
      Protect={Text=active.Protected and "◆ UNLOCK" or "◆ PROTECT",Fn=function() self:Send("Flag",active.Id,"LockedFlowers") end,Visible=true},
-     Dissolve={Text="DISSOLVE",Fn=function() self:Send("Dissolve",active.Id,1) end,Visible=active.Free>0},
-     Mastery={Text="MASTERY +XP",Fn=function() self:Send("FlowerUpgrade",active.Id) end,Visible=true},
+     Dissolve={Text="DISSOLVE",Fn=function() self:Send("Dissolve",active.Id,1) end,Visible=active.Free>0,Enabled=active.CanDissolve~=false},
+     Mastery={Text="MASTERY +XP",Fn=function() self:Send("FlowerUpgrade",active.Id) end,Visible=true,Enabled=active.CanUpgrade~=false},
      Memory={Text="MEMORY",Fn=function() self:Send("Keepsake","Flower",active.Id) end,Visible=true},
      Memory2={Text="MEMORY II",Fn=function() self:Send("Keepsake","Flower2",active.Id) end,Visible=p.WorkshopV5.Nodes.LEGACY_5==true},
     }
@@ -484,7 +484,8 @@ function UI:RenderMenu()
      if btn and btn:IsA("TextButton") then
       btn.Text=data.Text
       btn.Visible=data.Visible
-      btn.Activated:Connect(data.Fn)
+      btn.Active=data.Enabled~=false
+      btn.Activated:Connect(function() if data.Enabled~=false then data.Fn() end end)
      end
     end
 
@@ -617,7 +618,10 @@ function UI:RenderMenu()
      if available and not owned then self:Send("WorkshopBuy",n.Id) end
     end)
    end
-   details.RespecButton.Activated:Connect(function() self:Send("Respec") end)
+   details.RespecButton.Active=not workshopUI or workshopUI.CanRespec==true
+   details.RespecButton.Activated:Connect(function()
+    if not workshopUI or workshopUI.CanRespec==true then self:Send("Respec") end
+   end)
 
    local initialCanvasPosition=self.WorkshopCanvasPosition or Vector2.new(570,405)
    canvas.CanvasPosition=initialCanvasPosition
@@ -668,7 +672,8 @@ function UI:RenderMenu()
   if trialsUI and type(trialsUI.Items)=="table" then
    for _,t in ipairs(trialsUI.Items) do
     local suffix=t.CanStart and "" or (t.ReasonText and "  •  "..t.ReasonText or "")
-    self:Button(self.Content,(t.Completed and "✓  " or "")..t.Name.."   •   "..t.Sector..suffix,function() self:Send("Trial",t.Id) end,Icons.Get("System","Quests"))
+    local button=self:Button(self.Content,(t.Completed and "✓  " or "")..t.Name.."   •   "..t.Sector..suffix,function() self:Send("Trial",t.Id) end,Icons.Get("System","Quests"))
+    button.Active=t.CanStart==true
    end
   else
    for id,t in pairs(Trials) do
@@ -680,7 +685,9 @@ function UI:RenderMenu()
   self:Section(self.Content,"Интерфейс и эффекты")
   for _,id in ipairs({"ReducedEffects","ShowOtherPollinators","HideOtherPlayersTokens","RareFeed","AutoDissolve"}) do
    local on=p.Settings[id]==true
-   self:Button(self.Content,(SETTINGS_NAMES[id] or id).."   •   "..(on and "ВКЛ" or "ВЫКЛ"),function() self:Send("Setting",id,not on) end,Icons.Get("System",on and "Confirm" or "Minus"))
+   local enabled=not (id=="AutoDissolve" and ui.Settings and not ui.Settings.AutoDissolveUnlocked)
+   local button=self:Button(self.Content,(SETTINGS_NAMES[id] or id).."   •   "..(on and "ВКЛ" or "ВЫКЛ"),function() self:Send("Setting",id,not on) end,Icons.Get("System",on and "Confirm" or "Minus"))
+   button.Active=enabled
   end
   self:Button(self.Content,"Громкость активностей   •   "..math.floor((p.Settings.TokenSoundVolume or 0)*100).."%",function() self:Send("Setting","TokenSoundVolume",(p.Settings.TokenSoundVolume+.25)%1.25) end,Icons.Get("System","Info"))
   if p.WorkshopV5.Nodes.ECONOMY_2 then
