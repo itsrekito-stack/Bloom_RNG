@@ -65,3 +65,12 @@ dialog::backdrop{background:rgba(0,0,0,.62)}.dialog-head{height:44px;display:fle
 #jsonArea{display:block;width:calc(100% - 20px);height:calc(100% - 102px);margin:10px;border:1px solid var(--line);border-radius:8px;background:#090d12;color:#cfe2f6;padding:10px;resize:none;font:11px/1.45 Consolas,monospace}
 .dialog-actions{height:48px;display:flex;justify-content:flex-end;gap:7px;padding:7px 10px;border-top:1px solid var(--line)}
 @media(max-width:1000px){.workspace{grid-template-columns:210px minmax(0,1fr) 270px}.palette{grid-template-columns:1fr}.currency{}}
+
+/* Editor-only visibility helpers: never alter Roblox Visible property. */
+.gui-node.runtime-hidden>.node-tag{background:#a56a18;color:#fff}
+.gui-node.runtime-hidden>.node-tag::after{content:" · HIDDEN";font-weight:800}
+.tree-row.runtime-hidden .tree-name{text-decoration:line-through;text-decoration-color:#9a6a2b;color:#b7a98c}
+.tree-row.runtime-hidden .tree-kind::after{content:" HIDDEN";color:#b87925;margin-left:4px}
+.show-hidden{padding:3px 6px;border:1px solid #4b3d27;border-radius:6px;background:#211b12}
+.raw-json,#rawProps{background:#090d12!important;color:#cfe2f6!important;border-color:#303b4b!important}
+#rawProps{min-height:150px}
