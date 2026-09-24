@@ -7665,6 +7665,132 @@
                         "ApplyStrokeMode": "Border"
                       },
                       "Children": []
+                    },
+                    {
+                      "ClassName": "TextLabel",
+                      "Name": "ControlsHint",
+                      "Properties": {
+                        "Size": {
+                          "UDim2": [
+                            [
+                              0,
+                              220
+                            ],
+                            [
+                              1,
+                              0
+                            ]
+                          ]
+                        },
+                        "Position": {
+                          "UDim2": [
+                            [
+                              0,
+                              190
+                            ],
+                            [
+                              0,
+                              0
+                            ]
+                          ]
+                        },
+                        "BackgroundTransparency": 1,
+                        "BorderSizePixel": 0,
+                        "Text": "LMB DRAG  •  WHEEL ZOOM",
+                        "TextColor3": [
+                          0.45,
+                          0.56,
+                          0.66
+                        ],
+                        "TextSize": 8,
+                        "TextWrapped": false,
+                        "TextXAlignment": "Left",
+                        "TextYAlignment": "Center",
+                        "Font": "GothamMedium",
+                        "ZIndex": 54,
+                        "Visible": true
+                      },
+                      "Children": []
+                    },
+                    {
+                      "ClassName": "TextLabel",
+                      "Name": "Zoom",
+                      "Properties": {
+                        "Size": {
+                          "UDim2": [
+                            [
+                              0,
+                              62
+                            ],
+                            [
+                              0,
+                              22
+                            ]
+                          ]
+                        },
+                        "Position": {
+                          "UDim2": [
+                            [
+                              0,
+                              410
+                            ],
+                            [
+                              0.5,
+                              -11
+                            ]
+                          ]
+                        },
+                        "BackgroundColor3": [
+                          0.047,
+                          0.086,
+                          0.133
+                        ],
+                        "BackgroundTransparency": 0.08,
+                        "BorderSizePixel": 0,
+                        "Text": "100%",
+                        "TextColor3": [
+                          0.69,
+                          0.77,
+                          0.84
+                        ],
+                        "TextSize": 8,
+                        "TextWrapped": false,
+                        "TextXAlignment": "Center",
+                        "TextYAlignment": "Center",
+                        "Font": "GothamBold",
+                        "ZIndex": 54,
+                        "Visible": true
+                      },
+                      "Children": [
+                        {
+                          "ClassName": "UICorner",
+                          "Name": "UICorner",
+                          "Properties": {
+                            "CornerRadius": {
+                              "UDim": [
+                                0,
+                                8
+                              ]
+                            }
+                          },
+                          "Children": []
+                        },
+                        {
+                          "ClassName": "UIStroke",
+                          "Name": "UIStroke",
+                          "Properties": {
+                            "Color": [
+                              0.1647,
+                              0.3373,
+                              0.5176
+                            ],
+                            "Thickness": 1,
+                            "Transparency": 0.45,
+                            "ApplyStrokeMode": "Border"
+                          },
+                          "Children": []
+                        }
+                      ]
                     }
                   ]
                 },
@@ -20653,6 +20779,60 @@
                                 "Thickness": 1,
                                 "Transparency": 0.35,
                                 "ApplyStrokeMode": "Border"
+                              },
+                              "Children": []
+                            }
+                          ]
+                        },
+                        {
+                          "ClassName": "Frame",
+                          "Name": "BranchAccent",
+                          "Properties": {
+                            "Size": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  4
+                                ],
+                                [
+                                  1,
+                                  -20
+                                ]
+                              ]
+                            },
+                            "Position": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  0
+                                ],
+                                [
+                                  0,
+                                  10
+                                ]
+                              ]
+                            },
+                            "BackgroundColor3": [
+                              0.345,
+                              0.694,
+                              1
+                            ],
+                            "BackgroundTransparency": 0.04,
+                            "BorderSizePixel": 0,
+                            "ZIndex": 55,
+                            "Visible": true
+                          },
+                          "Children": [
+                            {
+                              "ClassName": "UICorner",
+                              "Name": "UICorner",
+                              "Properties": {
+                                "CornerRadius": {
+                                  "UDim": [
+                                    0,
+                                    3
+                                  ]
+                                }
                               },
                               "Children": []
                             }
