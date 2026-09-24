@@ -236,9 +236,12 @@ function renderGuiNode(n,parentEl,parentNode){
   el.appendChild(t);
  }
  if(IMAGE_CLASSES.has(n.ClassName)){
-  const img=document.createElement("img");img.className="gui-image";img.draggable=false;img.src=imageUrl(p.Image||"");
-  img.style.opacity=1-clamp(finite(p.ImageTransparency,0),0,1);img.style.objectFit=p.ScaleType==="Crop"?"cover":p.ScaleType==="Stretch"?"fill":"contain";
-  if(p.ImageColor3)img.style.filter="none";el.appendChild(img);
+  const resolved=imageUrl(p.Image||"");
+  if(resolved){
+   const img=document.createElement("img");img.className="gui-image";img.draggable=false;img.src=resolved;
+   img.style.opacity=1-clamp(finite(p.ImageTransparency,0),0,1);img.style.objectFit=p.ScaleType==="Crop"?"cover":p.ScaleType==="Stretch"?"fill":"contain";
+   if(p.ImageColor3)img.style.filter="none";el.appendChild(img);
+  }
  }
  if(state.labels){
   const tag=document.createElement("div");tag.className="node-tag";tag.textContent=`${n.Name} · ${n.ClassName}`;el.appendChild(tag)
