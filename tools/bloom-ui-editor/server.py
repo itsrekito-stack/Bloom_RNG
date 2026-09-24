@@ -19,7 +19,7 @@ HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 ROOT = Path(os.environ.get("BLOOM_UI_ROOT", os.getcwd())).resolve()
 CACHE_LIMIT = 256
-BRIDGE_VERSION = 5
+BRIDGE_VERSION = 6
 
 _thumbnail_cache: "OrderedDict[str, tuple[bytes, str]]" = OrderedDict()
 
@@ -274,44 +274,44 @@ def safe_sync_git(editor_model=None) -> tuple[int, dict]:
     model_abs = ROOT / MODEL_PATH
     model_rel = MODEL_PATH.as_posix()
 
-    # Preserve the user's edited UI model outside Git's textual stash machinery.
-    # BloomUI.model.json is huge and frequently causes false/ugly line conflicts.
     base_model = git_show_json("HEAD", model_rel)
     disk_model = read_json_file(model_abs)
-    local_model = disk_model
+
     model_dirty_check = run_git("status", "--porcelain", "--", model_rel)
     model_dirty = bool(model_dirty_check.stdout.strip()) if model_dirty_check.returncode == 0 else False
-    recovered_from_editor = False
+
     recovery_backup = ""
+    recovered_from_editor = False
+    invalid_model_fallback = False
+    local_model = disk_model if model_dirty else None
 
-    if model_dirty and disk_model is None and isinstance(editor_model, dict):
-        # The file on disk is malformed, but Bloom UI Studio still has a valid in-memory model.
-        # Preserve raw bytes first, then use the editor model as the user's local side of the merge.
-        recovery_backup = backup_raw_model("broken-before-ai-sync")
-        local_model = editor_model
-        recovered_from_editor = True
+    # BloomUI.model.json is handled separately from Git stash.
+    # Always back it up before touching it.
+    if model_dirty:
+        recovery_backup = backup_raw_model("before-ai-sync")
 
-    model_saved = model_dirty and base_model is not None and local_model is not None
+        if disk_model is None:
+            if isinstance(editor_model, dict):
+                local_model = editor_model
+                recovered_from_editor = True
+            else:
+                # Do not block sync. Keep raw broken bytes in .recovery and use
+                # the clean repository model as the fallback.
+                local_model = None
+                invalid_model_fallback = True
 
-    if model_dirty and not model_saved:
-        return 409, {
-            "ok": False,
-            "stage": "model-backup",
-            "error": "BloomUI.model.json повреждён и редактор не передал рабочую recovery-модель.",
-        }
-
-    if model_saved:
         restore_model = run_git("restore", "--staged", "--worktree", "--", model_rel)
         if restore_model.returncode != 0:
             return 500, {
                 "ok": False,
-                "stage": "model-backup",
-                "error": restore_model.stderr.strip() or restore_model.stdout.strip() or "Не удалось временно восстановить базовый BloomUI.model.json",
+                "stage": "model-restore",
+                "error": restore_model.stderr.strip() or restore_model.stdout.strip() or "Не удалось восстановить базовый BloomUI.model.json",
+                "recovery_backup": recovery_backup,
             }
 
-    # Stash every remaining tracked/untracked local change.
-    status_after_model_backup = git_status_payload()
-    dirty_other = bool(status_after_model_backup.get("dirty"))
+    # Stash every OTHER local change after BloomUI.model.json has been isolated.
+    status_after_model = git_status_payload()
+    dirty_other = bool(status_after_model.get("dirty"))
     stash_ref = ""
     stash_label = ""
     stashed = False
@@ -322,26 +322,39 @@ def safe_sync_git(editor_model=None) -> tuple[int, dict]:
         try:
             stash = run_git("stash", "push", "-u", "-m", stash_label, timeout=30.0)
         except (subprocess.TimeoutExpired, OSError) as exc:
-            if model_saved:
+            if model_dirty and local_model is not None:
                 write_model_json(local_model)
-            return 500, {"ok": False, "stage": "stash", "error": str(exc)}
+            return 500, {
+                "ok": False,
+                "stage": "stash",
+                "error": str(exc),
+                "recovery_backup": recovery_backup,
+            }
+
         if stash.returncode != 0:
-            if model_saved:
+            if model_dirty and local_model is not None:
                 write_model_json(local_model)
             output = "\n".join(x for x in [stash.stdout.strip(), stash.stderr.strip()] if x)
-            return 500, {"ok": False, "stage": "stash", "error": output or "git stash failed"}
+            return 500, {
+                "ok": False,
+                "stage": "stash",
+                "error": output or "git stash failed",
+                "recovery_backup": recovery_backup,
+            }
 
         for ref, subject in git_stash_entries():
             if stash_label in subject:
                 stash_ref = ref
                 break
+
         if not stash_ref:
-            if model_saved:
+            if model_dirty and local_model is not None:
                 write_model_json(local_model)
             return 500, {
                 "ok": False,
                 "stage": "stash",
-                "error": "Локальные изменения сохранены, но временный stash не удалось идентифицировать. Данные не удалены.",
+                "error": "Локальные изменения сохранены, но временный stash не удалось идентифицировать.",
+                "recovery_backup": recovery_backup,
             }
         stashed = True
 
@@ -363,7 +376,9 @@ def safe_sync_git(editor_model=None) -> tuple[int, dict]:
             if restore.returncode == 0:
                 run_git("stash", "drop", stash_ref)
                 restored = True
-        if model_saved:
+
+        # Put back user's valid local model if pull itself failed.
+        if model_dirty and local_model is not None:
             write_model_json(local_model)
 
         return 500, {
@@ -373,6 +388,7 @@ def safe_sync_git(editor_model=None) -> tuple[int, dict]:
             "stashed": stashed,
             "restored": restored,
             "stash_ref": stash_ref if stashed and not restored else "",
+            "recovery_backup": recovery_backup,
         }
 
     status_after_pull = git_status_payload()
@@ -383,10 +399,6 @@ def safe_sync_git(editor_model=None) -> tuple[int, dict]:
         try:
             restore = run_git("stash", "apply", stash_ref, timeout=30.0)
         except (subprocess.TimeoutExpired, OSError) as exc:
-            if model_saved:
-                remote_model = read_json_file(model_abs)
-                merged = merge_remote_changes(base_model, local_model, remote_model) if remote_model is not None else local_model
-                write_model_json(merged)
             return 500, {
                 "ok": False,
                 "stage": "restore",
@@ -395,36 +407,29 @@ def safe_sync_git(editor_model=None) -> tuple[int, dict]:
                 "stashed": True,
                 "restored": False,
                 "stash_ref": stash_ref,
+                "recovery_backup": recovery_backup,
             }
 
         if restore.returncode != 0:
-            # Keep the stash. Git has also left conflict markers for the non-model files.
             conflict_scan = run_git("diff", "--name-only", "--diff-filter=U")
             conflicts = [x for x in conflict_scan.stdout.splitlines() if x.strip()] if conflict_scan.returncode == 0 else []
-            if model_saved:
-                remote_model = read_json_file(model_abs)
-                merged = merge_remote_changes(base_model, local_model, remote_model) if remote_model is not None else local_model
-                write_model_json(merged)
             output = "\n".join(x for x in [restore.stdout.strip(), restore.stderr.strip()] if x)
             return 409, {
                 "ok": False,
                 "stage": "restore",
-                "error": "Мои изменения подтянуты, но конфликт возник в других локальных файлах. BloomUI.model.json объединён отдельно.",
+                "error": "Мои изменения подтянуты, но конфликт возник в других локальных файлах. Stash сохранён.",
                 "details": output[-6000:],
                 "conflicts": conflicts,
                 "changed": bool(old_head and new_head and old_head != new_head),
                 "stashed": True,
                 "restored": False,
                 "stash_ref": stash_ref,
+                "recovery_backup": recovery_backup,
             }
 
         restored = True
         drop = run_git("stash", "drop", stash_ref)
         if drop.returncode != 0:
-            if model_saved:
-                remote_model = read_json_file(model_abs)
-                merged = merge_remote_changes(base_model, local_model, remote_model) if remote_model is not None else local_model
-                write_model_json(merged)
             return 500, {
                 "ok": False,
                 "stage": "drop",
@@ -433,25 +438,32 @@ def safe_sync_git(editor_model=None) -> tuple[int, dict]:
                 "changed": bool(old_head and new_head and old_head != new_head),
                 "stashed": True,
                 "restored": True,
+                "recovery_backup": recovery_backup,
             }
 
-    # Merge assistant changes into the user's local UI model structurally.
+    # At this point the file on disk is the clean remote model.
+    remote_model = read_json_file(model_abs)
+    if remote_model is None:
+        return 500, {
+            "ok": False,
+            "stage": "remote-model",
+            "error": "После pull GitHub-версия BloomUI.model.json оказалась невалидной.",
+            "recovery_backup": recovery_backup,
+        }
+
     model_merged = False
-    if model_saved:
-        remote_model = read_json_file(model_abs)
-        if remote_model is None:
-            write_model_json(local_model)
-            return 500, {
-                "ok": False,
-                "stage": "model-merge",
-                "error": "После pull не удалось прочитать удалённый BloomUI.model.json. Локальная модель восстановлена.",
-            }
+    if model_dirty and local_model is not None and base_model is not None:
         merged_model = merge_remote_changes(base_model, local_model, remote_model)
         write_model_json(merged_model)
         model_merged = True
+    elif invalid_model_fallback:
+        # Broken local bytes are safely preserved in .recovery.
+        # Keep the valid remote model and continue successfully.
+        write_model_json(remote_model)
 
     status_final = git_status_payload()
     pull_output = "\n".join(x for x in [pull.stdout.strip(), pull.stderr.strip()] if x)
+
     return 200, {
         "ok": True,
         "changed": bool(old_head and new_head and old_head != new_head),
@@ -462,6 +474,7 @@ def safe_sync_git(editor_model=None) -> tuple[int, dict]:
         "restored": restored,
         "model_merged": model_merged,
         "recovered_from_editor": recovered_from_editor,
+        "invalid_model_fallback": invalid_model_fallback,
         "recovery_backup": recovery_backup,
         "output": pull_output[-6000:],
     }
