@@ -224,6 +224,39 @@ function UI:BindWorkshopPan(canvas,nodes)
  canvas.ScrollBarThickness=0
  canvas.ElasticBehavior=Enum.ElasticBehavior.Never
  canvas.Selectable=false
+
+ local panMap=canvas:FindFirstChild("PanMap")
+ local zoomScale=nil
+ local baseCanvas=Vector2.new(
+  math.max(1,canvas.CanvasSize.X.Offset),
+  math.max(1,canvas.CanvasSize.Y.Offset)
+ )
+ if panMap and panMap:IsA("GuiObject") then
+  zoomScale=panMap:FindFirstChild("WorkshopZoomScale")
+  if not zoomScale then
+   zoomScale=Instance.new("UIScale")
+   zoomScale.Name="WorkshopZoomScale"
+   zoomScale.Parent=panMap
+  end
+ end
+
+ local zoomMin=.5
+ local zoomMax=1.6
+ local zoomStep=.1
+ local zoom=math.clamp(tonumber(self.WorkshopZoom) or 1,zoomMin,zoomMax)
+ self.WorkshopZoom=zoom
+
+ local function applyZoom(value)
+  zoom=math.clamp(value,zoomMin,zoomMax)
+  self.WorkshopZoom=zoom
+  if zoomScale then zoomScale.Scale=zoom end
+  canvas.CanvasSize=UDim2.fromOffset(
+   math.max(1,math.floor(baseCanvas.X*zoom+.5)),
+   math.max(1,math.floor(baseCanvas.Y*zoom+.5))
+  )
+ end
+ applyZoom(zoom)
+
  local connections={}
  self.WorkshopPanConnections=connections
 
@@ -281,13 +314,38 @@ function UI:BindWorkshopPan(canvas,nodes)
  end))
 
  table.insert(connections,UIS.InputChanged:Connect(function(input)
-  if not dragging or input.UserInputType~=Enum.UserInputType.MouseMovement or not canvas.Parent then return end
-  local delta=pointerPosition(input)-startPointer
-  if not moved and delta.Magnitude<dragThreshold then return end
-  moved=true
-  local position=self:ClampWorkshopCanvasPosition(canvas,startCanvas-delta)
-  canvas.CanvasPosition=position
-  self.WorkshopCanvasPosition=position
+  if not canvas.Parent or self.Menu~="Workshop" then return end
+
+  if input.UserInputType==Enum.UserInputType.MouseMovement then
+   if not dragging then return end
+   local delta=pointerPosition(input)-startPointer
+   if not moved and delta.Magnitude<dragThreshold then return end
+   moved=true
+   local position=self:ClampWorkshopCanvasPosition(canvas,startCanvas-delta)
+   canvas.CanvasPosition=position
+   self.WorkshopCanvasPosition=position
+   return
+  end
+
+  if input.UserInputType==Enum.UserInputType.MouseWheel then
+   local mouse=UIS:GetMouseLocation()
+   if not insideCanvas(mouse) then return end
+   local wheel=input.Position.Z
+   if wheel==0 then return end
+
+   local oldZoom=zoom
+   local newZoom=math.clamp(oldZoom+wheel*zoomStep,zoomMin,zoomMax)
+   if math.abs(newZoom-oldZoom)<.001 then return end
+
+   local localMouse=mouse-canvas.AbsolutePosition
+   local worldPoint=(canvas.CanvasPosition+localMouse)/oldZoom
+   applyZoom(newZoom)
+
+   local target=worldPoint*newZoom-localMouse
+   target=self:ClampWorkshopCanvasPosition(canvas,target)
+   canvas.CanvasPosition=target
+   self.WorkshopCanvasPosition=target
+  end
  end))
 
  table.insert(connections,UIS.InputEnded:Connect(function(input)
