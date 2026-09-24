@@ -44,7 +44,7 @@ function loadPrefs(){
   if(typeof p.geometry==="boolean")state.geometry=p.geometry;
   if(Number.isFinite(p.inset))state.inset=p.inset;
   if(["design","preview"].includes(p.mode))state.mode=p.mode;
-  if(["gameplay","seedbag","reward","toast"].includes(p.previewScene))state.previewScene=p.previewScene;
+  if(["gameplay","seedbag","workshop","fieldguide","map","trials","settings","reward","toast"].includes(p.previewScene))state.previewScene=p.previewScene;
  }catch{}
 }
 function savePrefs(){
@@ -254,6 +254,35 @@ const PREVIEW_DATA={
   ["Подсолнух","x2","117046422836136"],["Роза","x1","131527836752075"],["Гортензия","x1","111742972197656"],["Клевер","x5","117046422836136"]
  ]
 };
+
+const MENU_PREVIEW_SCENES=new Set(["seedbag","workshop","fieldguide","map","trials","settings"]);
+const PREVIEW_META={
+ seedbag:{title:"Сумка семян",subtitle:"Цветы, пчёлы, мастерство и экипировка"},
+ workshop:{title:"Мастерская",subtitle:"Постоянные улучшения и ветви прогрессии"},
+ fieldguide:{title:"Справочник",subtitle:"Коллекция, шансы и открытые синергии"},
+ map:{title:"Карта",subtitle:"Сектора, открытия и переходы"},
+ trials:{title:"Испытания",subtitle:"Короткие испытания билда"},
+ settings:{title:"Настройки",subtitle:"Эффекты, звук и автоматизация"}
+};
+function updateUiStateBar(){
+ const bar=$("#uiStateBar");if(!bar)return;
+ const current=state.mode==="design"?"design":state.previewScene;
+ bar.querySelectorAll("[data-ui-state]").forEach(b=>b.classList.toggle("active",b.dataset.uiState===current));
+ bar.classList.toggle("preview-active",state.mode==="preview");
+}
+function activateUiState(scene){
+ if(scene==="design"){
+  state.mode="design";
+ }else{
+  state.mode="preview";
+  state.previewScene=scene;
+ }
+ syncToolbarFromState();
+ renderAll();
+ savePrefs();
+ toast(scene==="design"?"Design mode · реальные Visible свойства":"Preview "+scene.toUpperCase()+" · JSON не изменяется");
+}
+
 function isPreview(){return state.mode==="preview"}
 function parentName(n){return findParent(n.__id)?.Name||""}
 function previewVisible(n){
@@ -261,10 +290,11 @@ function previewVisible(n){
  const name=n.Name||"",p=parentName(n);
  if(name==="Templates"||p==="Templates"||name==="Tooltip")return false;
  if(["ObjectiveCard","CurrencyHUD","MenuDock","RollHUD","VerticalRoulette","RollButton"].includes(name))return true;
- if(name==="MainPanel")return state.previewScene==="seedbag";
+ if(name==="MainPanel")return MENU_PREVIEW_SCENES.has(state.previewScene);
  if(name==="RewardReveal")return state.previewScene==="reward";
  if(name==="Toast")return state.previewScene==="toast";
- if(name==="ModalShade"||name==="TutorialGuideBanner")return false;
+ if(name==="ModalShade")return MENU_PREVIEW_SCENES.has(state.previewScene);
+ if(name==="TutorialGuideBanner")return false;
  return null;
 }
 function previewText(n,parentNode){
@@ -274,8 +304,8 @@ function previewText(n,parentNode){
  if(name==="ObjectiveText")return "Заполни Bloom и сделай особый roll";
  if(name==="MeterLabel")return "BLOOM  38%  •  DISCOVERY  3/30";
  if(name==="RollButton"){if(Object.prototype.hasOwnProperty.call(n.Properties||{},"Text")&&(n.Properties.Text??"")==="")return "";return "СДЕЛАТЬ ROLL"}
- if(name==="PanelTitle"&&state.previewScene==="seedbag")return "Сумка семян";
- if(name==="PanelSubtitle"&&state.previewScene==="seedbag")return "Собирай, сажай и выращивай редкие цветы";
+ if(name==="PanelTitle"&&PREVIEW_META[state.previewScene])return PREVIEW_META[state.previewScene].title;
+ if(name==="PanelSubtitle"&&PREVIEW_META[state.previewScene])return PREVIEW_META[state.previewScene].subtitle;
  if(name==="RewardTitle"&&state.previewScene==="reward")return "Ромашка";
  if(name==="RewardMeta"&&state.previewScene==="reward")return "Обычный • 1/25 • Новый";
  if(name==="ToastLabel"&&state.previewScene==="toast")return "+24 Petal Dust";
@@ -299,32 +329,65 @@ function previewSize(n){
 }
 function injectRuntimePreview(n,el,parentNode){
  if(!isPreview())return;
- if(n.Name==="Content"&&parentNode?.Name==="MainPanel"&&state.previewScene==="seedbag"){
-  const wrap=document.createElement("div");wrap.className="preview-runtime";
-  const img=id=>`/api/thumbnail?id=${id}`;
+ if(n.Name!=="Content"||parentNode?.Name!=="MainPanel"||!MENU_PREVIEW_SCENES.has(state.previewScene))return;
+
+ const wrap=document.createElement("div");wrap.className="preview-runtime";
+ const img=id=>`/api/thumbnail?id=${id}`;
+
+ if(state.previewScene==="seedbag"){
   wrap.innerHTML=`
-   <div class="preview-seedbag">
-    <div class="preview-seed-left">
-     <div class="preview-filters">
-      <span class="preview-chip active">Все (12)</span><span class="preview-chip">Обычные</span><span class="preview-chip">Редкие</span><span class="preview-chip">Эпические</span>
+   <div class="preview-inventory-v2">
+    <div class="preview-inv-summary"><b>FLOWER COLLECTION</b><span>12 TYPES</span></div>
+    <div class="preview-inv-body">
+     <div class="preview-inv-left">
+      <div class="preview-inv-pill"><b>SEEDS</b><span>12</span></div>
+      <div class="preview-grid">
+       ${PREVIEW_DATA.seeds.map((s,i)=>`<div class="preview-tile ${i===0?"selected":""}"><span class="preview-count">${s[1]}</span><img src="${img(s[2])}"><strong>${s[0]}</strong></div>`).join("")}
+      </div>
      </div>
-     <div class="preview-grid">
-      ${PREVIEW_DATA.seeds.map((s,i)=>`<div class="preview-tile ${i===0?"selected":""}"><span class="preview-count">${s[1]}</span><img src="${img(s[2])}"><strong>${s[0]}</strong></div>`).join("")}
+     <div class="preview-inv-detail">
+      <div class="preview-detail-card">
+       <i></i><img src="${img("117046422836136")}">
+       <div><h3>Ромашка</h3><small>COMMON • x2</small><p>Mastery 2 • XP 18/50</p><em>FREE 2 / OWNED 2</em></div>
+      </div>
+      <b class="preview-subtitle">QUICK ACTIONS</b>
+      <div class="preview-action gold">★ ADD FAVORITE</div>
+      <div class="preview-action">◆ PROTECT</div>
+      <div class="preview-action danger">DISSOLVE 1 FREE DUPLICATE</div>
+      <div class="preview-action purple">MASTERY +XP</div>
+      <div class="preview-action blue">FLOWER MEMORY</div>
      </div>
     </div>
-    <div class="preview-seed-detail">
-     <div class="preview-detail-head"><img src="${img("117046422836136")}"><div><h3>Ромашка</h3><small>ОБЫЧНЫЙ • УРОВЕНЬ 2</small></div></div>
-     <p class="preview-desc">Нежный полевой цветок. Мастерство 1 • шанс 1/25.</p>
-     <div class="preview-action primary">Посадить</div>
-     <div class="preview-action">★ В избранное</div>
-     <div class="preview-action">🔒 Запретить дубликат</div>
-     <div class="preview-action success">Преобразовать дубликаты</div>
+    <div class="preview-pollinators"><b>POLLINATORS</b><span>Worker Bee ×2 • Royal Bee ×1</span></div>
+   </div>`;
+ }else{
+  const meta=PREVIEW_META[state.previewScene];
+  const sceneCards={
+   workshop:["WORKSHOP TREE","Hive Path","Bee Upgrades","Garden Efficiency"],
+   fieldguide:["COLLECTION","Discovered 18/30","Rare Chances","Synergies"],
+   map:["WORLD MAP","Meadow Sector","Hive Route","Landmarks"],
+   trials:["BUILD TRIALS","Speed Trial","Bloom Trial","Rare Roll Trial"],
+   settings:["SETTINGS","Effects","Audio","Automation"]
+  }[state.previewScene]||["MENU","Option A","Option B","Option C"];
+  wrap.innerHTML=`
+   <div class="preview-menu-generic">
+    <div class="preview-menu-pill"><b>${sceneCards[0]}</b><span>PREVIEW</span></div>
+    <div class="preview-menu-columns">
+     <div class="preview-menu-list">
+      ${sceneCards.slice(1).map((x,i)=>`<div class="preview-menu-row ${i===0?"active":""}"><span>${x}</span><small>${i===0?"SELECTED":"OPEN"}</small></div>`).join("")}
+     </div>
+     <div class="preview-menu-detail">
+      <b>${meta?.title||"Menu"}</b>
+      <p>${meta?.subtitle||""}</p>
+      <div class="preview-menu-card"></div>
+      <div class="preview-action blue">PRIMARY ACTION</div>
+      <div class="preview-action">SECONDARY ACTION</div>
+     </div>
     </div>
    </div>`;
-  el.appendChild(wrap);
  }
+ el.appendChild(wrap);
 }
-
 
 function setZoom(value,save=true){
  state.zoom=clamp(value,.25,1.5);
@@ -1938,7 +2001,8 @@ $("#modeSelect").onchange=e=>{
  renderAll();
  toast(isPreview()?"Runtime Preview включён — mock-данные не сохраняются":"Design mode — отображается файл как есть");savePrefs();
 };
-$("#sceneSelect").onchange=e=>{state.previewScene=e.target.value;renderAll();savePrefs();};
+$("#sceneSelect").onchange=e=>{state.previewScene=e.target.value;renderAll();updateUiStateBar();savePrefs();};
+ $("#uiStateBar")?.addEventListener("click",e=>{const b=e.target.closest("[data-ui-state]");if(b)activateUiState(b.dataset.uiState)});
 $("#insetInput").onchange=e=>{state.inset=Math.max(0,+e.target.value);renderAll();savePrefs()};
 $("#bgBtn").onclick=()=>$("#bgInput").click();
 $("#bgClearBtn").onclick=()=>{els.device.style.backgroundImage="";els.device.style.backgroundColor="#182332";toast("Фон убран")};
