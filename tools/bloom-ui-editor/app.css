@@ -701,3 +701,52 @@ dialog::backdrop{background:rgba(0,0,0,.62)}.dialog-head{height:44px;display:fle
 .preview-menu-detail{display:flex;flex-direction:column;gap:8px}
 .preview-menu-detail>b{font-size:14px}.preview-menu-detail>p{margin:0;color:#899eb3;font-size:8px}
 .preview-menu-card{height:92px;border:1px solid #234867;border-radius:12px;background:linear-gradient(145deg,#102236,#0b1826)}
+
+/* Inventory error-pass: containment + 760x560 runtime parity */
+.preview-inventory-v2{
+  overflow:hidden;
+}
+.preview-inv-body{
+  min-height:0;
+  overflow:hidden;
+}
+.preview-inv-left,
+.preview-inv-detail{
+  overflow:hidden;
+}
+.preview-inv-left .preview-grid{
+  flex:1;
+  min-height:0;
+  overflow:auto;
+  align-content:start;
+  scrollbar-width:thin;
+}
+.preview-inv-detail .preview-detail-card,
+.preview-inv-detail .preview-subtitle,
+.preview-inv-detail .preview-action{
+  flex:none;
+}
+.preview-pollinators{
+  position:relative;
+  flex:none;
+  overflow:hidden;
+  white-space:nowrap;
+}
+.preview-pollinators span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.preview-pollinators em{
+  margin-left:auto;
+  flex:none;
+  padding:3px 7px;
+  border:1px solid #294b69;
+  border-radius:999px;
+  background:#10253a;
+  color:#ffc84e;
+  font-size:7px;
+  font-style:normal;
+  font-weight:900;
+}
