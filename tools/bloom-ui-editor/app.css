@@ -750,3 +750,10 @@ dialog::backdrop{background:rgba(0,0,0,.62)}.dialog-head{height:44px;display:fle
   font-style:normal;
   font-weight:900;
 }
+
+/* Authored SeedSatchel template: real editable Roblox hierarchy */
+.gui-node[data-name="SeedSatchelTemplate"]>.node-tag::after{
+  content:" · EDITABLE TEMPLATE";
+  color:#ffcf59;
+  font-weight:900;
+}
