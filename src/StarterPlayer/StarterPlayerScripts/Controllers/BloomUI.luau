@@ -614,20 +614,26 @@ function UI:RenderMenu()
 
    local n=W.Nodes[selectedId]
    if n then
-    details.Icon.Image=Icons.GetWorkshopNodeIcon(n.Id)
-    details.Name.Text=n.Name
-    details.Branch.Text=n.Branch
+    local detailIcon=details:WaitForChild("Icon")
+    local detailName=details:WaitForChild("Name")
+    local detailBranch=details:WaitForChild("Branch")
+    local detailEffect=details:WaitForChild("Effect")
+    local detailCost=details:WaitForChild("Cost")
+    local detailRequirement=details:WaitForChild("Requirement")
+    detailIcon.Image=Icons.GetWorkshopNodeIcon(n.Id)
+    detailName.Text=n.Name
+    detailBranch.Text=n.Branch
     local rules=effects[n.Id] or {}
     local descriptions={}
     for key,value in pairs(rules) do table.insert(descriptions,key.."  "..tostring(value)) end
     table.sort(descriptions)
-    details.Effect.Text=#descriptions>0 and table.concat(descriptions,"\n") or "Core progression node"
-    details.Cost.Text=tostring(n.Cost or 0).." point  •  "..compact(n.Coins or 0).." coins"..((n.Dust or 0)>0 and "  •  "..compact(n.Dust).." dust" or "")..((n.Nectar or 0)>0 and "  •  "..compact(n.Nectar).." nectar" or "")
+    detailEffect.Text=#descriptions>0 and table.concat(descriptions,"\n") or "Core progression node"
+    detailCost.Text=tostring(n.Cost or 0).." point  •  "..compact(n.Coins or 0).." coins"..((n.Dust or 0)>0 and "  •  "..compact(n.Dust).." dust" or "")..((n.Nectar or 0)>0 and "  •  "..compact(n.Nectar).." nectar" or "")
     local backend=workshopUI and workshopUI.Nodes and workshopUI.Nodes[n.Id]
     local owned=backend and backend.Owned==true or p.WorkshopV5.Nodes[n.Id]==true
     local available=backend and backend.Available==true or (backend==nil and not owned)
     local reasonText=backend and backend.ReasonText
-    details.Requirement.Text="Hive "..tostring(n.Hive or 0)..(n.Parent and "  •  Parent "..n.Parent or "")..(reasonText and "  •  "..reasonText or "")
+    detailRequirement.Text="Hive "..tostring(n.Hive or 0)..(n.Parent and "  •  Parent "..n.Parent or "")..(reasonText and "  •  "..reasonText or "")
     details.BuyButton.Text=owned and "OWNED" or available and "UPGRADE" or "LOCKED"
     details.BuyButton.BackgroundColor3=owned and C.GreenDeep or available and C.Gold or C.PanelRaised
     details.BuyButton.TextColor3=owned and C.Text or available and C.Black or C.Faint
