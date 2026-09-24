@@ -793,10 +793,38 @@ function resizeFromDrag(d,dx,dy,bypassGuides=false){
  if(!bypassGuides)guide=smartSnapResize(d,rx,ry);
  rx=guide.rx;ry=guide.ry;
  const sz=deepClone(d.size),ps=deepClone(d.pos),a=d.anchor;
- if(dir.includes("e")){sz[0][1]=Math.max(1,roundOffset(d.size[0][1]+rx));ps[0][1]=roundOffset(d.pos[0][1]+rx*a[0])}
- if(dir.includes("w")){sz[0][1]=Math.max(1,roundOffset(d.size[0][1]-rx));ps[0][1]=roundOffset(d.pos[0][1]+rx*(1-a[0]))}
- if(dir.includes("s")){sz[1][1]=Math.max(1,roundOffset(d.size[1][1]+ry));ps[1][1]=roundOffset(d.pos[1][1]+ry*a[1])}
- if(dir.includes("n")){sz[1][1]=Math.max(1,roundOffset(d.size[1][1]-ry));ps[1][1]=roundOffset(d.pos[1][1]+ry*(1-a[1]))}
+ const base=d.geometry?.base;
+ const parent=findParent(d.n.__id);
+ const parentEl=parent&&parent!==state.root?els.guiRoot.querySelector(`[data-id="${parent.__id}"]`):els.guiRoot;
+ const pr=localRect(parentEl);
+ const pw=Math.max(1,pr?.w||state.viewport.w),ph=Math.max(1,pr?.h||state.viewport.h);
+ const baseW=Math.max(1,base?.w||(d.size[0][0]*pw+d.size[0][1]));
+ const baseH=Math.max(1,base?.h||(d.size[1][0]*ph+d.size[1][1]));
+
+ if(dir.includes("e")){
+  const desiredW=Math.max(1,baseW+rx);
+  const applied=desiredW-baseW;
+  sz[0][1]=roundOffset(desiredW-d.size[0][0]*pw);
+  ps[0][1]=roundOffset(d.pos[0][1]+applied*a[0]);
+ }
+ if(dir.includes("w")){
+  const desiredW=Math.max(1,baseW-rx);
+  const applied=baseW-desiredW;
+  sz[0][1]=roundOffset(desiredW-d.size[0][0]*pw);
+  ps[0][1]=roundOffset(d.pos[0][1]+applied*(1-a[0]));
+ }
+ if(dir.includes("s")){
+  const desiredH=Math.max(1,baseH+ry);
+  const applied=desiredH-baseH;
+  sz[1][1]=roundOffset(desiredH-d.size[1][0]*ph);
+  ps[1][1]=roundOffset(d.pos[1][1]+applied*a[1]);
+ }
+ if(dir.includes("n")){
+  const desiredH=Math.max(1,baseH-ry);
+  const applied=baseH-desiredH;
+  sz[1][1]=roundOffset(desiredH-d.size[1][0]*ph);
+  ps[1][1]=roundOffset(d.pos[1][1]+applied*(1-a[1]));
+ }
  d.n.Properties.Size={UDim2:sz};d.n.Properties.Position={UDim2:ps};state.dirty=true;renderViewport();updateOverlay();showSmartGuides(guide.x,guide.y);updatePixelReadout();updateStatus();
 }
 
