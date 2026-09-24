@@ -253,7 +253,7 @@ function UI:RenderMenu()
  self.Content.ScrollBarThickness=name=="SeedSatchel" and 0 or 5
 
  if not self.IsMobileLayout then
-  self.Panel.Size=name=="SeedSatchel" and UDim2.fromOffset(640,500) or UDim2.fromOffset(600,420)
+  self.Panel.Size=name=="Workshop" and UDim2.fromOffset(940,620) or name=="SeedSatchel" and UDim2.fromOffset(640,500) or UDim2.fromOffset(600,420)
  end
 
  if name=="Plant" then
@@ -395,39 +395,85 @@ function UI:RenderMenu()
   end
 
  elseif name=="Workshop" then
-  self:Section(self.Content,"Workshop Tree")
-  self:Label(self.Content,"Points "..p.WorkshopV5.Points.."   •   Coins "..compact(p.Currencies.Coins).."   •   Petal Dust "..compact(p.Currencies.PetalDust),36)
-  self:Button(self.Content,"Alpha respec • вернуть стоимость обычных узлов",function() self:Send("Respec") end,Icons.Get("System","Warning"))
-  local canvas=make("ScrollingFrame",self.Content,{Size=UDim2.new(1,0,0,320),CanvasSize=UDim2.fromOffset(1440,1300),BackgroundColor3=C.Background,BackgroundTransparency=.12,BorderSizePixel=0,ScrollBarThickness=6,ScrollBarImageColor3=C.Blue,ScrollingDirection=Enum.ScrollingDirection.XY})
-  corner(canvas,Theme.Radius.Large)
-  outline(canvas,C.BorderDark,Theme.Stroke.Panel,.08)
-  local center=Vector2.new(720,650)
-  for id,n in pairs(W.Nodes) do
-   local pos=id=="CORE" and center or center+Vector2.new(math.cos(n.Angle),math.sin(n.Angle))*n.Radius
-   if n.Parent then
-    local prev=W.Nodes[n.Parent]
-    local from=n.Parent=="CORE" and center or center+Vector2.new(math.cos(prev.Angle),math.sin(prev.Angle))*prev.Radius
-    local d=pos-from
-    make("Frame",canvas,{Size=UDim2.fromOffset(d.Magnitude,3),AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromOffset((pos.X+from.X)/2,(pos.Y+from.Y)/2),Rotation=math.deg(math.atan2(d.Y,d.X)),BackgroundColor3=p.WorkshopV5.Nodes[n.Parent] and C.GreenDeep or C.BorderSoft,BorderSizePixel=0,ZIndex=1})
+  local template=self.Panel:FindFirstChild("WorkshopTemplate")
+  if not template then
+   self:Label(self.Content,"WorkshopTemplate missing",32)
+  else
+   local shell=template:Clone()
+   shell.Name="WorkshopRuntime"
+   shell.Visible=true
+   shell.Parent=self.Content
+   shell.Size=UDim2.new(1,0,0,510)
+   shell.Position=UDim2.new()
+   shell.LayoutOrder=1
+
+   local top=shell:WaitForChild("WorkshopTop")
+   top.Points.Text=tostring(p.WorkshopV5.Points).." POINTS"
+   local body=shell:WaitForChild("WorkshopBody")
+   local canvas=body.TreePanel.TreeCanvas
+   local nodes=canvas.Nodes
+   local links=canvas.Connections
+   local details=body.DetailsPanel
+   local effects=require(RS.Config.WorkshopEffectsConfig)
+
+   self.SelectedNode=self.SelectedNode or "ROLL_1"
+   local selectedNode=W.Nodes[self.SelectedNode] or W.Nodes.ROLL_1
+   local selectedId=selectedNode and selectedNode.Id or "ROLL_1"
+
+   for id,n in pairs(W.Nodes) do
+    local node=nodes:FindFirstChild("Node_"..id)
+    if node and node:IsA("TextButton") then
+     local owned=id=="CORE" or p.WorkshopV5.Nodes[id]==true
+     local parentOwned=not n.Parent or n.Parent=="CORE" or p.WorkshopV5.Nodes[n.Parent]==true
+     local available=not owned and parentOwned and (p.HiveLevel or 1)>=(n.Hive or 0)
+     local selected=id==selectedId
+     local icon=node:FindFirstChild("HexIcon")
+     if icon and icon:IsA("ImageLabel") then
+      icon.Image=Icons.GetWorkshopNodeIcon(id)
+      icon.ImageColor3=selected and C.Gold or owned and C.Green or available and C.Blue or C.Faint
+      icon.ImageTransparency=owned and 0 or available and .06 or .34
+     end
+     local label=node:FindFirstChild("NodeName")
+     if label and label:IsA("TextLabel") then label.Text=n.Name label.TextColor3=selected and C.Gold or C.Text end
+     local level=node:FindFirstChild("Level")
+     if level and level:IsA("TextLabel") then level.Text=id=="CORE" and "CORE" or owned and "1/1" or "0/1" level.TextColor3=owned and C.Green or available and C.Blue or C.Faint end
+     node.Activated:Connect(function()
+      if id~="CORE" then self.SelectedNode=id self:RenderMenu() end
+     end)
+    end
+    if n.Parent then
+     local link=links:FindFirstChild("Link_"..n.Parent.."_"..id)
+     if link and link:IsA("Frame") then
+      local parentOwned=n.Parent=="CORE" or p.WorkshopV5.Nodes[n.Parent]==true
+      link.BackgroundColor3=parentOwned and C.Blue or C.BorderSoft
+      link.BackgroundTransparency=parentOwned and .08 or .58
+     end
+    end
    end
-   local b=make("TextButton",canvas,{Size=UDim2.fromOffset(94,84),Position=UDim2.fromOffset(pos.X-47,pos.Y-42),BackgroundTransparency=1,Text="",ZIndex=2})
-   local selected=self.SelectedNode==id
-   local owned=p.WorkshopV5.Nodes[id]
-   local icon=make("ImageLabel",b,{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Image=Icons.GetWorkshopHexIcon(owned and "Core" or "Locked"),ImageColor3=owned and C.Green or C.White,ScaleType=Enum.ScaleType.Fit,ZIndex=2})
-   if selected then icon.ImageColor3=C.Gold end
-   make("TextLabel",b,{Size=UDim2.new(1,-12,1,-16),Position=UDim2.fromOffset(6,8),BackgroundTransparency=1,Text=n.Name,TextColor3=C.Text,TextStrokeColor3=C.Black,TextStrokeTransparency=.55,TextSize=11,Font=Enum.Font.GothamBold,TextWrapped=true,ZIndex=3})
-   b.Activated:Connect(function() if id~="CORE" then self.SelectedNode=id self:RenderMenu() end end)
-  end
-  canvas.CanvasPosition=Vector2.new(480,410)
-  local n=W.Nodes[self.SelectedNode]
-  if n then
-   local rules=require(RS.Config.WorkshopEffectsConfig)[n.Id] or {}
-   local descriptions={}
-   for key,value in pairs(rules) do table.insert(descriptions,key..": "..tostring(value)) end
-   self:Section(self.Content,"Выбранный узел")
-   self:Label(self.Content,n.Name.."   •   Hive "..n.Hive.."   •   "..n.Cost.." point   •   "..n.Coins.." coins   •   "..n.Dust.." dust   •   "..n.Nectar.." nectar",56)
-   if #descriptions>0 then self:Label(self.Content,table.concat(descriptions,"  •  "),52) end
-   self:Button(self.Content,p.WorkshopV5.Nodes[n.Id] and "Куплено" or "Купить узел",function() self:Send("WorkshopBuy",n.Id) end,Icons.Get("System",p.WorkshopV5.Nodes[n.Id] and "Confirm" or "Upgrade"))
+
+   local n=W.Nodes[selectedId]
+   if n then
+    details.Icon.Image=Icons.GetWorkshopNodeIcon(n.Id)
+    details.Name.Text=n.Name
+    details.Branch.Text=n.Branch
+    local rules=effects[n.Id] or {}
+    local descriptions={}
+    for key,value in pairs(rules) do table.insert(descriptions,key.."  "..tostring(value)) end
+    table.sort(descriptions)
+    details.Effect.Text=#descriptions>0 and table.concat(descriptions,"\n") or "Core progression node"
+    details.Cost.Text=tostring(n.Cost or 0).." point  •  "..compact(n.Coins or 0).." coins"..((n.Dust or 0)>0 and "  •  "..compact(n.Dust).." dust" or "")..((n.Nectar or 0)>0 and "  •  "..compact(n.Nectar).." nectar" or "")
+    details.Requirement.Text="Hive "..tostring(n.Hive or 0)..(n.Parent and "  •  Parent "..n.Parent or "")
+    local owned=p.WorkshopV5.Nodes[n.Id]==true
+    details.BuyButton.Text=owned and "OWNED" or "UPGRADE"
+    details.BuyButton.BackgroundColor3=owned and C.GreenDeep or C.Gold
+    details.BuyButton.TextColor3=owned and C.Text or C.Black
+    details.BuyButton.Active=not owned
+    details.BuyButton.Activated:Connect(function()
+     if not owned then self:Send("WorkshopBuy",n.Id) end
+    end)
+   end
+   details.RespecButton.Activated:Connect(function() self:Send("Respec") end)
+   canvas.CanvasPosition=Vector2.new(570,405)
   end
 
  elseif name=="FieldGuide" then
