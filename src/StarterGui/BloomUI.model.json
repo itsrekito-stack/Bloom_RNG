@@ -7674,7 +7674,7 @@
                           "UDim2": [
                             [
                               0,
-                              220
+                              360
                             ],
                             [
                               1,
@@ -7696,7 +7696,7 @@
                         },
                         "BackgroundTransparency": 1,
                         "BorderSizePixel": 0,
-                        "Text": "LMB DRAG  •  WHEEL ZOOM",
+                        "Text": "LMB DRAG  •  WHEEL ZOOM  •  CLICK SELECT  •  CLICK AGAIN UPGRADE",
                         "TextColor3": [
                           0.45,
                           0.56,
