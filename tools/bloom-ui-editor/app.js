@@ -895,7 +895,18 @@ function renderGuiNode(n,parentEl,parentNode){
  if(IMAGE_CLASSES.has(n.ClassName)){
   const runtimeImage=previewImage(n,parentNode);const resolved=imageUrl(runtimeImage??p.Image??"");
   if(resolved){
-   const img=document.createElement("img");img.className="gui-image";img.draggable=false;img.src=resolved;
+   const img=document.createElement("img");img.className="gui-image";img.draggable=false;
+   let retry=0;
+   const setSource=()=>{
+    const sep=resolved.includes("?")?"&":"?";
+    img.src=retry===0?resolved:`${resolved}${sep}retry=${Date.now()}_${retry}`;
+   };
+   img.onerror=()=>{
+    if(retry>=4)return;
+    retry+=1;
+    setTimeout(setSource,180*retry);
+   };
+   setSource();
    img.style.opacity=1-clamp(finite(p.ImageTransparency,0),0,1);img.style.objectFit=p.ScaleType==="Crop"?"cover":p.ScaleType==="Stretch"?"fill":"contain";
    if(p.ImageColor3)img.style.filter="none";el.appendChild(img);
   }
