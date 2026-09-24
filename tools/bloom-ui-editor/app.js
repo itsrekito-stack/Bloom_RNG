@@ -15,7 +15,7 @@ const CONTAINERS=new Set(["ScreenGui","Frame","ScrollingFrame","TextButton","Ima
 const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 
 const state={
- root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,inset:36,
+ root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,inset:36,mode:"design",previewScene:"gameplay",
  projectHandle:null,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
  history:[],future:[],dirty:false,drag:null,collapsed:new Set()
 };
@@ -166,6 +166,91 @@ function imageUrl(src){
  return `/api/thumbnail?id=${encodeURIComponent(m[1])}`;
 }
 
+
+const PREVIEW_DATA={
+ currency:{Coins:"152",Honey:"68",Hive:"3",PetalDust:"1,240",AncientNectar:"7"},
+ roulette:{
+  Next:{name:"Розовый пион",chance:"1 / 50",image:"rbxthumb://type=Asset&id=111742972197656&w=420&h=420"},
+  Current:{name:"Ромашка",chance:"1 / 25",image:"rbxthumb://type=Asset&id=117046422836136&w=420&h=420"},
+  Previous:{name:"Василёк",chance:"1 / 100",image:"rbxthumb://type=Asset&id=131527836752075&w=420&h=420"}
+ },
+ seeds:[
+  ["Ромашка","x2","117046422836136"],["Пион","x1","111742972197656"],["Василёк","x3","131527836752075"],["Лотос","x1","117046422836136"],
+  ["Лаванда","x2","111742972197656"],["Тюльпан","x1","131527836752075"],["Лилия","x4","117046422836136"],["Сакура","x1","111742972197656"],
+  ["Подсолнух","x2","117046422836136"],["Роза","x1","131527836752075"],["Гортензия","x1","111742972197656"],["Клевер","x5","117046422836136"]
+ ]
+};
+function isPreview(){return state.mode==="preview"}
+function parentName(n){return findParent(n.__id)?.Name||""}
+function previewVisible(n){
+ if(!isPreview())return null;
+ const name=n.Name||"",p=parentName(n);
+ if(name==="Templates"||p==="Templates"||name==="Tooltip")return false;
+ if(["ObjectiveCard","CurrencyHUD","MenuDock","RollHUD","VerticalRoulette","RollButton"].includes(name))return true;
+ if(name==="MainPanel")return state.previewScene==="seedbag";
+ if(name==="RewardReveal")return state.previewScene==="reward";
+ if(name==="Toast")return state.previewScene==="toast";
+ if(name==="ModalShade"||name==="TutorialGuideBanner")return false;
+ return null;
+}
+function previewText(n,parentNode){
+ if(!isPreview())return null;
+ const name=n.Name||"",p=parentNode?.Name||parentName(n);
+ if(name==="ObjectiveTitle")return "ОБУЧЕНИЕ • 1/8";
+ if(name==="ObjectiveText")return "Заполни Bloom и сделай особый roll";
+ if(name==="MeterLabel")return "BLOOM  38%  •  DISCOVERY  3/30";
+ if(name==="RollButton")return "СДЕЛАТЬ ROLL";
+ if(name==="PanelTitle"&&state.previewScene==="seedbag")return "Сумка семян";
+ if(name==="PanelSubtitle"&&state.previewScene==="seedbag")return "Собирай, сажай и выращивай редкие цветы";
+ if(name==="RewardTitle"&&state.previewScene==="reward")return "Ромашка";
+ if(name==="RewardMeta"&&state.previewScene==="reward")return "Обычный • 1/25 • Новый";
+ if(name==="ToastLabel"&&state.previewScene==="toast")return "+24 Petal Dust";
+ if(name==="Value"&&PREVIEW_DATA.currency[p]!=null)return PREVIEW_DATA.currency[p];
+ if(name==="Name"&&PREVIEW_DATA.roulette[p])return PREVIEW_DATA.roulette[p].name;
+ if(name==="Chance"&&PREVIEW_DATA.roulette[p])return PREVIEW_DATA.roulette[p].chance;
+ return null;
+}
+function previewImage(n,parentNode){
+ if(!isPreview())return null;
+ const name=n.Name||"",p=parentNode?.Name||parentName(n);
+ if(name==="RewardIcon"&&state.previewScene==="reward")return "rbxthumb://type=Asset&id=117046422836136&w=420&h=420";
+ if(name==="Icon"&&PREVIEW_DATA.roulette[p])return PREVIEW_DATA.roulette[p].image;
+ return null;
+}
+function previewSize(n){
+ if(!isPreview())return null;
+ if(n.Name==="ObjectiveProgressFill")return [[.38,0],[1,0]];
+ if(n.Name==="BloomFill")return [[.38,0],[1,0]];
+ return null;
+}
+function injectRuntimePreview(n,el,parentNode){
+ if(!isPreview())return;
+ if(n.Name==="Content"&&parentNode?.Name==="MainPanel"&&state.previewScene==="seedbag"){
+  const wrap=document.createElement("div");wrap.className="preview-runtime";
+  const img=id=>`/api/thumbnail?id=${id}`;
+  wrap.innerHTML=`
+   <div class="preview-seedbag">
+    <div class="preview-seed-left">
+     <div class="preview-filters">
+      <span class="preview-chip active">Все (12)</span><span class="preview-chip">Обычные</span><span class="preview-chip">Редкие</span><span class="preview-chip">Эпические</span>
+     </div>
+     <div class="preview-grid">
+      ${PREVIEW_DATA.seeds.map((s,i)=>`<div class="preview-tile ${i===0?"selected":""}"><span class="preview-count">${s[1]}</span><img src="${img(s[2])}"><strong>${s[0]}</strong></div>`).join("")}
+     </div>
+    </div>
+    <div class="preview-seed-detail">
+     <div class="preview-detail-head"><img src="${img("117046422836136")}"><div><h3>Ромашка</h3><small>ОБЫЧНЫЙ • УРОВЕНЬ 2</small></div></div>
+     <p class="preview-desc">Нежный полевой цветок. Мастерство 1 • шанс 1/25.</p>
+     <div class="preview-action primary">Посадить</div>
+     <div class="preview-action">★ В избранное</div>
+     <div class="preview-action">🔒 Запретить дубликат</div>
+     <div class="preview-action success">Преобразовать дубликаты</div>
+    </div>
+   </div>`;
+  el.appendChild(wrap);
+ }
+}
+
 function hasDrawableGui(){
  let count=0;
  walk(state.root,n=>{
@@ -193,21 +278,29 @@ function renderViewport(){
  $(".roblox-topbar").style.display=state.inset>0?"flex":"none";
  els.guiRoot.style.top=state.inset+"px";
  els.guiRoot.innerHTML="";
+ if(isPreview()){
+  const wm=document.createElement("div");wm.className="preview-mode-watermark";wm.textContent="RUNTIME PREVIEW · "+state.previewScene.toUpperCase();els.guiRoot.appendChild(wm);
+ }
  const children=state.root.ClassName==="ScreenGui"?state.root.Children:[state.root];
  for(const c of children) if(!MODIFIERS.has(c.ClassName)) renderGuiNode(c,els.guiRoot,null);
 }
 function renderGuiNode(n,parentEl,parentNode){
  const el=document.createElement("div");el.className="gui-node";el.dataset.id=n.__id;el.dataset.class=n.ClassName;
  const p=n.Properties||{};
- el.style.width=cssUDim2(p.Size||u2(0,100,0,100),0);
- el.style.height=cssUDim2(p.Size||u2(0,100,0,100),1);
+ const runtimeSize=previewSize(n);
+ const renderSize=runtimeSize?{UDim2:runtimeSize}:(p.Size||u2(0,100,0,100));
+ el.style.width=cssUDim2(renderSize,0);
+ el.style.height=cssUDim2(renderSize,1);
  el.style.left=cssUDim2(p.Position||u2(),0);el.style.top=cssUDim2(p.Position||u2(),1);
  const ap=v2v(n,"AnchorPoint",[0,0]);const rot=finite(p.Rotation,0);
  el.style.transform=`translate(${-ap[0]*100}%,${-ap[1]*100}%) rotate(${rot}deg)`;
  el.style.transformOrigin=`${ap[0]*100}% ${ap[1]*100}%`;
  el.style.zIndex=finite(p.ZIndex,1);
  const runtimeHidden=p.Visible===false;
- if(runtimeHidden&&!state.showHidden)el.style.display="none";
+ const forcedVisible=previewVisible(n);
+ if(forcedVisible===false)el.style.display="none";
+ else if(forcedVisible===true)el.style.display="";
+ else if(runtimeHidden&&!state.showHidden)el.style.display="none";
  else{
   el.style.display="";
   if(runtimeHidden)el.classList.add("runtime-hidden");
@@ -224,7 +317,7 @@ function renderGuiNode(n,parentEl,parentNode){
  }
  const padding=getPadding(n);if(padding)el.style.padding=`${padding.t}px ${padding.r}px ${padding.b}px ${padding.l}px`;
  if(TEXT_CLASSES.has(n.ClassName)){
-  const t=document.createElement("span");t.className="gui-text";t.textContent=p.Text??n.Name;
+  const t=document.createElement("span");t.className="gui-text";const runtimeText=previewText(n,parentNode);t.textContent=runtimeText??p.Text??n.Name;
   t.style.color=color(p.TextColor3||[1,1,1],p.TextTransparency??0);t.style.fontSize=finite(p.TextSize,14)+"px";
   t.style.fontWeight=/Bold|Black/i.test(p.Font||"")?"700":"400";
   t.style.fontFamily=/Code/i.test(p.Font||"")?"Consolas,monospace":"Gotham,Montserrat,Segoe UI,Arial,sans-serif";
@@ -236,7 +329,7 @@ function renderGuiNode(n,parentEl,parentNode){
   el.appendChild(t);
  }
  if(IMAGE_CLASSES.has(n.ClassName)){
-  const resolved=imageUrl(p.Image||"");
+  const runtimeImage=previewImage(n,parentNode);const resolved=imageUrl(runtimeImage??p.Image??"");
   if(resolved){
    const img=document.createElement("img");img.className="gui-image";img.draggable=false;img.src=resolved;
    img.style.opacity=1-clamp(finite(p.ImageTransparency,0),0,1);img.style.objectFit=p.ScaleType==="Crop"?"cover":p.ScaleType==="Stretch"?"fill":"contain";
@@ -269,6 +362,7 @@ function renderGuiNode(n,parentEl,parentNode){
   const child=renderGuiNode(c,el,n);
   if((list||grid)&&child)child.classList.add("layout-child");
  }
+ injectRuntimePreview(n,el,parentNode);
  return el;
 }
 els.guiRoot.addEventListener("pointerdown",ev=>{if(ev.target===els.guiRoot)select(state.root.__id)});
@@ -406,7 +500,7 @@ function updatePixelReadout(){
  if(box)[...box.querySelectorAll("strong")].forEach((s,i)=>s.textContent=vals[i]);
 }
 function updateStatus(){
- const n=selected();els.status.textContent=(state.dirty?"● ":"")+(state.projectHandle?"Project connected":"Local preview")+" · "+(n?`${n.Name} [${n.ClassName}]`:"");
+ const n=selected();const mode=isPreview()?`PREVIEW · ${state.previewScene} · mock data`:(state.projectHandle?"Project connected":"Design");els.status.textContent=(state.dirty?"● ":"")+mode+" · "+(n?`${n.Name} [${n.ClassName}]`:"");
  els.target.textContent=state.targetPath;
 }
 
@@ -536,6 +630,14 @@ $("#snapSelect").onchange=e=>state.snap=+e.target.value;
 $("#labelsToggle").onchange=e=>{state.labels=e.target.checked;renderViewport();updateOverlay()};
 $("#gridToggle").onchange=e=>{state.grid=e.target.checked;els.stageScroller.classList.toggle("no-grid",!state.grid)};
 $("#hiddenToggle").onchange=e=>{state.showHidden=e.target.checked;renderViewport();renderTree();updateOverlay();toast(state.showHidden?"Скрытые Roblox-объекты показаны только в редакторе":"Скрытые Roblox-объекты спрятаны")};
+$("#modeSelect").onchange=e=>{
+ state.mode=e.target.value;
+ $("#sceneSelect").disabled=!isPreview();
+ $("#modeSelect").classList.toggle("preview-active",isPreview());
+ renderAll();
+ toast(isPreview()?"Runtime Preview включён — mock-данные не сохраняются":"Design mode — отображается файл как есть");
+};
+$("#sceneSelect").onchange=e=>{state.previewScene=e.target.value;renderAll();};
 $("#insetInput").onchange=e=>{state.inset=Math.max(0,+e.target.value);renderAll()};
 $("#bgBtn").onclick=()=>$("#bgInput").click();
 $("#bgClearBtn").onclick=()=>{els.device.style.backgroundImage="";els.device.style.backgroundColor="#182332";toast("Фон убран")};
@@ -576,5 +678,8 @@ window.addEventListener("keydown",e=>{
 
 $("#labelsToggle").checked=state.labels;
 $("#hiddenToggle").checked=state.showHidden;
+$("#modeSelect").value=state.mode;
+$("#sceneSelect").value=state.previewScene;
+$("#sceneSelect").disabled=!isPreview();
 loadInitial();
 })();
