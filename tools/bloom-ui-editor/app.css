@@ -212,3 +212,20 @@ dialog::backdrop{background:rgba(0,0,0,.62)}.dialog-head{height:44px;display:fle
   background:rgba(12,34,53,.72);color:#78c8ff;font-size:8px;font-weight:900;
   letter-spacing:.08em;pointer-events:none;
 }
+
+/* QoL */
+.tree-search-wrap{
+  height:35px;margin:7px 8px 3px;padding:0 8px;display:grid;
+  grid-template-columns:16px 1fr auto;align-items:center;gap:5px;
+  border:1px solid var(--line);border-radius:8px;background:#0d1219;color:#718096;
+}
+.tree-search-wrap:focus-within{border-color:#3d7fb4;box-shadow:0 0 0 1px rgba(82,169,255,.12)}
+.tree-search-wrap input{height:28px;width:100%;border:0!important;background:transparent!important;outline:0!important;padding:0!important;color:var(--text)}
+.tree-search-wrap kbd{padding:1px 5px;border:1px solid #303b4b;border-radius:4px;background:#171d26;color:#7e8ca0;font:8px Consolas,monospace}
+.tree-search-meta{min-height:14px;padding:0 9px 3px;color:#66758a;font-size:8px}
+.tree-row.search-match .tree-name{color:#dff3ff;font-weight:700}
+.tree-row.search-match{background:rgba(45,120,176,.10)}
+.tool-btn{width:auto!important;min-width:30px;padding:0 6px;font-size:9px;font-weight:800}
+.stage-scroller.panning{cursor:grabbing!important}
+.stage-scroller.panning *{cursor:grabbing!important}
+.statusbar .dirty-hint{color:#e6bd59}
