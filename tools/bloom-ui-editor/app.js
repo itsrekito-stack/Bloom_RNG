@@ -620,7 +620,7 @@ function renderTree(){
   shown++;
   const row=document.createElement("div");row.className="tree-row"+(n.__id===state.selectedId?" selected":"")+(MODIFIERS.has(n.ClassName)?" modifier":"")+(n.Properties?.Visible===false?" runtime-hidden":"")+(matched.has(n.__id)?" search-match":"");
   const kids=n.Children||[],collapsed=state.collapsed.has(n.__id)&&!q;
-  row.innerHTML=`<span class="tree-indent" style="width:${depth*13}px"></span><span class="tree-toggle">${kids.length?(collapsed?"▸":"▾"):""}</span><span class="tree-icon">${classIcon(n.ClassName)}</span><span class="tree-name"></span><span class="tree-kind"></span>`;
+  row.dataset.id=n.__id;row.innerHTML=`<span class="tree-indent" style="width:${depth*13}px"></span><span class="tree-toggle">${kids.length?(collapsed?"▸":"▾"):""}</span><span class="tree-icon">${classIcon(n.ClassName)}</span><span class="tree-name"></span><span class="tree-kind"></span>`;
   row.querySelector(".tree-name").textContent=n.Name;row.querySelector(".tree-kind").textContent=n.ClassName;
   row.querySelector(".tree-toggle").onclick=e=>{e.stopPropagation();collapsed?state.collapsed.delete(n.__id):state.collapsed.add(n.__id);renderTree()};
   row.ondblclick=()=>{select(n.__id);renameSelected()};
@@ -632,7 +632,19 @@ function renderTree(){
 }
 function classIcon(k){return ({ScreenGui:"▱",Frame:"▣",TextLabel:"T",TextButton:"▤",ImageLabel:"◈",ImageButton:"◇",ScrollingFrame:"↕",UICorner:"◜",UIStroke:"□",UIListLayout:"☷",UIGridLayout:"▦",UIPadding:"↔"})[k]||"·"}
 
-function select(id){state.selectedId=id;renderTree();renderInspector();updateOverlay();updateStatus()}
+function revealTreePath(id){
+ let p=findParent(id);
+ while(p){state.collapsed.delete(p.__id);p=findParent(p.__id)}
+}
+function scrollTreeToSelected(){
+ requestAnimationFrame(()=>{
+  const row=els.tree.querySelector(`.tree-row[data-id="${state.selectedId}"]`);
+  if(row)row.scrollIntoView({block:"nearest",inline:"nearest"});
+ });
+}
+function select(id){
+ state.selectedId=id;revealTreePath(id);renderTree();renderInspector();updateOverlay();updateStatus();scrollTreeToSelected();
+}
 function updateOverlay(){
  const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName)){els.overlay.classList.add("hidden");updateGeometrySelection();return}
  const nodeEl=els.guiRoot.querySelector(`[data-id="${n.__id}"]`);if(!nodeEl||nodeEl.style.display==="none"){els.overlay.classList.add("hidden");updateGeometrySelection();return}
