@@ -38,14 +38,14 @@ echo.
 where py.exe >nul 2>&1
 if not errorlevel 1 (
   echo Starting Python server...
-  start "Bloom UI Studio Server" /min cmd.exe /c "cd /d "%CD%" && py.exe -m http.server %PORT% --bind 127.0.0.1"
+  start "Bloom UI Studio Server" /min py.exe "%~dp0tools\bloom-ui-editor\server.py" --root "%CD%" --port %PORT%
   goto :WAIT
 )
 
 where python.exe >nul 2>&1
 if not errorlevel 1 (
   echo Starting Python server...
-  start "Bloom UI Studio Server" /min cmd.exe /c "cd /d "%CD%" && python.exe -m http.server %PORT% --bind 127.0.0.1"
+  start "Bloom UI Studio Server" /min python.exe "%~dp0tools\bloom-ui-editor\server.py" --root "%CD%" --port %PORT%
   goto :WAIT
 )
 
@@ -76,7 +76,7 @@ echo   py --version
 echo.
 echo Then try:
 echo   cd /d "%CD%"
-echo   py -m http.server %PORT% --bind 127.0.0.1
+echo   py "%~dp0tools\bloom-ui-editor\server.py" --root "%CD%" --port %PORT%
 echo.
 pause
 exit /b 1
