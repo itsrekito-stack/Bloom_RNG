@@ -1,10 +1,20 @@
 local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.BuildTrialConfig) local B=require(RS.Config.BeesConfig) local S={Active={}}
 function S:Init(x) self.X=x end
 function S:StartTrial(player,id)
- local p=self.X:Profile(player) local cfg=C[id] if not p or not cfg or not p.Tutorial.FeatureUnlocks.Trials or self.X.MapService:Sector(player)~=cfg.Sector or not p.World.UnlockedSectors[cfg.Sector] then return false end
- local location=require(RS.Config.LocationsConfig).Sectors[cfg.Sector] local pos=self.X.Origin+location.Center+Vector3.new(0,2,30)
- if not self.X.U.Near(player,pos,14) then return false end
- self.Active[player]={Advanced=p.WorkshopV5.Nodes.LEGACY_4==true,Id=id,Start=os.clock(),Counts={},Revision=p.Garden.Revision} self.X:Send(player,"Message",cfg.Name.." started") return true
+ local p=self.X:Profile(player)
+ if not p then return false,"PROFILE_LOADING" end
+ local cfg=type(id)=="string" and C[id] or nil
+ if not cfg then return false,"INVALID_ITEM" end
+ if not p.Tutorial.FeatureUnlocks.Trials then return false,"TRIAL_LOCKED" end
+ if self.Active[player] then return false,"TRIAL_RUNNING" end
+ if not p.World.UnlockedSectors[cfg.Sector] then return false,"SECTOR_LOCKED" end
+ if self.X.MapService:Sector(player)~=cfg.Sector then return false,"WRONG_SECTOR" end
+ local location=require(RS.Config.LocationsConfig).Sectors[cfg.Sector]
+ local pos=self.X.Origin+location.Center+Vector3.new(0,2,30)
+ if not self.X.U.Near(player,pos,14) then return false,"TOO_FAR" end
+ self.Active[player]={Advanced=p.WorkshopV5.Nodes.LEGACY_4==true,Id=id,Start=os.clock(),Counts={},Revision=p.Garden.Revision}
+ self.X:Send(player,"Message",cfg.Name.." started")
+ return true
 end
 function S:Event(player,event,n)
  local a=self.Active[player] local p=self.X:Profile(player) if not a or not p then return end local cfg=C[a.Id] if os.clock()-a.Start>cfg.Seconds then self.Active[player]=nil return end
