@@ -19,6 +19,7 @@ local RollAudio=require(RS.Config.RollAudioConfig)
 local NumberFormatter=require(RS.Shared.NumberFormatter)
 
 local C=Theme.Colors
+local CLIENT_BUILD="state-sync-v3-2026-09-24"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0}
 
 local MENU_NAMES={
@@ -953,7 +954,6 @@ function UI:ApplyState(payload,source)
   return false
  end
  self.State=payload
- self.Player:SetAttribute("BloomClientReady",true)
  if not self.RouletteLanding then self:BuildRouletteVisualPool(true) end
  self:Render()
  print("[BloomUI] State applied:",source or "Event")
@@ -961,6 +961,7 @@ function UI:ApplyState(payload,source)
 end
 
 function UI:Start()
+ print("[BloomUI] Starting client build:",CLIENT_BUILD)
  self.Player:SetAttribute("BloomClientReady",false)
  self.Player:GetAttributeChangedSignal("BloomProfileState"):Connect(function()
   local status=self.Player:GetAttribute("BloomProfileState")
@@ -1034,6 +1035,8 @@ function UI:Start()
   elseif kind=="Cards" then task.defer(function() self:Open("Cards") end)
   elseif kind=="Replay" then self.ReplayIndex=1 self:Open("Replay") end
  end)
+ self.Player:SetAttribute("BloomClientReady",true)
+ print("[BloomUI] Client listener ready:",CLIENT_BUILD)
 
  UIS.InputBegan:Connect(function(input,processed)
   if processed then return end
@@ -1077,6 +1080,10 @@ function UI:Start()
    if status~=lastStatus then
     lastStatus=status
     if status then print("[BloomUI] Profile state:",status) end
+    if status=="Active" and self.ObjectiveTitle and self.ObjectiveText then
+     self.ObjectiveTitle.Text="СИНХРОНИЗАЦИЯ"
+     self.ObjectiveText.Text="Профиль загружен. Получаем состояние игры…"
+    end
    end
    if os.clock()-started>20 then
     local profileError=self.Player:GetAttribute("BloomProfileError")
