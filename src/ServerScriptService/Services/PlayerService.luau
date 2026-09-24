@@ -16,11 +16,19 @@ function X:Prompt(part,text,callback)
  local prompt=Instance.new("ProximityPrompt") prompt.ActionText=text prompt.ObjectText=part.Name prompt.RequiresLineOfSight=false prompt.MaxActivationDistance=12 prompt.Parent=part
  prompt.Triggered:Connect(function(player) if self:Profile(player) and U.Near(player,part.Position,C.InteractionDistance) and self.RemoteService:Accept(player) then callback(player) self:Push(player) end end) return prompt
 end
-function X:Push(player)
- local p=self:Profile(player) if not p then return end self.TutorialService:Refresh(player)
+function X:Snapshot(player)
+ local p=self:Profile(player) if not p then return nil end
+ self.TutorialService:Refresh(player)
  local public={Profile=U.Copy(p),Synergies=self.GardenSynergyService.Active[player] or {},BeeCapacity=self.StatsService:BeeCapacity(p),HivePosition=self.GardenPlotService:HivePosition(player),Trial=self.BuildTrialService.Active[player],ServerBloom=self.SocialService.Progress,Pulse=self.SocialService.Pulse,Cards=self.SeasonService:Offers(p),Odds=self.RollService:Odds(player)}
- public.Profile.LegacyArchive=nil public.Profile.Telemetry=nil public.Profile.Migrations=nil self:Send(player,"State",public)
+ public.Profile.LegacyArchive=nil public.Profile.Telemetry=nil public.Profile.Migrations=nil
+ return public
+end
+function X:Push(player)
+ local public=self:Snapshot(player) if not public then return false end
+ self:Send(player,"State",public)
+ local p=public.Profile
  local leader=player:FindFirstChild("leaderstats") if leader then leader.Coins.Value=math.floor(p.Currencies.Coins) leader.Hive.Value=p.Hive.Level end
+ return true
 end
 function X:Request(player,action,a,b,c)
  local p=self:Profile(player) if not p then return false end
