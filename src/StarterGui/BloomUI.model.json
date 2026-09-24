@@ -72,7 +72,7 @@
             "BackgroundTransparency": 0.05,
             "BorderSizePixel": 0,
             "ZIndex": 20,
-            "Visible": false,
+            "Visible": true,
             "ClipsDescendants": false,
             "Position": {
               "UDim2": [
@@ -136,6 +136,7 @@
               "Children": [
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -314,6 +315,7 @@
               "Children": [
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -353,6 +355,7 @@
                   "Children": [
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -368,6 +371,7 @@
             },
             {
               "ClassName": "UICorner",
+              "Name": "UICorner",
               "Properties": {
                 "CornerRadius": {
                   "UDim": [
@@ -379,6 +383,7 @@
             },
             {
               "ClassName": "UIStroke",
+              "Name": "UIStroke",
               "Properties": {
                 "Color": [
                   0.023529411764705882,
@@ -400,11 +405,11 @@
               "UDim2": [
                 [
                   0,
-                  190
+                  142
                 ],
                 [
                   0,
-                  205
+                  221
                 ]
               ]
             },
@@ -416,34 +421,22 @@
             "BackgroundTransparency": 1,
             "BorderSizePixel": 0,
             "ZIndex": 20,
-            "Visible": false,
+            "Visible": true,
             "ClipsDescendants": false,
             "Position": {
               "UDim2": [
                 [
-                  0,
-                  12
+                  1,
+                  -153
                 ],
                 [
-                  0,
-                  12
+                  0.5,
+                  -270
                 ]
               ]
             }
           },
           "Children": [
-            {
-              "ClassName": "UIListLayout",
-              "Properties": {
-                "Padding": {
-                  "UDim": [
-                    0,
-                    5
-                  ]
-                },
-                "SortOrder": "LayoutOrder"
-              }
-            },
             {
               "ClassName": "Frame",
               "Name": "Coins",
@@ -452,7 +445,7 @@
                   "UDim2": [
                     [
                       0,
-                      190
+                      140
                     ],
                     [
                       0,
@@ -470,62 +463,21 @@
                 "ZIndex": 20,
                 "Visible": true,
                 "ClipsDescendants": false,
-                "LayoutOrder": 1
+                "LayoutOrder": 1,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      0,
+                      0
+                    ]
+                  ]
+                }
               },
               "Children": [
-                {
-                  "ClassName": "Frame",
-                  "Name": "Accent",
-                  "Properties": {
-                    "Size": {
-                      "UDim2": [
-                        [
-                          0,
-                          3
-                        ],
-                        [
-                          0,
-                          20
-                        ]
-                      ]
-                    },
-                    "BackgroundColor3": [
-                      1,
-                      0.803921568627451,
-                      0.3568627450980392
-                    ],
-                    "BackgroundTransparency": 0,
-                    "BorderSizePixel": 0,
-                    "ZIndex": 21,
-                    "Visible": true,
-                    "ClipsDescendants": false,
-                    "Position": {
-                      "UDim2": [
-                        [
-                          0,
-                          5
-                        ],
-                        [
-                          0.5,
-                          -10
-                        ]
-                      ]
-                    }
-                  },
-                  "Children": [
-                    {
-                      "ClassName": "UICorner",
-                      "Properties": {
-                        "CornerRadius": {
-                          "UDim": [
-                            0,
-                            2
-                          ]
-                        }
-                      }
-                    }
-                  ]
-                },
                 {
                   "ClassName": "Frame",
                   "Name": "IconBg",
@@ -568,6 +520,7 @@
                   "Children": [
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -706,6 +659,7 @@
                 },
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -717,6 +671,7 @@
                 },
                 {
                   "ClassName": "UIStroke",
+                  "Name": "UIStroke",
                   "Properties": {
                     "Color": [
                       0.023529411764705882,
@@ -738,7 +693,7 @@
                   "UDim2": [
                     [
                       0,
-                      190
+                      140
                     ],
                     [
                       0,
@@ -756,62 +711,21 @@
                 "ZIndex": 20,
                 "Visible": true,
                 "ClipsDescendants": false,
-                "LayoutOrder": 2
+                "LayoutOrder": 2,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      0,
+                      44
+                    ]
+                  ]
+                }
               },
               "Children": [
-                {
-                  "ClassName": "Frame",
-                  "Name": "Accent",
-                  "Properties": {
-                    "Size": {
-                      "UDim2": [
-                        [
-                          0,
-                          3
-                        ],
-                        [
-                          0,
-                          20
-                        ]
-                      ]
-                    },
-                    "BackgroundColor3": [
-                      1,
-                      0.6901960784313725,
-                      0.2823529411764706
-                    ],
-                    "BackgroundTransparency": 0,
-                    "BorderSizePixel": 0,
-                    "ZIndex": 21,
-                    "Visible": true,
-                    "ClipsDescendants": false,
-                    "Position": {
-                      "UDim2": [
-                        [
-                          0,
-                          5
-                        ],
-                        [
-                          0.5,
-                          -10
-                        ]
-                      ]
-                    }
-                  },
-                  "Children": [
-                    {
-                      "ClassName": "UICorner",
-                      "Properties": {
-                        "CornerRadius": {
-                          "UDim": [
-                            0,
-                            2
-                          ]
-                        }
-                      }
-                    }
-                  ]
-                },
                 {
                   "ClassName": "Frame",
                   "Name": "IconBg",
@@ -854,6 +768,7 @@
                   "Children": [
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -992,6 +907,7 @@
                 },
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -1003,6 +919,7 @@
                 },
                 {
                   "ClassName": "UIStroke",
+                  "Name": "UIStroke",
                   "Properties": {
                     "Color": [
                       0.023529411764705882,
@@ -1024,7 +941,7 @@
                   "UDim2": [
                     [
                       0,
-                      190
+                      140
                     ],
                     [
                       0,
@@ -1042,62 +959,21 @@
                 "ZIndex": 20,
                 "Visible": true,
                 "ClipsDescendants": false,
-                "LayoutOrder": 3
+                "LayoutOrder": 3,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      0,
+                      88
+                    ]
+                  ]
+                }
               },
               "Children": [
-                {
-                  "ClassName": "Frame",
-                  "Name": "Accent",
-                  "Properties": {
-                    "Size": {
-                      "UDim2": [
-                        [
-                          0,
-                          3
-                        ],
-                        [
-                          0,
-                          20
-                        ]
-                      ]
-                    },
-                    "BackgroundColor3": [
-                      0.4,
-                      0.8784313725490196,
-                      0.6509803921568628
-                    ],
-                    "BackgroundTransparency": 0,
-                    "BorderSizePixel": 0,
-                    "ZIndex": 21,
-                    "Visible": true,
-                    "ClipsDescendants": false,
-                    "Position": {
-                      "UDim2": [
-                        [
-                          0,
-                          5
-                        ],
-                        [
-                          0.5,
-                          -10
-                        ]
-                      ]
-                    }
-                  },
-                  "Children": [
-                    {
-                      "ClassName": "UICorner",
-                      "Properties": {
-                        "CornerRadius": {
-                          "UDim": [
-                            0,
-                            2
-                          ]
-                        }
-                      }
-                    }
-                  ]
-                },
                 {
                   "ClassName": "Frame",
                   "Name": "IconBg",
@@ -1140,6 +1016,7 @@
                   "Children": [
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -1278,6 +1155,7 @@
                 },
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -1289,6 +1167,7 @@
                 },
                 {
                   "ClassName": "UIStroke",
+                  "Name": "UIStroke",
                   "Properties": {
                     "Color": [
                       0.023529411764705882,
@@ -1310,7 +1189,7 @@
                   "UDim2": [
                     [
                       0,
-                      190
+                      140
                     ],
                     [
                       0,
@@ -1328,62 +1207,21 @@
                 "ZIndex": 20,
                 "Visible": true,
                 "ClipsDescendants": false,
-                "LayoutOrder": 4
+                "LayoutOrder": 4,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      0,
+                      132
+                    ]
+                  ]
+                }
               },
               "Children": [
-                {
-                  "ClassName": "Frame",
-                  "Name": "Accent",
-                  "Properties": {
-                    "Size": {
-                      "UDim2": [
-                        [
-                          0,
-                          3
-                        ],
-                        [
-                          0,
-                          20
-                        ]
-                      ]
-                    },
-                    "BackgroundColor3": [
-                      0.7333333333333333,
-                      0.5450980392156862,
-                      1
-                    ],
-                    "BackgroundTransparency": 0,
-                    "BorderSizePixel": 0,
-                    "ZIndex": 21,
-                    "Visible": true,
-                    "ClipsDescendants": false,
-                    "Position": {
-                      "UDim2": [
-                        [
-                          0,
-                          5
-                        ],
-                        [
-                          0.5,
-                          -10
-                        ]
-                      ]
-                    }
-                  },
-                  "Children": [
-                    {
-                      "ClassName": "UICorner",
-                      "Properties": {
-                        "CornerRadius": {
-                          "UDim": [
-                            0,
-                            2
-                          ]
-                        }
-                      }
-                    }
-                  ]
-                },
                 {
                   "ClassName": "Frame",
                   "Name": "IconBg",
@@ -1426,6 +1264,7 @@
                   "Children": [
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -1564,6 +1403,7 @@
                 },
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -1575,6 +1415,7 @@
                 },
                 {
                   "ClassName": "UIStroke",
+                  "Name": "UIStroke",
                   "Properties": {
                     "Color": [
                       0.023529411764705882,
@@ -1596,7 +1437,7 @@
                   "UDim2": [
                     [
                       0,
-                      190
+                      140
                     ],
                     [
                       0,
@@ -1614,62 +1455,21 @@
                 "ZIndex": 20,
                 "Visible": true,
                 "ClipsDescendants": false,
-                "LayoutOrder": 5
+                "LayoutOrder": 5,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      0,
+                      176
+                    ]
+                  ]
+                }
               },
               "Children": [
-                {
-                  "ClassName": "Frame",
-                  "Name": "Accent",
-                  "Properties": {
-                    "Size": {
-                      "UDim2": [
-                        [
-                          0,
-                          3
-                        ],
-                        [
-                          0,
-                          20
-                        ]
-                      ]
-                    },
-                    "BackgroundColor3": [
-                      0.3843137254901961,
-                      0.9058823529411765,
-                      0.8392156862745098
-                    ],
-                    "BackgroundTransparency": 0,
-                    "BorderSizePixel": 0,
-                    "ZIndex": 21,
-                    "Visible": true,
-                    "ClipsDescendants": false,
-                    "Position": {
-                      "UDim2": [
-                        [
-                          0,
-                          5
-                        ],
-                        [
-                          0.5,
-                          -10
-                        ]
-                      ]
-                    }
-                  },
-                  "Children": [
-                    {
-                      "ClassName": "UICorner",
-                      "Properties": {
-                        "CornerRadius": {
-                          "UDim": [
-                            0,
-                            2
-                          ]
-                        }
-                      }
-                    }
-                  ]
-                },
                 {
                   "ClassName": "Frame",
                   "Name": "IconBg",
@@ -1712,6 +1512,7 @@
                   "Children": [
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -1850,6 +1651,7 @@
                 },
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -1861,6 +1663,7 @@
                 },
                 {
                   "ClassName": "UIStroke",
+                  "Name": "UIStroke",
                   "Properties": {
                     "Color": [
                       0.023529411764705882,
@@ -1884,11 +1687,11 @@
               "UDim2": [
                 [
                   0,
-                  44
+                  164
                 ],
                 [
                   0,
-                  294
+                  112
                 ]
               ]
             },
@@ -1900,16 +1703,16 @@
             "BackgroundTransparency": 1,
             "BorderSizePixel": 0,
             "ZIndex": 29,
-            "Visible": false,
+            "Visible": true,
             "ClipsDescendants": false,
             "Position": {
               "UDim2": [
                 [
-                  0,
-                  12
+                  1,
+                  -164
                 ],
                 [
-                  0.58,
+                  0.5,
                   0
                 ]
               ]
@@ -1922,20 +1725,6 @@
             }
           },
           "Children": [
-            {
-              "ClassName": "UIListLayout",
-              "Properties": {
-                "Padding": {
-                  "UDim": [
-                    0,
-                    6
-                  ]
-                },
-                "SortOrder": "LayoutOrder",
-                "HorizontalAlignment": "Left",
-                "VerticalAlignment": "Center"
-              }
-            },
             {
               "ClassName": "TextButton",
               "Name": "Dock_SeedSatchel",
@@ -1971,7 +1760,19 @@
                 "ZIndex": 29,
                 "Visible": true,
                 "LayoutOrder": 1,
-                "BackgroundTransparency": 0.04
+                "BackgroundTransparency": 0.04,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      8
+                    ],
+                    [
+                      0,
+                      8
+                    ]
+                  ]
+                }
               },
               "Children": [
                 {
@@ -2061,6 +1862,7 @@
                   "Children": [
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -2072,6 +1874,7 @@
                     },
                     {
                       "ClassName": "UIStroke",
+                      "Name": "UIStroke",
                       "Properties": {
                         "Color": [
                           0.027450980392156862,
@@ -2087,6 +1890,7 @@
                 },
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -2098,6 +1902,7 @@
                 },
                 {
                   "ClassName": "UIStroke",
+                  "Name": "UIStroke",
                   "Properties": {
                     "Color": [
                       0.023529411764705882,
@@ -2146,7 +1951,19 @@
                 "ZIndex": 29,
                 "Visible": true,
                 "LayoutOrder": 2,
-                "BackgroundTransparency": 0.04
+                "BackgroundTransparency": 0.04,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      60
+                    ],
+                    [
+                      0,
+                      8
+                    ]
+                  ]
+                }
               },
               "Children": [
                 {
@@ -2236,6 +2053,7 @@
                   "Children": [
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -2247,6 +2065,7 @@
                     },
                     {
                       "ClassName": "UIStroke",
+                      "Name": "UIStroke",
                       "Properties": {
                         "Color": [
                           0.027450980392156862,
@@ -2262,6 +2081,7 @@
                 },
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -2273,6 +2093,7 @@
                 },
                 {
                   "ClassName": "UIStroke",
+                  "Name": "UIStroke",
                   "Properties": {
                     "Color": [
                       0.023529411764705882,
@@ -2321,7 +2142,19 @@
                 "ZIndex": 29,
                 "Visible": true,
                 "LayoutOrder": 3,
-                "BackgroundTransparency": 0.04
+                "BackgroundTransparency": 0.04,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      112
+                    ],
+                    [
+                      0,
+                      8
+                    ]
+                  ]
+                }
               },
               "Children": [
                 {
@@ -2411,6 +2244,7 @@
                   "Children": [
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -2422,6 +2256,7 @@
                     },
                     {
                       "ClassName": "UIStroke",
+                      "Name": "UIStroke",
                       "Properties": {
                         "Color": [
                           0.027450980392156862,
@@ -2437,6 +2272,7 @@
                 },
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -2448,6 +2284,7 @@
                 },
                 {
                   "ClassName": "UIStroke",
+                  "Name": "UIStroke",
                   "Properties": {
                     "Color": [
                       0.023529411764705882,
@@ -2496,7 +2333,19 @@
                 "ZIndex": 29,
                 "Visible": true,
                 "LayoutOrder": 4,
-                "BackgroundTransparency": 0.04
+                "BackgroundTransparency": 0.04,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      8
+                    ],
+                    [
+                      0,
+                      60
+                    ]
+                  ]
+                }
               },
               "Children": [
                 {
@@ -2586,6 +2435,7 @@
                   "Children": [
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -2597,6 +2447,7 @@
                     },
                     {
                       "ClassName": "UIStroke",
+                      "Name": "UIStroke",
                       "Properties": {
                         "Color": [
                           0.027450980392156862,
@@ -2612,6 +2463,7 @@
                 },
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -2623,6 +2475,7 @@
                 },
                 {
                   "ClassName": "UIStroke",
+                  "Name": "UIStroke",
                   "Properties": {
                     "Color": [
                       0.023529411764705882,
@@ -2671,7 +2524,19 @@
                 "ZIndex": 29,
                 "Visible": true,
                 "LayoutOrder": 5,
-                "BackgroundTransparency": 0.04
+                "BackgroundTransparency": 0.04,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      60
+                    ],
+                    [
+                      0,
+                      60
+                    ]
+                  ]
+                }
               },
               "Children": [
                 {
@@ -2761,6 +2626,7 @@
                   "Children": [
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -2772,6 +2638,7 @@
                     },
                     {
                       "ClassName": "UIStroke",
+                      "Name": "UIStroke",
                       "Properties": {
                         "Color": [
                           0.027450980392156862,
@@ -2787,6 +2654,7 @@
                 },
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -2798,6 +2666,7 @@
                 },
                 {
                   "ClassName": "UIStroke",
+                  "Name": "UIStroke",
                   "Properties": {
                     "Color": [
                       0.023529411764705882,
@@ -2846,7 +2715,19 @@
                 "ZIndex": 29,
                 "Visible": true,
                 "LayoutOrder": 6,
-                "BackgroundTransparency": 0.04
+                "BackgroundTransparency": 0.04,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      112
+                    ],
+                    [
+                      0,
+                      60
+                    ]
+                  ]
+                }
               },
               "Children": [
                 {
@@ -2936,6 +2817,7 @@
                   "Children": [
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -2947,6 +2829,7 @@
                     },
                     {
                       "ClassName": "UIStroke",
+                      "Name": "UIStroke",
                       "Properties": {
                         "Color": [
                           0.027450980392156862,
@@ -2962,6 +2845,7 @@
                 },
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -2973,6 +2857,7 @@
                 },
                 {
                   "ClassName": "UIStroke",
+                  "Name": "UIStroke",
                   "Properties": {
                     "Color": [
                       0.023529411764705882,
@@ -3012,7 +2897,7 @@
             "BackgroundTransparency": 1,
             "BorderSizePixel": 0,
             "ZIndex": 24,
-            "Visible": false,
+            "Visible": true,
             "ClipsDescendants": false,
             "Position": {
               "UDim2": [
@@ -3068,7 +2953,7 @@
                     ],
                     [
                       0,
-                      0
+                      -32
                     ]
                   ]
                 },
@@ -3202,6 +3087,7 @@
                   "Children": [
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -3213,6 +3099,7 @@
                     },
                     {
                       "ClassName": "UIStroke",
+                      "Name": "UIStroke",
                       "Properties": {
                         "Color": [
                           0.027450980392156862,
@@ -3254,6 +3141,7 @@
                       "Children": [
                         {
                           "ClassName": "UICorner",
+                          "Name": "UICorner",
                           "Properties": {
                             "CornerRadius": {
                               "UDim": [
@@ -3269,6 +3157,7 @@
                 },
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -3280,6 +3169,7 @@
                 },
                 {
                   "ClassName": "UIStroke",
+                  "Name": "UIStroke",
                   "Properties": {
                     "Color": [
                       0.023529411764705882,
@@ -3316,10 +3206,10 @@
               0.10588235294117647,
               0.1411764705882353
             ],
-            "BackgroundTransparency": 1,
+            "BackgroundTransparency": 0,
             "BorderSizePixel": 0,
             "ZIndex": 25,
-            "Visible": false,
+            "Visible": true,
             "ClipsDescendants": false,
             "Position": {
               "UDim2": [
@@ -3962,6 +3852,7 @@
               "Children": [
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -3973,6 +3864,7 @@
                 },
                 {
                   "ClassName": "UIStroke",
+                  "Name": "UIStroke",
                   "Properties": {
                     "Color": [
                       1,
@@ -4131,9 +4023,9 @@
               ]
             },
             "BackgroundColor3": [
-              0.1450980392156863,
-              0.4549019607843137,
-              0.7764705882352941
+              0.07058823529411765,
+              0.09803921568627451,
+              0.13333333333333333
             ],
             "BorderSizePixel": 0,
             "Text": "",
@@ -4210,59 +4102,6 @@
                 },
                 "Visible": true
               }
-            },
-            {
-              "ClassName": "Frame",
-              "Name": "StatusDot",
-              "Properties": {
-                "Size": {
-                  "UDim2": [
-                    [
-                      0,
-                      8
-                    ],
-                    [
-                      0,
-                      8
-                    ]
-                  ]
-                },
-                "BackgroundColor3": [
-                  0.4,
-                  0.8784313725490196,
-                  0.6509803921568628
-                ],
-                "BackgroundTransparency": 0,
-                "BorderSizePixel": 0,
-                "ZIndex": 29,
-                "Visible": false,
-                "ClipsDescendants": false,
-                "Position": {
-                  "UDim2": [
-                    [
-                      1,
-                      -17
-                    ],
-                    [
-                      0.5,
-                      -4
-                    ]
-                  ]
-                }
-              },
-              "Children": [
-                {
-                  "ClassName": "UICorner",
-                  "Properties": {
-                    "CornerRadius": {
-                      "UDim": [
-                        0,
-                        999
-                      ]
-                    }
-                  }
-                }
-              ]
             }
           ]
         },
@@ -4324,6 +4163,7 @@
           "Children": [
             {
               "ClassName": "UICorner",
+              "Name": "UICorner",
               "Properties": {
                 "CornerRadius": {
                   "UDim": [
@@ -4335,6 +4175,7 @@
             },
             {
               "ClassName": "UIStroke",
+              "Name": "UIStroke",
               "Properties": {
                 "Color": [
                   0.023529411764705882,
@@ -4483,6 +4324,7 @@
             },
             {
               "ClassName": "UICorner",
+              "Name": "UICorner",
               "Properties": {
                 "CornerRadius": {
                   "UDim": [
@@ -4494,6 +4336,7 @@
             },
             {
               "ClassName": "UIStroke",
+              "Name": "UIStroke",
               "Properties": {
                 "Color": [
                   0.023529411764705882,
@@ -4839,6 +4682,7 @@
                     },
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -4850,6 +4694,7 @@
                     },
                     {
                       "ClassName": "UIStroke",
+                      "Name": "UIStroke",
                       "Properties": {
                         "Color": [
                           0.027450980392156862,
@@ -4865,6 +4710,7 @@
                 },
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -4930,6 +4776,7 @@
               "Children": [
                 {
                   "ClassName": "UIListLayout",
+                  "Name": "UIListLayout",
                   "Properties": {
                     "Padding": {
                       "UDim": [
@@ -4942,6 +4789,7 @@
                 },
                 {
                   "ClassName": "UIPadding",
+                  "Name": "UIPadding",
                   "Properties": {
                     "PaddingLeft": {
                       "UDim": [
@@ -4973,6 +4821,7 @@
             },
             {
               "ClassName": "UICorner",
+              "Name": "UICorner",
               "Properties": {
                 "CornerRadius": {
                   "UDim": [
@@ -4984,6 +4833,7 @@
             },
             {
               "ClassName": "UIStroke",
+              "Name": "UIStroke",
               "Properties": {
                 "Color": [
                   0.023529411764705882,
@@ -5092,6 +4942,7 @@
                     },
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -5103,6 +4954,7 @@
                     },
                     {
                       "ClassName": "UIStroke",
+                      "Name": "UIStroke",
                       "Properties": {
                         "Color": [
                           0.023529411764705882,
@@ -5186,6 +5038,7 @@
                   "Children": [
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -5197,6 +5050,7 @@
                     },
                     {
                       "ClassName": "UIStroke",
+                      "Name": "UIStroke",
                       "Properties": {
                         "Color": [
                           0.19215686274509805,
@@ -5210,6 +5064,7 @@
                     },
                     {
                       "ClassName": "UIPadding",
+                      "Name": "UIPadding",
                       "Properties": {
                         "PaddingLeft": {
                           "UDim": [
@@ -5274,6 +5129,7 @@
                   "Children": [
                     {
                       "ClassName": "UIPadding",
+                      "Name": "UIPadding",
                       "Properties": {
                         "PaddingLeft": {
                           "UDim": [
@@ -5498,6 +5354,7 @@
                     },
                     {
                       "ClassName": "UICorner",
+                      "Name": "UICorner",
                       "Properties": {
                         "CornerRadius": {
                           "UDim": [
@@ -5509,6 +5366,7 @@
                     },
                     {
                       "ClassName": "UIStroke",
+                      "Name": "UIStroke",
                       "Properties": {
                         "Color": [
                           0.023529411764705882,
@@ -5630,6 +5488,7 @@
               "Children": [
                 {
                   "ClassName": "UICorner",
+                  "Name": "UICorner",
                   "Properties": {
                     "CornerRadius": {
                       "UDim": [
@@ -5813,6 +5672,7 @@
             },
             {
               "ClassName": "UICorner",
+              "Name": "UICorner",
               "Properties": {
                 "CornerRadius": {
                   "UDim": [
@@ -5824,6 +5684,7 @@
             },
             {
               "ClassName": "UIStroke",
+              "Name": "UIStroke",
               "Properties": {
                 "Color": [
                   0.023529411764705882,
