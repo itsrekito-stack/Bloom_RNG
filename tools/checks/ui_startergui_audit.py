@@ -17,6 +17,28 @@ def walk(n,path=''):
         yield from walk(c,p)
 
 nodes=list(walk(model))
+
+def find_fractional_udim_offsets(value,path='root',bad=None):
+    if bad is None: bad=[]
+    if isinstance(value,dict):
+        if 'UDim' in value:
+            arr=value['UDim']
+            if isinstance(arr,list) and len(arr)==2 and not float(arr[1]).is_integer():
+                bad.append((path+'.UDim',arr))
+        if 'UDim2' in value:
+            arr=value['UDim2']
+            if isinstance(arr,list) and len(arr)==2:
+                for i,component in enumerate(arr):
+                    if isinstance(component,list) and len(component)==2 and not float(component[1]).is_integer():
+                        bad.append((f'{path}.UDim2[{i}]',component))
+        for key,item in value.items():
+            find_fractional_udim_offsets(item,f'{path}.{key}',bad)
+    elif isinstance(value,list):
+        for i,item in enumerate(value):
+            find_fractional_udim_offsets(item,f'{path}[{i}]',bad)
+    return bad
+
+fractional_udim_offsets=find_fractional_udim_offsets(model)
 by_name={}
 for p,n in nodes:
     by_name.setdefault(n.get('Name'),[]).append((p,n))
@@ -40,6 +62,7 @@ rollhud_path,_=one('RollHUD')
 panel=one('MainPanel')[1]
 templates=one('Templates')[1]
 
+check('Rojo-safe integer UDim offsets',not fractional_udim_offsets,str(fractional_udim_offsets[:4]))
 check('StarterGui mapped to src/StarterGui',project['tree']['StarterGui'].get('$path')=='src/StarterGui')
 check('BloomUI declarative ScreenGui',model.get('ClassName')=='ScreenGui' and model.get('Name')=='BloomUI')
 check('ScreenGui uses Sibling ZIndex',model.get('Properties',{}).get('ZIndexBehavior')=='Sibling')
