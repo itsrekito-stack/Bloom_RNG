@@ -23,13 +23,30 @@ function S:Build(player)
  self.X.GardenSynergyService:Recalculate(player)
 end
 function S:Plant(player,i,id)
- local p=self.X:Profile(player) if not p or not self.X.U.Integer(i,p.Garden.UnlockedSlots) then return false end
- local pos=self:Position(player,i) if not pos or not self.X.U.Near(player,pos,C.InteractionDistance) then return false end
- if id~="" and (type(id)~="string" or not F.Exists(id)) then return false end
- local old=p.Garden.Slots[i] if old.SpeciesId==id then return true end
- if id~="" and self.X.InventoryService:Available(p,id)<1 then return false end
- local slot={} if id~="" then slot={SpeciesId=id,Level=1,XP=0,TotalPollination=0,Mutation=""} local mutation=self.X.Temp[player].SeedMutation if mutation and mutation.Id==id then slot.Mutation=mutation.Mutation self.X.Temp[player].SeedMutation=nil end end
- p.Garden.Slots[i]=slot p.Garden.Revision=p.Garden.Revision+1 self.X.GardenActivityService:CancelGarden(player) self:Build(player) if id~="" then self.X:Emit(player,"Plant",1) end return true
+ local p=self.X:Profile(player)
+ if not p then return false,"PROFILE_LOADING" end
+ if not self.X.U.Integer(i,p.Garden.UnlockedSlots) then return false,"INVALID_SLOT" end
+ local pos=self:Position(player,i)
+ if not pos or not self.X.U.Near(player,pos,C.InteractionDistance) then return false,"TOO_FAR" end
+ if id~="" and (type(id)~="string" or not F.Exists(id)) then return false,"INVALID_ITEM" end
+ local old=p.Garden.Slots[i]
+ if old.SpeciesId==id then return true end
+ if id~="" and self.X.InventoryService:Available(p,id)<1 then return false,"NO_FREE_COPY" end
+ local slot={}
+ if id~="" then
+  slot={SpeciesId=id,Level=1,XP=0,TotalPollination=0,Mutation=""}
+  local mutation=self.X.Temp[player].SeedMutation
+  if mutation and mutation.Id==id then
+   slot.Mutation=mutation.Mutation
+   self.X.Temp[player].SeedMutation=nil
+  end
+ end
+ p.Garden.Slots[i]=slot
+ p.Garden.Revision+=1
+ self.X.GardenActivityService:CancelGarden(player)
+ self:Build(player)
+ if id~="" then self.X:Emit(player,"Plant",1) end
+ return true
 end
 function S:RefreshCapacity(player) local p=self.X:Profile(player) p.Garden.UnlockedSlots=self.X.StatsService:FlowerCapacity(p) self:Build(player) end
 function S:Remove(player) local plot=self.Plots[player] if plot then self.Used[plot.Index]=nil plot.Model:Destroy() self.Plots[player]=nil end end
