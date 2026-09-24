@@ -7818,7 +7818,7 @@
                                 ]
                               ]
                             },
-                            "ScrollBarThickness": 4,
+                            "ScrollBarThickness": 0,
                             "ScrollBarImageColor3": [
                               0.345,
                               0.694,
@@ -7827,7 +7827,9 @@
                             "ScrollingDirection": "XY",
                             "ZIndex": 55,
                             "Visible": true,
-                            "ClipsDescendants": true
+                            "ClipsDescendants": true,
+                            "ScrollingEnabled": false,
+                            "ElasticBehavior": "Never"
                           },
                           "Children": [
                             {
