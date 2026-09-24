@@ -15,7 +15,7 @@ const CONTAINERS=new Set(["ScreenGui","Frame","ScrollingFrame","TextButton","Ima
 const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 
 const state={
- root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:true,grid:true,inset:36,
+ root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:true,grid:true,showHidden:true,inset:36,
  projectHandle:null,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
  history:[],future:[],dirty:false,drag:null,collapsed:new Set()
 };
@@ -157,7 +157,12 @@ function renderGuiNode(n,parentEl,parentNode){
  el.style.transform=`translate(${-ap[0]*100}%,${-ap[1]*100}%) rotate(${rot}deg)`;
  el.style.transformOrigin=`${ap[0]*100}% ${ap[1]*100}%`;
  el.style.zIndex=finite(p.ZIndex,1);
- el.style.display=p.Visible===false?"none":"";
+ const runtimeHidden=p.Visible===false;
+ if(runtimeHidden&&!state.showHidden)el.style.display="none";
+ else{
+  el.style.display="";
+  if(runtimeHidden)el.classList.add("runtime-hidden");
+ }
  el.style.overflow=p.ClipsDescendants?"hidden":"visible";
  el.style.background=color(p.BackgroundColor3||[1,1,1],p.BackgroundTransparency??0);
  if(p.BorderSizePixel>0){el.style.border=`${p.BorderSizePixel}px solid ${color(p.BorderColor3||[0,0,0],0)}`}
@@ -219,7 +224,7 @@ els.guiRoot.addEventListener("pointerdown",ev=>{if(ev.target===els.guiRoot)selec
 function renderTree(){
  els.tree.innerHTML="";if(!state.root)return;
  const recur=(n,depth)=>{
-  const row=document.createElement("div");row.className="tree-row"+(n.__id===state.selectedId?" selected":"")+(MODIFIERS.has(n.ClassName)?" modifier":"");
+  const row=document.createElement("div");row.className="tree-row"+(n.__id===state.selectedId?" selected":"")+(MODIFIERS.has(n.ClassName)?" modifier":"")+(n.Properties?.Visible===false?" runtime-hidden":"");
   const kids=n.Children||[],collapsed=state.collapsed.has(n.__id);
   row.innerHTML=`<span class="tree-indent" style="width:${depth*13}px"></span><span class="tree-toggle">${kids.length?(collapsed?"▸":"▾"):""}</span><span class="tree-icon">${classIcon(n.ClassName)}</span><span class="tree-name"></span><span class="tree-kind"></span>`;
   row.querySelector(".tree-name").textContent=n.Name;row.querySelector(".tree-kind").textContent=n.ClassName;
@@ -473,6 +478,7 @@ $("#zoomRange").oninput=e=>{state.zoom=+e.target.value/100;$("#zoomLabel").textC
 $("#snapSelect").onchange=e=>state.snap=+e.target.value;
 $("#labelsToggle").onchange=e=>{state.labels=e.target.checked;renderViewport();updateOverlay()};
 $("#gridToggle").onchange=e=>{state.grid=e.target.checked;els.stageScroller.classList.toggle("no-grid",!state.grid)};
+$("#hiddenToggle").onchange=e=>{state.showHidden=e.target.checked;renderViewport();renderTree();updateOverlay();toast(state.showHidden?"Скрытые Roblox-объекты показаны только в редакторе":"Скрытые Roblox-объекты спрятаны")};
 $("#insetInput").onchange=e=>{state.inset=Math.max(0,+e.target.value);renderAll()};
 $("#bgBtn").onclick=()=>$("#bgInput").click();
 $("#bgClearBtn").onclick=()=>{els.device.style.backgroundImage="";els.device.style.backgroundColor="#182332";toast("Фон убран")};
