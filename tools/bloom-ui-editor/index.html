@@ -81,6 +81,7 @@
         </label>
         <label class="check"><input id="labelsToggle" type="checkbox" checked> Names</label>
         <label class="check"><input id="gridToggle" type="checkbox" checked> Grid</label>
+        <label class="check geometry-toggle" title="Линейки, размеры, smart guides и snapping"><input id="geometryToggle" type="checkbox" checked> Geometry</label>
         <label class="check show-hidden"><input id="hiddenToggle" type="checkbox" checked> Hidden</label>
         <span class="divider"></span>
         <select id="modeSelect" class="mode-select" title="Режим визуализации">
@@ -103,6 +104,7 @@
           <div id="device" class="device">
             <div class="roblox-topbar"><span>Roblox safe inset preview</span></div>
             <div id="guiRoot" class="gui-root"></div>
+            <div id="geometryLayer" class="geometry-layer"></div>
             <div id="emptyCanvas" class="empty-canvas hidden">
               <strong>Пустой HUD</strong>
               <span>Создай первый Roblox GUI-объект</span>
