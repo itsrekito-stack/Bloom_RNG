@@ -141,7 +141,7 @@ MODEL_PATH = Path("src/StarterGui/BloomUI.model.json")
 
 def read_json_file(path: Path):
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return json.loads(path.read_text(encoding="utf-8-sig"))
     except Exception:
         return None
 
