@@ -1,6 +1,7 @@
 local RS=game:GetService("ReplicatedStorage")
 local Players=game:GetService("Players")
 local UIS=game:GetService("UserInputService")
+local GuiService=game:GetService("GuiService")
 local TweenService=game:GetService("TweenService")
 local Workspace=game:GetService("Workspace")
 local StarterGui=game:GetService("StarterGui")
@@ -19,7 +20,7 @@ local RollAudio=require(RS.Config.RollAudioConfig)
 local NumberFormatter=require(RS.Shared.NumberFormatter)
 
 local C=Theme.Colors
-local CLIENT_BUILD="ui-polish-v4-2026-09-24"
+local CLIENT_BUILD="ui-polish-v5-workshop-pan-2026-09-25"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0}
 
 local MENU_NAMES={
@@ -198,7 +199,109 @@ function UI:Toast(text)
  end
 end
 
+function UI:DisconnectWorkshopPan()
+ if self.WorkshopPanConnections then
+  for _,connection in ipairs(self.WorkshopPanConnections) do
+   connection:Disconnect()
+  end
+ end
+ self.WorkshopPanConnections=nil
+ self.WorkshopPanDragging=false
+end
+
+function UI:ClampWorkshopCanvasPosition(canvas,position)
+ if not canvas or not canvas:IsA("ScrollingFrame") then return Vector2.zero end
+ local maxX=math.max(0,canvas.AbsoluteCanvasSize.X-canvas.AbsoluteSize.X)
+ local maxY=math.max(0,canvas.AbsoluteCanvasSize.Y-canvas.AbsoluteSize.Y)
+ return Vector2.new(math.clamp(position.X,0,maxX),math.clamp(position.Y,0,maxY))
+end
+
+function UI:BindWorkshopPan(canvas,nodes)
+ self:DisconnectWorkshopPan()
+ if not canvas:IsA("ScrollingFrame") then return end
+
+ canvas.Active=true
+ local connections={}
+ self.WorkshopPanConnections=connections
+
+ local dragging=false
+ local moved=false
+ local startPointer=Vector2.zero
+ local startCanvas=Vector2.zero
+ local dragThreshold=4
+
+ local function pointerPosition(input)
+  return Vector2.new(input.Position.X,input.Position.Y)
+ end
+
+ local function insideCanvas(position)
+  local topLeft=canvas.AbsolutePosition
+  local size=canvas.AbsoluteSize
+  return position.X>=topLeft.X and position.X<=topLeft.X+size.X and position.Y>=topLeft.Y and position.Y<=topLeft.Y+size.Y
+ end
+
+ local function overNodeButton(position)
+  for _,gui in ipairs(GuiService:GetGuiObjectsAtPosition(position.X,position.Y)) do
+   local current=gui
+   while current and current~=canvas do
+    if current:IsA("GuiButton") and current:IsDescendantOf(nodes) then
+     return true
+    end
+    current=current.Parent
+   end
+  end
+  return false
+ end
+
+ local function finishDrag()
+  if not dragging then return end
+  dragging=false
+  moved=false
+  self.WorkshopPanDragging=false
+  if canvas.Parent then
+   local position=self:ClampWorkshopCanvasPosition(canvas,canvas.CanvasPosition)
+   canvas.CanvasPosition=position
+   self.WorkshopCanvasPosition=position
+  end
+ end
+
+ table.insert(connections,UIS.InputBegan:Connect(function(input,processed)
+  if processed or self.Menu~="Workshop" or not canvas.Parent or not canvas.Visible then return end
+  if input.UserInputType~=Enum.UserInputType.MouseButton1 then return end
+  local position=pointerPosition(input)
+  if not insideCanvas(position) or overNodeButton(position) then return end
+  dragging=true
+  moved=false
+  self.WorkshopPanDragging=true
+  startPointer=position
+  startCanvas=canvas.CanvasPosition
+ end))
+
+ table.insert(connections,UIS.InputChanged:Connect(function(input)
+  if not dragging or input.UserInputType~=Enum.UserInputType.MouseMovement or not canvas.Parent then return end
+  local delta=pointerPosition(input)-startPointer
+  if not moved and delta.Magnitude<dragThreshold then return end
+  moved=true
+  local position=self:ClampWorkshopCanvasPosition(canvas,startCanvas-delta)
+  canvas.CanvasPosition=position
+  self.WorkshopCanvasPosition=position
+ end))
+
+ table.insert(connections,UIS.InputEnded:Connect(function(input)
+  if input.UserInputType==Enum.UserInputType.MouseButton1 then finishDrag() end
+ end))
+
+ table.insert(connections,UIS.WindowFocusReleased:Connect(finishDrag))
+
+ table.insert(connections,canvas:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+  if not dragging and canvas.Parent then
+   self.WorkshopCanvasPosition=self:ClampWorkshopCanvasPosition(canvas,canvas.CanvasPosition)
+  end
+ end))
+end
+
 function UI:ClearPanel()
+ self:DisconnectWorkshopPan()
  for _,x in ipairs(self.Content:GetChildren()) do
   if not x:IsA("UIListLayout") and not x:IsA("UIPadding") then x:Destroy() end
  end
@@ -214,6 +317,7 @@ function UI:SetPanelVisible(visible)
 end
 
 function UI:Close()
+ self:DisconnectWorkshopPan()
  self.ReplayIndex=nil
  if self.Menu=="Season" then self:Send("SeasonCancel") end
  self.Menu=nil
@@ -473,7 +577,17 @@ function UI:RenderMenu()
     end)
    end
    details.RespecButton.Activated:Connect(function() self:Send("Respec") end)
-   canvas.CanvasPosition=Vector2.new(570,405)
+
+   local initialCanvasPosition=self.WorkshopCanvasPosition or Vector2.new(570,405)
+   canvas.CanvasPosition=initialCanvasPosition
+   self:BindWorkshopPan(canvas,nodes)
+   task.defer(function()
+    if canvas.Parent then
+     local position=self:ClampWorkshopCanvasPosition(canvas,canvas.CanvasPosition)
+     canvas.CanvasPosition=position
+     self.WorkshopCanvasPosition=position
+    end
+   end)
   end
 
  elseif name=="FieldGuide" then
