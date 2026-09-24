@@ -95,13 +95,35 @@
         </select>
         <select id="sceneSelect" class="scene-select" title="Runtime preview scene" disabled>
           <option value="gameplay">Gameplay</option>
-          <option value="seedbag">Seed Bag</option>
+          <option value="seedbag">Inventory</option>
+          <option value="workshop">Workshop</option>
+          <option value="fieldguide">Field Guide</option>
+          <option value="map">Map</option>
+          <option value="trials">Trials</option>
+          <option value="settings">Settings</option>
           <option value="reward">Reward</option>
           <option value="toast">Toast</option>
         </select>
         <label>Inset <input id="insetInput" type="number" value="36" min="0" max="120"></label>
         <button id="bgBtn" class="btn">Фон Roblox</button>
         <button id="bgClearBtn" class="tiny" title="Убрать фон">×</button>
+      </div>
+
+      <div id="uiStateBar" class="ui-statebar">
+        <span class="ui-state-label">UI STATE</span>
+        <button class="ui-state-btn" data-ui-state="design">DESIGN</button>
+        <button class="ui-state-btn" data-ui-state="gameplay">HUD</button>
+        <span class="ui-state-sep"></span>
+        <button class="ui-state-btn" data-ui-state="seedbag">INVENTORY</button>
+        <button class="ui-state-btn" data-ui-state="workshop">WORKSHOP</button>
+        <button class="ui-state-btn" data-ui-state="fieldguide">GUIDE</button>
+        <button class="ui-state-btn" data-ui-state="map">MAP</button>
+        <button class="ui-state-btn" data-ui-state="trials">TRIALS</button>
+        <button class="ui-state-btn" data-ui-state="settings">SETTINGS</button>
+        <span class="ui-state-sep"></span>
+        <button class="ui-state-btn" data-ui-state="reward">REWARD</button>
+        <button class="ui-state-btn" data-ui-state="toast">TOAST</button>
+        <span class="ui-state-note">PREVIEW ONLY · Visible в JSON не меняется</span>
       </div>
 
       <div id="stageScroller" class="stage-scroller">
