@@ -543,9 +543,9 @@ function renderGuiNode(n,parentEl,parentNode){
   const sp=stroke.Properties||{},th=Math.max(0,finite(sp.Thickness,1)),sc=color(sp.Color||[0,0,0],sp.Transparency??0);
   el.style.boxShadow=sp.ApplyStrokeMode==="Contextual"?`0 0 0 ${th}px ${sc}`:`inset 0 0 0 ${th}px ${sc},0 0 0 ${Math.max(0,th-1)}px ${sc}`;
  }
- const padding=getPadding(n);if(padding)el.style.padding=`${padding.t}px ${padding.r}px ${padding.b}px ${padding.l}px`;
+ const padding=getPadding(n);
  if(TEXT_CLASSES.has(n.ClassName)){
-  const t=document.createElement("span");t.className="gui-text";const runtimeText=previewText(n,parentNode);t.textContent=runtimeText??p.Text??"";
+  const t=document.createElement("span");t.className="gui-text";const runtimeText=previewText(n,parentNode);t.textContent=runtimeText??p.Text??"";if(padding)t.style.inset=`${padding.t}px ${padding.r}px ${padding.b}px ${padding.l}px`;
   t.style.color=color(p.TextColor3||[1,1,1],p.TextTransparency??0);t.style.fontSize=finite(p.TextSize,14)+"px";
   t.style.fontWeight=/Bold|Black/i.test(p.Font||"")?"700":"400";
   t.style.fontFamily=/Code/i.test(p.Font||"")?"Consolas,monospace":"Gotham,Montserrat,Segoe UI,Arial,sans-serif";
@@ -573,21 +573,29 @@ function renderGuiNode(n,parentEl,parentNode){
  parentEl.appendChild(el);
 
  const list=modifier(n,"UIListLayout"),grid=modifier(n,"UIGridLayout");
+ let childHost=el;
+ if(list||grid){
+  childHost=document.createElement("div");
+  childHost.className="layout-host "+(list?"list-layout":"grid-layout");
+  if(padding){
+   childHost.style.left=padding.l+"px";childHost.style.right=padding.r+"px";
+   childHost.style.top=padding.t+"px";childHost.style.bottom=padding.b+"px";
+  }
+  el.appendChild(childHost);
+ }
  if(list){
-  el.classList.add("list-layout");
-  el.style.flexDirection=prop(list,"FillDirection","Vertical")==="Horizontal"?"row":"column";
-  const gap=udv(list,"Padding",[0,0]);el.style.gap=roundOffset(gap[1])+"px";
-  el.style.alignItems=({Left:"flex-start",Center:"center",Right:"flex-end"})[prop(list,"HorizontalAlignment","Left")]||"stretch";
+  childHost.style.flexDirection=prop(list,"FillDirection","Vertical")==="Horizontal"?"row":"column";
+  const gap=udv(list,"Padding",[0,0]);childHost.style.gap=roundOffset(gap[1])+"px";
+  childHost.style.alignItems=({Left:"flex-start",Center:"center",Right:"flex-end"})[prop(list,"HorizontalAlignment","Left")]||"stretch";
  }
  if(grid){
-  el.classList.add("grid-layout");
   const cs=u2v(grid,"CellSize",u2(0,64,0,64)),cp=u2v(grid,"CellPadding",u2(0,6,0,6));
-  el.style.gridTemplateColumns=`repeat(auto-fill,${Math.max(1,roundOffset(cs[0][1]))}px)`;
-  el.style.gridAutoRows=Math.max(1,roundOffset(cs[1][1]))+"px";
-  el.style.columnGap=roundOffset(cp[0][1])+"px";el.style.rowGap=roundOffset(cp[1][1])+"px";
+  childHost.style.gridTemplateColumns=`repeat(auto-fill,${Math.max(1,roundOffset(cs[0][1]))}px)`;
+  childHost.style.gridAutoRows=Math.max(1,roundOffset(cs[1][1]))+"px";
+  childHost.style.columnGap=roundOffset(cp[0][1])+"px";childHost.style.rowGap=roundOffset(cp[1][1])+"px";
  }
  for(const c of layoutChildNodes(n)){
-  const child=renderGuiNode(c,el,n);
+  const child=renderGuiNode(c,childHost,n);
   if((list||grid)&&child)child.classList.add("layout-child");
  }
  injectRuntimePreview(n,el,parentNode);
