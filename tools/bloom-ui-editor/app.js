@@ -17,7 +17,7 @@ const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 const state={
  root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,inset:36,mode:"design",previewScene:"gameplay",
  projectHandle:null,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
- history:[],future:[],dirty:false,drag:null,collapsed:new Set()
+ history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null
 };
 
 let idCounter=1;
@@ -30,6 +30,39 @@ const c3=(r=1,g=1,b=1)=>[r,g,b];
 const ud=(s=0,o=0)=>({UDim:[s,o]});
 const u2=(xs=0,xo=0,ys=0,yo=0)=>({UDim2:[[xs,xo],[ys,yo]]});
 const v2=(x=0,y=0)=>({Vector2:[x,y]});
+
+const PREFS_KEY="BloomUIStudioPrefsV1";
+function loadPrefs(){
+ try{
+  const p=JSON.parse(localStorage.getItem(PREFS_KEY)||"{}");
+  if(p.viewport&&Number.isFinite(p.viewport.w)&&Number.isFinite(p.viewport.h))state.viewport={w:p.viewport.w,h:p.viewport.h};
+  if(Number.isFinite(p.zoom))state.zoom=clamp(p.zoom,.25,1.5);
+  if(Number.isFinite(p.snap))state.snap=p.snap;
+  if(typeof p.labels==="boolean")state.labels=p.labels;
+  if(typeof p.grid==="boolean")state.grid=p.grid;
+  if(typeof p.showHidden==="boolean")state.showHidden=p.showHidden;
+  if(Number.isFinite(p.inset))state.inset=p.inset;
+  if(["design","preview"].includes(p.mode))state.mode=p.mode;
+  if(["gameplay","seedbag","reward","toast"].includes(p.previewScene))state.previewScene=p.previewScene;
+ }catch{}
+}
+function savePrefs(){
+ localStorage.setItem(PREFS_KEY,JSON.stringify({
+  viewport:state.viewport,zoom:state.zoom,snap:state.snap,labels:state.labels,grid:state.grid,
+  showHidden:state.showHidden,inset:state.inset,mode:state.mode,previewScene:state.previewScene
+ }));
+}
+function syncToolbarFromState(){
+ $("#viewportW").value=state.viewport.w;$("#viewportH").value=state.viewport.h;
+ $("#zoomRange").value=Math.round(state.zoom*100);$("#zoomLabel").textContent=Math.round(state.zoom*100)+"%";
+ $("#snapSelect").value=String(state.snap);
+ $("#labelsToggle").checked=state.labels;$("#gridToggle").checked=state.grid;$("#hiddenToggle").checked=state.showHidden;
+ $("#insetInput").value=state.inset;$("#modeSelect").value=state.mode;$("#sceneSelect").value=state.previewScene;
+ $("#sceneSelect").disabled=!isPreview();$("#modeSelect").classList.toggle("preview-active",isPreview());
+ els.stageScroller.classList.toggle("no-grid",!state.grid);
+ const preset=`${state.viewport.w}x${state.viewport.h}`;if([...$("#presetSelect").options].some(o=>o.value===preset))$("#presetSelect").value=preset;else $("#presetSelect").value="";
+}
+
 
 function normalizeNode(node){
  const n={
@@ -251,6 +284,46 @@ function injectRuntimePreview(n,el,parentNode){
  }
 }
 
+
+function setZoom(value,save=true){
+ state.zoom=clamp(value,.25,1.5);
+ $("#zoomRange").value=Math.round(state.zoom*100);
+ $("#zoomLabel").textContent=Math.round(state.zoom*100)+"%";
+ renderAll();if(save)savePrefs();
+}
+function fitViewport(){
+ const pad=128,w=Math.max(100,els.stageScroller.clientWidth-pad),h=Math.max(100,els.stageScroller.clientHeight-pad);
+ setZoom(Math.min(w/state.viewport.w,h/state.viewport.h,1.5));
+ els.stageScroller.scrollLeft=0;els.stageScroller.scrollTop=0;
+ toast("Viewport вписан в рабочую область");
+}
+function focusSelected(){
+ const n=selected();if(!n)return;
+ const el=els.guiRoot.querySelector(`[data-id="${n.__id}"]`);
+ if(!el){toast("Выбранный объект сейчас не отображается",true);return}
+ el.scrollIntoView({behavior:"smooth",block:"center",inline:"center"});
+}
+function copySelectedObject(){
+ const n=selected();if(!n||n===state.root)return;
+ state.clipboard=stripNode(n);toast(n.Name+" скопирован");
+}
+function pasteObject(){
+ if(!state.clipboard)return toast("Буфер объектов пуст",true);
+ let parent=selected();
+ if(!parent||!CONTAINERS.has(parent.ClassName))parent=findParent(state.selectedId)||state.root;
+ if(parent===state.root){const safe=(state.root.Children||[]).find(x=>x.Name==="SafeRoot");if(safe)parent=safe}
+ pushHistory();
+ const copy=normalizeNode(deepClone(state.clipboard));copy.Name=uniqueName(copy.Name||copy.ClassName);
+ const pos=u2v(copy,"Position");pos[0][1]+=12;pos[1][1]+=12;copy.Properties.Position={UDim2:pos};
+ parent.Children=parent.Children||[];parent.Children.push(copy);state.selectedId=copy.__id;changed();toast(copy.Name+" вставлен");
+}
+function renameSelected(){
+ const n=selected();if(!n)return;
+ const value=prompt("Имя Roblox Instance:",n.Name);if(value==null)return;
+ const name=value.trim();if(!name||name===n.Name)return;
+ pushHistory();n.Name=name;changed();
+}
+
 function hasDrawableGui(){
  let count=0;
  walk(state.root,n=>{
@@ -369,16 +442,30 @@ els.guiRoot.addEventListener("pointerdown",ev=>{if(ev.target===els.guiRoot)selec
 
 function renderTree(){
  els.tree.innerHTML="";if(!state.root)return;
+ const q=state.treeQuery.trim().toLowerCase();
+ const matched=new Set(),ancestors=new Set();
+ if(q){
+  const scan=(n,path=[])=>{
+   const next=[...path,n];
+   if((n.Name+" "+n.ClassName).toLowerCase().includes(q)){matched.add(n.__id);for(const a of path)ancestors.add(a.__id)}
+   for(const c of n.Children||[])scan(c,next);
+  };scan(state.root);
+ }
+ let shown=0;
  const recur=(n,depth)=>{
-  const row=document.createElement("div");row.className="tree-row"+(n.__id===state.selectedId?" selected":"")+(MODIFIERS.has(n.ClassName)?" modifier":"")+(n.Properties?.Visible===false?" runtime-hidden":"");
-  const kids=n.Children||[],collapsed=state.collapsed.has(n.__id);
+  if(q&&!matched.has(n.__id)&&!ancestors.has(n.__id))return;
+  shown++;
+  const row=document.createElement("div");row.className="tree-row"+(n.__id===state.selectedId?" selected":"")+(MODIFIERS.has(n.ClassName)?" modifier":"")+(n.Properties?.Visible===false?" runtime-hidden":"")+(matched.has(n.__id)?" search-match":"");
+  const kids=n.Children||[],collapsed=state.collapsed.has(n.__id)&&!q;
   row.innerHTML=`<span class="tree-indent" style="width:${depth*13}px"></span><span class="tree-toggle">${kids.length?(collapsed?"▸":"▾"):""}</span><span class="tree-icon">${classIcon(n.ClassName)}</span><span class="tree-name"></span><span class="tree-kind"></span>`;
   row.querySelector(".tree-name").textContent=n.Name;row.querySelector(".tree-kind").textContent=n.ClassName;
   row.querySelector(".tree-toggle").onclick=e=>{e.stopPropagation();collapsed?state.collapsed.delete(n.__id):state.collapsed.add(n.__id);renderTree()};
+  row.ondblclick=()=>{select(n.__id);renameSelected()};
   row.onclick=()=>select(n.__id);els.tree.appendChild(row);
   if(!collapsed)for(const c of kids)recur(c,depth+1);
  };
  recur(state.root,0);
+ $("#treeSearchMeta").textContent=q?(matched.size?matched.size+" совпад.":"Ничего не найдено"):"";
 }
 function classIcon(k){return ({ScreenGui:"▱",Frame:"▣",TextLabel:"T",TextButton:"▤",ImageLabel:"◈",ImageButton:"◇",ScrollingFrame:"↕",UICorner:"◜",UIStroke:"□",UIListLayout:"☷",UIGridLayout:"▦",UIPadding:"↔"})[k]||"·"}
 
@@ -623,22 +710,22 @@ $("#deleteBtn").onclick=deleteSelected;$("#duplicateBtn").onclick=duplicateSelec
 $("#connectBtn").onclick=connectProject;$("#pullBtn").onclick=pullProject;$("#pushBtn").onclick=pushProject;
 $("#exportBtn").onclick=download;$("#copyBtn").onclick=copyModel;$("#importBtn").onclick=()=>els.fileInput.click();
 els.fileInput.onchange=()=>els.fileInput.files[0]&&importFile(els.fileInput.files[0]);
-$("#presetSelect").onchange=e=>{const [w,h]=e.target.value.split("x").map(Number);state.viewport={w,h};$("#viewportW").value=w;$("#viewportH").value=h;renderAll()};
-$("#viewportW").onchange=e=>{state.viewport.w=Math.max(100,+e.target.value);renderAll()};$("#viewportH").onchange=e=>{state.viewport.h=Math.max(100,+e.target.value);renderAll()};
-$("#zoomRange").oninput=e=>{state.zoom=+e.target.value/100;$("#zoomLabel").textContent=e.target.value+"%";renderAll()};
-$("#snapSelect").onchange=e=>state.snap=+e.target.value;
-$("#labelsToggle").onchange=e=>{state.labels=e.target.checked;renderViewport();updateOverlay()};
-$("#gridToggle").onchange=e=>{state.grid=e.target.checked;els.stageScroller.classList.toggle("no-grid",!state.grid)};
-$("#hiddenToggle").onchange=e=>{state.showHidden=e.target.checked;renderViewport();renderTree();updateOverlay();toast(state.showHidden?"Скрытые Roblox-объекты показаны только в редакторе":"Скрытые Roblox-объекты спрятаны")};
+$("#presetSelect").onchange=e=>{const [w,h]=e.target.value.split("x").map(Number);state.viewport={w,h};$("#viewportW").value=w;$("#viewportH").value=h;renderAll();savePrefs();fitViewport()};
+$("#viewportW").onchange=e=>{state.viewport.w=Math.max(100,+e.target.value);renderAll();savePrefs()};$("#viewportH").onchange=e=>{state.viewport.h=Math.max(100,+e.target.value);renderAll();savePrefs()};
+$("#zoomRange").oninput=e=>setZoom(+e.target.value/100);
+$("#snapSelect").onchange=e=>{state.snap=+e.target.value;savePrefs()};
+$("#labelsToggle").onchange=e=>{state.labels=e.target.checked;renderViewport();updateOverlay();savePrefs()};
+$("#gridToggle").onchange=e=>{state.grid=e.target.checked;els.stageScroller.classList.toggle("no-grid",!state.grid);savePrefs()};
+$("#hiddenToggle").onchange=e=>{state.showHidden=e.target.checked;renderViewport();renderTree();updateOverlay();toast(state.showHidden?"Скрытые Roblox-объекты показаны только в редакторе":"Скрытые Roblox-объекты спрятаны");savePrefs()};
 $("#modeSelect").onchange=e=>{
  state.mode=e.target.value;
  $("#sceneSelect").disabled=!isPreview();
  $("#modeSelect").classList.toggle("preview-active",isPreview());
  renderAll();
- toast(isPreview()?"Runtime Preview включён — mock-данные не сохраняются":"Design mode — отображается файл как есть");
+ toast(isPreview()?"Runtime Preview включён — mock-данные не сохраняются":"Design mode — отображается файл как есть");savePrefs();
 };
-$("#sceneSelect").onchange=e=>{state.previewScene=e.target.value;renderAll();};
-$("#insetInput").onchange=e=>{state.inset=Math.max(0,+e.target.value);renderAll()};
+$("#sceneSelect").onchange=e=>{state.previewScene=e.target.value;renderAll();savePrefs();};
+$("#insetInput").onchange=e=>{state.inset=Math.max(0,+e.target.value);renderAll();savePrefs()};
 $("#bgBtn").onclick=()=>$("#bgInput").click();
 $("#bgClearBtn").onclick=()=>{els.device.style.backgroundImage="";els.device.style.backgroundColor="#182332";toast("Фон убран")};
 $("#bgInput").onchange=()=>{
@@ -656,6 +743,27 @@ $("#bgInput").onchange=()=>{
  };
  img.src=url;
 };
+
+$("#undoBtn").onclick=undo;$("#redoBtn").onclick=redo;
+$("#fitBtn").onclick=fitViewport;$("#zoom100Btn").onclick=()=>setZoom(1);$("#focusBtn").onclick=focusSelected;
+$("#treeSearch").addEventListener("input",e=>{state.treeQuery=e.target.value;renderTree()});
+els.stageScroller.addEventListener("wheel",e=>{
+ if(!e.ctrlKey)return;e.preventDefault();
+ setZoom(state.zoom*(e.deltaY<0?1.1:.9));
+},{passive:false});
+els.stageScroller.addEventListener("pointerdown",e=>{
+ if(e.button!==1)return;e.preventDefault();
+ state.pan={x:e.clientX,y:e.clientY,left:els.stageScroller.scrollLeft,top:els.stageScroller.scrollTop};
+ els.stageScroller.classList.add("panning");
+});
+window.addEventListener("pointermove",e=>{
+ if(!state.pan)return;
+ els.stageScroller.scrollLeft=state.pan.left-(e.clientX-state.pan.x);
+ els.stageScroller.scrollTop=state.pan.top-(e.clientY-state.pan.y);
+});
+window.addEventListener("pointerup",()=>{if(state.pan){state.pan=null;els.stageScroller.classList.remove("panning")}});
+window.addEventListener("beforeunload",e=>{if(state.dirty){e.preventDefault();e.returnValue=""}});
+
 $("#dialogClose").onclick=()=>els.jsonDialog.close();$("#dialogCopy").onclick=()=>navigator.clipboard.writeText(els.jsonArea.value);
 $("#dialogApply").onclick=()=>{try{setRoot(JSON.parse(els.jsonArea.value),"JSON применён");els.jsonDialog.close()}catch(e){toast(e.message,true)}};
 $("#addMenuBtn").onclick=()=>$("#palette").scrollIntoView({behavior:"smooth"});
@@ -665,6 +773,12 @@ window.addEventListener("keydown",e=>{
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();e.shiftKey?redo():undo();return}
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="y"){e.preventDefault();redo();return}
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="d"){e.preventDefault();duplicateSelected();return}
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="c"){e.preventDefault();copySelectedObject();return}
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="v"){e.preventDefault();pasteObject();return}
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="f"){e.preventDefault();$("#treeSearch").focus();$("#treeSearch").select();return}
+ if(e.key==="F2"){e.preventDefault();renameSelected();return}
+ if(e.key.toLowerCase()==="f"){e.preventDefault();focusSelected();return}
+ if(e.key==="0"){e.preventDefault();fitViewport();return}
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){e.preventDefault();state.projectHandle?pushProject():download();return}
  if(e.key==="Delete"){deleteSelected();return}
  const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName))return;
@@ -676,10 +790,7 @@ window.addEventListener("keydown",e=>{
  e.preventDefault();n.Properties.Position={UDim2:p};changed()
 });
 
-$("#labelsToggle").checked=state.labels;
-$("#hiddenToggle").checked=state.showHidden;
-$("#modeSelect").value=state.mode;
-$("#sceneSelect").value=state.previewScene;
-$("#sceneSelect").disabled=!isPreview();
-loadInitial();
+loadPrefs();
+syncToolbarFromState();
+loadInitial().then(()=>{requestAnimationFrame(()=>fitViewport())});
 })();
