@@ -251,6 +251,10 @@ function UI:RenderMenu()
  end
  self.Content.CanvasPosition=Vector2.new()
 
+ if not self.IsMobileLayout then
+  self.Panel.Size=name=="SeedSatchel" and UDim2.fromOffset(680,440) or UDim2.fromOffset(600,420)
+ end
+
  if name=="Plant" then
   local slot=self.MenuArg
   self:Section(self.Content,"Клумба "..slot)
@@ -282,8 +286,6 @@ function UI:RenderMenu()
   self:Button(self.Content,"Выкопать цветок • семя сохранится",function() self:Send("Plant",slot,"") self:Close() end,Icons.Get("System","Minus"))
 
  elseif name=="SeedSatchel" then
-  self:Section(self.Content,"Семена и цветы")
-  self:Label(self.Content,"Слева все семена квадратами, справа выбранный цветок и быстрые действия. Посадка выполняется через клумбу.",36)
   local items={}
   for id,count in pairs(p.FlowerCollection.OwnedSeedCopies) do
    local f=F.Species[id]
@@ -299,53 +301,90 @@ function UI:RenderMenu()
    if ar==br then return a.Flower.DisplayName<b.Flower.DisplayName end
    return ar<br
   end)
+
+  local summary=make("Frame",self.Content,{Name="InventorySummary",Size=UDim2.new(1,0,0,34),BackgroundColor3=C.PanelSoft,BackgroundTransparency=.10,BorderSizePixel=0,ZIndex=self.Content.ZIndex+1})
+  corner(summary,Theme.Radius.Pill)
+  outline(summary,C.Border,.9,.36)
+  local summaryTitle=self:Text(summary,"FLOWER COLLECTION",UDim2.new(0,180,1,0),{Position=UDim2.fromOffset(12,0),TextSize=10,TextColor3=C.Blue,Font=Enum.Font.GothamBold,ZIndex=summary.ZIndex+1})
+  local summaryCount=self:Text(summary,tostring(#items).." TYPES",UDim2.new(0,88,0,22),{Position=UDim2.new(1,-98,.5,-11),TextSize=9,TextColor3=C.Gold,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Center,ZIndex=summary.ZIndex+1})
+  summaryCount.BackgroundColor3=C.BlueSoft summaryCount.BackgroundTransparency=.18
+  corner(summaryCount,Theme.Radius.Pill)
+  outline(summaryCount,C.BorderSoft,1,.42)
+
   if #items==0 then
-   self:Label(self.Content,"Нет семян. Сделай roll и получи семя, после чего инвентарь заполнится автоматически.",38)
+   local empty=make("Frame",self.Content,{Size=UDim2.new(1,0,0,250),BackgroundColor3=C.Panel,BackgroundTransparency=.04,BorderSizePixel=0,ZIndex=self.Content.ZIndex+1})
+   corner(empty,Theme.Radius.Large)
+   outline(empty,C.BorderSoft,1,.32)
+   local emptyIcon=make("ImageLabel",empty,{Size=UDim2.fromOffset(64,64),Position=UDim2.new(.5,-32,0,54),BackgroundTransparency=1,Image=Icons.Get("System","Flower"),ScaleType=Enum.ScaleType.Fit,ZIndex=empty.ZIndex+1})
+   self:Text(empty,"INVENTORY EMPTY",UDim2.new(1,-24,0,28),{Position=UDim2.fromOffset(12,126),TextSize=15,TextColor3=C.Text,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Center,ZIndex=empty.ZIndex+1})
+   self:Text(empty,"Сделай roll — первый найденный цветок появится здесь.",UDim2.new(1,-40,0,38),{Position=UDim2.fromOffset(20,158),TextSize=10,TextColor3=C.Muted,TextWrapped=true,TextXAlignment=Enum.TextXAlignment.Center,ZIndex=empty.ZIndex+1})
   else
    local selected=self.SelectedSatchelItem
    local active=items[1]
    for _,entry in ipairs(items) do if entry.Id==selected then active=entry break end end
    self.SelectedSatchelItem=active.Id
+   local rarityColor=R.Colors[active.Flower.Rarity] or C.Gold
 
-   local split=make("Frame",self.Content,{Size=UDim2.new(1,0,0,286),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=self.Content.ZIndex+1})
-   local left=make("ScrollingFrame",split,{Name="InventoryGrid",Size=UDim2.new(0,228,1,0),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundColor3=C.Panel,BackgroundTransparency=.12,BorderSizePixel=0,ScrollBarThickness=6,ScrollBarImageColor3=C.Blue,ZIndex=split.ZIndex+1})
-   corner(left,Theme.Radius.Large)
-   outline(left,C.BorderSoft,1,.4)
-   pad(left,12,12,12,12)
-   local grid=make("UIGridLayout",left,{CellSize=UDim2.fromOffset(64,64),CellPadding=UDim2.fromOffset(7,7),SortOrder=Enum.SortOrder.LayoutOrder})
+   local split=make("Frame",self.Content,{Name="InventoryBody",Size=UDim2.new(1,0,0,304),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=self.Content.ZIndex+1})
 
-   local right=make("Frame",split,{Name="SelectedDetails",Size=UDim2.new(1,-240,1,0),Position=UDim2.fromOffset(240,0),BackgroundColor3=C.Panel,BackgroundTransparency=.08,BorderSizePixel=0,ZIndex=split.ZIndex+1})
+   local leftPanel=make("Frame",split,{Name="CollectionPanel",Size=UDim2.new(0,252,1,0),BackgroundColor3=C.Panel,BackgroundTransparency=.04,BorderSizePixel=0,ZIndex=split.ZIndex+1})
+   corner(leftPanel,Theme.Radius.Large)
+   outline(leftPanel,C.BorderSoft,1,.30)
+
+   local leftHeader=make("Frame",leftPanel,{Name="CollectionHeader",Size=UDim2.new(1,-16,0,30),Position=UDim2.fromOffset(8,7),BackgroundColor3=C.PanelSoft,BackgroundTransparency=.16,BorderSizePixel=0,ZIndex=leftPanel.ZIndex+1})
+   corner(leftHeader,Theme.Radius.Pill)
+   self:Text(leftHeader,"SEEDS",UDim2.new(0,80,1,0),{Position=UDim2.fromOffset(10,0),TextSize=9,TextColor3=C.Blue,Font=Enum.Font.GothamBold,ZIndex=leftHeader.ZIndex+1})
+   self:Text(leftHeader,tostring(#items),UDim2.new(0,36,1,0),{Position=UDim2.new(1,-44,0,0),TextSize=9,TextColor3=C.Muted,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Right,ZIndex=leftHeader.ZIndex+1})
+
+   local left=make("ScrollingFrame",leftPanel,{Name="InventoryGrid",Size=UDim2.new(1,-12,1,-48),Position=UDim2.fromOffset(6,42),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=4,ScrollBarImageColor3=C.Blue,ZIndex=leftPanel.ZIndex+1})
+   pad(left,7,7,7,7)
+   local grid=make("UIGridLayout",left,{CellSize=UDim2.fromOffset(70,70),CellPadding=UDim2.fromOffset(7,7),SortOrder=Enum.SortOrder.LayoutOrder})
+
+   local right=make("Frame",split,{Name="SelectedDetails",Size=UDim2.new(1,-264,1,0),Position=UDim2.fromOffset(264,0),BackgroundColor3=C.Panel,BackgroundTransparency=.04,BorderSizePixel=0,ZIndex=split.ZIndex+1})
    corner(right,Theme.Radius.Large)
-   outline(right,C.BorderDark,Theme.Stroke.Panel,.08)
-   local info=make("Frame",right,{Name="Info",Size=UDim2.new(1,-16,0,98),Position=UDim2.fromOffset(8,8),BackgroundColor3=C.PanelSoft,BackgroundTransparency=.18,BorderSizePixel=0,ZIndex=right.ZIndex+1})
-   corner(info,Theme.Radius.Medium)
-   outline(info,C.BorderSoft,1,.45)
+   outline(right,C.BorderSoft,1,.30)
 
-   local iconWrap=make("Frame",info,{Size=UDim2.fromOffset(64,64),Position=UDim2.fromOffset(10,10),BackgroundColor3=C.PanelRaised,BorderSizePixel=0,ZIndex=info.ZIndex+1})
+   local info=make("Frame",right,{Name="Info",Size=UDim2.new(1,-16,0,106),Position=UDim2.fromOffset(8,8),BackgroundColor3=C.PanelSoft,BackgroundTransparency=.10,BorderSizePixel=0,ZIndex=right.ZIndex+1})
+   corner(info,Theme.Radius.Large)
+   outline(info,rarityColor,1.2,.40)
+   local accent=make("Frame",info,{Name="RarityAccent",Size=UDim2.fromOffset(3,74),Position=UDim2.fromOffset(7,16),BackgroundColor3=rarityColor,BorderSizePixel=0,ZIndex=info.ZIndex+1})
+   corner(accent,2)
+
+   local iconWrap=make("Frame",info,{Size=UDim2.fromOffset(72,72),Position=UDim2.fromOffset(18,16),BackgroundColor3=C.Background,BackgroundTransparency=.02,BorderSizePixel=0,ZIndex=info.ZIndex+1})
    corner(iconWrap,Theme.Radius.Large)
-   outline(iconWrap,C.BorderDark,Theme.Stroke.Control,.12)
-   local infoIcon=make("ImageLabel",iconWrap,{Name="Icon",Size=UDim2.fromOffset(44,44),Position=UDim2.fromOffset(10,10),BackgroundTransparency=1,ScaleType=Enum.ScaleType.Fit,Image=Icons.GetRewardIcon("FlowerSeed",active.Id),ZIndex=iconWrap.ZIndex+1})
-   local title=self:Text(info,active.Flower.DisplayName,UDim2.new(1,-94,0,22),{Position=UDim2.fromOffset(84,8),TextSize=16,Font=Enum.Font.GothamBold,ZIndex=info.ZIndex+1})
-   local rarity=self:Text(info,active.Flower.Rarity.."   •   copies "..active.Count,UDim2.new(1,-94,0,15),{Position=UDim2.fromOffset(84,30),TextSize=10,TextColor3=C.Gold,ZIndex=info.ZIndex+1})
-   local meta=self:Text(info,"Mastery "..active.Mastery.Level.."   •   XP "..active.Mastery.XP.."/"..(active.Mastery.Level*25).."   •   свободно "..active.Free.." / всего "..active.Count,UDim2.new(1,-94,0,28),{Position=UDim2.fromOffset(84,46),TextSize=10,TextColor3=C.Muted,TextWrapped=true,ZIndex=info.ZIndex+1})
-   local hint=self:Text(info,"Защищай любимые цветы и растворяй только свободные дубликаты.",UDim2.new(1,-20,0,12),{Position=UDim2.fromOffset(10,80),TextSize=9,TextColor3=C.Muted,ZIndex=info.ZIndex+1})
+   outline(iconWrap,C.Border,.9,.34)
+   local infoIcon=make("ImageLabel",iconWrap,{Name="Icon",Size=UDim2.fromOffset(50,50),Position=UDim2.fromOffset(11,11),BackgroundTransparency=1,ScaleType=Enum.ScaleType.Fit,Image=Icons.GetRewardIcon("FlowerSeed",active.Id),ZIndex=iconWrap.ZIndex+1})
 
-   local actions=make("ScrollingFrame",right,{Name="Actions",Size=UDim2.new(1,-16,1,-114),Position=UDim2.fromOffset(8,106),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=6,ScrollBarImageColor3=C.Blue,ZIndex=right.ZIndex+1})
-   local actionsLayout=make("UIListLayout",actions,{Padding=UDim.new(0,8),SortOrder=Enum.SortOrder.LayoutOrder})
+   local title=self:Text(info,active.Flower.DisplayName,UDim2.new(1,-116,0,24),{Position=UDim2.fromOffset(102,13),TextSize=18,Font=Enum.Font.GothamBold,ZIndex=info.ZIndex+1})
+   local rarity=self:Text(info,string.upper(active.Flower.Rarity).."  •  x"..active.Count,UDim2.new(1,-116,0,16),{Position=UDim2.fromOffset(102,38),TextSize=9,TextColor3=rarityColor,Font=Enum.Font.GothamBold,ZIndex=info.ZIndex+1})
+   local meta=self:Text(info,"Mastery "..active.Mastery.Level.."  •  XP "..active.Mastery.XP.."/"..(active.Mastery.Level*25),UDim2.new(1,-116,0,16),{Position=UDim2.fromOffset(102,57),TextSize=9,TextColor3=C.Muted,ZIndex=info.ZIndex+1})
+   local free=self:Text(info,"FREE "..active.Free.."   /   OWNED "..active.Count,UDim2.new(1,-116,0,18),{Position=UDim2.fromOffset(102,76),TextSize=9,TextColor3=C.Blue,Font=Enum.Font.GothamBold,ZIndex=info.ZIndex+1})
 
-   local function addAction(text,fn,icon)
+   local actionsTitle=self:Text(right,"QUICK ACTIONS",UDim2.new(1,-16,0,18),{Position=UDim2.fromOffset(10,120),TextSize=9,TextColor3=C.Blue,Font=Enum.Font.GothamBold,ZIndex=right.ZIndex+1})
+   local actions=make("ScrollingFrame",right,{Name="Actions",Size=UDim2.new(1,-16,1,-146),Position=UDim2.fromOffset(8,140),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=4,ScrollBarImageColor3=C.Blue,ZIndex=right.ZIndex+1})
+   local actionsLayout=make("UIListLayout",actions,{Padding=UDim.new(0,6),SortOrder=Enum.SortOrder.LayoutOrder})
+
+   local function addAction(text,fn,icon,accentColor)
     local btn=self:Button(actions,text,fn,icon)
-    btn.Size=UDim2.new(1,0,0,32)
-    btn.TextSize=12
+    btn.Size=UDim2.new(1,0,0,34)
+    btn.TextSize=11
+    btn.BackgroundColor3=C.PanelRaised
+    btn.BackgroundTransparency=.04
+    local stroke=btn:FindFirstChildOfClass("UIStroke")
+    if stroke then
+     stroke.Color=accentColor or C.BorderSoft
+     stroke.Thickness=1.2
+     stroke.Transparency=accentColor and .28 or .44
+    end
     return btn
    end
 
-   addAction((p.FlowerCollection.LockedFlowers[active.Id] and "Снять защиту" or "Защитить").." • "..active.Flower.DisplayName,function() self:Send("Flag",active.Id,"LockedFlowers") end,Icons.GetRewardIcon("FlowerSeed",active.Id))
-   addAction(p.FlowerCollection.FavoriteFlowers[active.Id] and "Убрать из избранного" or "Добавить в избранное",function() self:Send("Flag",active.Id,"FavoriteFlowers") end,Icons.Get("System","Confirm"))
-   addAction("Растворить 1 свободный дубликат",function() self:Send("Dissolve",active.Id,1) end,Icons.Get("WorkshopHex","Duplicate"))
-   addAction("Mastery +XP  •  "..(active.Mastery.Level*5).." Petal Dust",function() self:Send("FlowerUpgrade",active.Id) end,Icons.GetCurrencyIcon("PetalDust"))
-   addAction("Flower Memory",function() self:Send("Keepsake","Flower",active.Id) end,Icons.Get("System","Flower"))
-   if p.WorkshopV5.Nodes.LEGACY_5 then addAction("Third Memory Slot",function() self:Send("Keepsake","Flower2",active.Id) end,Icons.Get("System","Flower")) end
+   addAction(p.FlowerCollection.LockedFlowers[active.Id] and "UNLOCK" or "PROTECT",function() self:Send("Flag",active.Id,"LockedFlowers") end,Icons.GetRewardIcon("FlowerSeed",active.Id),C.Gold)
+   addAction(p.FlowerCollection.FavoriteFlowers[active.Id] and "REMOVE FAVORITE" or "ADD FAVORITE",function() self:Send("Flag",active.Id,"FavoriteFlowers") end,Icons.Get("System","Confirm"),C.Gold)
+   addAction("DISSOLVE 1 FREE DUPLICATE",function() self:Send("Dissolve",active.Id,1) end,Icons.Get("WorkshopHex","Duplicate"),C.Danger)
+   addAction("MASTERY +XP  •  "..(active.Mastery.Level*5).." PETAL DUST",function() self:Send("FlowerUpgrade",active.Id) end,Icons.GetCurrencyIcon("PetalDust"),C.Dust)
+   addAction("FLOWER MEMORY",function() self:Send("Keepsake","Flower",active.Id) end,Icons.Get("System","Flower"),C.Blue)
+   if p.WorkshopV5.Nodes.LEGACY_5 then addAction("THIRD MEMORY SLOT",function() self:Send("Keepsake","Flower2",active.Id) end,Icons.Get("System","Flower"),C.Blue) end
 
    for index,entry in ipairs(items) do
     local tileTemplate=self.Templates and self.Templates:FindFirstChild("InventoryTileTemplate")
@@ -357,34 +396,55 @@ function UI:RenderMenu()
      tile.Parent=left
      tile.LayoutOrder=index
      tile.ZIndex=left.ZIndex+1
-     tile.BackgroundColor3=entry.Id==active.Id and C.BlueDeep or C.PanelRaised
     else
-     tile=make("ImageButton",left,{Name="Tile_"..entry.Id,BackgroundColor3=entry.Id==active.Id and C.BlueDeep or C.PanelRaised,BorderSizePixel=0,AutoButtonColor=false,Image="",LayoutOrder=index,ZIndex=left.ZIndex+1})
+     tile=make("ImageButton",left,{Name="Tile_"..entry.Id,Size=UDim2.fromOffset(70,70),BackgroundColor3=C.PanelRaised,BackgroundTransparency=.04,BorderSizePixel=0,AutoButtonColor=false,Image="",LayoutOrder=index,ZIndex=left.ZIndex+1})
      corner(tile,Theme.Radius.Medium)
-     outline(tile,C.BorderDark,Theme.Stroke.Control,.14)
+     outline(tile,C.BorderSoft,1.2,.28)
     end
+
+    local isSelected=entry.Id==active.Id
+    tile.BackgroundColor3=isSelected and C.BlueSoft or C.PanelRaised
+    tile.BackgroundTransparency=isSelected and .02 or .06
     local tileStroke=tile:FindFirstChildOfClass("UIStroke")
-    if tileStroke then tileStroke.Color=entry.Id==active.Id and C.Gold or C.BorderDark tileStroke.Thickness=entry.Id==active.Id and 2 or Theme.Stroke.Control tileStroke.Transparency=entry.Id==active.Id and .05 or .14 end
+    if tileStroke then
+     tileStroke.Color=isSelected and C.Gold or C.BorderSoft
+     tileStroke.Thickness=isSelected and 2 or 1.2
+     tileStroke.Transparency=isSelected and .04 or .34
+    end
+
     local img=tile:FindFirstChild("Icon")
     local countLabel=tile:FindFirstChild("Count")
     local nameLabel=tile:FindFirstChild("Name")
     local flagsLabel=tile:FindFirstChild("Flags")
     if img and img:IsA("ImageLabel") then img.Image=Icons.GetRewardIcon("FlowerSeed",entry.Id) img.ZIndex=tile.ZIndex+1 end
     if countLabel and countLabel:IsA("TextLabel") then countLabel.Text="x"..entry.Count countLabel.ZIndex=tile.ZIndex+2 end
-    if nameLabel and nameLabel:IsA("TextLabel") then nameLabel.Text=entry.Flower.DisplayName nameLabel.ZIndex=tile.ZIndex+1 end
+    if nameLabel and nameLabel:IsA("TextLabel") then nameLabel.Text=entry.Flower.DisplayName nameLabel.TextColor3=isSelected and C.Gold or C.Text nameLabel.ZIndex=tile.ZIndex+1 end
     if flagsLabel and flagsLabel:IsA("TextLabel") then flagsLabel.Text=(p.FlowerCollection.LockedFlowers[entry.Id] and "◆" or (p.FlowerCollection.FavoriteFlowers[entry.Id] and "★" or "")) flagsLabel.ZIndex=tile.ZIndex+2 end
-    tile.MouseEnter:Connect(function() if entry.Id~=self.SelectedSatchelItem then TweenService:Create(tile,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelHover}):Play() end end)
-    tile.MouseLeave:Connect(function() if entry.Id~=self.SelectedSatchelItem then TweenService:Create(tile,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelRaised}):Play() end end)
+
+    tile.MouseEnter:Connect(function()
+     if entry.Id~=self.SelectedSatchelItem then
+      TweenService:Create(tile,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelHover,BackgroundTransparency=.02}):Play()
+     end
+    end)
+    tile.MouseLeave:Connect(function()
+     if entry.Id~=self.SelectedSatchelItem then
+      TweenService:Create(tile,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelRaised,BackgroundTransparency=.06}):Play()
+     end
+    end)
     tile.Activated:Connect(function() self.SelectedSatchelItem=entry.Id self:RenderMenu() end)
    end
 
-   self:Section(self.Content,"Пчёлы • слотов "..self.State.BeeCapacity)
+   local bees=make("Frame",self.Content,{Name="PollinatorInventory",Size=UDim2.new(1,0,0,54),BackgroundColor3=C.Panel,BackgroundTransparency=.06,BorderSizePixel=0,ZIndex=self.Content.ZIndex+1})
+   corner(bees,Theme.Radius.Large)
+   outline(bees,C.BorderSoft,1,.34)
+   self:Text(bees,"POLLINATORS",UDim2.new(0,110,0,18),{Position=UDim2.fromOffset(12,7),TextSize=9,TextColor3=C.Blue,Font=Enum.Font.GothamBold,ZIndex=bees.ZIndex+1})
+   local beeText={}
    for id,count in pairs(p.Pollinators.BeeInventory) do
     local bee=B.Get(id)
-    if bee then
-     self:Label(self.Content,bee.DisplayName.."  ×"..count.."   •   "..table.concat(bee.Traits,", "),34)
-    end
+    if bee then table.insert(beeText,bee.DisplayName.." ×"..count) end
    end
+   table.sort(beeText)
+   self:Text(bees,#beeText>0 and table.concat(beeText,"   •   ") or "No pollinators yet",UDim2.new(1,-24,0,20),{Position=UDim2.fromOffset(12,27),TextSize=10,TextColor3=#beeText>0 and C.Text or C.Muted,TextWrapped=false,ZIndex=bees.ZIndex+1})
   end
 
  elseif name=="Workshop" then
