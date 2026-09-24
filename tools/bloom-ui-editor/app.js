@@ -17,7 +17,7 @@ const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 const state={
  root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,geometry:true,inset:36,mode:"design",previewScene:"gameplay",
  projectHandle:null,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
- history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null
+ history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[]
 };
 
 let idCounter=1;
@@ -776,14 +776,44 @@ function renderTree(){
   shown++;
   const row=document.createElement("div");row.className="tree-row"+(isSelectedId(n.__id)?" selected":"")+(n.__id===state.selectedId?" primary-selected":"")+(MODIFIERS.has(n.ClassName)?" modifier":"")+(n.Properties?.Visible===false?" runtime-hidden":"")+(matched.has(n.__id)?" search-match":"");
   const kids=n.Children||[],collapsed=state.collapsed.has(n.__id)&&!q;
-  row.dataset.id=n.__id;row.innerHTML=`<span class="tree-indent" style="width:${depth*13}px"></span><span class="tree-toggle">${kids.length?(collapsed?"▸":"▾"):""}</span><span class="tree-icon">${classIcon(n.ClassName)}</span><span class="tree-name"></span><span class="tree-kind"></span>`;
+  row.dataset.id=n.__id;
+  row.draggable=n!==state.root;
+  row.innerHTML=`<span class="tree-indent" style="width:${depth*13}px"></span><span class="tree-toggle">${kids.length?(collapsed?"▸":"▾"):""}</span><span class="tree-icon">${classIcon(n.ClassName)}</span><span class="tree-name"></span><span class="tree-kind"></span>`;
   row.querySelector(".tree-name").textContent=n.Name;row.querySelector(".tree-kind").textContent=n.ClassName;
   row.querySelector(".tree-toggle").onclick=e=>{e.stopPropagation();collapsed?state.collapsed.delete(n.__id):state.collapsed.add(n.__id);renderTree()};
   row.ondblclick=e=>{e.preventDefault();select(n.__id,false);renameSelected()};
   row.onclick=e=>{
    if(e.shiftKey)selectTreeRange(n.__id,e.ctrlKey||e.metaKey);
    else select(n.__id,e.ctrlKey||e.metaKey);
-  };els.tree.appendChild(row);
+  };
+  row.addEventListener("dragstart",e=>{
+   if(n===state.root){e.preventDefault();return}
+   if(!isSelectedId(n.__id))select(n.__id,false);
+   state.treeDragIds=selectedMoveRoots().map(x=>x.__id);
+   row.classList.add("dragging");
+   e.dataTransfer.effectAllowed="move";
+   try{e.dataTransfer.setData("text/plain",n.__id)}catch{}
+  });
+  row.addEventListener("dragend",()=>{
+   state.treeDragIds=[];row.classList.remove("dragging");
+   els.tree.querySelectorAll(".drop-target").forEach(x=>x.classList.remove("drop-target"));
+  });
+  row.addEventListener("dragover",e=>{
+   if(!state.treeDragIds.length)return;
+   const target=treeDropTargetFromRow(row);if(!target)return;
+   const moving=state.treeDragIds.map(findNode).filter(Boolean);
+   if(moving.some(x=>x===target||isAncestorOf(x,target)))return;
+   e.preventDefault();e.dataTransfer.dropEffect="move";row.classList.add("drop-target");
+  });
+  row.addEventListener("dragleave",()=>row.classList.remove("drop-target"));
+  row.addEventListener("drop",e=>{
+   e.preventDefault();row.classList.remove("drop-target");
+   const target=treeDropTargetFromRow(row);if(!target)return;
+   const moving=state.treeDragIds.map(findNode).filter(Boolean);
+   state.treeDragIds=[];
+   reparentPreserve(moving,target);
+  });
+  els.tree.appendChild(row);
   if(!collapsed)for(const c of kids)recur(c,depth+1);
  };
  recur(state.root,0);
@@ -1148,6 +1178,116 @@ function addObject(kind){
  const n=defaultObject(kind);parent.Children=parent.Children||[];parent.Children.push(n);state.selectedId=n.__id;state.selectedIds=new Set([n.__id]);state.selectionAnchorId=n.__id;changed();toast(kind+" создан")
 }
 
+
+function isAncestorOf(ancestor,node){
+ let p=findParent(node.__id);
+ while(p){if(p===ancestor)return true;p=findParent(p.__id)}
+ return false;
+}
+function canContainNode(parent,node){
+ if(!parent||!node||parent===node)return false;
+ if(MODIFIERS.has(node.ClassName)){
+  return parent.ClassName!=="ScreenGui"&&!MODIFIERS.has(parent.ClassName);
+ }
+ return CONTAINERS.has(parent.ClassName);
+}
+function reparentPreserve(nodes,newParent,insertIndex=null){
+ nodes=(nodes||[]).filter(Boolean);
+ if(!nodes.length||!newParent)return false;
+ const roots=nodes.filter(n=>!nodes.some(other=>other!==n&&isAncestorOf(other,n)));
+ if(!roots.length)return false;
+ if(roots.some(n=>n===state.root||isAncestorOf(n,newParent)||!canContainNode(newParent,n))){
+  toast("Сюда нельзя переместить выбранные объекты",true);return false;
+ }
+
+ const newParentEl=newParent===state.root?els.guiRoot:els.guiRoot.querySelector(`[data-id="${newParent.__id}"]`);
+ const newPr=localRect(newParentEl);
+ if(!newPr){toast("Не удалось определить геометрию нового родителя",true);return false}
+
+ const snapshots=roots.map(n=>({
+  n,
+  oldParent:findParent(n.__id),
+  r:localRect(els.guiRoot.querySelector(`[data-id="${n.__id}"]`))
+ })).filter(x=>x.oldParent&&x.r);
+ if(!snapshots.length)return false;
+
+ pushHistory();
+
+ // Full-control behavior: layouts on either side are baked before reparenting.
+ const layoutParents=new Set();
+ for(const s of snapshots)if(isLayoutParent(s.oldParent))layoutParents.add(s.oldParent);
+ if(isLayoutParent(newParent))layoutParents.add(newParent);
+ for(const p of layoutParents)bakeLayout(p,{record:false,render:false,notify:false});
+
+ // Remove roots from old parents first.
+ for(const {n,oldParent} of snapshots){
+  oldParent.Children=(oldParent.Children||[]).filter(c=>c!==n);
+ }
+
+ newParent.Children=newParent.Children||[];
+ let at=insertIndex==null?newParent.Children.length:Math.max(0,Math.min(insertIndex,newParent.Children.length));
+ for(const {n,r} of snapshots){
+  n.Properties=n.Properties||{};
+  if(!MODIFIERS.has(n.ClassName)){
+   const a=v2v(n,"AnchorPoint",[0,0]);
+   n.Properties.Position={UDim2:[
+    [0,roundOffset(r.left-newPr.left+a[0]*r.w)],
+    [0,roundOffset(r.top-newPr.top+a[1]*r.h)]
+   ]};
+   n.Properties.Size={UDim2:[
+    [0,Math.max(1,roundOffset(r.w))],
+    [0,Math.max(1,roundOffset(r.h))]
+   ]};
+  }
+  newParent.Children.splice(at++,0,n);
+ }
+
+ state.selectedIds=new Set(roots.map(n=>n.__id));
+ state.selectedId=roots[roots.length-1].__id;
+ state.selectionAnchorId=roots[0].__id;
+ state.dirty=true;renderAll();finishSelection();
+ toast(roots.length===1?roots[0].Name+" перемещён в "+newParent.Name:roots.length+" объектов перемещено в "+newParent.Name);
+ return true;
+}
+function outdentSelected(){
+ const roots=selectedMoveRoots();
+ if(!roots.length)return;
+ const byTarget=new Map();
+ for(const n of roots){
+  const parent=findParent(n.__id),grand=parent&&findParent(parent.__id);
+  if(!parent||!grand)continue;
+  if(!byTarget.has(grand.__id))byTarget.set(grand.__id,{grand,parent,nodes:[]});
+  byTarget.get(grand.__id).nodes.push(n);
+ }
+ if(!byTarget.size){toast("Объект уже находится на верхнем доступном уровне",true);return}
+
+ // Common case: one parent => preserve order and insert right after that parent.
+ if(byTarget.size===1){
+  const {grand,parent,nodes}=[...byTarget.values()][0];
+  const idx=Math.max(0,(grand.Children||[]).indexOf(parent)+1);
+  reparentPreserve(nodes,grand,idx);
+  return;
+ }
+
+ // Different parents: outdent groups independently.
+ const original=[...state.selectedIds];
+ let first=true;
+ for(const {grand,parent,nodes} of byTarget.values()){
+  const idx=Math.max(0,(grand.Children||[]).indexOf(parent)+1);
+  if(first){reparentPreserve(nodes,grand,idx);first=false}
+  else{
+   // reuse current geometry with a separate action only when selections span branches
+   reparentPreserve(nodes,grand,idx);
+  }
+ }
+ state.selectedIds=new Set(original.filter(id=>findNode(id)));
+ if(state.selectedIds.size){state.selectedId=[...state.selectedIds].pop();state.selectionAnchorId=[...state.selectedIds][0];finishSelection()}
+}
+function treeDropTargetFromRow(row){
+ const n=row&&findNode(row.dataset.id);
+ return n&&CONTAINERS.has(n.ClassName)?n:null;
+}
+
 function groupSelected(){
  let nodes=selectedMoveRoots();
  if(nodes.length<2){toast("Для Group выбери минимум 2 объекта",true);return}
@@ -1299,7 +1439,7 @@ async function loadInitial(){
 
 $("#palette").addEventListener("click",e=>{const b=e.target.closest("[data-add]");if(b)addObject(b.dataset.add)});
 $("#createFirstFrame").onclick=()=>addObject("Frame");
-$("#deleteBtn").onclick=deleteSelected;$("#duplicateBtn").onclick=duplicateSelected;$("#groupBtn").onclick=groupSelected;$("#ungroupBtn").onclick=ungroupSelected;
+$("#deleteBtn").onclick=deleteSelected;$("#duplicateBtn").onclick=duplicateSelected;$("#outdentBtn").onclick=outdentSelected;$("#groupBtn").onclick=groupSelected;$("#ungroupBtn").onclick=ungroupSelected;
 $("#connectBtn").onclick=connectProject;$("#pullBtn").onclick=pullProject;$("#pushBtn").onclick=pushProject;
 $("#exportBtn").onclick=download;$("#copyBtn").onclick=copyModel;$("#importBtn").onclick=()=>els.fileInput.click();
 els.fileInput.onchange=()=>els.fileInput.files[0]&&importFile(els.fileInput.files[0]);
@@ -1372,6 +1512,7 @@ window.addEventListener("keydown",e=>{
  if(mod&&code==="KeyV"){e.preventDefault();pasteObject();return}
  if(mod&&code==="KeyF"){e.preventDefault();$("#treeSearch").focus();$("#treeSearch").select();return}
  if(mod&&code==="KeyG"){e.preventDefault();e.shiftKey?ungroupSelected():groupSelected();return}
+ if(mod&&e.altKey&&code==="ArrowUp"){e.preventDefault();outdentSelected();return}
  if(mod&&code==="KeyA"){e.preventDefault();selectAllSiblings();return}
  if(code==="Escape"&&state.selectedIds.size>1){e.preventDefault();collapseSelectionToPrimary();return}
  if(code==="F2"){e.preventDefault();renameSelected();return}
