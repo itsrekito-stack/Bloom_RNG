@@ -15,7 +15,7 @@ const CONTAINERS=new Set(["ScreenGui","Frame","ScrollingFrame","TextButton","Ima
 const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 
 const state={
- root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:true,grid:true,showHidden:true,inset:36,
+ root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,inset:36,
  projectHandle:null,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
  history:[],future:[],dirty:false,drag:null,collapsed:new Set()
 };
@@ -155,8 +155,14 @@ function getPadding(n){
 }
 function imageUrl(src){
  if(!src)return "";
- const m=String(src).match(/(?:id=|rbxassetid:\/\/)(\d+)/i)||String(src).match(/^(\d{6,})$/);
- if(!m)return src.startsWith("http")?src:"";
+ const s=String(src).trim();
+ const m=
+  s.match(/rbxthumb:\/\/[^?]*\?[^#]*\bid=(\d+)/i)||
+  s.match(/rbxthumb:\/\/.*?\bid=(\d+)/i)||
+  s.match(/rbxassetid:\/\/(\d+)/i)||
+  s.match(/[?&]id=(\d+)/i)||
+  s.match(/^(\d{6,})$/);
+ if(!m)return /^https?:\/\//i.test(s)?s:"";
  return `https://www.roblox.com/asset-thumbnail/image?assetId=${m[1]}&width=420&height=420&format=png`;
 }
 
@@ -565,5 +571,7 @@ window.addEventListener("keydown",e=>{
  e.preventDefault();n.Properties.Position={UDim2:p};changed()
 });
 
+$("#labelsToggle").checked=state.labels;
+$("#hiddenToggle").checked=state.showHidden;
 loadInitial();
 })();
