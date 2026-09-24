@@ -4122,11 +4122,11 @@
               "UDim2": [
                 [
                   0,
-                  80
+                  75
                 ],
                 [
                   0,
-                  80
+                  75
                 ]
               ]
             },
@@ -4147,7 +4147,7 @@
             "Font": "GothamBlack",
             "AutoButtonColor": false,
             "ZIndex": 28,
-            "Visible": false,
+            "Visible": true,
             "Position": {
               "UDim2": [
                 [
@@ -4207,7 +4207,8 @@
                     0.5,
                     0.5
                   ]
-                }
+                },
+                "Visible": true
               }
             },
             {
