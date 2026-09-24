@@ -19,7 +19,7 @@ local RollAudio=require(RS.Config.RollAudioConfig)
 local NumberFormatter=require(RS.Shared.NumberFormatter)
 
 local C=Theme.Colors
-local CLIENT_BUILD="state-sync-v3-2026-09-24"
+local CLIENT_BUILD="ui-polish-v4-2026-09-24"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0}
 
 local MENU_NAMES={
@@ -239,6 +239,16 @@ function UI:RenderMenu()
  self:ClearPanel()
  self.PanelTitle.Text=MENU_NAMES[name] or name
  self.PanelSubtitle.Text=MENU_HINTS[name] or ""
+ if self.PanelHeaderIcon then
+  local headerImage=Icons.Get("Menus",name)
+  if headerImage=="" then
+   if name=="Plant" then headerImage=Icons.Get("System","Garden")
+   elseif name=="Season" or name=="Cards" then headerImage=Icons.Get("System","Flower")
+   elseif name=="Replay" then headerImage=Icons.Get("System","Tutorial")
+   else headerImage=Icons.Get("System","Info") end
+  end
+  self.PanelHeaderIcon.Image=headerImage
+ end
  self.Content.CanvasPosition=Vector2.new()
 
  if name=="Plant" then
@@ -302,7 +312,7 @@ function UI:RenderMenu()
    corner(left,Theme.Radius.Large)
    outline(left,C.BorderSoft,1,.4)
    pad(left,12,12,12,12)
-   local grid=make("UIGridLayout",left,{CellSize=UDim2.fromOffset(68,52),CellPadding=UDim2.fromOffset(8,8),SortOrder=Enum.SortOrder.LayoutOrder})
+   local grid=make("UIGridLayout",left,{CellSize=UDim2.fromOffset(64,64),CellPadding=UDim2.fromOffset(7,7),SortOrder=Enum.SortOrder.LayoutOrder})
 
    local right=make("Frame",split,{Name="SelectedDetails",Size=UDim2.new(1,-240,1,0),Position=UDim2.fromOffset(240,0),BackgroundColor3=C.Panel,BackgroundTransparency=.08,BorderSizePixel=0,ZIndex=split.ZIndex+1})
    corner(right,Theme.Radius.Large)
@@ -311,14 +321,14 @@ function UI:RenderMenu()
    corner(info,Theme.Radius.Medium)
    outline(info,C.BorderSoft,1,.45)
 
-   local iconWrap=make("Frame",info,{Size=UDim2.fromOffset(74,74),Position=UDim2.fromOffset(10,10),BackgroundColor3=C.PanelRaised,BorderSizePixel=0,ZIndex=info.ZIndex+1})
+   local iconWrap=make("Frame",info,{Size=UDim2.fromOffset(64,64),Position=UDim2.fromOffset(10,10),BackgroundColor3=C.PanelRaised,BorderSizePixel=0,ZIndex=info.ZIndex+1})
    corner(iconWrap,Theme.Radius.Large)
    outline(iconWrap,C.BorderDark,Theme.Stroke.Control,.12)
-   local infoIcon=make("ImageLabel",iconWrap,{Name="Icon",Size=UDim2.fromOffset(50,32),Position=UDim2.fromOffset(12,12),BackgroundTransparency=1,ScaleType=Enum.ScaleType.Fit,Image=Icons.GetRewardIcon("FlowerSeed",active.Id),ZIndex=iconWrap.ZIndex+1})
-   local title=self:Text(info,active.Flower.DisplayName,UDim2.new(1,-98,0,24),{Position=UDim2.fromOffset(94,10),TextSize=18,Font=Enum.Font.GothamBold,ZIndex=info.ZIndex+1})
-   local rarity=self:Text(info,active.Flower.Rarity.."   •   copies "..active.Count,UDim2.new(1,-98,0,16),{Position=UDim2.fromOffset(94,34),TextSize=11,TextColor3=C.Gold,ZIndex=info.ZIndex+1})
-   local meta=self:Text(info,"Mastery "..active.Mastery.Level.."   •   XP "..active.Mastery.XP.."/"..(active.Mastery.Level*25).."   •   свободно "..active.Free.." / всего "..active.Count,UDim2.new(1,-98,0,28),{Position=UDim2.fromOffset(94,36),TextSize=11,TextColor3=C.Muted,TextWrapped=true,ZIndex=info.ZIndex+1})
-   local hint=self:Text(info,"Защищай любимые цветы и растворяй только свободные дубликаты.",UDim2.new(1,-20,0,16),{Position=UDim2.fromOffset(10,88),TextSize=10,TextColor3=C.Muted,ZIndex=info.ZIndex+1})
+   local infoIcon=make("ImageLabel",iconWrap,{Name="Icon",Size=UDim2.fromOffset(44,44),Position=UDim2.fromOffset(10,10),BackgroundTransparency=1,ScaleType=Enum.ScaleType.Fit,Image=Icons.GetRewardIcon("FlowerSeed",active.Id),ZIndex=iconWrap.ZIndex+1})
+   local title=self:Text(info,active.Flower.DisplayName,UDim2.new(1,-94,0,22),{Position=UDim2.fromOffset(84,8),TextSize=16,Font=Enum.Font.GothamBold,ZIndex=info.ZIndex+1})
+   local rarity=self:Text(info,active.Flower.Rarity.."   •   copies "..active.Count,UDim2.new(1,-94,0,15),{Position=UDim2.fromOffset(84,30),TextSize=10,TextColor3=C.Gold,ZIndex=info.ZIndex+1})
+   local meta=self:Text(info,"Mastery "..active.Mastery.Level.."   •   XP "..active.Mastery.XP.."/"..(active.Mastery.Level*25).."   •   свободно "..active.Free.." / всего "..active.Count,UDim2.new(1,-94,0,28),{Position=UDim2.fromOffset(84,46),TextSize=10,TextColor3=C.Muted,TextWrapped=true,ZIndex=info.ZIndex+1})
+   local hint=self:Text(info,"Защищай любимые цветы и растворяй только свободные дубликаты.",UDim2.new(1,-20,0,12),{Position=UDim2.fromOffset(10,80),TextSize=9,TextColor3=C.Muted,ZIndex=info.ZIndex+1})
 
    local actions=make("ScrollingFrame",right,{Name="Actions",Size=UDim2.new(1,-16,1,-114),Position=UDim2.fromOffset(8,106),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=6,ScrollBarImageColor3=C.Blue,ZIndex=right.ZIndex+1})
    local actionsLayout=make("UIListLayout",actions,{Padding=UDim.new(0,8),SortOrder=Enum.SortOrder.LayoutOrder})
@@ -500,7 +510,7 @@ function UI:ApplyResponsiveLayout(width,height)
 
  -- Small-screen safety only. These adjustments intentionally touch as little as possible.
  self.ObjectiveCard.Size=UDim2.fromOffset(math.max(280,width-24),66)
- self.CurrencyHUD.Position=UDim2.fromOffset(10,84)
+ self.CurrencyHUD.Position=UDim2.fromOffset(10,208)
  self.Dock.AnchorPoint=Vector2.new(1,.5)
  self.Dock.Position=UDim2.new(1,-10,.56,0)
  self.Guide.Size=UDim2.fromOffset(math.max(260,width-24),38)
@@ -846,6 +856,7 @@ function UI:BindStaticUI()
  for _,name in ipairs({"SeedSatchel","Workshop","FieldGuide","Map","Trials","Settings"}) do
   local button=self.Dock:WaitForChild("Dock_"..name)
   local tip=button:WaitForChild("Tooltip")
+  tip.Text=MENU_NAMES[name] or name
   local icon=button:FindFirstChild("Icon")
   local image=Icons.Get("Menus",name)
   if image=="" and name=="Map" then image=Icons.Get("System","Garden") end
@@ -896,6 +907,7 @@ function UI:BindStaticUI()
  self.Panel=root:WaitForChild("MainPanel")
  self.PanelScale=self.Panel:FindFirstChild("PanelScale") or self.Panel:FindFirstChildOfClass("UIScale")
  local header=self.Panel:WaitForChild("Header")
+ self.PanelHeaderIcon=header:FindFirstChild("HeaderIcon")
  self.PanelTitle=header:WaitForChild("PanelTitle")
  self.PanelSubtitle=header:WaitForChild("PanelSubtitle")
  local close=header:WaitForChild("Close")
@@ -1017,7 +1029,7 @@ function UI:ApplyState(payload,source)
  end
  if not self.RouletteLanding then self:BuildRouletteVisualPool(true) end
  self:Render()
- print("[BloomUI] State applied:",source or "Event")
+ if firstState then print("[BloomUI] State applied:",source or "Event") end
  return true
 end
 
