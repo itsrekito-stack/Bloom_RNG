@@ -229,3 +229,119 @@ dialog::backdrop{background:rgba(0,0,0,.62)}.dialog-head{height:44px;display:fle
 .stage-scroller.panning{cursor:grabbing!important}
 .stage-scroller.panning *{cursor:grabbing!important}
 .statusbar .dirty-hint{color:#e6bd59}
+
+/* ============================================================
+   QoL: consistent scrollbars across the editor
+============================================================ */
+:root{
+  --scroll-track:#0b1017;
+  --scroll-thumb:#334154;
+  --scroll-thumb-hover:#4a6079;
+  --scroll-size:10px;
+}
+
+/* Firefox */
+.tree,
+.inspector,
+.palette,
+.viewbar,
+.stage-scroller{
+  scrollbar-width:thin;
+  scrollbar-color:var(--scroll-thumb) var(--scroll-track);
+}
+
+/* Chromium / Edge */
+.tree::-webkit-scrollbar,
+.inspector::-webkit-scrollbar,
+.palette::-webkit-scrollbar,
+.viewbar::-webkit-scrollbar,
+.stage-scroller::-webkit-scrollbar{
+  width:var(--scroll-size);
+  height:var(--scroll-size);
+}
+
+.tree::-webkit-scrollbar-track,
+.inspector::-webkit-scrollbar-track,
+.palette::-webkit-scrollbar-track,
+.viewbar::-webkit-scrollbar-track,
+.stage-scroller::-webkit-scrollbar-track{
+  background:var(--scroll-track);
+}
+
+.tree::-webkit-scrollbar-thumb,
+.inspector::-webkit-scrollbar-thumb,
+.palette::-webkit-scrollbar-thumb,
+.viewbar::-webkit-scrollbar-thumb,
+.stage-scroller::-webkit-scrollbar-thumb{
+  background:var(--scroll-thumb);
+  border:2px solid var(--scroll-track);
+  border-radius:999px;
+  min-height:28px;
+}
+
+.tree::-webkit-scrollbar-thumb:hover,
+.inspector::-webkit-scrollbar-thumb:hover,
+.palette::-webkit-scrollbar-thumb:hover,
+.viewbar::-webkit-scrollbar-thumb:hover,
+.stage-scroller::-webkit-scrollbar-thumb:hover{
+  background:var(--scroll-thumb-hover);
+}
+
+.tree::-webkit-scrollbar-corner,
+.inspector::-webkit-scrollbar-corner,
+.palette::-webkit-scrollbar-corner,
+.viewbar::-webkit-scrollbar-corner,
+.stage-scroller::-webkit-scrollbar-corner{
+  background:var(--scroll-track);
+}
+
+/* Let flex/grid children actually shrink so their own scrollbars work. */
+.workspace,
+.sidebar,
+.center{
+  min-height:0;
+}
+.sidebar{
+  overflow:hidden;
+}
+.tree{
+  min-height:0;
+  overflow:auto;
+  scrollbar-gutter:stable;
+}
+.inspector{
+  min-height:0;
+  overflow:auto;
+  scrollbar-gutter:stable;
+}
+.palette{
+  flex:none;
+  max-height:245px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-gutter:stable;
+}
+.viewbar{
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-gutter:stable;
+}
+.stage-scroller{
+  overflow:scroll;
+  scrollbar-gutter:stable both-edges;
+}
+
+/* Keep viewport content clear of scrollbar intersections. */
+.stage{
+  padding-right:2px!important;
+  padding-bottom:2px!important;
+}
+
+/* Slight visual edge so users immediately understand panels are scrollable. */
+.tree,
+.inspector{
+  background-image:
+    linear-gradient(to bottom,rgba(255,255,255,.018),transparent 18px),
+    linear-gradient(to top,rgba(255,255,255,.014),transparent 18px);
+  background-attachment:local,local;
+}
