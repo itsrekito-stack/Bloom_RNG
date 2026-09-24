@@ -250,9 +250,10 @@ function UI:RenderMenu()
   self.PanelHeaderIcon.Image=headerImage
  end
  self.Content.CanvasPosition=Vector2.new()
+ self.Content.ScrollBarThickness=name=="SeedSatchel" and 3 or 5
 
  if not self.IsMobileLayout then
-  self.Panel.Size=name=="SeedSatchel" and UDim2.fromOffset(680,440) or UDim2.fromOffset(600,420)
+  self.Panel.Size=name=="SeedSatchel" and UDim2.fromOffset(760,560) or UDim2.fromOffset(600,420)
  end
 
  if name=="Plant" then
@@ -325,9 +326,9 @@ function UI:RenderMenu()
    self.SelectedSatchelItem=active.Id
    local rarityColor=R.Colors[active.Flower.Rarity] or C.Gold
 
-   local split=make("Frame",self.Content,{Name="InventoryBody",Size=UDim2.new(1,0,0,304),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=self.Content.ZIndex+1})
+   local split=make("Frame",self.Content,{Name="InventoryBody",Size=UDim2.new(1,0,0,372),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=self.Content.ZIndex+1})
 
-   local leftPanel=make("Frame",split,{Name="CollectionPanel",Size=UDim2.new(0,252,1,0),BackgroundColor3=C.Panel,BackgroundTransparency=.04,BorderSizePixel=0,ZIndex=split.ZIndex+1})
+   local leftPanel=make("Frame",split,{Name="CollectionPanel",Size=UDim2.new(0,254,1,0),BackgroundColor3=C.Panel,BackgroundTransparency=.04,BorderSizePixel=0,ZIndex=split.ZIndex+1})
    corner(leftPanel,Theme.Radius.Large)
    outline(leftPanel,C.BorderSoft,1,.30)
 
@@ -336,11 +337,11 @@ function UI:RenderMenu()
    self:Text(leftHeader,"SEEDS",UDim2.new(0,80,1,0),{Position=UDim2.fromOffset(10,0),TextSize=9,TextColor3=C.Blue,Font=Enum.Font.GothamBold,ZIndex=leftHeader.ZIndex+1})
    self:Text(leftHeader,tostring(#items),UDim2.new(0,36,1,0),{Position=UDim2.new(1,-44,0,0),TextSize=9,TextColor3=C.Muted,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Right,ZIndex=leftHeader.ZIndex+1})
 
-   local left=make("ScrollingFrame",leftPanel,{Name="InventoryGrid",Size=UDim2.new(1,-12,1,-48),Position=UDim2.fromOffset(6,42),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=4,ScrollBarImageColor3=C.Blue,ZIndex=leftPanel.ZIndex+1})
+   local left=make("ScrollingFrame",leftPanel,{Name="InventoryGrid",Size=UDim2.new(1,-12,1,-48),Position=UDim2.fromOffset(6,42),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=4,ScrollBarImageColor3=C.Blue,ClipsDescendants=true,ZIndex=leftPanel.ZIndex+1})
    pad(left,7,7,7,7)
    local grid=make("UIGridLayout",left,{CellSize=UDim2.fromOffset(70,70),CellPadding=UDim2.fromOffset(7,7),SortOrder=Enum.SortOrder.LayoutOrder})
 
-   local right=make("Frame",split,{Name="SelectedDetails",Size=UDim2.new(1,-264,1,0),Position=UDim2.fromOffset(264,0),BackgroundColor3=C.Panel,BackgroundTransparency=.04,BorderSizePixel=0,ZIndex=split.ZIndex+1})
+   local right=make("Frame",split,{Name="SelectedDetails",Size=UDim2.new(1,-266,1,0),Position=UDim2.fromOffset(266,0),BackgroundColor3=C.Panel,BackgroundTransparency=.04,BorderSizePixel=0,ZIndex=split.ZIndex+1})
    corner(right,Theme.Radius.Large)
    outline(right,C.BorderSoft,1,.30)
 
@@ -361,7 +362,7 @@ function UI:RenderMenu()
    local free=self:Text(info,"FREE "..active.Free.."   /   OWNED "..active.Count,UDim2.new(1,-116,0,18),{Position=UDim2.fromOffset(102,76),TextSize=9,TextColor3=C.Blue,Font=Enum.Font.GothamBold,ZIndex=info.ZIndex+1})
 
    local actionsTitle=self:Text(right,"QUICK ACTIONS",UDim2.new(1,-16,0,18),{Position=UDim2.fromOffset(10,120),TextSize=9,TextColor3=C.Blue,Font=Enum.Font.GothamBold,ZIndex=right.ZIndex+1})
-   local actions=make("ScrollingFrame",right,{Name="Actions",Size=UDim2.new(1,-16,1,-146),Position=UDim2.fromOffset(8,140),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=4,ScrollBarImageColor3=C.Blue,ZIndex=right.ZIndex+1})
+   local actions=make("ScrollingFrame",right,{Name="Actions",Size=UDim2.new(1,-16,1,-146),Position=UDim2.fromOffset(8,140),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=4,ScrollBarImageColor3=C.Blue,ClipsDescendants=true,ZIndex=right.ZIndex+1})
    local actionsLayout=make("UIListLayout",actions,{Padding=UDim.new(0,6),SortOrder=Enum.SortOrder.LayoutOrder})
 
    local function addAction(text,fn,icon,accentColor)
@@ -434,17 +435,25 @@ function UI:RenderMenu()
     tile.Activated:Connect(function() self.SelectedSatchelItem=entry.Id self:RenderMenu() end)
    end
 
-   local bees=make("Frame",self.Content,{Name="PollinatorInventory",Size=UDim2.new(1,0,0,54),BackgroundColor3=C.Panel,BackgroundTransparency=.06,BorderSizePixel=0,ZIndex=self.Content.ZIndex+1})
+   local bees=make("Frame",self.Content,{Name="PollinatorInventory",Size=UDim2.new(1,0,0,54),BackgroundColor3=C.Panel,BackgroundTransparency=.06,BorderSizePixel=0,ClipsDescendants=true,ZIndex=self.Content.ZIndex+1})
    corner(bees,Theme.Radius.Large)
    outline(bees,C.BorderSoft,1,.34)
    self:Text(bees,"POLLINATORS",UDim2.new(0,110,0,18),{Position=UDim2.fromOffset(12,7),TextSize=9,TextColor3=C.Blue,Font=Enum.Font.GothamBold,ZIndex=bees.ZIndex+1})
    local beeText={}
+   local beeOwned=0
    for id,count in pairs(p.Pollinators.BeeInventory) do
     local bee=B.Get(id)
-    if bee then table.insert(beeText,bee.DisplayName.." ×"..count) end
+    if bee then
+     beeOwned=beeOwned+count
+     table.insert(beeText,bee.DisplayName.." ×"..count)
+    end
    end
    table.sort(beeText)
-   self:Text(bees,#beeText>0 and table.concat(beeText,"   •   ") or "No pollinators yet",UDim2.new(1,-24,0,20),{Position=UDim2.fromOffset(12,27),TextSize=10,TextColor3=#beeText>0 and C.Text or C.Muted,TextWrapped=false,ZIndex=bees.ZIndex+1})
+   local beeCount=self:Text(bees,tostring(beeOwned).." OWNED",UDim2.fromOffset(82,18),{Position=UDim2.new(1,-94,0,6),TextSize=8,TextColor3=C.Gold,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Center,ZIndex=bees.ZIndex+1})
+   beeCount.BackgroundColor3=C.BlueSoft beeCount.BackgroundTransparency=.18
+   corner(beeCount,Theme.Radius.Pill)
+   local beeLine=self:Text(bees,#beeText>0 and table.concat(beeText,"   •   ") or "No pollinators yet",UDim2.new(1,-24,0,20),{Position=UDim2.fromOffset(12,27),TextSize=10,TextColor3=#beeText>0 and C.Text or C.Muted,TextWrapped=false,ZIndex=bees.ZIndex+1})
+   beeLine.TextTruncate=Enum.TextTruncate.AtEnd
   end
 
  elseif name=="Workshop" then
