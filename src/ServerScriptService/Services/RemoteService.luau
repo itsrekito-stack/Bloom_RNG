@@ -27,8 +27,15 @@ function S:Start()
   return state,nil
  end
  self.Request.OnServerEvent:Connect(function(player,action,a,b,c)
-  if not self:Accept(player) or type(action)~="string" or #action>32 then return end
-  if type(a)=="string" and #a>100 or type(b)=="string" and #b>100 or type(c)=="string" and #c>100 then return end
+  if type(action)~="string" or #action>32 then return end
+  if not self:Accept(player) then
+   self.X:Send(player,"Ack",{Action=action,OK=false,Reason="RATE_LIMITED",Message=self.X.UIStateService:ReasonText("RATE_LIMITED")})
+   return
+  end
+  if type(a)=="string" and #a>100 or type(b)=="string" and #b>100 or type(c)=="string" and #c>100 then
+   self.X:Send(player,"Ack",{Action=action,OK=false,Reason="INVALID_VALUE",Message=self.X.UIStateService:ReasonText("INVALID_VALUE")})
+   return
+  end
   if not self.X:Profile(player) then
    if action=="Ready" then self.X:Send(player,"Ack",{Action="Ready",OK=false,Reason="PROFILE_LOADING"}) end
    return
