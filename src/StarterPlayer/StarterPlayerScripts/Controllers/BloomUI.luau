@@ -117,53 +117,69 @@ function UI:Text(parent,text,size,props)
 end
 
 function UI:Label(parent,text,height)
- local label=self:Text(parent,text,UDim2.new(1,0,0,height or 32),{
-  BackgroundTransparency=.38,
-  BackgroundColor3=C.PanelSoft,
-  TextColor3=C.Muted,
-  TextSize=12,
-  TextWrapped=true,
- })
- corner(label,Theme.Radius.Medium)
- outline(label,C.BorderSoft,1,.5)
- pad(label,10,10,4,4)
+ local template=self.Templates and self.Templates:FindFirstChild("LabelTemplate")
+ local label
+ if template and template:IsA("TextLabel") then
+  label=template:Clone()
+  label.Name="Label"
+  label.Visible=true
+  label.Parent=parent
+  label.Text=text or ""
+  label.Size=UDim2.new(1,0,0,height or 30)
+  label.ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1
+ else
+  label=self:Text(parent,text,UDim2.new(1,0,0,height or 30),{BackgroundTransparency=.32,BackgroundColor3=C.PanelSoft,TextColor3=C.Muted,TextSize=11,TextWrapped=true})
+  corner(label,Theme.Radius.Medium)
+  outline(label,C.BorderSoft,1,.46)
+  pad(label,10,10,4,4)
+ end
  return label
 end
 
 function UI:Section(parent,text)
- local label=self:Text(parent,text,UDim2.new(1,0,0,20),{
-  TextColor3=C.Blue,
-  TextSize=11,
-  Font=Enum.Font.GothamBold,
- })
- label.Text=string.upper(text)
- pad(label,2,2,0,0)
+ local template=self.Templates and self.Templates:FindFirstChild("SectionTemplate")
+ local label
+ if template and template:IsA("TextLabel") then
+  label=template:Clone()
+  label.Name="Section"
+  label.Visible=true
+  label.Parent=parent
+  label.Text=string.upper(text or "")
+  label.ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1
+ else
+  label=self:Text(parent,string.upper(text or ""),UDim2.new(1,0,0,18),{TextColor3=C.Blue,TextSize=10,Font=Enum.Font.GothamBold})
+  pad(label,2,2,0,0)
+ end
  return label
 end
 
 function UI:Button(parent,text,fn,icon)
- local base=C.PanelRaised
- local b=make("TextButton",parent,{
-  Size=UDim2.new(1,0,0,38),
-  BackgroundColor3=base,
-  BorderSizePixel=0,
-  Text=text,
-  TextColor3=C.Text,
-  TextSize=12,
-  TextWrapped=true,
-  TextXAlignment=icon and icon~="" and Enum.TextXAlignment.Left or Enum.TextXAlignment.Center,
-  Font=Enum.Font.GothamMedium,
-  ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1,
- })
- corner(b,Theme.Radius.Medium)
- outline(b,C.BorderDark,Theme.Stroke.Control,.08)
- if icon and icon~="" then
-  make("ImageLabel",b,{Name="Icon",Size=UDim2.fromOffset(24,24),Position=UDim2.fromOffset(8,7),BackgroundTransparency=1,Image=icon,ScaleType=Enum.ScaleType.Fit,ZIndex=b.ZIndex+1})
-  pad(b,40,10,0,0)
+ local template=self.Templates and self.Templates:FindFirstChild("ButtonTemplate")
+ local b
+ if template and template:IsA("TextButton") then
+  b=template:Clone()
+  b.Name="Button"
+  b.Visible=true
+  b.Parent=parent
+  b.Text=text or ""
+  b.ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1
+  local img=b:FindFirstChild("Icon")
+  local padding=b:FindFirstChild("Padding") or b:FindFirstChildOfClass("UIPadding")
+  if img and img:IsA("ImageLabel") then
+   img.Visible=icon~=nil and icon~=""
+   img.Image=icon or ""
+   img.ZIndex=b.ZIndex+1
+  end
+  b.TextXAlignment=(icon and icon~="") and Enum.TextXAlignment.Left or Enum.TextXAlignment.Center
+  if padding then padding.PaddingLeft=UDim.new(0,(icon and icon~="") and 36 or 10) end
  else
-  pad(b,10,10,0,0)
+  local base=C.PanelRaised
+  b=make("TextButton",parent,{Size=UDim2.new(1,0,0,34),BackgroundColor3=base,BorderSizePixel=0,Text=text,TextColor3=C.Text,TextSize=12,TextWrapped=true,TextXAlignment=icon and icon~="" and Enum.TextXAlignment.Left or Enum.TextXAlignment.Center,Font=Enum.Font.GothamMedium,ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1})
+  corner(b,Theme.Radius.Medium)
+  outline(b,C.BorderDark,Theme.Stroke.Control,.12)
+  if icon and icon~="" then make("ImageLabel",b,{Name="Icon",Size=UDim2.fromOffset(22,22),Position=UDim2.fromOffset(8,6),BackgroundTransparency=1,Image=icon,ScaleType=Enum.ScaleType.Fit,ZIndex=b.ZIndex+1}) pad(b,36,10,0,0) else pad(b,10,10,0,0) end
  end
- hover(b,base,C.PanelHover)
+ hover(b,C.PanelRaised,C.PanelHover)
  b.Activated:Connect(fn)
  return b
 end
@@ -228,7 +244,7 @@ function UI:RenderMenu()
  if name=="Plant" then
   local slot=self.MenuArg
   self:Section(self.Content,"Клумба "..slot)
-  self:Label(self.Content,"Выберите свободное семя. Уже посаженные копии автоматически вычитаются из доступного количества.",50)
+  self:Label(self.Content,"Выберите свободное семя. Уже посаженные копии автоматически вычитаются из доступного количества.",32)
   if p.WorkshopV5.Nodes.GARDEN_3 and self.LastSeed then
    self:Button(self.Content,"Повторить посадку • "..self.LastSeed,function() self:Send("Plant",slot,self.LastSeed) self:Close() end,Icons.GetRewardIcon("FlowerSeed",self.LastSeed))
   end
@@ -246,7 +262,7 @@ function UI:RenderMenu()
    return ar<br
   end)
   if #available==0 then
-   self:Label(self.Content,"Нет свободных семян. Получи семя из рулетки или выкопай уже посаженный цветок — после награды инвентарь обновляется автоматически.",68)
+   self:Label(self.Content,"Нет свободных семян. Получи семя из рулетки или выкопай уже посаженный цветок — после награды инвентарь обновляется автоматически.",52)
   else
    for _,entry in ipairs(available) do
     local id=entry.Id local f=entry.Flower local count=entry.Count
@@ -257,7 +273,7 @@ function UI:RenderMenu()
 
  elseif name=="SeedSatchel" then
   self:Section(self.Content,"Семена и цветы")
-  self:Label(self.Content,"Слева все семена квадратами, справа выбранный цветок и быстрые действия. Посадка выполняется через клумбу.",54)
+  self:Label(self.Content,"Слева все семена квадратами, справа выбранный цветок и быстрые действия. Посадка выполняется через клумбу.",36)
   local items={}
   for id,count in pairs(p.FlowerCollection.OwnedSeedCopies) do
    local f=F.Species[id]
@@ -274,42 +290,42 @@ function UI:RenderMenu()
    return ar<br
   end)
   if #items==0 then
-   self:Label(self.Content,"Нет семян. Сделай roll и получи семя, после чего инвентарь заполнится автоматически.",58)
+   self:Label(self.Content,"Нет семян. Сделай roll и получи семя, после чего инвентарь заполнится автоматически.",38)
   else
    local selected=self.SelectedSatchelItem
    local active=items[1]
    for _,entry in ipairs(items) do if entry.Id==selected then active=entry break end end
    self.SelectedSatchelItem=active.Id
 
-   local split=make("Frame",self.Content,{Size=UDim2.new(1,0,0,324),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=self.Content.ZIndex+1})
-   local left=make("ScrollingFrame",split,{Name="InventoryGrid",Size=UDim2.new(0,244,1,0),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundColor3=C.Panel,BackgroundTransparency=.12,BorderSizePixel=0,ScrollBarThickness=6,ScrollBarImageColor3=C.Blue,ZIndex=split.ZIndex+1})
+   local split=make("Frame",self.Content,{Size=UDim2.new(1,0,0,286),BackgroundTransparency=1,BorderSizePixel=0,ZIndex=self.Content.ZIndex+1})
+   local left=make("ScrollingFrame",split,{Name="InventoryGrid",Size=UDim2.new(0,228,1,0),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundColor3=C.Panel,BackgroundTransparency=.12,BorderSizePixel=0,ScrollBarThickness=6,ScrollBarImageColor3=C.Blue,ZIndex=split.ZIndex+1})
    corner(left,Theme.Radius.Large)
    outline(left,C.BorderSoft,1,.4)
    pad(left,12,12,12,12)
-   local grid=make("UIGridLayout",left,{CellSize=UDim2.fromOffset(68,68),CellPadding=UDim2.fromOffset(8,8),SortOrder=Enum.SortOrder.LayoutOrder})
+   local grid=make("UIGridLayout",left,{CellSize=UDim2.fromOffset(68,52),CellPadding=UDim2.fromOffset(8,8),SortOrder=Enum.SortOrder.LayoutOrder})
 
-   local right=make("Frame",split,{Name="SelectedDetails",Size=UDim2.new(1,-256,1,0),Position=UDim2.fromOffset(256,0),BackgroundColor3=C.Panel,BackgroundTransparency=.08,BorderSizePixel=0,ZIndex=split.ZIndex+1})
+   local right=make("Frame",split,{Name="SelectedDetails",Size=UDim2.new(1,-240,1,0),Position=UDim2.fromOffset(240,0),BackgroundColor3=C.Panel,BackgroundTransparency=.08,BorderSizePixel=0,ZIndex=split.ZIndex+1})
    corner(right,Theme.Radius.Large)
    outline(right,C.BorderDark,Theme.Stroke.Panel,.08)
-   local info=make("Frame",right,{Name="Info",Size=UDim2.new(1,-20,0,110),Position=UDim2.fromOffset(10,10),BackgroundColor3=C.PanelSoft,BackgroundTransparency=.18,BorderSizePixel=0,ZIndex=right.ZIndex+1})
+   local info=make("Frame",right,{Name="Info",Size=UDim2.new(1,-16,0,98),Position=UDim2.fromOffset(8,8),BackgroundColor3=C.PanelSoft,BackgroundTransparency=.18,BorderSizePixel=0,ZIndex=right.ZIndex+1})
    corner(info,Theme.Radius.Medium)
    outline(info,C.BorderSoft,1,.45)
 
    local iconWrap=make("Frame",info,{Size=UDim2.fromOffset(74,74),Position=UDim2.fromOffset(10,10),BackgroundColor3=C.PanelRaised,BorderSizePixel=0,ZIndex=info.ZIndex+1})
    corner(iconWrap,Theme.Radius.Large)
    outline(iconWrap,C.BorderDark,Theme.Stroke.Control,.12)
-   local infoIcon=make("ImageLabel",iconWrap,{Name="Icon",Size=UDim2.fromOffset(50,50),Position=UDim2.fromOffset(12,12),BackgroundTransparency=1,ScaleType=Enum.ScaleType.Fit,Image=Icons.GetRewardIcon("FlowerSeed",active.Id),ZIndex=iconWrap.ZIndex+1})
+   local infoIcon=make("ImageLabel",iconWrap,{Name="Icon",Size=UDim2.fromOffset(50,32),Position=UDim2.fromOffset(12,12),BackgroundTransparency=1,ScaleType=Enum.ScaleType.Fit,Image=Icons.GetRewardIcon("FlowerSeed",active.Id),ZIndex=iconWrap.ZIndex+1})
    local title=self:Text(info,active.Flower.DisplayName,UDim2.new(1,-98,0,24),{Position=UDim2.fromOffset(94,10),TextSize=18,Font=Enum.Font.GothamBold,ZIndex=info.ZIndex+1})
    local rarity=self:Text(info,active.Flower.Rarity.."   •   copies "..active.Count,UDim2.new(1,-98,0,16),{Position=UDim2.fromOffset(94,34),TextSize=11,TextColor3=C.Gold,ZIndex=info.ZIndex+1})
-   local meta=self:Text(info,"Mastery "..active.Mastery.Level.."   •   XP "..active.Mastery.XP.."/"..(active.Mastery.Level*25).."   •   свободно "..active.Free.." / всего "..active.Count,UDim2.new(1,-98,0,28),{Position=UDim2.fromOffset(94,54),TextSize=11,TextColor3=C.Muted,TextWrapped=true,ZIndex=info.ZIndex+1})
+   local meta=self:Text(info,"Mastery "..active.Mastery.Level.."   •   XP "..active.Mastery.XP.."/"..(active.Mastery.Level*25).."   •   свободно "..active.Free.." / всего "..active.Count,UDim2.new(1,-98,0,28),{Position=UDim2.fromOffset(94,36),TextSize=11,TextColor3=C.Muted,TextWrapped=true,ZIndex=info.ZIndex+1})
    local hint=self:Text(info,"Защищай любимые цветы и растворяй только свободные дубликаты.",UDim2.new(1,-20,0,16),{Position=UDim2.fromOffset(10,88),TextSize=10,TextColor3=C.Muted,ZIndex=info.ZIndex+1})
 
-   local actions=make("ScrollingFrame",right,{Name="Actions",Size=UDim2.new(1,-20,1,-132),Position=UDim2.fromOffset(10,122),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=6,ScrollBarImageColor3=C.Blue,ZIndex=right.ZIndex+1})
+   local actions=make("ScrollingFrame",right,{Name="Actions",Size=UDim2.new(1,-16,1,-114),Position=UDim2.fromOffset(8,106),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=6,ScrollBarImageColor3=C.Blue,ZIndex=right.ZIndex+1})
    local actionsLayout=make("UIListLayout",actions,{Padding=UDim.new(0,8),SortOrder=Enum.SortOrder.LayoutOrder})
 
    local function addAction(text,fn,icon)
     local btn=self:Button(actions,text,fn,icon)
-    btn.Size=UDim2.new(1,0,0,34)
+    btn.Size=UDim2.new(1,0,0,32)
     btn.TextSize=12
     return btn
    end
@@ -322,13 +338,31 @@ function UI:RenderMenu()
    if p.WorkshopV5.Nodes.LEGACY_5 then addAction("Third Memory Slot",function() self:Send("Keepsake","Flower2",active.Id) end,Icons.Get("System","Flower")) end
 
    for index,entry in ipairs(items) do
-    local tile=make("ImageButton",left,{Name="Tile_"..entry.Id,BackgroundColor3=entry.Id==active.Id and C.BlueDeep or C.PanelRaised,BorderSizePixel=0,AutoButtonColor=false,Image="",LayoutOrder=index,ZIndex=left.ZIndex+1})
-    corner(tile,Theme.Radius.Medium)
-    outline(tile,entry.Id==active.Id and C.Gold or C.BorderDark,entry.Id==active.Id and 2 or 1,entry.Id==active.Id and .05 or .2)
-    local img=make("ImageLabel",tile,{Name="Icon",Size=UDim2.fromOffset(38,38),Position=UDim2.fromOffset(15,4),BackgroundTransparency=1,Image=Icons.GetRewardIcon("FlowerSeed",entry.Id),ScaleType=Enum.ScaleType.Fit,ZIndex=tile.ZIndex+1})
-    make("TextLabel",tile,{Name="Count",Size=UDim2.fromOffset(24,16),Position=UDim2.fromOffset(42,2),BackgroundColor3=C.Blue,BorderSizePixel=0,Text="x"..entry.Count,TextColor3=C.Text,TextSize=10,Font=Enum.Font.GothamBold,ZIndex=tile.ZIndex+2})
-    make("TextLabel",tile,{Name="Name",Size=UDim2.new(1,-8,0,16),Position=UDim2.fromOffset(4,48),BackgroundTransparency=1,Text=entry.Flower.DisplayName,TextColor3=C.Text,TextSize=9,Font=Enum.Font.GothamMedium,TextWrapped=true,ZIndex=tile.ZIndex+1})
-    local lock=make("TextLabel",tile,{Name="Flags",Size=UDim2.fromOffset(18,18),Position=UDim2.fromOffset(4,4),BackgroundTransparency=1,Text=(p.FlowerCollection.LockedFlowers[entry.Id] and "🔒" or (p.FlowerCollection.FavoriteFlowers[entry.Id] and "★" or "")),TextColor3=C.Gold,TextSize=12,Font=Enum.Font.GothamBold,ZIndex=tile.ZIndex+2})
+    local tileTemplate=self.Templates and self.Templates:FindFirstChild("InventoryTileTemplate")
+    local tile
+    if tileTemplate and tileTemplate:IsA("ImageButton") then
+     tile=tileTemplate:Clone()
+     tile.Name="Tile_"..entry.Id
+     tile.Visible=true
+     tile.Parent=left
+     tile.LayoutOrder=index
+     tile.ZIndex=left.ZIndex+1
+     tile.BackgroundColor3=entry.Id==active.Id and C.BlueDeep or C.PanelRaised
+    else
+     tile=make("ImageButton",left,{Name="Tile_"..entry.Id,BackgroundColor3=entry.Id==active.Id and C.BlueDeep or C.PanelRaised,BorderSizePixel=0,AutoButtonColor=false,Image="",LayoutOrder=index,ZIndex=left.ZIndex+1})
+     corner(tile,Theme.Radius.Medium)
+     outline(tile,C.BorderDark,Theme.Stroke.Control,.14)
+    end
+    local tileStroke=tile:FindFirstChildOfClass("UIStroke")
+    if tileStroke then tileStroke.Color=entry.Id==active.Id and C.Gold or C.BorderDark tileStroke.Thickness=entry.Id==active.Id and 2 or Theme.Stroke.Control tileStroke.Transparency=entry.Id==active.Id and .05 or .14 end
+    local img=tile:FindFirstChild("Icon")
+    local countLabel=tile:FindFirstChild("Count")
+    local nameLabel=tile:FindFirstChild("Name")
+    local flagsLabel=tile:FindFirstChild("Flags")
+    if img and img:IsA("ImageLabel") then img.Image=Icons.GetRewardIcon("FlowerSeed",entry.Id) img.ZIndex=tile.ZIndex+1 end
+    if countLabel and countLabel:IsA("TextLabel") then countLabel.Text="x"..entry.Count countLabel.ZIndex=tile.ZIndex+2 end
+    if nameLabel and nameLabel:IsA("TextLabel") then nameLabel.Text=entry.Flower.DisplayName nameLabel.ZIndex=tile.ZIndex+1 end
+    if flagsLabel and flagsLabel:IsA("TextLabel") then flagsLabel.Text=(p.FlowerCollection.LockedFlowers[entry.Id] and "◆" or (p.FlowerCollection.FavoriteFlowers[entry.Id] and "★" or "")) flagsLabel.ZIndex=tile.ZIndex+2 end
     tile.MouseEnter:Connect(function() if entry.Id~=self.SelectedSatchelItem then TweenService:Create(tile,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelHover}):Play() end end)
     tile.MouseLeave:Connect(function() if entry.Id~=self.SelectedSatchelItem then TweenService:Create(tile,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelRaised}):Play() end end)
     tile.Activated:Connect(function() self.SelectedSatchelItem=entry.Id self:RenderMenu() end)
@@ -338,16 +372,16 @@ function UI:RenderMenu()
    for id,count in pairs(p.Pollinators.BeeInventory) do
     local bee=B.Get(id)
     if bee then
-     self:Label(self.Content,bee.DisplayName.."  ×"..count.."   •   "..table.concat(bee.Traits,", "),42)
+     self:Label(self.Content,bee.DisplayName.."  ×"..count.."   •   "..table.concat(bee.Traits,", "),34)
     end
    end
   end
 
  elseif name=="Workshop" then
   self:Section(self.Content,"Workshop Tree")
-  self:Label(self.Content,"Points "..p.WorkshopV5.Points.."   •   Coins "..compact(p.Currencies.Coins).."   •   Petal Dust "..compact(p.Currencies.PetalDust),44)
+  self:Label(self.Content,"Points "..p.WorkshopV5.Points.."   •   Coins "..compact(p.Currencies.Coins).."   •   Petal Dust "..compact(p.Currencies.PetalDust),36)
   self:Button(self.Content,"Alpha respec • вернуть стоимость обычных узлов",function() self:Send("Respec") end,Icons.Get("System","Warning"))
-  local canvas=make("ScrollingFrame",self.Content,{Size=UDim2.new(1,0,0,360),CanvasSize=UDim2.fromOffset(1440,1300),BackgroundColor3=C.Background,BackgroundTransparency=.12,BorderSizePixel=0,ScrollBarThickness=6,ScrollBarImageColor3=C.Blue,ScrollingDirection=Enum.ScrollingDirection.XY})
+  local canvas=make("ScrollingFrame",self.Content,{Size=UDim2.new(1,0,0,320),CanvasSize=UDim2.fromOffset(1440,1300),BackgroundColor3=C.Background,BackgroundTransparency=.12,BorderSizePixel=0,ScrollBarThickness=6,ScrollBarImageColor3=C.Blue,ScrollingDirection=Enum.ScrollingDirection.XY})
   corner(canvas,Theme.Radius.Large)
   outline(canvas,C.BorderDark,Theme.Stroke.Panel,.08)
   local center=Vector2.new(720,650)
@@ -383,21 +417,21 @@ function UI:RenderMenu()
   self:Section(self.Content,"Коллекция и реальные шансы")
   self:Label(self.Content,"Шансы учитывают текущие модификаторы и гарантию нового открытия.",48)
   for _,item in ipairs(self.State.Odds) do
-   self:Label(self.Content,item.DisplayName.."   •   "..item.Rarity..string.format("   •   %.6f%%",item.Chance*100)..(item.Undiscovered and "   •   НЕ ОТКРЫТ" or "   •   открыт"),46)
+   self:Label(self.Content,item.DisplayName.."   •   "..item.Rarity..string.format("   •   %.6f%%",item.Chance*100)..(item.Undiscovered and "   •   НЕ ОТКРЫТ" or "   •   открыт"),38)
   end
   self:Section(self.Content,"Синергии")
-  self:Label(self.Content,"Пары: Daisy + Tulip; Sunflower + Clover.",44)
-  if p.WorkshopV5.Nodes.GARDEN_5 then self:Label(self.Content,"Crystal triangle: 1, 2, 6; Meadow line: 1, 2, 3; opposite: 1, 15.",62) end
-  for id in pairs(p.GardenSynergies.Discovered) do self:Label(self.Content,id.."   •   mastery "..(p.GardenSynergies.Mastery[id] or 0),42) end
+  self:Label(self.Content,"Пары: Daisy + Tulip; Sunflower + Clover.",36)
+  if p.WorkshopV5.Nodes.GARDEN_5 then self:Label(self.Content,"Crystal triangle: 1, 2, 6; Meadow line: 1, 2, 3; opposite: 1, 15.",48) end
+  for id in pairs(p.GardenSynergies.Discovered) do self:Label(self.Content,id.."   •   mastery "..(p.GardenSynergies.Mastery[id] or 0),34) end
 
  elseif name=="Map" then
   self:Section(self.Content,"Мир Bloom RNG")
-  if p.WorkshopV5.Nodes.EXPLORATION_1 and self.State.Pulse then self:Label(self.Content,"Biome Pulse  •  "..self.State.Pulse.Sector,44) end
-  for _,id in ipairs(L.Order) do self:Label(self.Content,L.Sectors[id].Name.."   •   "..(p.World.UnlockedSectors[id] and "ОТКРЫТО" or "требуется Hive "..L.Sectors[id].Hive),44) end
+  if p.WorkshopV5.Nodes.EXPLORATION_1 and self.State.Pulse then self:Label(self.Content,"Biome Pulse  •  "..self.State.Pulse.Sector,36) end
+  for _,id in ipairs(L.Order) do self:Label(self.Content,L.Sectors[id].Name.."   •   "..(p.World.UnlockedSectors[id] and "ОТКРЫТО" or "требуется Hive "..L.Sectors[id].Hive),36) end
   self:Section(self.Content,"Landmarks")
   local any=false
-  for id in pairs(p.World.LandmarkDiscoveries) do any=true self:Label(self.Content,"✓  "..id,40) end
-  if not any then self:Label(self.Content,"Пока ничего не найдено.",40) end
+  for id in pairs(p.World.LandmarkDiscoveries) do any=true self:Label(self.Content,"✓  "..id,32) end
+  if not any then self:Label(self.Content,"Пока ничего не найдено.",32) end
   self:Button(self.Content,"Открыть Build Trials",function() self:Open("Trials") end,Icons.Get("System","Quests"))
 
  elseif name=="Trials" then
@@ -427,16 +461,16 @@ function UI:RenderMenu()
  elseif name=="Season" then
   local preview=self.MenuArg
   self:Section(self.Content,"Что сохранится")
-  self:Label(self.Content,table.concat(preview.Keep,", "),78)
+  self:Label(self.Content,table.concat(preview.Keep,", "),38)
   self:Section(self.Content,"Изменения")
-  for _,diff in ipairs(preview.Diff) do self:Label(self.Content,diff.Path..":  "..tostring(diff.Before).."  →  "..tostring(diff.After),46) end
+  for _,diff in ipairs(preview.Diff) do self:Label(self.Content,diff.Path..":  "..tostring(diff.Before).."  →  "..tostring(diff.After),38) end
   self:Button(self.Content,self.SeasonSecond and "ПОДТВЕРДИТЬ СБРОС СЕЗОНА" or "Продолжить",function() self:Send("SeasonConfirm",preview.Token) end,Icons.Get("System",self.SeasonSecond and "Warning" or "Confirm"))
 
  elseif name=="Replay" then
   local i=self.ReplayIndex or 1
   self.ReplayIndex=i
   self:Section(self.Content,"Шаг "..i.." из "..#T.Steps)
-  self:Label(self.Content,T.Steps[i].Text,78)
+  self:Label(self.Content,T.Steps[i].Text,38)
   self:Button(self.Content,"Следующий шаг",function() self.ReplayIndex=i%#T.Steps+1 self:RenderMenu() end,Icons.Get("System","ArrowRight"))
   self:Button(self.Content,"Предыдущий шаг",function() self.ReplayIndex=(i-2)%#T.Steps+1 self:RenderMenu() end,Icons.Get("System","ArrowLeft"))
 
@@ -465,25 +499,27 @@ function UI:ApplyResponsiveLayout(width,height)
  if width>=700 then return end
 
  -- Small-screen safety only. These adjustments intentionally touch as little as possible.
- self.ObjectiveCard.Size=UDim2.fromOffset(math.max(280,width-24),82)
- self.CurrencyHUD.Position=UDim2.fromOffset(10,96)
+ self.ObjectiveCard.Size=UDim2.fromOffset(math.max(280,width-24),66)
+ self.CurrencyHUD.Position=UDim2.fromOffset(10,84)
  self.Dock.AnchorPoint=Vector2.new(1,.5)
  self.Dock.Position=UDim2.new(1,-10,.56,0)
  self.Guide.Size=UDim2.fromOffset(math.max(260,width-24),38)
- self.RollHUD.Size=UDim2.fromOffset(math.min(300,width-18),58)
+ self.RollHUD.Size=UDim2.fromOffset(math.min(300,width-18),38)
  self.RollHUD.AnchorPoint=Vector2.new(.5,1)
- self.RollHUD.Position=UDim2.new(.5,0,1,-72)
+ self.RollHUD.Position=UDim2.new(.5,0,1,-62)
  self.Roll.AnchorPoint=Vector2.new(.5,1)
  self.Roll.Position=UDim2.new(.5,0,1,-10)
  self.RouletteViewport.AnchorPoint=Vector2.new(.5,0)
- self.RouletteViewport.Position=UDim2.new(.5,0,0,108)
- self.ToastRoot.Size=UDim2.fromOffset(math.max(260,width-24),44)
- self.Panel.Size=UDim2.fromOffset(math.max(300,width-16),math.max(300,height-120))
+ self.RouletteViewport.Position=UDim2.new(.5,0,0,78)
+ self.ToastRoot.Size=UDim2.fromOffset(math.max(260,width-24),36)
+ self.Panel.Size=UDim2.fromOffset(math.max(300,width-16),math.max(300,height-108))
  self.Panel.Position=UDim2.new(.5,0,.52,0)
- self.Reveal.Size=UDim2.fromOffset(math.max(280,width-24),124)
+ self.Reveal.Size=UDim2.fromOffset(math.max(280,width-24),100)
 end
 
 function UI:Render()
+ self.ObjectiveCard.Visible=true
+ self.CurrencyHUD.Visible=true
  local p=self.State.Profile
  local step=T.Steps[p.Tutorial.Step]
  if step then
@@ -868,6 +904,7 @@ function UI:BindStaticUI()
  close.MouseLeave:Connect(function() TweenService:Create(close,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelRaised}):Play() end)
  self.Content=self.Panel:WaitForChild("Content")
  self.ContentLayout=self.Content:FindFirstChildOfClass("UIListLayout")
+ self.Templates=self.Panel:FindFirstChild("Templates")
 
  self.Reveal=root:WaitForChild("RewardReveal")
  self.RewardStroke=self.Reveal:FindFirstChildOfClass("UIStroke")
@@ -948,12 +985,36 @@ function UI:ResolveBloomGui()
  error("[BloomUI] BloomUI is missing from both PlayerGui and StarterGui")
 end
 
+function UI:GuardBloomGui()
+ local playerGui=self.Player:WaitForChild("PlayerGui")
+ self.Gui:SetAttribute("BloomAuthoritative",true)
+ local function removeDuplicate(child)
+  if child~=self.Gui and child:IsA("ScreenGui") and child.Name=="BloomUI" then
+   warn("[BloomUI] Destroying late duplicate HUD:",child:GetFullName())
+   child:Destroy()
+  end
+ end
+ for _,child in ipairs(playerGui:GetChildren()) do removeDuplicate(child) end
+ self.GuiGuardConnection=playerGui.ChildAdded:Connect(function(child)
+  if child.Name~="BloomUI" or not child:IsA("ScreenGui") then return end
+  task.defer(function()
+   if child.Parent==playerGui and self.Gui and self.Gui.Parent==playerGui then removeDuplicate(child) end
+  end)
+ end)
+end
+
 function UI:ApplyState(payload,source)
  if type(payload)~="table" or type(payload.Profile)~="table" then
   warn("[BloomUI] Ignoring invalid state payload from",source or "unknown")
   return false
  end
+ local firstState=self.State==nil
  self.State=payload
+ if firstState then
+  self.ObjectiveCard.Visible=true
+  self.CurrencyHUD.Visible=true
+  self.Dock.Visible=true
+ end
  if not self.RouletteLanding then self:BuildRouletteVisualPool(true) end
  self:Render()
  print("[BloomUI] State applied:",source or "Event")
@@ -972,6 +1033,7 @@ function UI:Start()
  self.StateRequest=remotes:WaitForChild("StateRequest")
  local event=remotes:WaitForChild("Event")
  self.Gui=self:ResolveBloomGui()
+ self:GuardBloomGui()
  self.SafeRoot=self.Gui:WaitForChild("SafeRoot",10)
  if not self.SafeRoot then error("[BloomUI] BloomUI exists, but SafeRoot is missing") end
  self:BindStaticUI()
