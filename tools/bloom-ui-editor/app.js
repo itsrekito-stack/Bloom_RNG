@@ -590,6 +590,11 @@ function tidySiblings(columns=3,gap=8){
  }
 
  // Tidy is a batch operation: keep the arranged set selected so it can be moved immediately.
+ const fitParent=$("#tidyFitParent")?.checked!==false;
+ if(fitParent){
+  renderViewport();
+  fitParentToChildren(parent,gap);
+ }
  state.selectedIds=new Set(data.map(x=>x.c.__id));
  state.selectedId=n.__id;
  state.selectionAnchorId=data[0].c.__id;
@@ -597,7 +602,7 @@ function tidySiblings(columns=3,gap=8){
  revealTreePath(state.selectedId);
  renderAll();
  scrollTreeToSelected();
- toast(`Tidy: ${data.length} объектов · ${columns} кол. · gap ${gap}px · группа выделена`);
+ toast(`Tidy: ${data.length} объектов · ${columns} кол. · gap ${gap}px${fitParent?" · parent fitted":""} · группа выделена`);
 }
 function distributeSiblings(axis="x",gap=8){
  const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName))return;
@@ -640,6 +645,61 @@ function distributeSiblings(axis="x",gap=8){
  toast((axis==="x"?"Горизонтальный":"Вертикальный")+" gap = "+gap+"px · группа выделена");
 }
 
+
+function fitParentToChildren(parent,pad=8){
+ if(!parent||parent===state.root||MODIFIERS.has(parent.ClassName))return false;
+ const pel=els.guiRoot.querySelector(`[data-id="${parent.__id}"]`);if(!pel)return false;
+ const pr=localRect(pel);if(!pr)return false;
+ const kids=(parent.Children||[]).filter(c=>!MODIFIERS.has(c.ClassName)).map(c=>{
+  const el=els.guiRoot.querySelector(`[data-id="${c.__id}"]`);
+  return {c,r:localRect(el)};
+ }).filter(x=>x.r&&els.guiRoot.querySelector(`[data-id="${x.c.__id}"]`)?.style.display!=="none");
+ if(!kids.length)return false;
+
+ pad=Math.max(0,roundOffset(pad));
+ const left=Math.min(...kids.map(x=>x.r.left))-pad;
+ const top=Math.min(...kids.map(x=>x.r.top))-pad;
+ const right=Math.max(...kids.map(x=>x.r.right))+pad;
+ const bottom=Math.max(...kids.map(x=>x.r.bottom))+pad;
+
+ const parentParent=findParent(parent.__id);
+ const ppEl=parentParent&&parentParent!==state.root?els.guiRoot.querySelector(`[data-id="${parentParent.__id}"]`):els.guiRoot;
+ const ppr=localRect(ppEl);if(!ppr)return false;
+
+ const a=v2v(parent,"AnchorPoint",[0,0]);
+ const w=Math.max(1,right-left),h=Math.max(1,bottom-top);
+
+ // Keep children visually fixed: move parent to the new top-left, then convert child coordinates.
+ const childRects=kids.map(x=>({c:x.c,r:x.r}));
+ parent.Properties=parent.Properties||{};
+ parent.Properties.Size={UDim2:[[0,roundOffset(w)],[0,roundOffset(h)]]};
+ parent.Properties.Position={UDim2:[
+  [0,roundOffset(left-ppr.left+a[0]*w)],
+  [0,roundOffset(top-ppr.top+a[1]*h)]
+ ]};
+
+ for(const {c,r} of childRects){
+  const ca=v2v(c,"AnchorPoint",[0,0]);
+  c.Properties=c.Properties||{};
+  c.Properties.Position={UDim2:[
+   [0,roundOffset(r.left-left+ca[0]*r.w)],
+   [0,roundOffset(r.top-top+ca[1]*r.h)]
+  ]};
+ }
+ return true;
+}
+function fitSelectedParent(){
+ const n=selected();if(!n)return;
+ const parent=findParent(n.__id);if(!parent||parent===state.root){toast("У выбранного объекта нет подходящего Frame-родителя",true);return}
+ pushHistory();
+ if(fitParentToChildren(parent,8)){
+  state.selectedId=parent.__id;state.selectedIds=new Set([parent.__id]);state.selectionAnchorId=parent.__id;
+  state.dirty=true;renderAll();finishSelection();toast(parent.Name+" подогнан под содержимое");
+ }else{
+  state.history.pop();toast("Не удалось подогнать родителя",true);
+ }
+}
+
 function geometryInspectorGroup(){
  const n=selected(),parent=n&&findParent(n.__id),managed=isLayoutParent(parent);
  return group("GEOMETRY",[
@@ -656,8 +716,10 @@ function geometryInspectorGroup(){
   '</div>'+
   '<div class="arrange-box">'+
    '<div class="arrange-row"><label>Columns <input id="arrangeColumns" type="number" min="1" max="12" value="3"></label><label>Gap <input id="arrangeGap" type="number" min="0" max="100" value="8"></label></div>'+
+   '<label class="arrange-check"><input id="tidyFitParent" type="checkbox" checked> Fit parent after Tidy</label>'+
    '<button class="btn arrange-primary" id="tidyBtn">TIDY SIBLINGS</button>'+
    '<div class="arrange-row buttons"><button class="btn" id="spaceXBtn">SPACE X</button><button class="btn" id="spaceYBtn">SPACE Y</button></div>'+
+   '<button class="btn" id="fitParentBtn">FIT PARENT TO CHILDREN</button>'+
   '</div>'+
   (managed?'<button class="btn free-layout-btn" id="freeLayoutBtn">FREE TRANSFORM · удалить Layout</button>':'')+
   '<div class="align-help">Tidy аккуратно раскладывает соседние элементы, но не создаёт Layout — после этого каждый объект остаётся полностью свободным. Smart snap работает при drag/resize. Alt временно отключает магнит.</div>'
@@ -1043,6 +1105,7 @@ function bindInspectorHandlers(n){
  $("#tidyBtn")?.addEventListener("click",()=>tidySiblings(finite($("#arrangeColumns")?.value,3),finite($("#arrangeGap")?.value,8)));
  $("#spaceXBtn")?.addEventListener("click",()=>distributeSiblings("x",finite($("#arrangeGap")?.value,8)));
  $("#spaceYBtn")?.addEventListener("click",()=>distributeSiblings("y",finite($("#arrangeGap")?.value,8)));
+ $("#fitParentBtn")?.addEventListener("click",fitSelectedParent);
  $("#freeLayoutBtn")?.addEventListener("click",()=>{const current=selected(),parent=current&&findParent(current.__id);if(parent&&bakeLayout(parent)){select(current.__id)}});
 }
 function setProp(n,k,v){n.Properties=n.Properties||{};n.Properties[k]=v;changed()}
