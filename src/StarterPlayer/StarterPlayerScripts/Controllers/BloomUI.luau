@@ -354,10 +354,22 @@ function UI:RenderMenu()
   self.PanelHeaderIcon.Image=headerImage
  end
  self.Content.CanvasPosition=Vector2.new()
- self.Content.ScrollBarThickness=name=="SeedSatchel" and 0 or 5
 
- if not self.IsMobileLayout then
-  self.Panel.Size=name=="Workshop" and UDim2.fromOffset(940,620) or name=="SeedSatchel" and UDim2.fromOffset(640,500) or UDim2.fromOffset(600,420)
+ if name=="Workshop" then
+  -- Workshop is a full-screen workspace. The tree itself pans independently.
+  self.Panel.AnchorPoint=Vector2.new(.5,.5)
+  self.Panel.Position=UDim2.fromScale(.5,.5)
+  self.Panel.Size=UDim2.new(1,-20,1,-20)
+  self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
+  self.Content.CanvasSize=UDim2.fromOffset(0,0)
+  self.Content.ScrollBarThickness=0
+ else
+  self.Content.AutomaticCanvasSize=Enum.AutomaticSize.Y
+  self.Content.ScrollBarThickness=name=="SeedSatchel" and 0 or 5
+  if not self.IsMobileLayout then
+   self.Panel.Size=name=="SeedSatchel" and UDim2.fromOffset(640,500) or UDim2.fromOffset(600,420)
+   self.Panel.Position=UDim2.new(.5,0,.52,0)
+  end
  end
 
  if name=="Plant" then
@@ -530,7 +542,7 @@ function UI:RenderMenu()
    shell.Name="WorkshopRuntime"
    shell.Visible=true
    shell.Parent=self.Content
-   shell.Size=UDim2.new(1,0,0,510)
+   shell.Size=UDim2.fromScale(1,1)
    shell.Position=UDim2.new()
    shell.LayoutOrder=1
 
@@ -797,12 +809,12 @@ function UI:Render()
  if self.Auto then
   self.Roll.Text=""
   self.Roll.BackgroundTransparency=1
-  self.RollStroke.Color=C.Green
+  if self.RollStroke then self.RollStroke.Color=C.Green end
   self.RollIcon.Image=Icons.GetActionIcon("AutoRoll")
  else
   self.Roll.Text=""
   self.Roll.BackgroundTransparency=1
-  self.RollStroke.Color=special and C.Gold or C.Blue
+  if self.RollStroke then self.RollStroke.Color=special and C.Gold or C.Blue end
   self.RollIcon.Image=Icons.GetActionIcon("Roll")
  end
  self.RollIcon.ImageColor3=C.White
