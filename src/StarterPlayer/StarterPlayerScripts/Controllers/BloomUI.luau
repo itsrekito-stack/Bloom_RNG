@@ -253,6 +253,9 @@ function UI:BindWorkshopPan(canvas,nodes)
   zoom=math.clamp(value,zoomMin,zoomMax)
   self.WorkshopZoom=zoom
   if zoomScale then zoomScale.Scale=zoom end
+  if self.WorkshopZoomLabel and self.WorkshopZoomLabel.Parent then
+   self.WorkshopZoomLabel.Text=tostring(math.floor(zoom*100+.5)).."%"
+  end
   canvas.CanvasSize=UDim2.fromOffset(
    math.max(1,math.floor(baseCanvas.X*zoom+.5)),
    math.max(1,math.floor(baseCanvas.Y*zoom+.5))
@@ -628,6 +631,7 @@ function UI:RenderMenu()
    shell.LayoutOrder=1
 
    local top=shell:WaitForChild("WorkshopTop")
+   self.WorkshopZoomLabel=top:FindFirstChild("Zoom")
    local workshopUI=ui.Workshop
    top.Points.Text=tostring(workshopUI and workshopUI.Points or p.WorkshopV5.Points).." POINTS"
    local body=shell:WaitForChild("WorkshopBody")
@@ -749,10 +753,8 @@ function UI:RenderMenu()
       end
      end)
      node.Activated:Connect(function()
-      if nodeId~="CORE" then
-       self.SelectedNode=nodeId
-       self:RenderMenu()
-      end
+      self.SelectedNode=nodeId
+      self:RenderMenu()
      end)
     end
 
@@ -760,8 +762,12 @@ function UI:RenderMenu()
      local link=links:FindFirstChild("Link_"..n.Parent.."_"..id)
      if link and link:IsA("Frame") then
       local parentOwned=n.Parent=="CORE" or p.WorkshopV5.Nodes[n.Parent]==true
-      link.BackgroundColor3=parentOwned and branchColor or C.BorderSoft
-      link.BackgroundTransparency=parentOwned and (owned and .08 or available and .26 or .44) or .68
+      local onSelectedPath=selectedNode
+       and n.Branch==selectedNode.Branch
+       and (n.Index or 0)<=(selectedNode.Index or 0)
+      link.BackgroundColor3=onSelectedPath and C.Gold or parentOwned and branchColor or C.BorderSoft
+      link.BackgroundTransparency=onSelectedPath and .08 or parentOwned and (owned and .10 or available and .28 or .46) or .70
+      link.Size=UDim2.new(link.Size.X.Scale,link.Size.X.Offset,0,onSelectedPath and 6 or 4)
      end
     end
    end
@@ -775,7 +781,10 @@ function UI:RenderMenu()
     local detailCost=details:WaitForChild("Cost")
     local detailRequirement=details:WaitForChild("Requirement")
     detailIcon.Image=Icons.GetWorkshopNodeIcon(n.Id)
-    detailIcon.ImageColor3=branchColors[n.Branch] or C.Blue
+    local selectedBranchColor=branchColors[n.Branch] or C.Blue
+    detailIcon.ImageColor3=selectedBranchColor
+    local branchAccent=details:FindFirstChild("BranchAccent")
+    if branchAccent and branchAccent:IsA("Frame") then branchAccent.BackgroundColor3=selectedBranchColor end
     detailName.Text=n.Name
     detailBranch.Text=n.Branch
     local rules=effects[n.Id] or {}
@@ -800,6 +809,34 @@ function UI:RenderMenu()
    details.RespecButton.Active=not workshopUI or workshopUI.CanRespec==true
    details.RespecButton.Activated:Connect(function()
     if not workshopUI or workshopUI.CanRespec==true then self:Send("Respec") end
+   end)
+
+   local buyBase=details.BuyButton.BackgroundColor3
+   details.BuyButton.MouseEnter:Connect(function()
+    if details.BuyButton.Active then
+     TweenService:Create(details.BuyButton,TweenInfo.new(Theme.Motion.Fast),{
+      BackgroundColor3=C.Honey,
+     }):Play()
+    end
+   end)
+   details.BuyButton.MouseLeave:Connect(function()
+    TweenService:Create(details.BuyButton,TweenInfo.new(Theme.Motion.Fast),{
+     BackgroundColor3=buyBase,
+    }):Play()
+   end)
+
+   local respecBase=details.RespecButton.BackgroundColor3
+   details.RespecButton.MouseEnter:Connect(function()
+    if details.RespecButton.Active then
+     TweenService:Create(details.RespecButton,TweenInfo.new(Theme.Motion.Fast),{
+      BackgroundColor3=C.PanelHover,
+     }):Play()
+    end
+   end)
+   details.RespecButton.MouseLeave:Connect(function()
+    TweenService:Create(details.RespecButton,TweenInfo.new(Theme.Motion.Fast),{
+     BackgroundColor3=respecBase,
+    }):Play()
    end)
 
    if self.WorkshopCanvasPosition then
