@@ -233,7 +233,7 @@ function previewText(n,parentNode){
  if(name==="ObjectiveTitle")return "ОБУЧЕНИЕ • 1/8";
  if(name==="ObjectiveText")return "Заполни Bloom и сделай особый roll";
  if(name==="MeterLabel")return "BLOOM  38%  •  DISCOVERY  3/30";
- if(name==="RollButton")return "СДЕЛАТЬ ROLL";
+ if(name==="RollButton"){if(Object.prototype.hasOwnProperty.call(n.Properties||{},"Text")&&(n.Properties.Text??"")==="")return "";return "СДЕЛАТЬ ROLL"}
  if(name==="PanelTitle"&&state.previewScene==="seedbag")return "Сумка семян";
  if(name==="PanelSubtitle"&&state.previewScene==="seedbag")return "Собирай, сажай и выращивай редкие цветы";
  if(name==="RewardTitle"&&state.previewScene==="reward")return "Ромашка";
@@ -531,7 +531,7 @@ function renderGuiNode(n,parentEl,parentNode){
  }
  const padding=getPadding(n);if(padding)el.style.padding=`${padding.t}px ${padding.r}px ${padding.b}px ${padding.l}px`;
  if(TEXT_CLASSES.has(n.ClassName)){
-  const t=document.createElement("span");t.className="gui-text";const runtimeText=previewText(n,parentNode);t.textContent=runtimeText??p.Text??n.Name;
+  const t=document.createElement("span");t.className="gui-text";const runtimeText=previewText(n,parentNode);t.textContent=runtimeText??p.Text??"";
   t.style.color=color(p.TextColor3||[1,1,1],p.TextTransparency??0);t.style.fontSize=finite(p.TextSize,14)+"px";
   t.style.fontWeight=/Bold|Black/i.test(p.Font||"")?"700":"400";
   t.style.fontFamily=/Code/i.test(p.Font||"")?"Consolas,monospace":"Gotham,Montserrat,Segoe UI,Arial,sans-serif";
@@ -719,7 +719,13 @@ function bindInspectorHandlers(n){
  els.inspector.querySelectorAll("[data-udim2-handler]").forEach(box=>box.addEventListener("change",()=>{pushHistory();const a=[...box.querySelectorAll("input")].map(x=>finite(x.value));handlers[box.dataset.udim2Handler]([[a[0],roundOffset(a[1])],[a[2],roundOffset(a[3])]])}));
  els.inspector.querySelectorAll("[data-v2-handler]").forEach(box=>box.addEventListener("change",()=>{pushHistory();const a=[...box.querySelectorAll("input")].map(x=>finite(x.value));handlers[box.dataset.v2Handler]([a[0],a[1]])}));
  els.inspector.querySelectorAll("[data-udim-handler]").forEach(box=>box.addEventListener("change",()=>{pushHistory();const a=[...box.querySelectorAll("input")].map(x=>finite(x.value));handlers[box.dataset.udimHandler]([a[0],roundOffset(a[1])])}));
- $("#applyRaw")?.addEventListener("click",()=>{try{pushHistory();n.Properties=JSON.parse($("#rawProps").value);changed()}catch(e){toast("Неверный JSON свойств",true)}});
+ $("#applyRaw")?.addEventListener("click",()=>{
+  try{
+   const next=JSON.parse($("#rawProps").value);
+   if(TEXT_CLASSES.has(n.ClassName)&&!Object.prototype.hasOwnProperty.call(next,"Text"))next.Text="";
+   pushHistory();n.Properties=next;changed();toast("Свойства применены");
+  }catch(e){toast("Неверный JSON свойств",true)}
+ });
  els.inspector.querySelectorAll("[data-align]").forEach(b=>b.addEventListener("click",()=>alignSelected(b.dataset.align)));
 }
 function setProp(n,k,v){n.Properties=n.Properties||{};n.Properties[k]=v;changed()}
