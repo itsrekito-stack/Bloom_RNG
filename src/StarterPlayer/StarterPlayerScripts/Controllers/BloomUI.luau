@@ -359,7 +359,7 @@ function UI:RenderMenu()
   -- Workshop is a full-screen workspace. The tree itself pans independently.
   self.Panel.AnchorPoint=Vector2.new(.5,.5)
   self.Panel.Position=UDim2.fromScale(.5,.5)
-  self.Panel.Size=UDim2.new(1,-20,1,-20)
+  self.Panel.Size=UDim2.fromScale(1,1)
   self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
   self.Content.CanvasSize=UDim2.fromOffset(0,0)
   self.Content.ScrollBarThickness=0
