@@ -17,7 +17,7 @@ const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 const state={
  root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,geometry:true,inset:36,mode:"design",previewScene:"gameplay",
  projectHandle:null,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
- history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[],assistantSyncing:false,bridgeBase:""
+ history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[],assistantSyncing:false,bridgeBase:"",modelLoadFailed:false
 };
 
 let idCounter=1;
@@ -105,7 +105,11 @@ function setRoot(raw,label="Модель загружена"){
   state.root=normalizeNode(raw);
   const safeRoot=(state.root.Children||[]).find(x=>x.Name==="SafeRoot"&&x.ClassName==="Frame");
   state.selectedId=(safeRoot||state.root).__id;
-  state.history=[];state.future=[];state.dirty=false;
+  state.selectedIds=new Set([state.selectedId]);
+  state.selectionAnchorId=state.selectedId;
+  state.history=[];state.future=[];state.dirty=false;state.modelLoadFailed=false;
+  try{localStorage.setItem("BloomUIStudioLastGoodModel",JSON.stringify(stripNode(state.root)))}catch{}
+  const push=$("#pushBtn");if(push){push.disabled=false;push.title="Записать модель в игру"}
   syncInsetFromRoot();renderAll();toast(label);
  }catch(e){console.error("[Bloom UI Studio] model/render error",e);toast("Ошибка модели: "+e.message,true)}
 }
@@ -1644,6 +1648,7 @@ async function pullProject(){
  catch(e){toast("Не удалось прочитать: "+e.message,true)}
 }
 async function pushProject(){
+ if(state.modelLoadFailed){toast("Сохранение заблокировано: сначала восстанови исходный BloomUI.model.json",true);return}
  try{
   const h=await getFile(state.targetPath,true),w=await h.createWritable();await w.write(serialize(true)+"\n");await w.close();
   state.dirty=false;updateStatus();toast("Записано в "+state.targetPath+" — Rojo может синхронизировать");assistantStatus()
@@ -1667,10 +1672,38 @@ function idb(){return new Promise((res,rej)=>{const q=indexedDB.open("BloomUIStu
 async function loadInitial(){
  state.projectHandle=await loadHandle();
  try{
-  const r=await fetch("/src/StarterGui/BloomUI.model.json",{cache:"no-store"});
-  if(r.ok){setRoot(await r.json(),"Текущий BloomUI открыт");return}
- }catch{}
- setRoot({ClassName:"ScreenGui",Name:"BloomUI",Properties:{ResetOnSpawn:false,IgnoreGuiInset:false,DisplayOrder:20,ZIndexBehavior:"Sibling"},Children:[]},"Новая модель")
+  const r=await fetch("/src/StarterGui/BloomUI.model.json?ts="+Date.now(),{cache:"no-store"});
+  if(r.ok){
+   const raw=await r.text();
+   try{
+    setRoot(JSON.parse(raw.replace(/^\uFEFF/,"")),"Текущий BloomUI открыт");
+    return;
+   }catch(parseError){
+    console.error("[Bloom UI Studio] BloomUI.model.json parse error",parseError);
+    state.modelLoadFailed=true;
+    const backup=localStorage.getItem("BloomUIStudioLastGoodModel");
+    if(backup){
+     try{
+      state.root=normalizeNode(JSON.parse(backup));
+      const safe=(state.root.Children||[]).find(x=>x.Name==="SafeRoot"&&x.ClassName==="Frame");
+      state.selectedId=(safe||state.root).__id;state.selectedIds=new Set([state.selectedId]);state.selectionAnchorId=state.selectedId;
+      state.history=[];state.future=[];state.dirty=false;
+      renderAll();
+     }catch{}
+    }
+    const push=$("#pushBtn");if(push){push.disabled=true;push.title="Заблокировано: исходный BloomUI.model.json повреждён. Не перезаписывай его пустой моделью."}
+    toast("RECOVERY MODE: BloomUI.model.json повреждён. «В ИГРУ» заблокировано, чтобы не стереть HUD.",true);
+    return;
+   }
+  }
+  throw new Error("BloomUI.model.json не найден");
+ }catch(e){
+  state.modelLoadFailed=true;
+  const backup=localStorage.getItem("BloomUIStudioLastGoodModel");
+  if(backup){try{state.root=normalizeNode(JSON.parse(backup));state.selectedId=state.root.__id;state.selectedIds=new Set([state.selectedId]);state.selectionAnchorId=state.selectedId;renderAll()}catch{}}
+  const push=$("#pushBtn");if(push){push.disabled=true;push.title="Заблокировано: исходная модель не загружена"}
+  toast("Не удалось загрузить BloomUI.model.json. Сохранение заблокировано: "+e.message,true);
+ }
 }
 
 $("#palette").addEventListener("click",e=>{const b=e.target.closest("[data-add]");if(b)addObject(b.dataset.add)});
