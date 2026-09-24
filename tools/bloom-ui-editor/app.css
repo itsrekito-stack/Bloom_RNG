@@ -345,3 +345,88 @@ dialog::backdrop{background:rgba(0,0,0,.62)}.dialog-head{height:44px;display:fle
     linear-gradient(to top,rgba(255,255,255,.014),transparent 18px);
   background-attachment:local,local;
 }
+
+/* ============================================================
+   Geometry assistance: rulers, smart guides, measurements
+============================================================ */
+.geometry-toggle{
+  padding:3px 6px;
+  border:1px solid #294d67;
+  border-radius:6px;
+  background:#101e2a;
+}
+.geometry-layer{
+  position:absolute;
+  inset:0;
+  z-index:999996;
+  pointer-events:none;
+  overflow:hidden;
+  font-family:Consolas,ui-monospace,monospace;
+}
+.geometry-layer.off{display:none}
+.geom-ruler{
+  position:absolute;
+  z-index:10;
+  color:#7890a8;
+  background:rgba(7,14,22,.78);
+  border-color:rgba(103,137,169,.22);
+  font-size:8px;
+  overflow:hidden;
+}
+.geom-ruler.top{left:18px;right:0;top:0;height:18px;border-bottom:1px solid rgba(103,137,169,.22)}
+.geom-ruler.left{left:0;top:18px;bottom:0;width:18px;border-right:1px solid rgba(103,137,169,.22)}
+.geom-corner{
+  position:absolute;left:0;top:0;width:18px;height:18px;z-index:11;
+  background:#0a121c;border-right:1px solid rgba(103,137,169,.22);border-bottom:1px solid rgba(103,137,169,.22)
+}
+.geom-tick{position:absolute;opacity:.8}
+.geom-ruler.top .geom-tick{top:0;height:100%;border-left:1px solid #536b83;padding-left:3px;padding-top:2px}
+.geom-ruler.left .geom-tick{left:0;width:100%;border-top:1px solid #536b83;padding-left:2px;padding-top:1px}
+.geom-axis{
+  position:absolute;
+  z-index:2;
+  opacity:.34;
+  pointer-events:none;
+}
+.geom-axis.vertical{top:18px;bottom:0;width:0;border-left:1px dashed #4daee8}
+.geom-axis.horizontal{left:18px;right:0;height:0;border-top:1px dashed #4daee8}
+.geom-safe{
+  position:absolute;left:18px;right:0;height:0;z-index:3;
+  border-top:1px dashed rgba(244,196,72,.48);
+}
+.geom-safe span{
+  position:absolute;left:5px;top:2px;padding:1px 4px;border-radius:4px;
+  background:rgba(54,43,13,.84);color:#e9c85b;font-size:8px
+}
+.geom-smart{
+  position:absolute;z-index:20;pointer-events:none;
+  box-shadow:0 0 5px rgba(255,82,189,.28);
+}
+.geom-smart.vertical{top:0;bottom:0;width:0;border-left:1px solid #ff55c8}
+.geom-smart.horizontal{left:0;right:0;height:0;border-top:1px solid #ff55c8}
+.geom-smart .geom-guide-label{
+  position:absolute;padding:2px 4px;border-radius:4px;
+  background:#8d266d;color:white;font-size:8px;font-weight:800;white-space:nowrap
+}
+.geom-smart.vertical .geom-guide-label{left:4px;top:22px}
+.geom-smart.horizontal .geom-guide-label{left:22px;top:4px}
+.geom-measure-line{
+  position:absolute;z-index:15;opacity:.82
+}
+.geom-measure-line.horizontal{height:0;border-top:1px solid #f2b94e}
+.geom-measure-line.vertical{width:0;border-left:1px solid #f2b94e}
+.geom-measure-label,.geom-size-badge{
+  position:absolute;z-index:16;transform:translate(-50%,-50%);
+  padding:2px 4px;border-radius:4px;border:1px solid rgba(244,195,75,.42);
+  background:rgba(39,30,8,.9);color:#ffd66b;font-size:8px;font-weight:800;white-space:nowrap
+}
+.geom-size-badge{
+  border-color:rgba(82,169,255,.48);background:rgba(11,43,68,.92);color:#8ed0ff
+}
+.align-tools{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.align-tools button{
+  height:28px;border:1px solid #304055;border-radius:6px;background:#111a24;color:#9ec4e5;
+  font-weight:800;font-size:10px
+}
+.align-tools button:hover{border-color:#4c94c7;background:#162a3a;color:#e5f5ff}
+.align-help{margin-top:5px;color:#6f8296;font-size:8px;line-height:1.35}
