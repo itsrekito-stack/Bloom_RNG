@@ -69,7 +69,8 @@ function serialize(pretty=true){return JSON.stringify(stripNode(state.root),null
 function setRoot(raw,label="Модель загружена"){
  try{
   state.root=normalizeNode(raw);
-  state.selectedId=state.root.__id;
+  const safeRoot=(state.root.Children||[]).find(x=>x.Name==="SafeRoot"&&x.ClassName==="Frame");
+  state.selectedId=(safeRoot||state.root).__id;
   state.history=[];state.future=[];state.dirty=false;
   syncInsetFromRoot();renderAll();toast(label);
  }catch(e){console.error("[Bloom UI Studio] model/render error",e);toast("Ошибка модели: "+e.message,true)}
@@ -159,8 +160,21 @@ function imageUrl(src){
  return `https://www.roblox.com/asset-thumbnail/image?assetId=${m[1]}&width=420&height=420&format=png`;
 }
 
+function hasDrawableGui(){
+ let count=0;
+ walk(state.root,n=>{
+  if(n===state.root||MODIFIERS.has(n.ClassName))return;
+  if(n.ClassName==="Frame"&&n.Name==="SafeRoot")return;
+  if(state.showHidden||n.Properties?.Visible!==false)count++;
+ });
+ return count>0;
+}
+function updateEmptyCanvas(){
+ const box=$("#emptyCanvas");if(!box)return;
+ box.classList.toggle("hidden",hasDrawableGui());
+}
 function renderAll(){
- renderViewport();renderTree();renderInspector();updateOverlay();updateStatus();
+ renderViewport();renderTree();renderInspector();updateOverlay();updateStatus();updateEmptyCanvas();
 }
 function renderViewport(){
  if(!state.root)return;
@@ -438,6 +452,10 @@ function defaultObject(kind){
 function uniqueName(base){let i=1,name=base;const names=new Set();walk(state.root,n=>names.add(n.Name));while(names.has(name))name=base+(++i);return name}
 function addObject(kind){
  if(!state.root)return;pushHistory();let parent=selected();
+ if(parent===state.root){
+  const safeRoot=(state.root.Children||[]).find(x=>x.Name==="SafeRoot"&&x.ClassName==="Frame");
+  if(safeRoot)parent=safeRoot;
+ }
  if(!parent||!CONTAINERS.has(parent.ClassName))parent=findParent(state.selectedId)||state.root;
  if(MODIFIERS.has(kind)&&parent.ClassName==="ScreenGui"){toast("Выбери GuiObject для "+kind,true);return}
  const n=defaultObject(kind);parent.Children=parent.Children||[];parent.Children.push(n);state.selectedId=n.__id;changed();toast(kind+" создан")
@@ -497,6 +515,7 @@ async function loadInitial(){
 }
 
 $("#palette").addEventListener("click",e=>{const b=e.target.closest("[data-add]");if(b)addObject(b.dataset.add)});
+$("#createFirstFrame").onclick=()=>addObject("Frame");
 $("#deleteBtn").onclick=deleteSelected;$("#duplicateBtn").onclick=duplicateSelected;
 $("#connectBtn").onclick=connectProject;$("#pullBtn").onclick=pullProject;$("#pushBtn").onclick=pushProject;
 $("#exportBtn").onclick=download;$("#copyBtn").onclick=copyModel;$("#importBtn").onclick=()=>els.fileInput.click();
