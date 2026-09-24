@@ -1,6 +1,7 @@
 local RS=game:GetService("ReplicatedStorage")
 local Players=game:GetService("Players")
 local UIS=game:GetService("UserInputService")
+local CAS=game:GetService("ContextActionService")
 local TweenService=game:GetService("TweenService")
 local Workspace=game:GetService("Workspace")
 local StarterGui=game:GetService("StarterGui")
@@ -19,7 +20,8 @@ local RollAudio=require(RS.Config.RollAudioConfig)
 local NumberFormatter=require(RS.Shared.NumberFormatter)
 
 local C=Theme.Colors
-local CLIENT_BUILD="ui-backend-v1-2026-09-25"
+local CLIENT_BUILD="ui-backend-v2-workshop-input-2026-09-25"
+local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0}
 
 local MENU_NAMES={
@@ -199,6 +201,7 @@ function UI:Toast(text)
 end
 
 function UI:DisconnectWorkshopPan()
+ CAS:UnbindAction(WORKSHOP_ZOOM_ACTION)
  if self.WorkshopPanConnections then
   for _,connection in ipairs(self.WorkshopPanConnections) do
    connection:Disconnect()
@@ -313,39 +316,53 @@ function UI:BindWorkshopPan(canvas,nodes)
   startCanvas=canvas.CanvasPosition
  end))
 
+ CAS:BindActionAtPriority(
+  WORKSHOP_ZOOM_ACTION,
+  function(_,inputState,input)
+   if self.Menu~="Workshop" or not canvas.Parent then
+    return Enum.ContextActionResult.Pass
+   end
+
+   if inputState==Enum.UserInputState.Change and input.UserInputType==Enum.UserInputType.MouseWheel then
+    local mouse=UIS:GetMouseLocation()
+    if insideCanvas(mouse) then
+     local wheel=input.Position.Z
+     if wheel~=0 then
+      local oldZoom=zoom
+      local newZoom=math.clamp(oldZoom+wheel*zoomStep,zoomMin,zoomMax)
+      if math.abs(newZoom-oldZoom)>=.001 then
+       local localMouse=mouse-canvas.AbsolutePosition
+       local worldPoint=(canvas.CanvasPosition+localMouse)/oldZoom
+       applyZoom(newZoom)
+
+       local target=worldPoint*newZoom-localMouse
+       target=self:ClampWorkshopCanvasPosition(canvas,target)
+       canvas.CanvasPosition=target
+       self.WorkshopCanvasPosition=target
+      end
+     end
+    end
+   end
+
+   -- While Workshop is open, the wheel belongs exclusively to the tree.
+   -- Sinking it here prevents PlayerModule/CameraModule from zooming the world.
+   return Enum.ContextActionResult.Sink
+  end,
+  false,
+  Enum.ContextActionPriority.High.Value+100,
+  Enum.UserInputType.MouseWheel
+ )
+
  table.insert(connections,UIS.InputChanged:Connect(function(input)
   if not canvas.Parent or self.Menu~="Workshop" then return end
+  if input.UserInputType~=Enum.UserInputType.MouseMovement or not dragging then return end
 
-  if input.UserInputType==Enum.UserInputType.MouseMovement then
-   if not dragging then return end
-   local delta=pointerPosition(input)-startPointer
-   if not moved and delta.Magnitude<dragThreshold then return end
-   moved=true
-   local position=self:ClampWorkshopCanvasPosition(canvas,startCanvas-delta)
-   canvas.CanvasPosition=position
-   self.WorkshopCanvasPosition=position
-   return
-  end
-
-  if input.UserInputType==Enum.UserInputType.MouseWheel then
-   local mouse=UIS:GetMouseLocation()
-   if not insideCanvas(mouse) then return end
-   local wheel=input.Position.Z
-   if wheel==0 then return end
-
-   local oldZoom=zoom
-   local newZoom=math.clamp(oldZoom+wheel*zoomStep,zoomMin,zoomMax)
-   if math.abs(newZoom-oldZoom)<.001 then return end
-
-   local localMouse=mouse-canvas.AbsolutePosition
-   local worldPoint=(canvas.CanvasPosition+localMouse)/oldZoom
-   applyZoom(newZoom)
-
-   local target=worldPoint*newZoom-localMouse
-   target=self:ClampWorkshopCanvasPosition(canvas,target)
-   canvas.CanvasPosition=target
-   self.WorkshopCanvasPosition=target
-  end
+  local delta=pointerPosition(input)-startPointer
+  if not moved and delta.Magnitude<dragThreshold then return end
+  moved=true
+  local position=self:ClampWorkshopCanvasPosition(canvas,startCanvas-delta)
+  canvas.CanvasPosition=position
+  self.WorkshopCanvasPosition=position
  end))
 
  table.insert(connections,UIS.InputEnded:Connect(function(input)
