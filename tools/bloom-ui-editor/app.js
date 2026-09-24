@@ -462,6 +462,87 @@ function alignSelected(mode){
  x(target[0]);y(target[1]);
  n.Properties.Position={UDim2:p};changed();
 }
+
+function siblingGuiObjects(n){
+ const parent=n&&findParent(n.__id);if(!parent)return [];
+ return (parent.Children||[]).filter(c=>!MODIFIERS.has(c.ClassName)&&c!==undefined);
+}
+function tidySiblings(columns=3,gap=8){
+ const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName))return;
+ const parent=findParent(n.__id);if(!parent)return;
+ const siblings=siblingGuiObjects(n).filter(c=>{
+  const el=els.guiRoot.querySelector(`[data-id="${c.__id}"]`);
+  return el&&el.style.display!=="none";
+ });
+ if(siblings.length<2){toast("Недостаточно соседних объектов для Tidy",true);return}
+
+ const data=siblings.map(c=>{
+  const el=els.guiRoot.querySelector(`[data-id="${c.__id}"]`);
+  const r=localRect(el);
+  return {c,r};
+ }).filter(x=>x.r);
+
+ if(data.length<2)return;
+ data.sort((a,b)=>a.r.top-b.r.top||a.r.left-b.r.left);
+
+ columns=Math.max(1,Math.min(columns,data.length));
+ gap=Math.max(0,Math.round(gap));
+
+ const minLeft=Math.min(...data.map(x=>x.r.left));
+ const minTop=Math.min(...data.map(x=>x.r.top));
+
+ const colW=Array(columns).fill(0);
+ for(let i=0;i<data.length;i++)colW[i%columns]=Math.max(colW[i%columns],data[i].r.w);
+
+ const rows=Math.ceil(data.length/columns);
+ const rowH=Array(rows).fill(0);
+ for(let i=0;i<data.length;i++)rowH[Math.floor(i/columns)]=Math.max(rowH[Math.floor(i/columns)],data[i].r.h);
+
+ const colX=[];let x=minLeft;
+ for(let i=0;i<columns;i++){colX[i]=x;x+=colW[i]+gap}
+ const rowY=[];let y=minTop;
+ for(let i=0;i<rows;i++){rowY[i]=y;y+=rowH[i]+gap}
+
+ pushHistory();
+ for(let i=0;i<data.length;i++){
+  const {c,r}=data[i],col=i%columns,row=Math.floor(i/columns),a=v2v(c,"AnchorPoint",[0,0]);
+  c.Properties=c.Properties||{};
+  c.Properties.Position={UDim2:[
+   [0,roundOffset(colX[col]+a[0]*r.w)],
+   [0,roundOffset(rowY[row]+a[1]*r.h)]
+  ]};
+ }
+ state.dirty=true;renderAll();select(n.__id);
+ toast(`Tidy: ${data.length} объектов · ${columns} кол. · gap ${gap}px`);
+}
+function distributeSiblings(axis="x",gap=8){
+ const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName))return;
+ const parent=findParent(n.__id);if(!parent)return;
+ const data=siblingGuiObjects(n).map(c=>{
+  const el=els.guiRoot.querySelector(`[data-id="${c.__id}"]`);
+  return {c,r:localRect(el)};
+ }).filter(x=>x.r&&els.guiRoot.querySelector(`[data-id="${x.c.__id}"]`)?.style.display!=="none");
+ if(data.length<2){toast("Недостаточно соседних объектов",true);return}
+ gap=Math.max(0,Math.round(gap));
+ data.sort((a,b)=>axis==="x"?a.r.left-b.r.left:a.r.top-b.r.top);
+ const start=axis==="x"?data[0].r.left:data[0].r.top;
+ pushHistory();
+ let cursor=start;
+ for(const {c,r} of data){
+  const a=v2v(c,"AnchorPoint",[0,0]),p=deepClone(u2v(c,"Position"));
+  if(axis==="x"){
+   p[0]=[0,roundOffset(cursor+a[0]*r.w)];
+   cursor+=r.w+gap;
+  }else{
+   p[1]=[0,roundOffset(cursor+a[1]*r.h)];
+   cursor+=r.h+gap;
+  }
+  c.Properties.Position={UDim2:p};
+ }
+ state.dirty=true;renderAll();select(n.__id);
+ toast((axis==="x"?"Горизонтальный":"Вертикальный")+" gap = "+gap+"px");
+}
+
 function geometryInspectorGroup(){
  const n=selected(),parent=n&&findParent(n.__id),managed=isLayoutParent(parent);
  return group("GEOMETRY",[
@@ -476,8 +557,13 @@ function geometryInspectorGroup(){
    '<button data-align="bc" title="По центру снизу">↓</button>'+
    '<button data-align="br" title="Правый нижний угол">↘</button>'+
   '</div>'+
+  '<div class="arrange-box">'+
+   '<div class="arrange-row"><label>Columns <input id="arrangeColumns" type="number" min="1" max="12" value="3"></label><label>Gap <input id="arrangeGap" type="number" min="0" max="100" value="8"></label></div>'+
+   '<button class="btn arrange-primary" id="tidyBtn">TIDY SIBLINGS</button>'+
+   '<div class="arrange-row buttons"><button class="btn" id="spaceXBtn">SPACE X</button><button class="btn" id="spaceYBtn">SPACE Y</button></div>'+
+  '</div>'+
   (managed?'<button class="btn free-layout-btn" id="freeLayoutBtn">FREE TRANSFORM · удалить Layout</button>':'')+
-  '<div class="align-help">'+(managed?'Этот объект управляется Layout. Drag автоматически запечёт текущую раскладку и даст полный контроль. ':'')+'Smart snap работает при drag/resize. Alt временно отключает магнит.</div>'
+  '<div class="align-help">Tidy аккуратно раскладывает соседние элементы, но не создаёт Layout — после этого каждый объект остаётся полностью свободным. Smart snap работает при drag/resize. Alt временно отключает магнит.</div>'
  ]);
 }
 
@@ -764,6 +850,9 @@ function bindInspectorHandlers(n){
   }catch(e){toast("Неверный JSON свойств",true)}
  });
  els.inspector.querySelectorAll("[data-align]").forEach(b=>b.addEventListener("click",()=>alignSelected(b.dataset.align)));
+ $("#tidyBtn")?.addEventListener("click",()=>tidySiblings(finite($("#arrangeColumns")?.value,3),finite($("#arrangeGap")?.value,8)));
+ $("#spaceXBtn")?.addEventListener("click",()=>distributeSiblings("x",finite($("#arrangeGap")?.value,8)));
+ $("#spaceYBtn")?.addEventListener("click",()=>distributeSiblings("y",finite($("#arrangeGap")?.value,8)));
  $("#freeLayoutBtn")?.addEventListener("click",()=>{const current=selected(),parent=current&&findParent(current.__id);if(parent&&bakeLayout(parent)){select(current.__id)}});
 }
 function setProp(n,k,v){n.Properties=n.Properties||{};n.Properties[k]=v;changed()}
