@@ -9,6 +9,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import subprocess
+import copy
 from collections import OrderedDict
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -18,7 +19,7 @@ HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 ROOT = Path(os.environ.get("BLOOM_UI_ROOT", os.getcwd())).resolve()
 CACHE_LIMIT = 256
-BRIDGE_VERSION = 3
+BRIDGE_VERSION = 4
 
 _thumbnail_cache: "OrderedDict[str, tuple[bytes, str]]" = OrderedDict()
 
@@ -134,25 +135,176 @@ def git_stash_entries() -> list[tuple[str, str]]:
     return out
 
 
+
+MODEL_PATH = Path("src/StarterGui/BloomUI.model.json")
+
+
+def read_json_file(path: Path):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+
+def git_show_json(rev: str, relpath: str):
+    shown = run_git("show", f"{rev}:{relpath}", timeout=20.0)
+    if shown.returncode != 0:
+        return None
+    try:
+        return json.loads(shown.stdout)
+    except Exception:
+        return None
+
+
+def _child_index(children):
+    counts = {}
+    order = []
+    mapping = {}
+    for child in children:
+        if not isinstance(child, dict):
+            base_key = ("__raw__", json.dumps(child, sort_keys=True, ensure_ascii=False))
+        else:
+            base_key = (str(child.get("ClassName", "")), str(child.get("Name", "")))
+        idx = counts.get(base_key, 0)
+        counts[base_key] = idx + 1
+        key = (*base_key, idx)
+        order.append(key)
+        mapping[key] = child
+    return order, mapping
+
+
+def merge_remote_changes(base, local, remote):
+    # If assistant did not change this value, keep the user's local value.
+    if base == remote:
+        return copy.deepcopy(local)
+    # If user did not change it, take assistant's value.
+    if base == local:
+        return copy.deepcopy(remote)
+
+    if isinstance(base, dict) and isinstance(local, dict) and isinstance(remote, dict):
+        out = copy.deepcopy(local)
+        all_keys = set(base) | set(local) | set(remote)
+        for key in all_keys:
+            b_has, l_has, r_has = key in base, key in local, key in remote
+            if b_has and not r_has:
+                # Assistant removed this key.
+                out.pop(key, None)
+                continue
+            if not b_has and r_has:
+                # Assistant added this key. Assistant wins on same-key simultaneous additions.
+                out[key] = copy.deepcopy(remote[key])
+                continue
+            if r_has and not l_has:
+                # User removed it. Preserve removal unless assistant changed the old value.
+                if base.get(key) == remote.get(key):
+                    out.pop(key, None)
+                else:
+                    out[key] = copy.deepcopy(remote[key])
+                continue
+            if b_has and l_has and r_has:
+                if key == "Children" and all(isinstance(x, list) for x in (base[key], local[key], remote[key])):
+                    out[key] = merge_children(base[key], local[key], remote[key])
+                else:
+                    out[key] = merge_remote_changes(base[key], local[key], remote[key])
+        return out
+
+    # Non-Children arrays represent atomic Roblox values (UDim2, Color3, etc.).
+    # When both sides edited the same atomic value, the assistant edit wins because
+    # AI SYNC was explicitly requested by the user.
+    return copy.deepcopy(remote)
+
+
+def merge_children(base_children, local_children, remote_children):
+    b_order, b_map = _child_index(base_children)
+    l_order, l_map = _child_index(local_children)
+    r_order, r_map = _child_index(remote_children)
+
+    out = []
+    emitted = set()
+
+    # Follow remote ordering for known/assistant-added objects.
+    for key in r_order:
+        emitted.add(key)
+        r = r_map[key]
+        if key not in b_map:
+            out.append(copy.deepcopy(r))
+            continue
+        b = b_map[key]
+        if key not in l_map:
+            # Preserve user deletion if assistant did not touch this object.
+            if b == r:
+                continue
+            out.append(copy.deepcopy(r))
+            continue
+        out.append(merge_remote_changes(b, l_map[key], r))
+
+    # Preserve user-only objects that do not exist in base or remote.
+    for key in l_order:
+        if key in emitted:
+            continue
+        if key not in b_map:
+            out.append(copy.deepcopy(l_map[key]))
+
+    return out
+
+
+def write_model_json(model) -> None:
+    target = ROOT / MODEL_PATH
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(model, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
 def safe_sync_git() -> tuple[int, dict]:
     status_before = git_status_payload()
     if not status_before.get("ok"):
         return 503, status_before
 
     old_head = status_before.get("head", "")
-    dirty = bool(status_before.get("dirty"))
+    model_abs = ROOT / MODEL_PATH
+    model_rel = MODEL_PATH.as_posix()
+
+    # Preserve the user's edited UI model outside Git's textual stash machinery.
+    # BloomUI.model.json is huge and frequently causes false/ugly line conflicts.
+    base_model = git_show_json("HEAD", model_rel)
+    local_model = read_json_file(model_abs)
+    model_dirty_check = run_git("status", "--porcelain", "--", model_rel)
+    model_dirty = bool(model_dirty_check.stdout.strip()) if model_dirty_check.returncode == 0 else False
+    model_saved = model_dirty and base_model is not None and local_model is not None
+
+    if model_dirty and not model_saved:
+        return 409, {
+            "ok": False,
+            "stage": "model-backup",
+            "error": "BloomUI.model.json изменён локально, но не удалось безопасно прочитать JSON. Исправь JSON перед AI SYNC.",
+        }
+
+    if model_saved:
+        restore_model = run_git("restore", "--staged", "--worktree", "--", model_rel)
+        if restore_model.returncode != 0:
+            return 500, {
+                "ok": False,
+                "stage": "model-backup",
+                "error": restore_model.stderr.strip() or restore_model.stdout.strip() or "Не удалось временно восстановить базовый BloomUI.model.json",
+            }
+
+    # Stash every remaining tracked/untracked local change.
+    status_after_model_backup = git_status_payload()
+    dirty_other = bool(status_after_model_backup.get("dirty"))
     stash_ref = ""
     stash_label = ""
     stashed = False
     restored = False
 
-    if dirty:
+    if dirty_other:
         stash_label = f"Bloom UI Studio AI SYNC {int(time.time())}"
         try:
             stash = run_git("stash", "push", "-u", "-m", stash_label, timeout=30.0)
         except (subprocess.TimeoutExpired, OSError) as exc:
+            if model_saved:
+                write_model_json(local_model)
             return 500, {"ok": False, "stage": "stash", "error": str(exc)}
         if stash.returncode != 0:
+            if model_saved:
+                write_model_json(local_model)
             output = "\n".join(x for x in [stash.stdout.strip(), stash.stderr.strip()] if x)
             return 500, {"ok": False, "stage": "stash", "error": output or "git stash failed"}
 
@@ -161,10 +313,12 @@ def safe_sync_git() -> tuple[int, dict]:
                 stash_ref = ref
                 break
         if not stash_ref:
+            if model_saved:
+                write_model_json(local_model)
             return 500, {
                 "ok": False,
                 "stage": "stash",
-                "error": "Локальные изменения были сохранены, но stash не удалось идентифицировать. Ничего не удалено.",
+                "error": "Локальные изменения сохранены, но временный stash не удалось идентифицировать. Данные не удалены.",
             }
         stashed = True
 
@@ -181,18 +335,13 @@ def safe_sync_git() -> tuple[int, dict]:
         if pull is not None:
             output = "\n".join(x for x in [pull.stdout.strip(), pull.stderr.strip()] if x) or "git pull --ff-only failed"
 
-        restore_note = ""
         if stashed and stash_ref:
-            try:
-                restore = run_git("stash", "apply", stash_ref, timeout=30.0)
-            except (subprocess.TimeoutExpired, OSError) as exc:
-                restore = None
-                restore_note = str(exc)
-            if restore is not None and restore.returncode == 0:
-                restored = True
+            restore = run_git("stash", "apply", stash_ref, timeout=30.0)
+            if restore.returncode == 0:
                 run_git("stash", "drop", stash_ref)
-            elif restore is not None:
-                restore_note = "\n".join(x for x in [restore.stdout.strip(), restore.stderr.strip()] if x)
+                restored = True
+        if model_saved:
+            write_model_json(local_model)
 
         return 500, {
             "ok": False,
@@ -201,16 +350,20 @@ def safe_sync_git() -> tuple[int, dict]:
             "stashed": stashed,
             "restored": restored,
             "stash_ref": stash_ref if stashed and not restored else "",
-            "restore_error": restore_note,
         }
 
     status_after_pull = git_status_payload()
     new_head = status_after_pull.get("head", "")
 
+    # Restore non-model local changes.
     if stashed and stash_ref:
         try:
             restore = run_git("stash", "apply", stash_ref, timeout=30.0)
         except (subprocess.TimeoutExpired, OSError) as exc:
+            if model_saved:
+                remote_model = read_json_file(model_abs)
+                merged = merge_remote_changes(base_model, local_model, remote_model) if remote_model is not None else local_model
+                write_model_json(merged)
             return 500, {
                 "ok": False,
                 "stage": "restore",
@@ -222,26 +375,33 @@ def safe_sync_git() -> tuple[int, dict]:
             }
 
         if restore.returncode != 0:
-            status_conflict = git_status_payload()
+            # Keep the stash. Git has also left conflict markers for the non-model files.
             conflict_scan = run_git("diff", "--name-only", "--diff-filter=U")
             conflicts = [x for x in conflict_scan.stdout.splitlines() if x.strip()] if conflict_scan.returncode == 0 else []
+            if model_saved:
+                remote_model = read_json_file(model_abs)
+                merged = merge_remote_changes(base_model, local_model, remote_model) if remote_model is not None else local_model
+                write_model_json(merged)
             output = "\n".join(x for x in [restore.stdout.strip(), restore.stderr.strip()] if x)
             return 409, {
                 "ok": False,
                 "stage": "restore",
-                "error": "Мои изменения подтянуты, но при возврате твоих локальных правок возник конфликт. Stash сохранён.",
+                "error": "Мои изменения подтянуты, но конфликт возник в других локальных файлах. BloomUI.model.json объединён отдельно.",
                 "details": output[-6000:],
                 "conflicts": conflicts,
                 "changed": bool(old_head and new_head and old_head != new_head),
                 "stashed": True,
                 "restored": False,
                 "stash_ref": stash_ref,
-                "dirty": status_conflict.get("dirty", True),
             }
 
         restored = True
         drop = run_git("stash", "drop", stash_ref)
         if drop.returncode != 0:
+            if model_saved:
+                remote_model = read_json_file(model_abs)
+                merged = merge_remote_changes(base_model, local_model, remote_model) if remote_model is not None else local_model
+                write_model_json(merged)
             return 500, {
                 "ok": False,
                 "stage": "drop",
@@ -251,6 +411,21 @@ def safe_sync_git() -> tuple[int, dict]:
                 "stashed": True,
                 "restored": True,
             }
+
+    # Merge assistant changes into the user's local UI model structurally.
+    model_merged = False
+    if model_saved:
+        remote_model = read_json_file(model_abs)
+        if remote_model is None:
+            write_model_json(local_model)
+            return 500, {
+                "ok": False,
+                "stage": "model-merge",
+                "error": "После pull не удалось прочитать удалённый BloomUI.model.json. Локальная модель восстановлена.",
+            }
+        merged_model = merge_remote_changes(base_model, local_model, remote_model)
+        write_model_json(merged_model)
+        model_merged = True
 
     status_final = git_status_payload()
     pull_output = "\n".join(x for x in [pull.stdout.strip(), pull.stderr.strip()] if x)
@@ -262,6 +437,7 @@ def safe_sync_git() -> tuple[int, dict]:
         "dirty": status_final.get("dirty", False),
         "stashed": stashed,
         "restored": restored,
+        "model_merged": model_merged,
         "output": pull_output[-6000:],
     }
 
@@ -364,7 +540,7 @@ def main() -> None:
     print(f"Root: {root}")
     print(f"URL : http://{HOST}:{args.port}/tools/bloom-ui-editor/index.html")
     print("Roblox thumbnail proxy: enabled")
-    print(f"Assistant Bridge API: v{BRIDGE_VERSION}")
+    print(f"Assistant Bridge API: v{BRIDGE_VERSION} (model-aware safe sync)")
     print("Close this window to stop the server.")
     print()
 
