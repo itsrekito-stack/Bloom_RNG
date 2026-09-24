@@ -1544,14 +1544,14 @@ async function discoverAssistantBridge(){
  for(const base of candidates){
   try{
    const {r,data}=await apiJson(base+"/api/health",{timeout:700});
-   if(r.ok&&data?.ok&&Number(data.bridge)>=2){
+   if(r.ok&&data?.ok&&Number(data.bridge)>=3){
     state.bridgeBase=base;
     return {ok:true,base,data};
    }
   }catch{}
  }
  state.bridgeBase="";
- return {ok:false,error:"Новый Assistant Bridge не найден. Закрой старое окно Bloom UI Studio Server и снова запусти Start Bloom UI Editor.bat"};
+ return {ok:false,error:"Assistant Bridge v3 не найден. Один раз перезапусти Bloom UI Studio Server через Start Bloom UI Editor.bat"};
 }
 async function assistantStatus(){
  const badge=$("#aiBridgeStatus");
@@ -1569,9 +1569,9 @@ async function assistantStatus(){
   if(!r.ok||!data.ok)throw new Error(data.error||("HTTP "+r.status));
   if(badge){
    const port=new URL(bridge.base).port||"80";
-   badge.textContent=(data.dirty?"LOCAL CHANGES · ":"")+((data.head||"").slice(0,7)||"AI ready");
+   badge.textContent=(data.dirty?"SAFE SYNC · ":"")+((data.head||"").slice(0,7)||"AI ready");
    badge.className="ai-bridge-status "+(data.dirty?"warn":"ready");
-   badge.title=(data.subject||"Assistant bridge ready")+" · port "+port;
+   badge.title=(data.dirty?"Есть локальные изменения — AI SYNC временно сохранит их, подтянет мои и вернёт твои. · ":"")+(data.subject||"Assistant bridge ready")+" · port "+port;
   }
   return {...data,bridgeBase:bridge.base};
  }catch(e){
@@ -1602,18 +1602,20 @@ async function assistantSync(){
  try{
   const status=await assistantStatus();
   if(!status?.ok)throw new Error(status?.error||"Assistant Bridge недоступен");
-  if(status.dirty){
-   toast("Локальный Git содержит изменения. AI SYNC не будет их перезаписывать.",true);
-   return;
-  }
   const base=status.bridgeBase||state.bridgeBase;
+  if(status.dirty)toast("AI SYNC: сохраняю локальные изменения → pull → возвращаю их обратно");
   const {r,data}=await apiJson(base+"/api/git/pull",{
    method:"POST",headers:{"Content-Type":"application/json"},body:"{}",timeout:50000
   });
-  if(!r.ok||!data.ok)throw new Error(data.error||data.output||("HTTP "+r.status));
+  if(!r.ok||!data.ok){
+   const conflicts=Array.isArray(data.conflicts)&&data.conflicts.length?" · Конфликты: "+data.conflicts.join(", "):"";
+   const stash=data.stash_ref?" · Stash сохранён: "+data.stash_ref:"";
+   throw new Error((data.error||data.output||("HTTP "+r.status))+conflicts+stash);
+  }
   state.bridgeBase=base;
   await reloadModelFromServer(data.changed?"AI UI обновлён из GitHub":"AI SYNC: уже актуально");
   await assistantStatus();
+  if(data.stashed&&data.restored)toast(data.changed?"AI SYNC готов · твои локальные изменения сохранены":"AI SYNC готов · локальные изменения возвращены");
   if(data.changed)requestAnimationFrame(()=>focusSelected());
  }catch(e){
   toast("AI SYNC: "+e.message,true);
