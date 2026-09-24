@@ -463,6 +463,7 @@ function alignSelected(mode){
  n.Properties.Position={UDim2:p};changed();
 }
 function geometryInspectorGroup(){
+ const n=selected(),parent=n&&findParent(n.__id),managed=isLayoutParent(parent);
  return group("GEOMETRY",[
   '<div class="align-tools align-grid-3x3">'+
    '<button data-align="tl" title="Левый верхний угол">↖</button>'+
@@ -474,7 +475,9 @@ function geometryInspectorGroup(){
    '<button data-align="bl" title="Левый нижний угол">↙</button>'+
    '<button data-align="bc" title="По центру снизу">↓</button>'+
    '<button data-align="br" title="Правый нижний угол">↘</button>'+
-  '</div><div class="align-help">Кнопки повторяют положение объекта внутри родителя. Smart snap работает при drag/resize. Alt временно отключает магнит.</div>'
+  '</div>'+
+  (managed?'<button class="btn free-layout-btn" id="freeLayoutBtn">FREE TRANSFORM · удалить Layout</button>':'')+
+  '<div class="align-help">'+(managed?'Этот объект управляется Layout. Drag автоматически запечёт текущую раскладку и даст полный контроль. ':'')+'Smart snap работает при drag/resize. Alt временно отключает магнит.</div>'
  ]);
 }
 
@@ -761,6 +764,7 @@ function bindInspectorHandlers(n){
   }catch(e){toast("Неверный JSON свойств",true)}
  });
  els.inspector.querySelectorAll("[data-align]").forEach(b=>b.addEventListener("click",()=>alignSelected(b.dataset.align)));
+ $("#freeLayoutBtn")?.addEventListener("click",()=>{const current=selected(),parent=current&&findParent(current.__id);if(parent&&bakeLayout(parent)){select(current.__id)}});
 }
 function setProp(n,k,v){n.Properties=n.Properties||{};n.Properties[k]=v;changed()}
 
@@ -777,10 +781,43 @@ function updateStatus(){
 }
 
 function isLayoutParent(n){return !!n&&(modifier(n,"UIListLayout")||modifier(n,"UIGridLayout"))}
+function bakeLayout(parent){
+ if(!parent)return false;
+ const layout=modifier(parent,"UIListLayout")||modifier(parent,"UIGridLayout");
+ if(!layout)return false;
+ const parentEl=parent===state.root?els.guiRoot:els.guiRoot.querySelector(`[data-id="${parent.__id}"]`);
+ if(!parentEl)return false;
+ const pr=localRect(parentEl);if(!pr)return false;
+
+ const children=layoutChildNodes(parent);
+ const snapshots=[];
+ for(const child of children){
+  const el=els.guiRoot.querySelector(`[data-id="${child.__id}"]`);
+  const r=localRect(el);if(!r)continue;
+  snapshots.push({child,r});
+ }
+ if(!snapshots.length)return false;
+
+ pushHistory();
+ for(const {child,r} of snapshots){
+  child.Properties=child.Properties||{};
+  const a=v2v(child,"AnchorPoint",[0,0]);
+  const relLeft=r.left-pr.left,relTop=r.top-pr.top;
+  child.Properties.Position={UDim2:[[0,roundOffset(relLeft+a[0]*r.w)],[0,roundOffset(relTop+a[1]*r.h)]]};
+  child.Properties.Size={UDim2:[[0,Math.max(1,roundOffset(r.w))],[0,Math.max(1,roundOffset(r.h))]]};
+ }
+ parent.Children=(parent.Children||[]).filter(c=>c!==layout);
+ state.dirty=true;
+ renderAll();
+ toast((layout.ClassName||"Layout")+" запечён — теперь элементы полностью свободны");
+ return true;
+}
 function startMove(ev,n){
  if(ev.button!==0||MODIFIERS.has(n.ClassName))return;ev.stopPropagation();select(n.__id);
- if(isLayoutParent(findParent(n.__id))){toast("Позиция управляется Layout. Меняй размер или LayoutOrder.");return}
- pushHistory();
+ const parent=findParent(n.__id);
+ if(isLayoutParent(parent)){
+  if(!bakeLayout(parent))return;
+ }
  const pos=deepClone(u2v(n,"Position")),startX=ev.clientX,startY=ev.clientY;
  state.drag={type:"move",n,startX,startY,pos,geometry:collectGuideTargets(n)};
  ev.currentTarget.setPointerCapture?.(ev.pointerId);
