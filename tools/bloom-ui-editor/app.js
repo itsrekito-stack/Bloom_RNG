@@ -450,17 +450,31 @@ function alignSelected(mode){
  const n=selected();if(!n||n===state.root||MODIFIERS.has(n.ClassName))return;
  const el=els.guiRoot.querySelector(`[data-id="${n.__id}"]`);if(!el)return;
  const r=localRect(el),a=v2v(n,"AnchorPoint",[0,0]),p=deepClone(u2v(n,"Position"));
+ const map={
+  tl:["left","top"],tc:["center","top"],tr:["right","top"],
+  ml:["left","middle"],mc:["center","middle"],mr:["right","middle"],
+  bl:["left","bottom"],bc:["center","bottom"],br:["right","bottom"]
+ };
+ const target=map[mode];if(!target)return;
  pushHistory();
  const x=m=>{if(m==="left")p[0]=[0,roundOffset(a[0]*r.w)];if(m==="center")p[0]=[.5,roundOffset((a[0]-.5)*r.w)];if(m==="right")p[0]=[1,roundOffset((a[0]-1)*r.w)]};
  const y=m=>{if(m==="top")p[1]=[0,roundOffset(a[1]*r.h)];if(m==="middle")p[1]=[.5,roundOffset((a[1]-.5)*r.h)];if(m==="bottom")p[1]=[1,roundOffset((a[1]-1)*r.h)]};
- if(mode==="left"||mode==="center"||mode==="right")x(mode);
- else if(mode==="top"||mode==="middle"||mode==="bottom")y(mode);
- else if(mode==="centerboth"){x("center");y("middle")}
+ x(target[0]);y(target[1]);
  n.Properties.Position={UDim2:p};changed();
 }
 function geometryInspectorGroup(){
  return group("GEOMETRY",[
-  '<div class="align-tools"><button data-align="left" title="К левому краю родителя">L</button><button data-align="center" title="По центру X">CX</button><button data-align="right" title="К правому краю родителя">R</button><button data-align="top" title="К верхнему краю родителя">T</button><button data-align="middle" title="По центру Y">CY</button><button data-align="bottom" title="К нижнему краю родителя">B</button><button data-align="centerboth" title="Точно в центр родителя" style="grid-column:1/4">CENTER BOTH</button></div><div class="align-help">Smart snap: центр и края родителя/соседей. Удерживай Alt при drag, чтобы временно отключить магнит.</div>'
+  '<div class="align-tools align-grid-3x3">'+
+   '<button data-align="tl" title="Левый верхний угол">↖</button>'+
+   '<button data-align="tc" title="По центру сверху">↑</button>'+
+   '<button data-align="tr" title="Правый верхний угол">↗</button>'+
+   '<button data-align="ml" title="Слева по центру">←</button>'+
+   '<button data-align="mc" title="Точно по центру">●</button>'+
+   '<button data-align="mr" title="Справа по центру">→</button>'+
+   '<button data-align="bl" title="Левый нижний угол">↙</button>'+
+   '<button data-align="bc" title="По центру снизу">↓</button>'+
+   '<button data-align="br" title="Правый нижний угол">↘</button>'+
+  '</div><div class="align-help">Кнопки повторяют положение объекта внутри родителя. Smart snap работает при drag/resize. Alt временно отключает магнит.</div>'
  ]);
 }
 
