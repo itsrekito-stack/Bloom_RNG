@@ -502,3 +502,19 @@ dialog::backdrop{background:rgba(0,0,0,.62)}.dialog-head{height:44px;display:fle
   font-weight:800;
   white-space:nowrap;
 }
+
+/* Selection / grouping QoL */
+.section-title .tiny#groupBtn,
+.section-title .tiny#ungroupBtn{
+  min-width:26px;
+  color:#a8c8e4;
+}
+.section-title .tiny#groupBtn:hover,
+.section-title .tiny#ungroupBtn:hover{
+  color:#eef8ff;
+  border-color:#4c8db9;
+  background:#163049;
+}
+.tree-row.selected{
+  user-select:none;
+}
