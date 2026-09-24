@@ -3320,7 +3320,7 @@
             "BorderSizePixel": 0,
             "ZIndex": 25,
             "Visible": false,
-            "ClipsDescendants": true,
+            "ClipsDescendants": false,
             "Position": {
               "UDim2": [
                 [
@@ -3343,7 +3343,7 @@
           "Children": [
             {
               "ClassName": "Frame",
-              "Name": "ReelStrip",
+              "Name": "RouletteClip",
               "Properties": {
                 "Size": {
                   "UDim2": [
@@ -3352,21 +3352,11 @@
                       0
                     ],
                     [
-                      0,
-                      164
+                      1,
+                      0
                     ]
                   ]
                 },
-                "BackgroundColor3": [
-                  0.0784313725490196,
-                  0.10588235294117647,
-                  0.1411764705882353
-                ],
-                "BackgroundTransparency": 1,
-                "BorderSizePixel": 0,
-                "ZIndex": 26,
-                "Visible": true,
-                "ClipsDescendants": false,
                 "Position": {
                   "UDim2": [
                     [
@@ -3378,12 +3368,17 @@
                       0
                     ]
                   ]
-                }
+                },
+                "BackgroundTransparency": 1,
+                "BorderSizePixel": 0,
+                "ZIndex": 25,
+                "Visible": true,
+                "ClipsDescendants": true
               },
               "Children": [
                 {
                   "ClassName": "Frame",
-                  "Name": "Next",
+                  "Name": "ReelStrip",
                   "Properties": {
                     "Size": {
                       "UDim2": [
@@ -3393,18 +3388,18 @@
                         ],
                         [
                           0,
-                          38
+                          164
                         ]
                       ]
                     },
                     "BackgroundColor3": [
+                      0.0784313725490196,
                       0.10588235294117647,
-                      0.1411764705882353,
-                      0.1843137254901961
+                      0.1411764705882353
                     ],
                     "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
-                    "ZIndex": 27,
+                    "ZIndex": 26,
                     "Visible": true,
                     "ClipsDescendants": false,
                     "Position": {
@@ -3422,463 +3417,505 @@
                   },
                   "Children": [
                     {
-                      "ClassName": "ImageLabel",
-                      "Name": "Icon",
-                      "Properties": {
-                        "Size": {
-                          "UDim2": [
-                            [
-                              0,
-                              28
-                            ],
-                            [
-                              0,
-                              28
-                            ]
-                          ]
-                        },
-                        "BackgroundTransparency": 1,
-                        "BorderSizePixel": 0,
-                        "Image": "rbxthumb://type=Asset&id=117046422836136&w=420&h=420",
-                        "ScaleType": "Fit",
-                        "ZIndex": 28,
-                        "Position": {
-                          "UDim2": [
-                            [
-                              0,
-                              8
-                            ],
-                            [
-                              0,
-                              5
-                            ]
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "ClassName": "TextLabel",
-                      "Name": "Name",
+                      "ClassName": "Frame",
+                      "Name": "Next",
                       "Properties": {
                         "Size": {
                           "UDim2": [
                             [
                               1,
-                              -54
+                              0
                             ],
                             [
                               0,
-                              17
+                              38
                             ]
                           ]
                         },
+                        "BackgroundColor3": [
+                          0.10588235294117647,
+                          0.1411764705882353,
+                          0.1843137254901961
+                        ],
                         "BackgroundTransparency": 1,
                         "BorderSizePixel": 0,
-                        "Text": "Sunflower",
-                        "TextColor3": [
-                          0.9607843137254902,
-                          0.9725490196078431,
-                          0.9882352941176471
-                        ],
-                        "TextSize": 12,
-                        "TextWrapped": true,
-                        "TextXAlignment": "Left",
-                        "TextYAlignment": "Center",
-                        "Font": "GothamBold",
-                        "ZIndex": 28,
+                        "ZIndex": 27,
                         "Visible": true,
+                        "ClipsDescendants": false,
                         "Position": {
                           "UDim2": [
                             [
                               0,
-                              44
+                              0
                             ],
                             [
                               0,
-                              3
+                              0
                             ]
                           ]
                         }
-                      }
-                    },
-                    {
-                      "ClassName": "TextLabel",
-                      "Name": "Chance",
-                      "Properties": {
-                        "Size": {
-                          "UDim2": [
-                            [
-                              1,
-                              -54
-                            ],
-                            [
-                              0,
-                              14
-                            ]
-                          ]
+                      },
+                      "Children": [
+                        {
+                          "ClassName": "ImageLabel",
+                          "Name": "Icon",
+                          "Properties": {
+                            "Size": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  28
+                                ],
+                                [
+                                  0,
+                                  28
+                                ]
+                              ]
+                            },
+                            "BackgroundTransparency": 1,
+                            "BorderSizePixel": 0,
+                            "Image": "rbxthumb://type=Asset&id=117046422836136&w=420&h=420",
+                            "ScaleType": "Fit",
+                            "ZIndex": 28,
+                            "Position": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  8
+                                ],
+                                [
+                                  0,
+                                  5
+                                ]
+                              ]
+                            }
+                          }
                         },
-                        "BackgroundTransparency": 1,
-                        "BorderSizePixel": 0,
-                        "Text": "1 / ?",
-                        "TextColor3": [
-                          0.64,
-                          0.72,
-                          0.79
-                        ],
-                        "TextSize": 9,
-                        "TextWrapped": true,
-                        "TextXAlignment": "Left",
-                        "TextYAlignment": "Center",
-                        "Font": "GothamBold",
-                        "ZIndex": 28,
-                        "Visible": true,
-                        "Position": {
-                          "UDim2": [
-                            [
-                              0,
-                              44
+                        {
+                          "ClassName": "TextLabel",
+                          "Name": "Name",
+                          "Properties": {
+                            "Size": {
+                              "UDim2": [
+                                [
+                                  1,
+                                  -54
+                                ],
+                                [
+                                  0,
+                                  17
+                                ]
+                              ]
+                            },
+                            "BackgroundTransparency": 1,
+                            "BorderSizePixel": 0,
+                            "Text": "Sunflower",
+                            "TextColor3": [
+                              0.9607843137254902,
+                              0.9725490196078431,
+                              0.9882352941176471
                             ],
-                            [
-                              0,
-                              20
-                            ]
-                          ]
+                            "TextSize": 12,
+                            "TextWrapped": true,
+                            "TextXAlignment": "Left",
+                            "TextYAlignment": "Center",
+                            "Font": "GothamBold",
+                            "ZIndex": 28,
+                            "Visible": true,
+                            "Position": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  44
+                                ],
+                                [
+                                  0,
+                                  3
+                                ]
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "ClassName": "TextLabel",
+                          "Name": "Chance",
+                          "Properties": {
+                            "Size": {
+                              "UDim2": [
+                                [
+                                  1,
+                                  -54
+                                ],
+                                [
+                                  0,
+                                  14
+                                ]
+                              ]
+                            },
+                            "BackgroundTransparency": 1,
+                            "BorderSizePixel": 0,
+                            "Text": "1 / ?",
+                            "TextColor3": [
+                              0.64,
+                              0.72,
+                              0.79
+                            ],
+                            "TextSize": 9,
+                            "TextWrapped": true,
+                            "TextXAlignment": "Left",
+                            "TextYAlignment": "Center",
+                            "Font": "GothamBold",
+                            "ZIndex": 28,
+                            "Visible": true,
+                            "Position": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  44
+                                ],
+                                [
+                                  0,
+                                  20
+                                ]
+                              ]
+                            }
+                          }
                         }
-                      }
-                    }
-                  ]
-                },
-                {
-                  "ClassName": "Frame",
-                  "Name": "Current",
-                  "Properties": {
-                    "Size": {
-                      "UDim2": [
-                        [
-                          1,
-                          0
-                        ],
-                        [
-                          0,
-                          38
-                        ]
                       ]
                     },
-                    "BackgroundColor3": [
-                      0.10588235294117647,
-                      0.1411764705882353,
-                      0.1843137254901961
-                    ],
-                    "BackgroundTransparency": 1,
-                    "BorderSizePixel": 0,
-                    "ZIndex": 27,
-                    "Visible": true,
-                    "ClipsDescendants": false,
-                    "Position": {
-                      "UDim2": [
-                        [
-                          0,
-                          0
+                    {
+                      "ClassName": "Frame",
+                      "Name": "Current",
+                      "Properties": {
+                        "Size": {
+                          "UDim2": [
+                            [
+                              1,
+                              0
+                            ],
+                            [
+                              0,
+                              38
+                            ]
+                          ]
+                        },
+                        "BackgroundColor3": [
+                          0.10588235294117647,
+                          0.1411764705882353,
+                          0.1843137254901961
                         ],
-                        [
-                          0,
-                          42
-                        ]
+                        "BackgroundTransparency": 1,
+                        "BorderSizePixel": 0,
+                        "ZIndex": 27,
+                        "Visible": true,
+                        "ClipsDescendants": false,
+                        "Position": {
+                          "UDim2": [
+                            [
+                              0,
+                              0
+                            ],
+                            [
+                              0,
+                              42
+                            ]
+                          ]
+                        }
+                      },
+                      "Children": [
+                        {
+                          "ClassName": "ImageLabel",
+                          "Name": "Icon",
+                          "Properties": {
+                            "Size": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  28
+                                ],
+                                [
+                                  0,
+                                  28
+                                ]
+                              ]
+                            },
+                            "BackgroundTransparency": 1,
+                            "BorderSizePixel": 0,
+                            "Image": "rbxthumb://type=Asset&id=117046422836136&w=420&h=420",
+                            "ScaleType": "Fit",
+                            "ZIndex": 28,
+                            "Position": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  8
+                                ],
+                                [
+                                  0,
+                                  5
+                                ]
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "ClassName": "TextLabel",
+                          "Name": "Name",
+                          "Properties": {
+                            "Size": {
+                              "UDim2": [
+                                [
+                                  1,
+                                  -54
+                                ],
+                                [
+                                  0,
+                                  17
+                                ]
+                              ]
+                            },
+                            "BackgroundTransparency": 1,
+                            "BorderSizePixel": 0,
+                            "Text": "Sunflower",
+                            "TextColor3": [
+                              0.9607843137254902,
+                              0.9725490196078431,
+                              0.9882352941176471
+                            ],
+                            "TextSize": 12,
+                            "TextWrapped": true,
+                            "TextXAlignment": "Left",
+                            "TextYAlignment": "Center",
+                            "Font": "GothamBold",
+                            "ZIndex": 28,
+                            "Visible": true,
+                            "Position": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  44
+                                ],
+                                [
+                                  0,
+                                  3
+                                ]
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "ClassName": "TextLabel",
+                          "Name": "Chance",
+                          "Properties": {
+                            "Size": {
+                              "UDim2": [
+                                [
+                                  1,
+                                  -54
+                                ],
+                                [
+                                  0,
+                                  14
+                                ]
+                              ]
+                            },
+                            "BackgroundTransparency": 1,
+                            "BorderSizePixel": 0,
+                            "Text": "1 / ?",
+                            "TextColor3": [
+                              0.64,
+                              0.72,
+                              0.79
+                            ],
+                            "TextSize": 9,
+                            "TextWrapped": true,
+                            "TextXAlignment": "Left",
+                            "TextYAlignment": "Center",
+                            "Font": "GothamBold",
+                            "ZIndex": 28,
+                            "Visible": true,
+                            "Position": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  44
+                                ],
+                                [
+                                  0,
+                                  20
+                                ]
+                              ]
+                            }
+                          }
+                        }
                       ]
-                    }
-                  },
-                  "Children": [
-                    {
-                      "ClassName": "ImageLabel",
-                      "Name": "Icon",
-                      "Properties": {
-                        "Size": {
-                          "UDim2": [
-                            [
-                              0,
-                              28
-                            ],
-                            [
-                              0,
-                              28
-                            ]
-                          ]
-                        },
-                        "BackgroundTransparency": 1,
-                        "BorderSizePixel": 0,
-                        "Image": "rbxthumb://type=Asset&id=117046422836136&w=420&h=420",
-                        "ScaleType": "Fit",
-                        "ZIndex": 28,
-                        "Position": {
-                          "UDim2": [
-                            [
-                              0,
-                              8
-                            ],
-                            [
-                              0,
-                              5
-                            ]
-                          ]
-                        }
-                      }
                     },
                     {
-                      "ClassName": "TextLabel",
-                      "Name": "Name",
+                      "ClassName": "Frame",
+                      "Name": "Previous",
                       "Properties": {
                         "Size": {
                           "UDim2": [
                             [
                               1,
-                              -54
+                              0
                             ],
                             [
                               0,
-                              17
+                              38
                             ]
                           ]
                         },
+                        "BackgroundColor3": [
+                          0.10588235294117647,
+                          0.1411764705882353,
+                          0.1843137254901961
+                        ],
                         "BackgroundTransparency": 1,
                         "BorderSizePixel": 0,
-                        "Text": "Sunflower",
-                        "TextColor3": [
-                          0.9607843137254902,
-                          0.9725490196078431,
-                          0.9882352941176471
-                        ],
-                        "TextSize": 12,
-                        "TextWrapped": true,
-                        "TextXAlignment": "Left",
-                        "TextYAlignment": "Center",
-                        "Font": "GothamBold",
-                        "ZIndex": 28,
+                        "ZIndex": 27,
                         "Visible": true,
+                        "ClipsDescendants": false,
                         "Position": {
                           "UDim2": [
                             [
                               0,
-                              44
+                              0
                             ],
                             [
                               0,
-                              3
+                              84
                             ]
                           ]
                         }
-                      }
-                    },
-                    {
-                      "ClassName": "TextLabel",
-                      "Name": "Chance",
-                      "Properties": {
-                        "Size": {
-                          "UDim2": [
-                            [
-                              1,
-                              -54
-                            ],
-                            [
-                              0,
-                              14
-                            ]
-                          ]
+                      },
+                      "Children": [
+                        {
+                          "ClassName": "ImageLabel",
+                          "Name": "Icon",
+                          "Properties": {
+                            "Size": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  28
+                                ],
+                                [
+                                  0,
+                                  28
+                                ]
+                              ]
+                            },
+                            "BackgroundTransparency": 1,
+                            "BorderSizePixel": 0,
+                            "Image": "rbxthumb://type=Asset&id=117046422836136&w=420&h=420",
+                            "ScaleType": "Fit",
+                            "ZIndex": 28,
+                            "Position": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  8
+                                ],
+                                [
+                                  0,
+                                  5
+                                ]
+                              ]
+                            }
+                          }
                         },
-                        "BackgroundTransparency": 1,
-                        "BorderSizePixel": 0,
-                        "Text": "1 / ?",
-                        "TextColor3": [
-                          0.64,
-                          0.72,
-                          0.79
-                        ],
-                        "TextSize": 9,
-                        "TextWrapped": true,
-                        "TextXAlignment": "Left",
-                        "TextYAlignment": "Center",
-                        "Font": "GothamBold",
-                        "ZIndex": 28,
-                        "Visible": true,
-                        "Position": {
-                          "UDim2": [
-                            [
-                              0,
-                              44
+                        {
+                          "ClassName": "TextLabel",
+                          "Name": "Name",
+                          "Properties": {
+                            "Size": {
+                              "UDim2": [
+                                [
+                                  1,
+                                  -54
+                                ],
+                                [
+                                  0,
+                                  17
+                                ]
+                              ]
+                            },
+                            "BackgroundTransparency": 1,
+                            "BorderSizePixel": 0,
+                            "Text": "Sunflower",
+                            "TextColor3": [
+                              0.9607843137254902,
+                              0.9725490196078431,
+                              0.9882352941176471
                             ],
-                            [
-                              0,
-                              20
-                            ]
-                          ]
+                            "TextSize": 12,
+                            "TextWrapped": true,
+                            "TextXAlignment": "Left",
+                            "TextYAlignment": "Center",
+                            "Font": "GothamBold",
+                            "ZIndex": 28,
+                            "Visible": true,
+                            "Position": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  44
+                                ],
+                                [
+                                  0,
+                                  3
+                                ]
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "ClassName": "TextLabel",
+                          "Name": "Chance",
+                          "Properties": {
+                            "Size": {
+                              "UDim2": [
+                                [
+                                  1,
+                                  -54
+                                ],
+                                [
+                                  0,
+                                  14
+                                ]
+                              ]
+                            },
+                            "BackgroundTransparency": 1,
+                            "BorderSizePixel": 0,
+                            "Text": "1 / ?",
+                            "TextColor3": [
+                              0.64,
+                              0.72,
+                              0.79
+                            ],
+                            "TextSize": 9,
+                            "TextWrapped": true,
+                            "TextXAlignment": "Left",
+                            "TextYAlignment": "Center",
+                            "Font": "GothamBold",
+                            "ZIndex": 28,
+                            "Visible": true,
+                            "Position": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  44
+                                ],
+                                [
+                                  0,
+                                  20
+                                ]
+                              ]
+                            }
+                          }
                         }
-                      }
-                    }
-                  ]
-                },
-                {
-                  "ClassName": "Frame",
-                  "Name": "Previous",
-                  "Properties": {
-                    "Size": {
-                      "UDim2": [
-                        [
-                          1,
-                          0
-                        ],
-                        [
-                          0,
-                          38
-                        ]
                       ]
-                    },
-                    "BackgroundColor3": [
-                      0.10588235294117647,
-                      0.1411764705882353,
-                      0.1843137254901961
-                    ],
-                    "BackgroundTransparency": 1,
-                    "BorderSizePixel": 0,
-                    "ZIndex": 27,
-                    "Visible": true,
-                    "ClipsDescendants": false,
-                    "Position": {
-                      "UDim2": [
-                        [
-                          0,
-                          0
-                        ],
-                        [
-                          0,
-                          84
-                        ]
-                      ]
-                    }
-                  },
-                  "Children": [
-                    {
-                      "ClassName": "ImageLabel",
-                      "Name": "Icon",
-                      "Properties": {
-                        "Size": {
-                          "UDim2": [
-                            [
-                              0,
-                              28
-                            ],
-                            [
-                              0,
-                              28
-                            ]
-                          ]
-                        },
-                        "BackgroundTransparency": 1,
-                        "BorderSizePixel": 0,
-                        "Image": "rbxthumb://type=Asset&id=117046422836136&w=420&h=420",
-                        "ScaleType": "Fit",
-                        "ZIndex": 28,
-                        "Position": {
-                          "UDim2": [
-                            [
-                              0,
-                              8
-                            ],
-                            [
-                              0,
-                              5
-                            ]
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "ClassName": "TextLabel",
-                      "Name": "Name",
-                      "Properties": {
-                        "Size": {
-                          "UDim2": [
-                            [
-                              1,
-                              -54
-                            ],
-                            [
-                              0,
-                              17
-                            ]
-                          ]
-                        },
-                        "BackgroundTransparency": 1,
-                        "BorderSizePixel": 0,
-                        "Text": "Sunflower",
-                        "TextColor3": [
-                          0.9607843137254902,
-                          0.9725490196078431,
-                          0.9882352941176471
-                        ],
-                        "TextSize": 12,
-                        "TextWrapped": true,
-                        "TextXAlignment": "Left",
-                        "TextYAlignment": "Center",
-                        "Font": "GothamBold",
-                        "ZIndex": 28,
-                        "Visible": true,
-                        "Position": {
-                          "UDim2": [
-                            [
-                              0,
-                              44
-                            ],
-                            [
-                              0,
-                              3
-                            ]
-                          ]
-                        }
-                      }
-                    },
-                    {
-                      "ClassName": "TextLabel",
-                      "Name": "Chance",
-                      "Properties": {
-                        "Size": {
-                          "UDim2": [
-                            [
-                              1,
-                              -54
-                            ],
-                            [
-                              0,
-                              14
-                            ]
-                          ]
-                        },
-                        "BackgroundTransparency": 1,
-                        "BorderSizePixel": 0,
-                        "Text": "1 / ?",
-                        "TextColor3": [
-                          0.64,
-                          0.72,
-                          0.79
-                        ],
-                        "TextSize": 9,
-                        "TextWrapped": true,
-                        "TextXAlignment": "Left",
-                        "TextYAlignment": "Center",
-                        "Font": "GothamBold",
-                        "ZIndex": 28,
-                        "Visible": true,
-                        "Position": {
-                          "UDim2": [
-                            [
-                              0,
-                              44
-                            ],
-                            [
-                              0,
-                              20
-                            ]
-                          ]
-                        }
-                      }
                     }
                   ]
                 }
