@@ -430,3 +430,16 @@ dialog::backdrop{background:rgba(0,0,0,.62)}.dialog-head{height:44px;display:fle
 }
 .align-tools button:hover{border-color:#4c94c7;background:#162a3a;color:#e5f5ff}
 .align-help{margin-top:5px;color:#6f8296;font-size:8px;line-height:1.35}
+
+/* Roblox UIPadding must never change the outer GuiObject AbsoluteSize. */
+.gui-node{box-sizing:border-box!important}
+.layout-host{
+  position:absolute;
+  inset:0;
+  min-width:0;
+  min-height:0;
+  box-sizing:border-box;
+  overflow:visible;
+}
+.layout-host.list-layout{display:flex!important}
+.layout-host.grid-layout{display:grid!important}
