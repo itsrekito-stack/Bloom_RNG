@@ -18,6 +18,7 @@ HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 ROOT = Path(os.environ.get("BLOOM_UI_ROOT", os.getcwd())).resolve()
 CACHE_LIMIT = 256
+BRIDGE_VERSION = 2
 
 _thumbnail_cache: "OrderedDict[str, tuple[bytes, str]]" = OrderedDict()
 
@@ -129,13 +130,20 @@ class BloomHandler(SimpleHTTPRequestHandler):
 
     def end_headers(self) -> None:
         self.send_header("Cache-Control", "no-store")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
         super().end_headers()
+
+    def do_OPTIONS(self) -> None:
+        self.send_response(204)
+        self.end_headers()
 
     def do_GET(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
 
         if parsed.path == "/api/health":
-            body = b'{"ok":true,"server":"Bloom UI Studio"}'
+            body = json.dumps({"ok": True, "server": "Bloom UI Studio", "bridge": BRIDGE_VERSION}).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -243,6 +251,7 @@ class BloomHandler(SimpleHTTPRequestHandler):
 
 
 def main() -> None:
+    global ROOT
     import argparse
 
     parser = argparse.ArgumentParser(description="Bloom UI Studio local server")
@@ -251,6 +260,7 @@ def main() -> None:
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
+    ROOT = root
     os.chdir(root)
 
     server = ThreadingHTTPServer((HOST, args.port), BloomHandler)
@@ -259,6 +269,7 @@ def main() -> None:
     print(f"Root: {root}")
     print(f"URL : http://{HOST}:{args.port}/tools/bloom-ui-editor/index.html")
     print("Roblox thumbnail proxy: enabled")
+    print(f"Assistant Bridge API: v{BRIDGE_VERSION}")
     print("Close this window to stop the server.")
     print()
 
