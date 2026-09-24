@@ -947,6 +947,19 @@ function UI:ResolveBloomGui()
  error("[BloomUI] BloomUI is missing from both PlayerGui and StarterGui")
 end
 
+function UI:ApplyState(payload,source)
+ if type(payload)~="table" or type(payload.Profile)~="table" then
+  warn("[BloomUI] Ignoring invalid state payload from",source or "unknown")
+  return false
+ end
+ self.State=payload
+ self.Player:SetAttribute("BloomClientReady",true)
+ if not self.RouletteLanding then self:BuildRouletteVisualPool(true) end
+ self:Render()
+ print("[BloomUI] State applied:",source or "Event")
+ return true
+end
+
 function UI:Start()
  self.Player:SetAttribute("BloomClientReady",false)
  self.Player:GetAttributeChangedSignal("BloomProfileState"):Connect(function()
@@ -955,6 +968,7 @@ function UI:Start()
  end)
  local remotes=RS:WaitForChild("BloomRemotes")
  self.Request=remotes:WaitForChild("Request")
+ self.StateRequest=remotes:WaitForChild("StateRequest")
  local event=remotes:WaitForChild("Event")
  self.Gui=self:ResolveBloomGui()
  self.SafeRoot=self.Gui:WaitForChild("SafeRoot",10)
@@ -974,10 +988,7 @@ function UI:Start()
 
  event.OnClientEvent:Connect(function(kind,payload)
   if kind=="State" then
-   self.State=payload
-   self.Player:SetAttribute("BloomClientReady",true)
-   if not self.RouletteLanding then self:BuildRouletteVisualPool(true) end
-   self:Render()
+   self:ApplyState(payload,"Event")
   elseif kind=="Ack" then
    if payload.Action=="Roll" then
     self.Pending=false
@@ -1047,7 +1058,20 @@ function UI:Start()
  task.spawn(function()
   local started=os.clock()
   local lastStatus=nil
+  local attempts=0
   while self.Gui.Parent and not self.State do
+   attempts=attempts+1
+   local ok,payload,reason=pcall(function() return self.StateRequest:InvokeServer() end)
+   if ok and payload then
+    if self:ApplyState(payload,"StateRequest") then
+     self:Send("Ready")
+     break
+    end
+   elseif not ok then
+    if attempts==1 or attempts%8==0 then warn("[BloomUI] StateRequest failed:",payload) end
+   elseif reason and reason~="PROFILE_LOADING" then
+    warn("[BloomUI] StateRequest rejected:",reason)
+   end
    self:Send("Ready")
    local status=self.Player:GetAttribute("BloomProfileState")
    if status~=lastStatus then
@@ -1055,9 +1079,9 @@ function UI:Start()
     if status then print("[BloomUI] Profile state:",status) end
    end
    if os.clock()-started>20 then
-    local reason=self.Player:GetAttribute("BloomProfileError")
-    warn("[BloomUI] Still waiting for profile state",status,reason)
-    self:Toast(reason and ("Профиль: "..tostring(reason)) or "Профиль всё ещё загружается…")
+    local profileError=self.Player:GetAttribute("BloomProfileError")
+    warn("[BloomUI] Still waiting for authoritative state",status,profileError)
+    self:Toast(profileError and ("Профиль: "..tostring(profileError)) or "Состояние профиля всё ещё синхронизируется…")
     started=os.clock()+9999
    end
    task.wait(.75)
