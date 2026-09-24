@@ -60,7 +60,7 @@ C.WorkshopNodeIcons={
  CORE="Core",
  ROLL_1="Roll",ROLL_2="Mastery",ROLL_3="Roll",ROLL_4="Luck",ROLL_5="AutoRoll",ROLL_6="AutoRoll",
  GARDEN_1="Garden",GARDEN_2="Garden",GARDEN_3="Garden",GARDEN_4="Garden",GARDEN_5="Luck",GARDEN_6="Garden",
- BEES_1="Bee",BEES_2="Bee",BEES_3="Mastery",BEES_4="Bee",BEES_5="Bee",BEES_6="Bee",
+ BEES_1="BeeHexagon",BEES_2="BeeHexagon",BEES_3="BeeHexagon",BEES_4="BeeHexagon",BEES_5="BeeHexagon",BEES_6="BeeHexagon",
  ECONOMY_1="Duplicate",ECONOMY_2="Duplicate",ECONOMY_3="Duplicate",ECONOMY_4="Economy",ECONOMY_5="FruitDust",ECONOMY_6="Economy",
  BLOOM_1="Mastery",BLOOM_2="Garden",BLOOM_3="Luck",BLOOM_4="Mastery",BLOOM_5="Mastery",BLOOM_6="Luck",
  EXPLORATION_1="Luck",EXPLORATION_2="Loadout",EXPLORATION_3="Luck",EXPLORATION_4="Garden",EXPLORATION_5="Luck",EXPLORATION_6="Loadout",
