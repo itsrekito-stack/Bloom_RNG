@@ -562,13 +562,13 @@ function UI:Render()
 
  local special=p.RollState.SpecialRollReady==true
  if self.Auto then
-  self.Roll.Text="STOP ROLL"
-  self.Roll.BackgroundColor3=C.GreenDeep
+  self.Roll.Text=""
+  self.Roll.BackgroundTransparency=1
   self.RollStroke.Color=C.Green
   self.RollIcon.Image=Icons.GetActionIcon("AutoRoll")
  else
-  self.Roll.Text=special and "BLOOM ROLL" or "AUTO ROLL"
-  self.Roll.BackgroundColor3=special and C.GreenDeep or C.BlueDeep
+  self.Roll.Text=""
+  self.Roll.BackgroundTransparency=1
   self.RollStroke.Color=special and C.Gold or C.Blue
   self.RollIcon.Image=Icons.GetActionIcon("Roll")
  end
