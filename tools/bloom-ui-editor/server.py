@@ -97,10 +97,10 @@ def roblox_thumbnail(asset_id: str) -> Optional[tuple[bytes, str]]:
             content_type = "image/png"
         elif image_bytes.startswith(b"\xff\xd8\xff"):
             content_type = "image/jpeg"
-        elif image_bytes[:4] in {b"RIFF"} and b"WEBP" in image_bytes[:16]:
+        elif image_bytes[:4] == b"RIFF" and b"WEBP" in image_bytes[:16]:
             content_type = "image/webp"
         else:
-            content_type = "image/png"
+            return None
 
     result = (image_bytes, content_type)
     _thumbnail_cache[asset_id] = result
