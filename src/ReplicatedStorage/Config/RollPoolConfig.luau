@@ -9,7 +9,7 @@ function S.Build(p,luck,temp)
    table.insert(pool,{Kind=kind,Id=id,DisplayName=v.DisplayName,Rarity=v.Rarity,Weight=w,Undiscovered=not discovered})
   end end end
  add("FlowerSeed",F.Species) add("Bee",B.Bees) table.sort(pool,function(a,b) return a.Kind..a.Id<b.Kind..b.Id end)
- if p.RollState.DiscoveryPity+1>=C.DiscoveryThreshold then local new={} for _,v in ipairs(pool) do if v.Undiscovered then table.insert(new,v) end end if #new>0 then pool=new end end
+ if p.RollState.DiscoveryPity+1>=C.DiscoveryThreshold then local cap=R.Rank[C.DiscoveryPityMaxRarity] or R.Rank.Epic local new={} for _,v in ipairs(pool) do if v.Undiscovered and (R.Rank[v.Rarity] or math.huge)<=cap then table.insert(new,v) end end if #new>0 then pool=new end end
  local total=0 for _,v in ipairs(pool) do total=total+v.Weight end if total<=0 then return {},0 end for _,v in ipairs(pool) do v.Chance=v.Weight/total v.Odds=total/v.Weight end return pool,total
 end
 return S
