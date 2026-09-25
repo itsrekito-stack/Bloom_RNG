@@ -6,6 +6,7 @@ local Trials=require(RS.Config.BuildTrialConfig)
 local Locations=require(RS.Config.LocationsConfig)
 local Bloom=require(RS.Config.BloomConfig)
 local Rarity=require(RS.Config.RarityConfig)
+local Effects=require(RS.Shared.WorkshopEffects)
 
 local S={}
 
@@ -55,7 +56,7 @@ local REASONS={
 
 local function masteryCost(profile,id)
  local mastery=profile.FlowerCollection.FlowerMastery[id] or {Level=1,XP=0}
- local discount=profile.WorkshopV5.Nodes.ECONOMY_5 and .8 or 1
+ local discount=1-Effects.Value(profile,"ECONOMY_5","StudyDiscount",0)
  return math.ceil((mastery.Level or 1)*5*discount)
 end
 
