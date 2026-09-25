@@ -1,4 +1,5 @@
 local RS=game:GetService("ReplicatedStorage") local F=require(RS.Config.FlowersConfig) local G=require(RS.Config.GardenSynergyConfig) local C=require(RS.Config.BloomConfig)
+local Rules=require(RS.Shared.GardenRules)
 local S={Plots={},Used={}}
 function S:Init(x) self.X=x end
 function S:Position(player,slot) local plot=self.Plots[player] return plot and plot.Origin+G.Position(slot) end
@@ -31,6 +32,7 @@ function S:Plant(player,i,id)
  if id~="" and (type(id)~="string" or not F.Exists(id)) then return false,"INVALID_ITEM" end
  local old=p.Garden.Slots[i]
  if old.SpeciesId==id then return true end
+ if Rules.HasProgress(old) then return false,"GARDEN_PROGRESS_PROTECTED" end
  if id~="" and self.X.InventoryService:Available(p,id)<1 then return false,"NO_FREE_COPY" end
  local slot={}
  if id~="" then
@@ -48,6 +50,12 @@ function S:Plant(player,i,id)
  if id~="" then self.X:Emit(player,"Plant",1) end
  return true
 end
-function S:RefreshCapacity(player) local p=self.X:Profile(player) p.Garden.UnlockedSlots=self.X.StatsService:FlowerCapacity(p) self:Build(player) end
+function S:RefreshCapacity(player)
+ local p=self.X:Profile(player) if not p then return false,"PROFILE_LOADING" end
+ local capacity=Rules.FlowerCapacity(p)
+ if Rules.HasOverflow(p.Garden.Slots,capacity) then return false,"RESPEC_GARDEN_OCCUPIED" end
+ p.Garden.UnlockedSlots=capacity self:Build(player) return true
+end
 function S:Remove(player) local plot=self.Plots[player] if plot then self.Used[plot.Index]=nil plot.Model:Destroy() self.Plots[player]=nil end end
 return S
+

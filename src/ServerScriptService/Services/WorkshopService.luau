@@ -1,5 +1,7 @@
 local RS=game:GetService("ReplicatedStorage")
 local C=require(RS.Config.WorkshopConfig)
+local Rules=require(RS.Shared.GardenRules)
+local Copy=require(RS.Shared.BloomUtil).Copy
 local S={}
 
 function S:Init(x)
@@ -52,6 +54,15 @@ function S:Respec(player)
  if not p then return false,"PROFILE_LOADING" end
  if not p.Tutorial.FeatureUnlocks.Workshop then return false,"FEATURE_LOCKED" end
 
+ -- Validate the future profile before touching balances, nodes, slots or equips.
+ local future=Copy(p)
+ for id in pairs(future.WorkshopV5.Nodes) do
+  local node=C.Nodes[id]
+  if node and not node.Permanent then future.WorkshopV5.Nodes[id]=nil end
+ end
+ local gardenCapacity=Rules.FlowerCapacity(future)
+ local beeCapacity=Rules.BeeCapacity(future)
+ if Rules.HasOverflow(p.Garden.Slots,gardenCapacity) then return false,"RESPEC_GARDEN_OCCUPIED" end
  local changed=false
  for id in pairs(p.WorkshopV5.Nodes) do
   local n=C.Nodes[id]
@@ -65,9 +76,10 @@ function S:Respec(player)
  end
  if not changed then return false,"NO_CHANGES" end
 
- local limit=self.X.StatsService:FlowerCapacity(p)
- for i=limit+1,15 do p.Garden.Slots[i]={} end
- for i=self.X.StatsService:BeeCapacity(p)+1,8 do p.Pollinators.EquippedBeeSlots[i]=nil end
+ -- Empty overflow slots need no deletion. Ownership is separate from equipment.
+ for slot in pairs(p.Pollinators.EquippedBeeSlots) do
+  if tonumber(slot) and tonumber(slot)>beeCapacity then p.Pollinators.EquippedBeeSlots[slot]=nil end
+ end
 
  self.X.GardenPlotService:RefreshCapacity(player)
  self.X.GardenSynergyService:Recalculate(player)
@@ -76,3 +88,4 @@ function S:Respec(player)
 end
 
 return S
+

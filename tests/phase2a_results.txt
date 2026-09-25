@@ -1,0 +1,74 @@
+STATIC PASS 11 changed Luau modules through Lua 5.4 compatibility checks (not a Luau typecheck)
+PASS default profile
+PASS legacy mapping, dust, planted ownership
+PASS empty garden stays empty
+PASS migration rejects NaN without mutation
+PASS malformed nested containers repaired
+PASS all registries valid, Workshop 43
+PASS odds normalized, 10000 samples known
+PASS discovery guarantee only undiscovered
+PASS all-discovered guarantee safe fallback
+PASS ownership, dissolve protection, remaining copy
+PASS season dry run deterministic and preserves mastery
+PASS trait copies cannot be equipped beyond ownership
+PASS synergies use physical adjacency, not equipped legacy
+PASS roll independent players, 100 cycles, cooldown and one-time Bloom
+PASS activity owner, distance, order, expiry, duplicate rejection
+PASS Nectar hold cannot finish immediately
+PASS Workshop purchase prerequisites, balance, idempotence
+PASS tutorial has 18 steps, reconnect progress, unlocks
+PASS one-time point source and preservation of Nectar
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS final save success releases confirmed snapshot
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS failed final save retains candidate and recovers same operation
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS repeated ambiguous failure bounded and never released
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS definite no-write retries bounded separately
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS ownership loss prohibits final overwrite
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS transaction committed with lost acknowledgement is confirmed by id
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS unknown transaction cannot be overwritten by stale normal save
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS PlayerRemoving during transaction releases post-turn snapshot
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS shutdown coordinates active transaction and concurrent player release
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS hung operation cannot deadlock shutdown or start a second writer
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS rejoin on same server rejected while previous record unresolved
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS expired lease is never resurrected by an old save
+PASS respec with empty overflow preserves ownership and valid slots
+PASS respec occupied overflow rejects atomically before refunds
+PASS respec progressed mutated overflow rejects without state loss
+PASS respec overflow bee unequips without destroying bee ownership
+PASS schema negative active values repair and retain original diagnostic values
+PASS schema NaN and infinity reject without changing source
+PASS schema unknown registries archived and future keys retained
+PASS schema excessive equipment repairs while preserving owned counts
+PASS schema invalid occupied slot rejects without silent removal
+PASS schema inconsistent planted ownership rejected without granting copies
+PASS schema huge finite values reject instead of silently capping earned progression
+PASS schema valid progression round trip idempotent after mutation
+PASS schema old migration retains original legacy archive and mappings
+PASS schema future version rejected rather than downgraded
+PASS plant replacement and unplant block progressed state loss
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS lease-expired read cannot return previous successful save as final success
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS leave during autosave uses fresh final snapshot after serialized save
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS real Season caller does not rebuild after timed-out commit and late release
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS Start wires PlayerRemoving and BindToClose to same owner
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS final release acknowledgement loss does not cause a duplicate write
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS invalid live profile is retained and has explicit final failure
+[DataService] Store:	FruitRNG_PlayerProfiles_TEST_v1
+PASS successful Season caller rebuilds exactly once with committed data
+TOTAL PASS 53
