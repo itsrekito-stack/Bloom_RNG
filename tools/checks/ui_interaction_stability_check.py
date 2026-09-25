@@ -41,5 +41,13 @@ need(boost,'self.LastRevision=revision',"revision still tracked without rebuild"
 need(boost,'badge.MouseEnter:Connect',"hover remains event-driven")
 need(boost,'badge.MouseLeave:Connect',"hover only closes on actual pointer leave")
 
+# Fullscreen Workshop must restore every HUD block it temporarily hid.
+need(ui,'function UI:CaptureWorkshopHUDVisibility()',"Workshop captures HUD visibility")
+need(ui,'function UI:RestoreWorkshopHUDVisibility()',"Workshop restores HUD visibility")
+need(ui,'snapshot[gui]=gui.Visible',"Workshop stores actual pre-open state")
+need(ui,'gui.Visible=visible',"Workshop restores exact pre-open state")
+need(ui,'self:RestoreWorkshopHUDVisibility()',"Workshop close restores snapshot before render")
+need(ui,'if self.BoostHUD then self.BoostHUD:SetSuppressed(false) end',"Workshop restores Active Boosts suppression")
+
 print("UI interaction stability contract: PASS")
 print("Background state sync cannot reset Settings scroll or destroy stable hover targets.")
