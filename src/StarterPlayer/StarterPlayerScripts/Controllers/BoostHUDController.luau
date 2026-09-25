@@ -84,7 +84,6 @@ function S:SetMinimized(minimized,animate)
  self.Hovered=nil
  self.Tooltip.Visible=false
  self.Toggle.Text=self.Minimized and "+" or "−"
- self.Toggle.TooltipText=self.Minimized and "Expand active boosts" or "Minimize active boosts"
  self.Title.Text=self.Minimized and ("BOOSTS  •  "..tostring(self.ItemCount)) or "ACTIVE BOOSTS"
  self.List.Visible=not self.Minimized and self.ItemCount>0
  self.Empty.Visible=not self.Minimized and self.ItemCount==0
