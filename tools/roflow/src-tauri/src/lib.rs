@@ -283,7 +283,7 @@ fn default_roadmap_tasks() -> Vec<PlannerTask> {
 
         planner_task("release-economy","5 · Balance & Content","Balance currency sources and sinks","Verified by deterministic guardrails: every release currency has live sources/sinks, early Workshop affordability is bounded, Coin coverage stays finite, Legacy Nectar spans multiple Seasons and Bloom/pity cadence stays in target ranges.",true),
         planner_task("release-pacing","5 · Balance & Content","Balance early / mid / late progression pacing","Verified with deterministic pacing anchors: Hive2 remains fast, world gates land at Hive2/4/6, Workshop reaches Hive5, Season at Hive8, Bee Mastery stays long-form and Legacy spans multiple Seasons.",true),
-        planner_task("release-rarities","5 · Balance & Content","Tune rarity and duplicate pacing","Validate flower/bee weights, duplicate frequency and dissolve value so RNG remains exciting without stalling progression.",false),
+        planner_task("release-rarities","5 · Balance & Content","Tune rarity and duplicate pacing","Implemented: natural rarity weights stay intact, discovery pity is capped at Epic so it supports Season progression without guaranteeing Legendary/Mythic/Celestial, and rarity/pity/duplicate guardrails are covered by CI.",true),
         planner_task("release-content","5 · Balance & Content","Lock the release content set","Choose the flowers, bees, locations, quests, trials and Workshop branches that are actually shipping in v1.",false),
         planner_task("release-sinks","5 · Balance & Content","Verify duplicate and endgame sinks","Make sure extra copies and accumulated currencies continue to have useful destinations after the early game.",false),
 
