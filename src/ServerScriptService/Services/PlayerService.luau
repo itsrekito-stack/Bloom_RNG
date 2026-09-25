@@ -71,6 +71,7 @@ function X:Request(player,action,a,b,c)
  elseif action=="SeasonConfirm" then return self.SeasonService:Confirm(player,a)
  elseif action=="Card" then return self.SeasonService:Card(player,a)
  elseif action=="Keepsake" then return self.SeasonService:Keepsake(player,a,b)
+ elseif action=="DistillNectar" then return self.SeasonService:DistillNectar(player)
  elseif action=="Skip" then self.TutorialService:Skip(player) return true
  elseif action=="Replay" then self.TutorialService:Replay(player) return true
  elseif action=="Menu" then
