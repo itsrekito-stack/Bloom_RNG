@@ -1915,7 +1915,7 @@ function UI:Start()
   while self.Gui.Parent do
    task.wait(.1)
    for id,item in pairs(self.Activities.Items) do
-    if workspace:GetServerTimeNow()>item.Expires then item.Part:Destroy() self.Activities.Items[id]=nil end
+    if workspace:GetServerTimeNow()>item.Expires then self.Activities:RemoveItem(id) end
    end
    if self.Auto and not self.Pending and not self.RouletteLanding then self:RollNow(true) end
    if self.Pending and os.clock()-self.PendingAt>15 then
