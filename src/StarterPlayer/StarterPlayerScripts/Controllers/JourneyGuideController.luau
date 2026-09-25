@@ -28,11 +28,11 @@ function S:RenderObjective()
  local ui=self.UI
  local _,index,count=self:SolarBloomTarget()
  if index and count then
-  ui.ObjectiveText.Text=string.format("Solar Bloom  •  Reach checkpoint %d/%d",index,count)
+  ui.ObjectiveText.Text=string.format("Solar Bloom  •  Checkpoint %d/%d  •  Reward: +20%% Roll Luck for 60s",index,count)
   ui.ObjectiveProgress.Visible=true
   ui.ObjectiveProgressFill.Size=UDim2.fromScale(math.clamp((index-1)/math.max(1,count),0,1),1)
  else
-  ui.ObjectiveText.Text="Activate Solar Bloom in Sunny Orchard"
+  ui.ObjectiveText.Text="Activate Solar Bloom  •  Reward: +20% Roll Luck for 60s"
   ui.ObjectiveProgress.Visible=false
  end
  return true
