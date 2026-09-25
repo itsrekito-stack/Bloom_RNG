@@ -263,7 +263,7 @@ fn default_roadmap_tasks() -> Vec<PlannerTask> {
         planner_task("release-low-end","2 · Runtime & Performance","Profile a long session on low-end hardware","Measure server/client frame time, Lua memory, UI churn and replication after 30–60 minutes of normal play.",false),
 
         planner_task("release-br002","3 · UI & Inventory","Resolve Inventory V2 menu ownership (BR-002)","Make SeedSatchel / Inventory V2 / FieldGuide responsibilities explicit against the actual authored UI model.",true),
-        planner_task("release-inventory-actions","3 · UI & Inventory","QA every Inventory V2 action","Verify category/search/sort/filter, Plant, Favorite, Protect, Dissolve, Mastery and Bee equip/unequip states.",false),
+        planner_task("release-inventory-actions","3 · UI & Inventory","QA every Inventory V2 action","Verify category/search/sort/filter, Plant, Favorite, Protect, Dissolve, Mastery and Bee equip/unequip states.",true),
         planner_task("release-inventory-plant","3 · UI & Inventory","Fix or clearly surface Garden proximity for Plant","Inventory planting currently depends on physical garden proximity; route or explain the action so it is not misleading.",true),
         planner_task("release-hud-responsive","3 · UI & Inventory","Finish HUD/responsive pass","Verify safe areas and authored HUD layout at 1920×1080, 1366×768 and 1280×720 without overlap.",false),
         planner_task("release-tutorial","3 · UI & Inventory","Finish intro/tutorial guidance","Ensure arrows, indicators and tutorial progression point to real world/UI targets and remain on-screen.",false),
