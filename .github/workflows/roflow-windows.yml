@@ -1,0 +1,47 @@
+name: Build RoFlow for Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "tools/roflow/**"
+      - ".github/workflows/roflow-windows.yml"
+
+concurrency:
+  group: roflow-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: tools/roflow
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: tools/roflow/package.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Build RoFlow
+        run: npm run build
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: RoFlow-Windows
+          path: tools/roflow/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error

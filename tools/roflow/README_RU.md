@@ -36,6 +36,8 @@ Windows installer:
 npm run build
 ```
 
+Также добавлен GitHub Actions workflow `.github/workflows/roflow-windows.yml`. Он собирает Windows installer на `windows-latest`, поэтому тяжёлую Rust/Tauri-сборку можно отдавать GitHub вместо слабого локального ноутбука.
+
 ## Следующий этап
 
 1. Встроить существующий Bloom UI Studio frontend внутрь RoFlow.
