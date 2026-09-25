@@ -2,6 +2,7 @@
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
 local RS = game:GetService("ReplicatedStorage")
 local Data = game:GetService("ServerScriptService"):WaitForChild("Data")
 local Copy = require(RS.Shared.TableUtil).DeepCopy
@@ -174,7 +175,8 @@ requestRelease=function(record)
  if record.Operation then return end -- its completion owns the final-save handoff
  if record.State=="Released" or record.State=="Lost" or record.State=="UnknownOutcome" or record.State=="RecoveryFailed" then return end
  setState(record,"Closing")
- local snapshot=prepare(record.Data)
+ local releaseData=record.StudioTransient and record.StudioOriginalData or record.Data
+ local snapshot=prepare(releaseData)
  if not snapshot then
   setState(record,"RecoveryFailed")
   record.LastOperation={Kind="Release",Attempts=0,Result=outcome("INVALID_PROFILE")}
@@ -231,12 +233,14 @@ function Service:GetPersistenceStatus(player)
  local r=recordsByUserId[player.UserId]
  if not r or r.Player~=player then return {State="Released"} end
  return {State=r.State,Closing=r.CloseRequested==true,Operation=r.Operation and r.Operation.Kind,
+  StudioTransient=r.StudioTransient==true,
   Result=r.FailureResult and r.FailureResult.Code or (r.LastOperation and r.LastOperation.Result and r.LastOperation.Result.Code)}
 end
 function Service:SaveProfile(player, releaseSession)
  if releaseSession then return self:ReleaseProfile(player) end
  local record=recordsByUserId[player.UserId]
  if not record or record.Player~=player or record.CloseRequested or record.State~="Active" or record.Operation then return outcome("RETRYABLE_FAILURE") end
+ if record.StudioTransient then return {Code="SUCCESS",Committed=true,Pending=false,StudioTransient=true} end
  local snapshot=prepare(record.Data)
  if not snapshot then
   record.CloseRequested=true setState(record,"RecoveryFailed")
@@ -252,6 +256,10 @@ function Service:CommitProfile(player, candidate, transactionId)
  if type(transactionId)~="string" or transactionId=="" then return outcome("INVALID_PROFILE") end
  local snapshot=prepare(candidate)
  if not snapshot then return outcome("INVALID_PROFILE") end
+ if record.StudioTransient then
+  record.Data=Copy(snapshot)
+  return {Code="SUCCESS",Committed=true,Pending=false,StudioTransient=true}
+ end
  local operation=beginOperation(record,"Transaction",snapshot,transactionId)
  local result=awaitOperation(record,operation)
  if result.Pending then
@@ -261,6 +269,20 @@ function Service:CommitProfile(player, candidate, transactionId)
  end
  return result
 end
+function Service:BeginStudioTransientProfile(player)
+ if not RunService:IsStudio() then return false,"NOT_STUDIO" end
+ local record=recordsByUserId[player.UserId]
+ if not record or record.Player~=player or record.CloseRequested or record.State~="Active" or record.Operation then return false,"PROFILE_LOADING" end
+ if not record.StudioOriginalData then record.StudioOriginalData=Copy(record.Data) end
+ local fresh=prepare(Schema.CreateDefault())
+ if not fresh then return false,"INVALID_PROFILE" end
+ record.Data=fresh
+ record.StudioTransient=true
+ player:SetAttribute("BloomStudioTransientProfile",true)
+ print("[DataService] Studio transient fresh profile active for",player.Name,"— persistent profile will be restored on release")
+ return true
+end
+
 function Service:ReleaseProfile(player)
  local record=recordsByUserId[player.UserId]
  if not record or record.Player~=player then return outcome("NO_PROFILE") end
@@ -276,7 +298,7 @@ function Service:AutosaveLoop()
   task.wait(Random.new():NextNumber(Config.AutosaveMinSeconds,Config.AutosaveMaxSeconds))
   if shuttingDown then break end
   for _,record in pairs(recordsByUserId) do
-   if record.State=="Active" and not record.CloseRequested then task.spawn(function() self:SaveProfile(record.Player,false) end) end
+   if record.State=="Active" and not record.CloseRequested and not record.StudioTransient then task.spawn(function() self:SaveProfile(record.Player,false) end) end
   end
  end
 end
