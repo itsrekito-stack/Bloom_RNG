@@ -13,20 +13,20 @@ function S:Build()
   self.X:Prompt(gate,s.Name.." • Hive "..s.Hive,function(player) self:Unlock(player,id) end)
   for j=1,3 do local pos=center+Vector3.new((j-2)*22,1,(j%2)*15) local key=id.."_"..j
    local landmark=self.X:Part(self.X.World,key,pos,Vector3.new(3,7,3),s.Color:Lerp(Color3.new(1,1,1),.3),true) self.Landmarks[key]=pos
-   self.X:Prompt(landmark,"Открыть место / активность",function(player)
+   self.X:Prompt(landmark,"Discover location / activity",function(player)
     local p=self.X:Profile(player) if not p or not p.World.UnlockedSectors[id] then return end
     if not p.World.LandmarkDiscoveries[key] then p.World.LandmarkDiscoveries[key]=true p.Currencies.PetalDust=p.Currencies.PetalDust+3 self.X.RollService:Charge(player,10) self.X:Emit(player,"Landmark",1)
-     if Random.new():NextNumber()<.02 then p.Cosmetics=p.Cosmetics or {} p.Cosmetics.WildBloomExplorer=true self.X:Send(player,"Message","Открыт титул Wild Bloom Explorer") end end
+     if Random.new():NextNumber()<.02 then p.Cosmetics=p.Cosmetics or {} p.Cosmetics.WildBloomExplorer=true self.X:Send(player,"Message","Wild Bloom Explorer title unlocked") end end
     self.X.GardenActivityService:Offer(player,s.Activity,pos,id)
    end)
   end
   local launch=self.X:Part(self.X.World,id.."Launch",center-dir*35,Vector3.new(5,.5,5),Color3.fromRGB(240,210,100),true)
-  self.X:Prompt(launch,"Прыжок к центру",function(player) local p=self.X:Profile(player) if p and p.World.UnlockedSectors[id] and p.World.LandmarkDiscoveries[id.."_1"] and p.WorkshopV5.Nodes.EXPLORATION_6 then local root=player.Character and player.Character:FindFirstChild("HumanoidRootPart") if root then root.AssemblyLinearVelocity=-dir*75+Vector3.new(0,65,0) end end end)
+  self.X:Prompt(launch,"Launch to center",function(player) local p=self.X:Profile(player) if p and p.World.UnlockedSectors[id] and p.World.LandmarkDiscoveries[id.."_1"] and p.WorkshopV5.Nodes.EXPLORATION_6 then local root=player.Character and player.Character:FindFirstChild("HumanoidRootPart") if root then root.AssemblyLinearVelocity=-dir*75+Vector3.new(0,65,0) end end end)
   local shrine=self.X:Part(self.X.World,id.."Shrine",center+Vector3.new(0,2,30),Vector3.new(6,4,6),Color3.fromRGB(230,210,150),true)
-  self.X:Prompt(shrine,"Испытания сада",function(player) local p=self.X:Profile(player) if p and p.World.UnlockedSectors[id] then self.X:Send(player,"Trials",id) end end)
+  self.X:Prompt(shrine,"Garden Trials",function(player) local p=self.X:Profile(player) if p and p.World.UnlockedSectors[id] then self.X:Send(player,"Trials",id) end end)
  end
  local workshop=self.X:Part(self.X.World,"Workshop",self.X.Origin+Vector3.new(12,2,0),Vector3.new(7,4,7),Color3.fromRGB(90,160,210),true)
- self.X:Prompt(workshop,"Открыть мастерскую",function(player) self.X:Emit(player,"WorkshopVisit",1) self.X:Send(player,"Open","Workshop") end)
+ self.X:Prompt(workshop,"Open Workshop",function(player) self.X:Emit(player,"WorkshopVisit",1) self.X:Send(player,"Open","Workshop") end)
  local tree=self.X:Part(self.X.World,"AncientTree",self.X.Origin+Vector3.new(-12,5,0),Vector3.new(6,10,6),Color3.fromRGB(140,100,170),true)
  self.X:Prompt(tree,"Season Turn",function(player) self.X.SeasonService:Preview(player) end)
 end
