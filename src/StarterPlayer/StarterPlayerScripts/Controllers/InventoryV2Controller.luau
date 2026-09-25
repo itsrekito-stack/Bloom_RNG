@@ -325,7 +325,7 @@ function InventoryV2.Render(controller,profile,uiState)
  }
 
  local function rerender()
-  if controller.Menu=="SeedSatchel" then controller:RenderMenu() end
+  if controller.MenuRenderer=="InventoryV2" then controller:RenderMenu() end
  end
 
  for _,category in ipairs(CATEGORY_ORDER) do

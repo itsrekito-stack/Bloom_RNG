@@ -25,6 +25,7 @@ local CLIENT_BUILD="state-sync-v5-revision-coalesced-2026-09-25"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0}
 
+local MENU_RENDERERS={SeedSatchel="InventoryV2"}
 local MENU_NAMES={
  SeedSatchel="Inventory",
  Workshop="Workshop",
@@ -559,6 +560,7 @@ function UI:Close()
  if wasWorkshop then self.WorkshopRuntime=nil end
  if self.Menu=="Season" then self:Send("SeasonCancel") end
  self.Menu=nil
+ self.MenuRenderer=nil
  self:SetPanelVisible(false)
  if wasWorkshop then self:SetWorkshopFocus(false) end
  self:Send("Menu",false)
@@ -570,6 +572,7 @@ function UI:Open(name,arg)
  if not self.State then return end
  if name~="Settings" and name~="Plant" and name~="Season" and name~="Cards" and name~="Replay" and not self.State.Profile.Tutorial.FeatureUnlocks[name] then return end
  self.Menu=name
+ self.MenuRenderer=MENU_RENDERERS[name] or name
  self.MenuArg=arg
  self:SetPanelVisible(true)
  if name=="Workshop" then self:SetWorkshopFocus(true) end
@@ -583,7 +586,8 @@ function UI:RenderMenu()
  local p=self.State.Profile
  local ui=self.State.UI or {}
  local name=self.Menu
- local workshop=name=="Workshop"
+ local renderer=self.MenuRenderer or MENU_RENDERERS[name] or name
+ local workshop=renderer=="Workshop"
  local reuseWorkshop=workshop and self.WorkshopRuntime and self.WorkshopRuntime.Parent==self.Content
  if not reuseWorkshop then self:ClearPanel() end
  self.PanelTitle.Text=MENU_NAMES[name] or name
@@ -629,7 +633,7 @@ function UI:RenderMenu()
 
   if self.IsMobileLayout then
    self.Panel.Size=UDim2.fromOffset(math.max(300,safeW-16),math.max(300,safeH-108))
-  elseif name=="SeedSatchel" then
+  elseif renderer=="InventoryV2" then
    self.Panel.Size=UDim2.fromOffset(math.min(1220,math.max(700,safeW-24)),math.min(660,math.max(500,safeH-24)))
   else
    self.Panel.Size=UDim2.fromOffset(600,420)
@@ -658,16 +662,16 @@ function UI:RenderMenu()
   self.Content.CanvasSize=UDim2.fromOffset(0,0)
   self.Content.ScrollingEnabled=false
   self.Content.ScrollBarThickness=0
- elseif name=="SeedSatchel" then
-  -- Inventory v2 owns its own ItemGrid scrolling. Keep outer Content fixed,
-  -- exactly like the Bloom UI Studio inventory preview.
+ elseif renderer=="InventoryV2" then
+  -- SeedSatchel is the persistent feature/unlock id; InventoryV2 is its only
+  -- live renderer. Keep the outer Content fixed because ItemGrid scrolls itself.
   self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
   self.Content.CanvasSize=UDim2.fromOffset(0,0)
   self.Content.ScrollingEnabled=false
   self.Content.ScrollBarThickness=0
   InventoryV2.Render(self,p,ui)
 
- elseif name=="Workshop" then
+ elseif renderer=="Workshop" then
   local shell=self.WorkshopRuntime
   local firstWorkshopBuild=not shell or shell.Parent~=self.Content
   local template=self.Panel:FindFirstChild("WorkshopTemplate")
