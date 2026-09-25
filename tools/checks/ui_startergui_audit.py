@@ -105,7 +105,7 @@ check('Templates folder authored',templates is not None)
 for name in ['ButtonTemplate','LabelTemplate','SectionTemplate']:
     n=one(name)[1]
     check(name+' authored',n is not None and n.get('Properties',{}).get('Visible') is False)
-check('menu helpers clone authored templates','self.Templates and self.Templates:FindFirstChild("ButtonTemplate")' in source and 'LabelTemplate' in source and 'SectionTemplate' in source)
+check('menu helpers clone authored templates','function UI:MenuTemplate(name)' in source and 'self:MenuTemplate("ButtonTemplate")' in source and 'self:MenuTemplate("LabelTemplate")' in source and 'self:MenuTemplate("SectionTemplate")' in source)
 inventory_prototype=one('InventoryPrototype')[1]
 item_card=one('ItemCardTemplate')[1]
 check('InventoryPrototype authored',inventory_prototype is not None and inventory_prototype.get('Properties',{}).get('Visible') is False)
