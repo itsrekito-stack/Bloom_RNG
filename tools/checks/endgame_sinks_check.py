@@ -14,6 +14,9 @@ remote=read("src/ServerScriptService/Services/RemoteService.luau")
 state=read("src/ServerScriptService/Services/UIStateService.luau")
 client=read("src/StarterPlayer/StarterPlayerScripts/Controllers/InventoryV2Controller.luau")
 mastery=read("src/ServerScriptService/Services/FlowerProgressionService.luau")
+workshop=read("src/ReplicatedStorage/Config/WorkshopConfig.luau")
+workshop_service=read("src/ServerScriptService/Services/WorkshopService.luau")
+season_plan=read("src/ReplicatedStorage/Shared/SeasonPlan.luau")
 
 # Flower duplicates already have a useful sink.
 need(cfg,"DustPerCopy=3","flower duplicate dust value")
@@ -47,5 +50,24 @@ need(state,"DissolveValue=Bloom.BeeDustPerCopy","bee dismantle reward projected"
 need(client,'controller:Send("DissolveBee",item.Id,1)',"Inventory V2 bee dismantle action")
 need(client,'"DISMANTLE ×1  •  +"..tostring(item.DissolveValue or 0).." DUST"',"Inventory V2 dismantle reward copy")
 
-print("endgame duplicate sinks: PASS")
-print("Flower and bee extra copies both have protected server-authoritative Petal Dust sinks.")
+# Coins and Petal Dust remain useful after the first progression pass.
+need(workshop,"Coins=i*30","Workshop Coin cost scales with node depth")
+need(workshop,'Dust=(branch=="ECONOMY" or branch=="BLOOM") and i*3 or 0',"Workshop Petal Dust sink branches")
+need(workshop_service,"p.Currencies.Coins-=(n.Coins or 0)","Workshop Coin spend")
+need(workshop_service,"p.Currencies.PetalDust-=(n.Dust or 0)","Workshop Petal Dust spend")
+need(season_plan,"after.Currencies.Coins=0","Season Coin reset")
+need(season_plan,"if not after.WorkshopV5.LegacyNodes[id] then","Season resets non-Legacy Workshop purchases")
+need(season_plan,"after.WorkshopV5.Points=after.WorkshopV5.Points+(node and node.Cost or 0)","Season refunds points only")
+if "after.Currencies.PetalDust=0" in season_plan:
+    raise AssertionError("Petal Dust should persist across Season Turn")
+
+seasonal_coin_sink=sum(i*30 for i in range(1,7))*6
+seasonal_dust_sink=sum(i*3 for i in range(1,7))*2
+if seasonal_coin_sink!=3780:
+    raise AssertionError(f"unexpected repeatable Workshop Coin sink: {seasonal_coin_sink}")
+if seasonal_dust_sink!=126:
+    raise AssertionError(f"unexpected repeatable Workshop Dust sink: {seasonal_dust_sink}")
+
+print("endgame sinks: PASS")
+print(f"Duplicate sinks protected; repeatable seasonal Workshop sinks: {seasonal_coin_sink} Coins and {seasonal_dust_sink} Petal Dust.")
+
