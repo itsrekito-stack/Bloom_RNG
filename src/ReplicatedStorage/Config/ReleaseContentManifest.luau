@@ -32,4 +32,20 @@ return {
   ShadowBee={Rarity="Celestial",Ability="ShadowEcho",SortOrder=12},
   StormBee={Rarity="Celestial",Ability="ChainTempest",SortOrder=13},
  },
+ Locations={
+  SunnyOrchard={Hive=2,Requires=false,Activity="SolarBloom"},
+  CrystalGreenhouse={Hive=4,Requires="SunnyOrchard",Activity="CrystalResonance"},
+  TwilightGrove={Hive=6,Requires="CrystalGreenhouse",Activity="FireflyRoute"},
+ },
+ Activities={"PollenSpark","NectarBud","DewDrop","PollenTrail","CrossPollination","Overcharge","BloomSurge","PollenWind","SolarBloom","CrystalResonance","ShadowBloom","FireflyRoute"},
+ Trials={
+  MeadowCircuit={Sector="SunnyOrchard",Event="Delivery",Advanced=false},
+  SwiftRoute={Sector="SunnyOrchard",Event="PollenTrail",Advanced=false},
+  CrystalTriangle={Sector="CrystalGreenhouse",Event="CrystalResonance",Advanced=false},
+  NoCelestial={Sector="CrystalGreenhouse",Event="WorldActivity",Advanced=true},
+  SignatureBloom={Sector="TwilightGrove",Event="Synergy",Advanced=true},
+  TwilightPulse={Sector="TwilightGrove",Event="Ability",Advanced=true},
+  MinimalGarden={Sector="SunnyOrchard",Event="Delivery",Advanced=true},
+  MutationStudy={Sector="CrystalGreenhouse",Event="Mutation",Advanced=true},
+ },
 }
