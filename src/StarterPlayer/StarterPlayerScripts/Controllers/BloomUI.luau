@@ -537,6 +537,7 @@ end
 
 function UI:ClearPanel()
  self:DisconnectWorkshopPan()
+ self.WorkshopRuntime=nil
  for _,x in ipairs(self.Content:GetChildren()) do
   if not x:IsA("UIListLayout") and not x:IsA("UIPadding") then x:Destroy() end
  end
@@ -555,6 +556,7 @@ function UI:Close()
  self:DisconnectWorkshopPan()
  self.ReplayIndex=nil
  local wasWorkshop=self.Menu=="Workshop"
+ if wasWorkshop then self.WorkshopRuntime=nil end
  if self.Menu=="Season" then self:Send("SeasonCancel") end
  self.Menu=nil
  self:SetPanelVisible(false)
@@ -581,8 +583,9 @@ function UI:RenderMenu()
  local p=self.State.Profile
  local ui=self.State.UI or {}
  local name=self.Menu
- self:ClearPanel()
  local workshop=name=="Workshop"
+ local reuseWorkshop=workshop and self.WorkshopRuntime and self.WorkshopRuntime.Parent==self.Content
+ if not reuseWorkshop then self:ClearPanel() end
  self.PanelTitle.Text=MENU_NAMES[name] or name
  self.PanelSubtitle.Text=MENU_HINTS[name] or ""
 
@@ -641,7 +644,7 @@ function UI:RenderMenu()
   self.Content.ScrollBarThickness=4
  end
 
- self.Content.CanvasPosition=Vector2.new()
+ if not workshop then self.Content.CanvasPosition=Vector2.new() end
 
  if workshop then
   -- Workshop is intentionally chrome-free: only the close button floats above the map.
@@ -665,19 +668,24 @@ function UI:RenderMenu()
   InventoryV2.Render(self,p,ui)
 
  elseif name=="Workshop" then
+  local shell=self.WorkshopRuntime
+  local firstWorkshopBuild=not shell or shell.Parent~=self.Content
   local template=self.Panel:FindFirstChild("WorkshopTemplate")
-  if not template then
+  if firstWorkshopBuild and not template then
    self:Label(self.Content,"WorkshopTemplate missing",32)
   else
-   local shell=template:Clone()
-   shell.Name="WorkshopRuntime"
-   shell.Visible=true
-   shell.Parent=self.Content
-   shell.Size=UDim2.fromScale(1,1)
-   shell.Position=UDim2.new()
-   shell.LayoutOrder=1
+   if firstWorkshopBuild then
+    shell=template:Clone()
+    shell.Name="WorkshopRuntime"
+    shell.Visible=true
+    shell.Parent=self.Content
+    shell.Size=UDim2.fromScale(1,1)
+    shell.Position=UDim2.new()
+    shell.LayoutOrder=1
+    self.WorkshopRuntime=shell
+    self.WorkshopZoomLabel=nil
+   end
 
-   self.WorkshopZoomLabel=nil
    local workshopUI=ui.Workshop
    local body=shell:WaitForChild("WorkshopBody")
    local treePanel=body:WaitForChild("TreePanel")
@@ -693,7 +701,7 @@ function UI:RenderMenu()
    if not nodes or not links then error("[BloomUI] Workshop tree containers missing") end
 
    local tooltip=body:WaitForChild("NodeTooltip")
-   tooltip.Visible=false
+   if firstWorkshopBuild then tooltip.Visible=false end
    tooltip.Active=false
    local tooltipTitle=tooltip:WaitForChild("Title")
    local tooltipBranch=tooltip:WaitForChild("Branch")
@@ -833,47 +841,68 @@ function UI:RenderMenu()
      local nodeId=id
      local isSelected=selected
 
-     node.MouseEnter:Connect(function(x,y)
-      if not node.Parent then return end
-      TweenService:Create(nodeScale,TweenInfo.new(Theme.Motion.Fast,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
-       Scale=isSelected and 1.18 or revealed and 1.09 or 1.04,
-      }):Play()
-      if icon and icon.Parent then
-       TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{ImageTransparency=math.max(0,baseTransparency-(revealed and .12 or .05))}):Play()
-      end
-      if revealed then
-       showTooltip(nodeId,n,backend,owned,available,branchColor)
-       if typeof(x)=="number" and typeof(y)=="number" then moveTooltip(x,y) else
-        local mouse=UIS:GetMouseLocation()
-        moveTooltip(mouse.X,mouse.Y)
+     node:SetAttribute("BloomWorkshopOwned",owned)
+     node:SetAttribute("BloomWorkshopRevealed",revealed)
+     node:SetAttribute("BloomWorkshopAvailable",available)
+     node:SetAttribute("BloomWorkshopSelected",selected)
+     node:SetAttribute("BloomWorkshopTransparency",baseTransparency)
+
+     if not node:GetAttribute("BloomWorkshopBound") then
+      node:SetAttribute("BloomWorkshopBound",true)
+      node.MouseEnter:Connect(function(x,y)
+       if not node.Parent then return end
+       local currentRevealed=node:GetAttribute("BloomWorkshopRevealed")==true
+       local currentSelected=node:GetAttribute("BloomWorkshopSelected")==true
+       local currentTransparency=tonumber(node:GetAttribute("BloomWorkshopTransparency")) or .28
+       local currentOwned=node:GetAttribute("BloomWorkshopOwned")==true
+       local currentAvailable=node:GetAttribute("BloomWorkshopAvailable")==true
+       local currentUI=self.State and self.State.UI and self.State.UI.Workshop
+       local currentBackend=currentUI and currentUI.Nodes and currentUI.Nodes[nodeId]
+       TweenService:Create(nodeScale,TweenInfo.new(Theme.Motion.Fast,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
+        Scale=currentSelected and 1.18 or currentRevealed and 1.09 or 1.04,
+       }):Play()
+       if icon and icon.Parent then
+        TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{ImageTransparency=math.max(0,currentTransparency-(currentRevealed and .12 or .05))}):Play()
        end
-      else
+       if currentRevealed then
+        showTooltip(nodeId,n,currentBackend,currentOwned,currentAvailable,branchColor)
+        if typeof(x)=="number" and typeof(y)=="number" then moveTooltip(x,y) else
+         local mouse=UIS:GetMouseLocation()
+         moveTooltip(mouse.X,mouse.Y)
+        end
+       else
+        tooltip.Visible=false
+       end
+      end)
+      node.MouseMoved:Connect(function(x,y)
+       if node:GetAttribute("BloomWorkshopRevealed")==true and tooltip.Visible then moveTooltip(x,y) end
+      end)
+      node.MouseLeave:Connect(function()
+       if not node.Parent then return end
+       local currentSelected=node:GetAttribute("BloomWorkshopSelected")==true
+       local currentTransparency=tonumber(node:GetAttribute("BloomWorkshopTransparency")) or .28
+       TweenService:Create(nodeScale,TweenInfo.new(Theme.Motion.Fast,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Scale=currentSelected and 1.12 or 1}):Play()
+       if icon and icon.Parent then TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{ImageTransparency=currentTransparency}):Play() end
        tooltip.Visible=false
-      end
-     end)
-     node.MouseMoved:Connect(function(x,y)
-      if revealed and tooltip.Visible then moveTooltip(x,y) end
-     end)
-     node.MouseLeave:Connect(function()
-      if not node.Parent then return end
-      TweenService:Create(nodeScale,TweenInfo.new(Theme.Motion.Fast,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Scale=baseScale}):Play()
-      if icon and icon.Parent then TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{ImageTransparency=baseTransparency}):Play() end
-      tooltip.Visible=false
-     end)
-     node.Activated:Connect(function()
-      if not revealed then return end
-      if nodeId=="CORE" then
+      end)
+      node.Activated:Connect(function()
+       local currentRevealed=node:GetAttribute("BloomWorkshopRevealed")==true
+       local currentOwned=node:GetAttribute("BloomWorkshopOwned")==true
+       local currentAvailable=node:GetAttribute("BloomWorkshopAvailable")==true
+       if not currentRevealed then return end
+       if nodeId=="CORE" then
+        self.SelectedNode=nodeId
+        self:RenderMenu()
+        return
+       end
+       if self.SelectedNode==nodeId then
+        if currentAvailable and not currentOwned then self:Send("WorkshopBuy",nodeId) end
+        return
+       end
        self.SelectedNode=nodeId
        self:RenderMenu()
-       return
-      end
-      if self.SelectedNode==nodeId then
-       if available and not owned then self:Send("WorkshopBuy",nodeId) end
-       return
-      end
-      self.SelectedNode=nodeId
-      self:RenderMenu()
-     end)
+      end)
+     end
     end
 
     if n.Parent then
@@ -890,30 +919,32 @@ function UI:RenderMenu()
     end
    end
 
-   if self.WorkshopCanvasPosition then
-    canvas.CanvasPosition=self.WorkshopCanvasPosition
-   end
-   self:BindWorkshopPan(canvas,nodes)
-   task.defer(function()
-    if not canvas.Parent then return end
-    local position=self.WorkshopCanvasPosition
-    if not position then
-     local core=nodes:FindFirstChild("Node_CORE")
-     if core and core:IsA("GuiObject") then
-      local zoom=self.WorkshopZoom or 1
-      local coreCenter=Vector2.new(
-       core.Position.X.Offset+core.Size.X.Offset*.5,
-       core.Position.Y.Offset+core.Size.Y.Offset*.5
-      )*zoom
-      position=coreCenter-canvas.AbsoluteSize*.5
-     else
-      position=Vector2.new(650,500)
-     end
+   if firstWorkshopBuild then
+    if self.WorkshopCanvasPosition then
+     canvas.CanvasPosition=self.WorkshopCanvasPosition
     end
-    position=self:ClampWorkshopCanvasPosition(canvas,position)
-    canvas.CanvasPosition=position
-    self.WorkshopCanvasPosition=position
-   end)
+    self:BindWorkshopPan(canvas,nodes)
+    task.defer(function()
+     if not canvas.Parent then return end
+     local position=self.WorkshopCanvasPosition
+     if not position then
+      local core=nodes:FindFirstChild("Node_CORE")
+      if core and core:IsA("GuiObject") then
+       local zoom=self.WorkshopZoom or 1
+       local coreCenter=Vector2.new(
+        core.Position.X.Offset+core.Size.X.Offset*.5,
+        core.Position.Y.Offset+core.Size.Y.Offset*.5
+       )*zoom
+       position=coreCenter-canvas.AbsoluteSize*.5
+      else
+       position=Vector2.new(650,500)
+      end
+     end
+     position=self:ClampWorkshopCanvasPosition(canvas,position)
+     canvas.CanvasPosition=position
+     self.WorkshopCanvasPosition=position
+    end)
+   end
   end
  elseif name=="FieldGuide" then
   self:Section(self.Content,"Collection and real odds")
