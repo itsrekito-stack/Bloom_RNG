@@ -1189,7 +1189,7 @@ function UI:Render()
  local bloomPercent=charge/bloomMax*100
  self.MeterLabel.Text=string.format("BLOOM  %.0f%%     •     DISCOVERY  %d/%d",bloomPercent,pity,pityMax)..(p.WorkshopV5.Nodes.ROLL_4 and pity>=pityMax-1 and "  •  PITY READY" or "")
  self.BloomFill.Size=UDim2.fromScale(charge/bloomMax,1)
- self.MeterArea.Visible=rollUnlocked and (p.Tutorial.Step>=10 or p.Tutorial.Skipped)
+ self.MeterArea.Visible=rollUnlocked and (p.Tutorial.Step>=(T.IndexById.Delivery or 8) or p.Tutorial.Skipped)
 
  for name,b in pairs(self.DockButtons) do b.Visible=name=="Settings" or p.Tutorial.FeatureUnlocks[name]==true end
  if not self:IsWorkshopExclusive() then self.GuideController:Update() end
@@ -1700,6 +1700,7 @@ function UI:ApplyState(payload,source)
   return false
  end
  local firstState=self.State==nil
+ local previousTutorialStep=not firstState and self.State.Profile and self.State.Profile.Tutorial and self.State.Profile.Tutorial.Step or nil
  if not firstState and payload.Revision~=nil and self.State.Revision==payload.Revision then return false end
  self.State=payload
  if firstState then
@@ -1709,6 +1710,27 @@ function UI:ApplyState(payload,source)
  end
  if not self.RouletteLanding then self:BuildRouletteVisualPool(true) end
  self:Render()
+
+ local nextTutorialStep=payload.Profile.Tutorial and payload.Profile.Tutorial.Step or nil
+ if previousTutorialStep and previousTutorialStep<=#T.Steps and nextTutorialStep and nextTutorialStep>#T.Steps then
+  self.ObjectiveCard.Visible=true
+  self.ObjectiveTitle.Text="TUTORIAL COMPLETE"
+  self.ObjectiveText.Text="Your garden journey begins now."
+  self.ObjectiveProgress.Visible=true
+  self.ObjectiveProgressFill.Size=UDim2.fromScale(1,1)
+  local scale=self.ObjectiveCard:FindFirstChild("TutorialCompleteScale")
+  if not scale then
+   scale=Instance.new("UIScale")
+   scale.Name="TutorialCompleteScale"
+   scale.Parent=self.ObjectiveCard
+  end
+  scale.Scale=1.08
+  TweenService:Create(scale,TweenInfo.new(.45,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
+  task.delay(1.5,function()
+   if self.State and self.State.Profile and self.State.Profile.Tutorial.Step>#T.Steps then self:Render() end
+  end)
+ end
+
  if self.Menu and not self.WorkshopPanDragging then self:RenderMenu() end
  if firstState then print("[BloomUI] State applied:",source or "Event") end
  return true
