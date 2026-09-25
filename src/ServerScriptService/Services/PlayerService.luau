@@ -94,10 +94,18 @@ function X:Request(player,action,a,b,c)
  elseif action=="Skip" then self.TutorialService:Skip(player) return true
  elseif action=="Replay" then self.TutorialService:Replay(player) return true
  elseif action=="Menu" then
-  if a==false then self.Temp[player].MenuOpen=false return true end
+  if a==false then
+   local closing=self.Temp[player].MenuName
+   self.Temp[player].MenuOpen=false
+   self.Temp[player].MenuName=nil
+   local tutorialStep=T.Steps[p.Tutorial.Step]
+   if closing=="SeedSatchel" and tutorialStep and tutorialStep.Id=="InventoryExplain" then self:Emit(player,"InventoryReviewed",1) end
+   return true
+  end
   if type(a)~="string" then return false,"INVALID_ACTION" end
   if a~="Settings" and not p.Tutorial.FeatureUnlocks[a] then return false,"LOCKED" end
   self.Temp[player].MenuOpen=true
+  self.Temp[player].MenuName=a
   if a=="SeedSatchel" then self:Emit(player,"SatchelOpen",1) end
   return true
  elseif action=="Setting" then
