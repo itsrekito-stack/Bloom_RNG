@@ -52,6 +52,9 @@ function X:Request(player,action,a,b,c)
  elseif action=="Dissolve" then
   if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end
   return self.InventoryService:Dissolve(player,a,b)
+ elseif action=="ReleaseBee" then
+  if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end
+  return self.InventoryService:ReleaseBee(player,a,b)
  elseif action=="FlowerUpgrade" then
   if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end
   return self.FlowerProgressionService:Upgrade(player,a)
