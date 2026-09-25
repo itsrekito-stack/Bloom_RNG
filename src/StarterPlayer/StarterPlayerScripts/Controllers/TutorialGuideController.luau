@@ -203,6 +203,11 @@ function S:ResolveWorldTarget(target)
  elseif target=="Token" then
   local token=ui.Activities:Target()
   if token then return token.Position,"ACTIVITY" end
+ elseif target=="SectorActivity" then
+  local token=ui.Activities:Target(true)
+  if token then return token.Position,"SECTOR ACTIVITY" end
+  local sunny=world and world:FindFirstChild("SunnyOrchard")
+  if sunny and sunny:IsA("BasePart") then return sunny.Position+Vector3.new(0,2,0),"SUNNY ORCHARD" end
  elseif target=="Workshop" then
   local part=world and world:FindFirstChild("Workshop")
   if part and part:IsA("BasePart") then return part.Position,"WORKSHOP" end
@@ -247,8 +252,8 @@ function S:Update()
  end
 
  local pos,label=self:ResolveWorldTarget(target)
- if target=="Token" and not pos then
-  ui.Guide.Text="Wait for the next activity — the pointer will appear automatically"
+ if (target=="Token" or target=="SectorActivity") and not pos then
+  ui.Guide.Text=target=="SectorActivity" and "Enter Sunny Orchard — a sector activity will spawn automatically" or "Wait for the next activity — the pointer will appear automatically"
   ui.Guide.Visible=true
   return
  end
