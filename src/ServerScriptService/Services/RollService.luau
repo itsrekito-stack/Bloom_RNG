@@ -1,7 +1,7 @@
 local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.BloomConfig) local Pool=require(RS.Config.RollPoolConfig) local T=require(RS.Config.TutorialConfig) local E=require(RS.Shared.WorkshopEffects) local S={Last={}} local rng=Random.new()
 function S:Init(x) self.X=x end
 function S:Charge(player,amount) local p=self.X:Profile(player) if p then p.RollState.BloomCharge=math.min(C.BloomMax,p.RollState.BloomCharge+amount) p.RollState.SpecialRollReady=p.RollState.BloomCharge>=C.BloomMax end end
-function S:Odds(player) local p=self.X:Profile(player) if not p then return {} end local t=self.X.Temp[player] return Pool.Build(p,self.X.StatsService:Get(p).Luck+(t.Dew or 0)*.1,t) end
+function S:Odds(player) local p=self.X:Profile(player) if not p then return {} end local t=self.X.Temp[player] return Pool.Build(p,self.X.BoostService:RollLuck(player,p),t) end
 function S:Roll(player,automatic,requestId)
  local p=self.X:Profile(player) if not p or not p.Tutorial.FeatureUnlocks.Roll then return false,"LOCKED" end
  local cd=E.Value(p,"ROLL_6","RollCooldown",E.Value(p,"ROLL_5","RollCooldown",E.Value(p,"ROLL_1","RollCooldown",C.RollCooldown))) if os.clock()-(self.Last[player] or -100)<cd then return false,"COOLDOWN" end
