@@ -1,4 +1,42 @@
 local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.BloomConfig) local S={Buckets={},StateRequests={}}
+local NO_ARGS={Ready=true,Respec=true,Skip=true,Replay=true,SeasonCancel=true}
+local ACTIVITY_PHASE={Begin=true,Collect=true,Cancel=true}
+local function finite(v) return type(v)=="number" and v==v and math.abs(v)~=math.huge end
+local function integer(v,min,max) return finite(v) and v%1==0 and v>=min and v<=max end
+local function short(v,max,allowEmpty) return type(v)=="string" and #v<=max and (allowEmpty or #v>0) end
+local function scalar(v) local t=type(v) return v==nil or t=="string" or t=="number" or t=="boolean" end
+function S:Validate(action,a,b,c)
+ if NO_ARGS[action] then return a==nil and b==nil and c==nil,a==nil and b==nil and c==nil and nil or"INVALID_VALUE" end
+ if not scalar(a) or not scalar(b) or not scalar(c) then return false,"INVALID_VALUE" end
+ if action=="Roll" then
+  if a~=nil and type(a)~="boolean" then return false,"INVALID_VALUE" end
+  if b~=nil and not integer(b,1,2147483647) then return false,"INVALID_VALUE" end
+  if c~=nil then return false,"INVALID_VALUE" end
+  return true
+ elseif action=="Plant" then
+  return integer(a,1,C.MaxFlowerSlots) and short(b,64,true) and c==nil,(integer(a,1,C.MaxFlowerSlots) and short(b,64,true) and c==nil) and nil or"INVALID_VALUE"
+ elseif action=="EquipBee" then
+  local idOK=a==nil or short(a,64,true)
+  return idOK and integer(b,1,C.MaxBeeSlots) and c==nil,(idOK and integer(b,1,C.MaxBeeSlots) and c==nil) and nil or"INVALID_VALUE"
+ elseif action=="Dissolve" then
+  return short(a,64,false) and integer(b,1,10000) and c==nil,(short(a,64,false) and integer(b,1,10000) and c==nil) and nil or"INVALID_VALUE"
+ elseif action=="FlowerUpgrade" or action=="WorkshopBuy" or action=="Trial" or action=="SeasonConfirm" or action=="Card" or action=="DissolveFilter" then
+  return short(a,64,false) and b==nil and c==nil,(short(a,64,false) and b==nil and c==nil) and nil or"INVALID_VALUE"
+ elseif action=="Flag" then
+  return short(a,64,false) and short(b,32,false) and c==nil,(short(a,64,false) and short(b,32,false) and c==nil) and nil or"INVALID_VALUE"
+ elseif action=="Activity" then
+  return short(a,64,false) and integer(b,1,32) and type(c)=="string" and ACTIVITY_PHASE[c]==true,(short(a,64,false) and integer(b,1,32) and type(c)=="string" and ACTIVITY_PHASE[c]==true) and nil or"INVALID_VALUE"
+ elseif action=="Keepsake" then
+  return short(a,16,false) and short(b,64,false) and c==nil,(short(a,16,false) and short(b,64,false) and c==nil) and nil or"INVALID_VALUE"
+ elseif action=="Menu" then
+  local menuOK=a==false or short(a,32,false)
+  return menuOK and b==nil and c==nil,(menuOK and b==nil and c==nil) and nil or"INVALID_VALUE"
+ elseif action=="Setting" then
+  local valueOK=type(b)=="boolean" or finite(b)
+  return short(a,32,false) and valueOK and c==nil,(short(a,32,false) and valueOK and c==nil) and nil or"INVALID_VALUE"
+ end
+ return false,"INVALID_ACTION"
+end
 function S:Init(x)
  self.X=x
  local old=RS:FindFirstChild("BloomRemotes") if old then old:Destroy() end
@@ -14,6 +52,7 @@ end
 function S:Start()
  print("[RemoteService] State sync ready: state-sync-v5-revision-coalesced-2026-09-25")
  self.StateRequest.OnServerInvoke=function(player,knownRevision)
+  if knownRevision~=nil and not integer(knownRevision,0,2147483647) then return nil,"INVALID_VALUE" end
   local now=os.clock() local last=self.StateRequests[player] or -100
   if now-last<.4 then return nil,"RATE_LIMITED" end
   self.StateRequests[player]=now
@@ -35,8 +74,9 @@ function S:Start()
    self.X:Send(player,"Ack",{Action=action,RequestId=rollRequestId,OK=false,Reason="RATE_LIMITED",Message=self.X.UIStateService:ReasonText("RATE_LIMITED")})
    return
   end
-  if type(a)=="string" and #a>100 or type(b)=="string" and #b>100 or type(c)=="string" and #c>100 then
-   self.X:Send(player,"Ack",{Action=action,RequestId=rollRequestId,OK=false,Reason="INVALID_VALUE",Message=self.X.UIStateService:ReasonText("INVALID_VALUE")})
+  local valid,validationReason=self:Validate(action,a,b,c)
+  if not valid then
+   self.X:Send(player,"Ack",{Action=action,RequestId=rollRequestId,OK=false,Reason=validationReason,Message=self.X.UIStateService:ReasonText(validationReason)})
    return
   end
   if not self.X:Profile(player) then
