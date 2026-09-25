@@ -46,7 +46,7 @@ need(garden,'self.X.U.Near(player,pos,C.InteractionDistance)',"Plant proximity v
 need(garden,'self.X.InventoryService:Available(p,id)<1',"Plant ownership validation")
 need(activity,'index~=o.Index',"Activity step-order validation")
 need(activity,'o.Expires<workspace:GetServerTimeNow()',"Activity expiry validation")
-need(activity,'phase~="Collect"',"Activity collect-only server path")
+need(activity,'phase~="Reach"',"Activity checkpoint-only server path")
 need(activity,'self.X.U.WithinCheckpoint(player,o.Nodes[o.Index],checkpointRadius,A.CheckpointVerticalTolerance)',"Activity checkpoint distance validation")
 need(workshop,'if w.Points<(n.Cost or 0)',"Workshop point cost validation")
 need(workshop,'if p.Currencies.Coins<(n.Coins or 0)',"Workshop coin cost validation")
