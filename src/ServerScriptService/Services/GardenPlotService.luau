@@ -1,4 +1,4 @@
-local RS=game:GetService("ReplicatedStorage") local F=require(RS.Config.FlowersConfig) local G=require(RS.Config.GardenSynergyConfig) local C=require(RS.Config.BloomConfig)
+local RS=game:GetService("ReplicatedStorage") local F=require(RS.Config.FlowersConfig) local G=require(RS.Config.GardenSynergyConfig) local C=require(RS.Config.BloomConfig) local T=require(RS.Config.TutorialConfig)
 local Rules=require(RS.Shared.GardenRules)
 local S={Plots={},Used={}}
 function S:Init(x) self.X=x end
@@ -60,6 +60,9 @@ function S:Plant(player,i,id)
  local p=self.X:Profile(player)
  if not p then return false,"PROFILE_LOADING" end
  if not self.X.U.Integer(i,p.Garden.UnlockedSlots) then return false,"INVALID_SLOT" end
+ local tutorialStep=T.Steps[p.Tutorial.Step]
+ if tutorialStep and tutorialStep.Id=="Plant" and i~=(tutorialStep.Slot or 3) then return false,"TUTORIAL_TARGET" end
+ if tutorialStep and tutorialStep.Id=="Synergy" and (i~=(tutorialStep.Slot or 2) or id~="Tulip") then return false,"TUTORIAL_TARGET" end
  local pos=self:Position(player,i)
  if not pos or not self.X.U.Near(player,pos,C.InteractionDistance) then return false,"TOO_FAR" end
  if id~="" and (type(id)~="string" or not F.Exists(id)) then return false,"INVALID_ITEM" end

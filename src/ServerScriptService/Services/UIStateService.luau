@@ -23,6 +23,7 @@ local REASONS={
  INVALID_ACTION="Unknown action",
  INVALID_ITEM="Item not found",
  INVALID_SLOT="Unavailable slot",
+ TUTORIAL_TARGET="Follow the highlighted tutorial target",
  INVALID_NODE="Node not found",
  INVALID_SETTING="Setting not found",
  INVALID_VALUE="Invalid value",

@@ -1,5 +1,6 @@
 local RS=game:GetService("ReplicatedStorage")
 local C=require(RS.Config.WorkshopConfig)
+local T=require(RS.Config.TutorialConfig)
 local Rules=require(RS.Shared.GardenRules)
 local E=require(RS.Shared.WorkshopEffects)
 local Copy=require(RS.Shared.BloomUtil).Copy
@@ -25,6 +26,8 @@ function S:Buy(player,id)
  if not p then return false,"PROFILE_LOADING" end
  local n=type(id)=="string" and C.Nodes[id] or nil
  if not n or id=="CORE" then return false,"INVALID_NODE" end
+ local tutorialStep=T.Steps[p.Tutorial.Step]
+ if tutorialStep and tutorialStep.Id=="WorkshopPurchase" and id~=(tutorialStep.NodeId or "ROLL_1") then return false,"TUTORIAL_TARGET" end
  if not p.Tutorial.FeatureUnlocks.Workshop then return false,"FEATURE_LOCKED" end
 
  local w=p.WorkshopV5
