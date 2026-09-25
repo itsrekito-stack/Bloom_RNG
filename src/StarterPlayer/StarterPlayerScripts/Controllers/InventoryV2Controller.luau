@@ -201,6 +201,14 @@ local function filteredItems(source,search,filter,sortMode)
  return out
 end
 
+local function componentTemplate(instance,name)
+ local runtime=instance and instance:FindFirstAncestor("InventoryV2Runtime")
+ local components=runtime and runtime:FindFirstChild("Components")
+ local template=components and components:FindFirstChild(name)
+ if not template then error("[InventoryV2] Missing authored component template: "..tostring(name)) end
+ return template
+end
+
 local function setButton(button,visible,text,enabled,callback)
  if not button or not button:IsA("TextButton") then return end
  local oldHitbox=button:FindFirstChild("_InventoryV2ActionHitbox")
@@ -212,15 +220,9 @@ local function setButton(button,visible,text,enabled,callback)
  button.TextTransparency=enabled==false and .45 or 0
  button.BackgroundTransparency=enabled==false and .24 or .02
  if visible and enabled~=false and callback then
-  local hitbox=Instance.new("TextButton")
+  local hitbox=componentTemplate(button,"ActionHitboxTemplate"):Clone()
   hitbox.Name="_InventoryV2ActionHitbox"
-  hitbox.BackgroundTransparency=1
-  hitbox.BorderSizePixel=0
-  hitbox.Text=""
-  hitbox.AutoButtonColor=false
-  hitbox.Active=true
-  hitbox.Size=UDim2.fromScale(1,1)
-  hitbox.Position=UDim2.fromScale(0,0)
+  hitbox.Visible=true
   hitbox.ZIndex=button.ZIndex+5
   hitbox.Parent=button
   hitbox.Activated:Connect(callback)
@@ -230,13 +232,9 @@ end
 local function overlayButton(frame,callback)
  if not frame or not frame:IsA("GuiObject") then return end
  frame.Active=true
- local b=Instance.new("TextButton")
+ local b=componentTemplate(frame,"OverlayHitboxTemplate"):Clone()
  b.Name="_InventoryV2Hitbox"
- b.BackgroundTransparency=1
- b.Text=""
- b.AutoButtonColor=false
- b.Size=UDim2.fromScale(1,1)
- b.Position=UDim2.fromScale(0,0)
+ b.Visible=true
  b.ZIndex=frame.ZIndex+20
  b.Parent=frame
  b.Activated:Connect(callback)
@@ -244,19 +242,10 @@ end
 
 local function setupSearch(searchBar,state,onChanged)
  local placeholder=searchBar:FindFirstChild("Placeholder")
- local box=Instance.new("TextBox")
+ local box=componentTemplate(searchBar,"SearchBoxTemplate"):Clone()
  box.Name="_InventoryV2Search"
- box.BackgroundTransparency=1
- box.BorderSizePixel=0
- box.ClearTextOnFocus=false
+ box.Visible=true
  box.Text=state.Search or ""
- box.PlaceholderText=""
- box.TextColor3=Color3.fromRGB(235,245,255)
- box.TextSize=11
- box.Font=Enum.Font.GothamMedium
- box.TextXAlignment=Enum.TextXAlignment.Left
- box.Size=UDim2.new(1,-40,1,0)
- box.Position=UDim2.fromOffset(36,0)
  box.ZIndex=searchBar.ZIndex+8
  box.Parent=searchBar
  local function sync()
@@ -525,14 +514,9 @@ function InventoryV2.Render(controller,profile,uiState)
   if active then state.Selected[state.Category]=active.Id end
 
   if #visible==0 then
-   local empty=Instance.new("TextLabel")
+   local empty=componentTemplate(grid,"EmptyStateTemplate"):Clone()
    empty.Name="_EmptyState"
-   empty.BackgroundTransparency=1
-   empty.Text="Nothing found"
-   empty.TextColor3=C.Muted
-   empty.TextSize=12
-   empty.Font=Enum.Font.GothamMedium
-   empty.Size=UDim2.new(1,-12,0,44)
+   empty.Visible=true
    empty.ZIndex=grid.ZIndex+2
    empty.Parent=grid
    drawDetails(nil)
