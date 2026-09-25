@@ -30,7 +30,8 @@ for text,label in [
 for text,label in [
  ('controller:Send("Flag",item.Id,"FavoriteFlowers")',"Favorite action"),
  ('controller:Send("Flag",item.Id,"LockedFlowers")',"Protect action"),
- ('controller:Send("Dissolve",item.Id,1)',"Dissolve action"),
+ ('controller:Send("Dissolve",item.Id,1)',"Flower dissolve action"),
+ ('controller:Send("DissolveBee",item.Id,1)',"Bee dismantle action"),
  ('controller:Send("FlowerUpgrade",item.Id)',"Mastery action"),
  ('controller:Send("EquipBee","",equippedSlot)',"Bee unequip action"),
  ('controller:Send("EquipBee",item.Id,slot)',"Bee equip action"),
@@ -50,20 +51,23 @@ need(garden,'Rules.HasProgress(old)',"Plant progression protection")
 for text,label in [
  ('elseif action=="Plant" then return self.GardenPlotService:Plant(player,a,b)',"Plant server route"),
  ('elseif action=="EquipBee" then return self.InventoryService:EquipBee(player,a,b)',"Equip server route"),
- ('return self.InventoryService:Dissolve(player,a,b)',"Dissolve server route"),
+ ('return self.InventoryService:Dissolve(player,a,b)',"Flower dissolve server route"),
+ ('return self.InventoryService:DissolveBee(player,a,b)',"Bee dismantle server route"),
  ('return self.FlowerProgressionService:Upgrade(player,a)',"Mastery server route"),
  ('if b~="LockedFlowers" and b~="FavoriteFlowers" then return false,"INVALID_ACTION" end',"Flag field allowlist"),
 ]:
     need(player,text,label)
-if player.count('if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end') < 3:
-    raise AssertionError("Dissolve, FlowerUpgrade and Flag must all require SeedSatchel unlock")
+if player.count('if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end') < 4:
+    raise AssertionError("Flower/bee dissolve, FlowerUpgrade and Flag must all require SeedSatchel unlock")
 
 # Dissolve / equip authority.
 for text,label in [
  ('if f.LockedFlowers[id] then return false,"PROTECTED" end',"protected dissolve guard"),
  ('if f.FavoriteFlowers[id] then return false,"FAVORITE" end',"favorite dissolve guard"),
  ('if self:Available(p,id)<n then return false,"NO_FREE_COPY" end',"free copy guard"),
- ('if (f.OwnedSeedCopies[id] or 0)-n<1 then return false,"LAST_COPY" end',"last copy guard"),
+ ('if (f.OwnedSeedCopies[id] or 0)-n<1 then return false,"LAST_COPY" end',"flower last copy guard"),
+ ('if self:AvailableBee(p,id)<n then return false,"NO_FREE_COPY" end',"free bee copy guard"),
+ ('if (inv.BeeInventory[id] or 0)-n<1 then return false,"LAST_COPY" end',"bee last copy guard"),
  ('if not self.X.U.Integer(slot,capacity) then return false,"INVALID_SLOT" end',"equip capacity guard"),
  ('if (p.Pollinators.BeeInventory[id] or 0)<1 then return false,"NOT_OWNED" end',"bee ownership guard"),
 ]:
@@ -85,9 +89,10 @@ for text,label in [
  ('Favorite=favorite',"favorite projection"),
  ('Protected=locked',"protected projection"),
  ('EquippedBeeSlots=self.X.U.Copy(profile.Pollinators.EquippedBeeSlots)',"equipped slots projection"),
+ ('DissolveValue=Bloom.BeeDustPerCopy',"bee dismantle value projection"),
 ]:
     need(state,text,label)
 
 print("inventory-v2 action contract: PASS")
-print("Covered: category/search/sort/filter, Plant, Favorite, Protect, Dissolve, Mastery, Bee equip/unequip.")
+print("Covered: category/search/sort/filter, Plant, Favorite, Protect, flower dissolve, Bee dismantle, Mastery and Bee equip/unequip.")
 print("Server authority: unlock, proximity, ownership, protection, cost and capacity guards verified.")
