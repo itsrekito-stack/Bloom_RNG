@@ -328,6 +328,7 @@ function S:Snapshot(player)
   Map=self:Map(player,profile),
   Trials=self:Trials(player,profile),
   Settings=self:Settings(profile),
+  Boosts=self.X.BoostService:Snapshot(player,profile),
  }
 end
 
