@@ -271,11 +271,11 @@ fn default_roadmap_tasks() -> Vec<PlannerTask> {
         planner_task("release-br010","3 · UI & Inventory","Clarify world gate / shrine feedback (BR-010)","Make unlock requirements and blocked interactions understandable in the physical world.",true),
         planner_task("release-br013","3 · UI & Inventory","Remove preview/runtime drift (BR-013)","Keep mock editor data clearly separate from runtime and remove stale/Russian player-facing preview labels.",true),
 
-        planner_task("release-core-loop","4 · Core Progression","Validate the complete progression loop","Starter bee → flower → pollination → currencies → roll → garden → Workshop → sectors/trials → season must work end-to-end.",false),
+        planner_task("release-core-loop","4 · Core Progression","Validate the complete progression loop","Verified by deterministic core progression reachability checks through Season Turn; Studio runtime acceptance remains separate.",true),
         planner_task("release-roll-loop","4 · Core Progression","Finalize Roll / Bloom / pity loop","Confirm reward cadence, Bloom charge/use, duplicate outcomes and roulette presentation all agree with server results.",false),
         planner_task("release-garden","4 · Core Progression","Finalize Garden progression and synergies","Verify slot capacity, planting, flower XP/levels, mutations, synergies, dismantling and ownership invariants.",false),
         planner_task("release-bees","4 · Core Progression","Finalize Bee traits, abilities and equipment","Verify ability cooldowns/effects, rarity, equipment caps and trait presentation for all release bees.",false),
-        planner_task("release-bee-mastery","4 · Core Progression","Give Bee Mastery a clear player-facing reward","The audit found mastery accumulation but no obvious direct reward path; define and verify one before release.",false),
+        planner_task("release-bee-mastery","4 · Core Progression","Give Bee Mastery a clear player-facing reward","Implemented: 10-level server-authoritative mastery ladder, runtime bonuses, XP multipliers, Inventory V2 progress and level-up feedback.",true),
         planner_task("release-hive-locations","4 · Core Progression","Finalize Hive and location progression","Players should always progress toward stronger locations with clear Hive upgrade feedback and no downgrade path.",false),
         planner_task("release-workshop-tree","4 · Core Progression","Finalize the Workshop progression tree","Verify node prerequisites, costs, permanent nodes, respec behavior and meaningful branches.",false),
         planner_task("release-quests-trials","4 · Core Progression","Finish quests, activities and trials","Make active world objectives useful for progression and verify rewards, cooldowns, tokens and shrine requirements.",false),
@@ -289,8 +289,8 @@ fn default_roadmap_tasks() -> Vec<PlannerTask> {
 
         planner_task("release-br011","6 · Technical Cleanup","Remove FlowersConfig duplication (BR-011)","Use one authoritative initialization table instead of repeating derived metadata and weights.",true),
         planner_task("release-br012","6 · Technical Cleanup","Document and unify config authority (BR-012)","Remove or document literal effect values that can drift from Workshop/config definitions.",true),
-        planner_task("release-legacy","6 · Technical Cleanup","Remove dead legacy routes and scripts","Delete only confirmed-unused Fruit/Research/old UI paths after repository search and runtime verification.",false),
-        planner_task("release-remote-security","6 · Technical Cleanup","Final remote validation/security pass","Recheck argument shape, rate limits, ownership, proximity and server-authoritative rewards for every mutation action.",false),
+        planner_task("release-legacy","6 · Technical Cleanup","Remove dead legacy routes and scripts","Completed: unused React/ReactRoblox vendor path and wrapper removed; active map/migration compatibility paths retained intentionally.",true),
+        planner_task("release-remote-security","6 · Technical Cleanup","Final remote validation/security pass","Completed: transport schemas, scalar/type/range validation and server-authority guards are covered by gameplay CI.",true),
 
         planner_task("release-fresh-profile","7 · QA","Fresh-profile smoke test","Complete onboarding and the early core loop from a brand-new production-shaped profile.",false),
         planner_task("release-returning-profile","7 · QA","Returning/legacy profile migration test","Load representative old profiles and verify no silent loss of inventory, garden, Workshop or season data.",false),
