@@ -1959,7 +1959,7 @@ async function writeCurrentModel({silent=false,force=false}={}){
  state.autoSaveQueued=false;
  try{
   if(ROFLOW_NATIVE){
-   await roflowInvoke("write_ui_model",{contents:payload});
+   await roflowInvoke("write_ui_model",{contents:payload,path:state.targetPath});
   }else{
    const h=await getFile(state.targetPath,true);
    const w=await h.createWritable();
@@ -2004,7 +2004,7 @@ async function flushAutoSave(){
 async function pullProject(){
  try{
   if(ROFLOW_NATIVE){
-   const text=await roflowInvoke("read_ui_model");
+   const text=await roflowInvoke("read_ui_model",{path:state.targetPath});
    state.nativeProjectReady=true;
    setRoot(JSON.parse(String(text).replace(/^\uFEFF/,"")),"Загружено из Roblox/Rojo файла");
    return;
@@ -2034,7 +2034,7 @@ function idb(){return new Promise((res,rej)=>{const q=indexedDB.open("BloomUIStu
 async function loadInitial(){
  if(ROFLOW_NATIVE){
   try{
-   const raw=await roflowInvoke("read_ui_model");
+   const raw=await roflowInvoke("read_ui_model",{path:state.targetPath});
    state.nativeProjectReady=true;
    setRoot(JSON.parse(String(raw).replace(/^\uFEFF/,"")),"Текущий BloomUI открыт в RoFlow");
    return;
