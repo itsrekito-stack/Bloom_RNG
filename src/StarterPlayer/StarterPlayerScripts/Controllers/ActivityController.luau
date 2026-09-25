@@ -46,7 +46,7 @@ function S:Update(list)
      if nearest then local highlight=Instance.new("Highlight") highlight.Adornee=nearest highlight.FillColor=part.Color highlight.FillTransparency=self.UI.State and self.UI.State.Profile.Settings.ReducedEffects and .85 or .6 highlight.Parent=part end
     end
    end
-   item={Part=part,Index=o.Index,Expires=o.Expires,Touching=false} self.Items[o.Id]=item
+   item={Part=part,Index=o.Index,Expires=o.Expires,Touching=false,Sector=o.Sector} self.Items[o.Id]=item
   else
    item.Part.Position=o.Position
   end
@@ -67,6 +67,10 @@ function S:Others(list)
  end
  for id,part in pairs(self.OtherItems) do if not keep[id] then part:Destroy() self.OtherItems[id]=nil end end
 end
-function S:Target() for _,item in pairs(self.Items) do return item.Part end end
+function S:Target(sectorOnly)
+ for _,item in pairs(self.Items) do
+  if not sectorOnly or item.Sector then return item.Part end
+ end
+end
 function S:Cleanup() self:Update({}) end
 return S
