@@ -141,7 +141,8 @@ function X:Start(data,services,names)
     if self.MetaProgressionService:Tick(player) then self:MarkStateDirty(player) end
     self.AnalyticsService:Tick(player,C.TickSeconds)
    end
-   if self.BuildTrialService.Active[player] and sync>=C.SyncSeconds then self:MarkStateDirty(player) end
+   local trialChanged=self.BuildTrialService:Tick(player)
+   if trialChanged or (self.BuildTrialService.Active[player] and sync>=C.SyncSeconds) then self:MarkStateDirty(player) end
    if sync>=C.SyncSeconds then self:Push(player) end
   end,debug.traceback) if not ok then warn("[Bloom] Tick",err) end end end if sync>=C.SyncSeconds then sync=0 end
  end end)
