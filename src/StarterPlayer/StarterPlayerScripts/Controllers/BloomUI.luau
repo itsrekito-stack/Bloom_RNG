@@ -341,6 +341,10 @@ function UI:ApplyWorkshopFocusVisibility()
  }) do
   if gui and gui:IsA("GuiObject") then gui.Visible=false end
  end
+ if self.BoostHUD then
+  if self.BoostHUD.Root then self.BoostHUD.Root.Visible=false end
+  if self.BoostHUD.Tooltip then self.BoostHUD.Tooltip.Visible=false end
+ end
 end
 
 function UI:SetWorkshopFocus(active)
@@ -1145,6 +1149,10 @@ function UI:ApplyResponsiveLayout(width,height)
  self.Panel.Size=UDim2.fromOffset(math.max(300,width-16),math.max(300,height-108))
  self.Panel.Position=UDim2.new(.5,0,.52,0)
  self.Reveal.Size=UDim2.fromOffset(math.max(280,width-24),100)
+ if self.BoostHUD and self.BoostHUD.Root then
+  self.BoostHUD.Root.Size=UDim2.fromOffset(math.max(280,math.min(360,width-20)),72)
+  self.BoostHUD.Root.Position=UDim2.new(0,10,1,-118)
+ end
 end
 
 function UI:Render()
@@ -1214,6 +1222,10 @@ function UI:Render()
   if self.JourneyGuideController then self.JourneyGuideController:Update() end
  end
  self.GardenPresentation:Update()
+ if self.BoostHUD then
+  local boosts=self.State.UI and self.State.UI.Boosts or {Items={}}
+  self.BoostHUD:Update(boosts,self.State.Revision)
+ end
  self:ApplyWorkshopFocusVisibility()
 end
 
@@ -1785,6 +1797,8 @@ function UI:Start()
  self.JourneyGuideController:Init(self,self.GuideController)
  self.GardenPresentation=require(script.Parent.GardenPresentationController)
  self.GardenPresentation:Init(self)
+ self.BoostHUD=require(script.Parent.BoostHUDController)
+ self.BoostHUD:Init(self)
 
  event.OnClientEvent:Connect(function(kind,payload)
   if kind=="State" then
@@ -1928,6 +1942,7 @@ function UI:Start()
    if self.State then
     self.GuideController:Update()
     if self.JourneyGuideController then self.JourneyGuideController:Update() end
+    if self.BoostHUD then self.BoostHUD:Tick() end
    end
    if self.ToastUntil and os.clock()>self.ToastUntil then self.ToastRoot.Visible=false self.ToastUntil=nil end
   end
