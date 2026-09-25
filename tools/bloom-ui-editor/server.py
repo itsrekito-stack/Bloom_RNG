@@ -231,6 +231,17 @@ def merge_remote_changes(base, local, remote):
     return copy.deepcopy(remote)
 
 
+REQUIRED_RUNTIME_UI_CHILDREN = {
+    "ObjectiveCard", "CurrencyHUD", "MenuDock", "RollHUD", "VerticalRoulette",
+    "TutorialGuideBanner", "Toast", "ModalShade", "MainPanel", "RewardReveal",
+    "ActiveBoostsHUD", "ActiveBoostTooltip",
+}
+
+
+def _is_required_runtime_ui_child(value) -> bool:
+    return isinstance(value, dict) and value.get("Name") in REQUIRED_RUNTIME_UI_CHILDREN
+
+
 def merge_children(base_children, local_children, remote_children):
     b_order, b_map = _child_index(base_children)
     l_order, l_map = _child_index(local_children)
@@ -248,7 +259,12 @@ def merge_children(base_children, local_children, remote_children):
             continue
         b = b_map[key]
         if key not in l_map:
-            # Preserve user deletion if assistant did not touch this object.
+            # Runtime-required authored UI cannot be deleted by a stale local editor model.
+            # These nodes are referenced directly by client controllers and must survive AI SYNC.
+            if _is_required_runtime_ui_child(r):
+                out.append(copy.deepcopy(r))
+                continue
+            # Preserve user deletion for non-required authored objects if assistant did not touch it.
             if b == r:
                 continue
             out.append(copy.deepcopy(r))
