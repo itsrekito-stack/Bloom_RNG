@@ -47,9 +47,17 @@ function S:Collect(player,id,index,phase)
   self.X:Emit(player,kind,1) self.X:Emit(player,"ActivityCompleted",1)
   local completedSector=o.Sector or self.X.MapService:Sector(player)
   if completedSector and completedSector~="Center" then self.X:Emit(player,"WorldActivity",1) end
-  self.X.SocialService:Contribute(player,2)
-  for _,bee in pairs(p.Pollinators.EquippedBeeSlots) do self.X.PollinatorService:AddMastery(player,bee,1,1) end
- end self:Push(player) return true
+
+  local socialOK,socialErr=xpcall(function() self.X.SocialService:Contribute(player,2) end,debug.traceback)
+  if not socialOK then warn("[Bloom] Activity social reward error",kind,socialErr) end
+  for _,bee in pairs(p.Pollinators.EquippedBeeSlots) do
+   local masteryOK,masteryErr=xpcall(function() self.X.PollinatorService:AddMastery(player,bee,1,1) end,debug.traceback)
+   if not masteryOK then warn("[Bloom] Activity mastery reward error",kind,bee,masteryErr) end
+  end
+ end
+ local pushOK,pushErr=xpcall(function() self:Push(player) end,debug.traceback)
+ if not pushOK then warn("[Bloom] Activity list push error",pushErr) end
+ return true
 end
 function S:Tick(player)
  local changed=false local offers=self.Offers[player] or {}
