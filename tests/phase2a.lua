@@ -276,11 +276,11 @@ end) end)
 test('successful Season caller rebuilds exactly once with committed data',function() scenario(function()
  local s,db,new=setup();local player=new(1);local profile=s:GetProfile(player)
  local season=require(node('ServerScriptService/Services/SeasonService'));local previousEligible=season.Eligible;season.Eligible=function() return true end
- local rebuilt=0
+ local rebuilt=0;local trialRemoved=0
  season:Init({Profile=function(_,p) return s:GetProfile(p) end,DataService=s,U=U,Revisions={[player]=0},Temp={[player]={}},
- Send=function() end,GardenActivityService={CancelGarden=function() end},PollinatorService={Remove=function() end},
+ Send=function() end,GardenActivityService={CancelGarden=function() end},BuildTrialService={Remove=function() trialRemoved=trialRemoved+1 end},PollinatorService={Remove=function() end},
  GardenPlotService={Build=function() assert(s:GetProfile(player).Season.Count==1);rebuilt=rebuilt+1 end}})
  season.Pending[player]={Token='turn',Revision=0,Expires=now+30,Confirm=1,Before=U.Copy(profile)}
- assert(season:Confirm(player,'turn'));assert(rebuilt==1 and s:GetProfile(player) and not season.Pending[player]);season.Eligible=previousEligible
+ assert(season:Confirm(player,'turn'));assert(rebuilt==1 and trialRemoved==1 and s:GetProfile(player) and not season.Pending[player]);season.Eligible=previousEligible
 end) end)
 os.clock=oldClock;os.time=oldTime;game=oldGame
