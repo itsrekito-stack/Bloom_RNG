@@ -120,6 +120,11 @@ check('BR-010 map exposes physical gate actionability','NearGate=nearGate' in ui
 check('BR-010 map tells Hive-ready players to use gate','Hive ready — go to the ' in ui_state_source and 'Use the world gate prompt to unlock' in ui_state_source)
 check('BR-010 trials expose shrine guidance','NearShrine=nearShrine' in ui_state_source and 'StartHint=startHint' in ui_state_source and 'Garden Trials shrine' in ui_state_source)
 check('BR-010 client renders derived world guidance','sector.UnlockHint' in source and 't.StartHint' in source and 'start them at sector shrines' in source)
+check('BR-013 preview mock state is explicitly non-runtime','MOCK DATA · NOT RUNTIME' in editor_source and 'MOCK PREVIEW · NOT RUNTIME' in editor_source)
+check('BR-013 preview terminology matches English runtime','TUTORIAL • 1/8' in editor_source and 'Fill Bloom and make a special roll' in editor_source and 'Permanent upgrades and progression branches' in editor_source)
+check('BR-013 old Russian runtime-preview labels removed',all(token not in editor_source for token in ['Розовый пион','Ромашка','Василёк','Мастерская','Справочник','Испытания']))
+check('BR-013 dead inventory mock removed','MOCK_PREVIEW_DATA.seeds' not in editor_source and '<div class="preview-inventory-v2">' not in editor_source)
+
 
 check('editor removed separate seedbag scene','value="seedbag"' not in editor_html and 'data-ui-state="seedbag"' not in editor_html)
 check('editor migrates stale seedbag preference','p.previewScene==="seedbag"' in editor_source and 'state.previewScene="inventory_v2"' in editor_source)
