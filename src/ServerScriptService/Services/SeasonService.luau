@@ -24,10 +24,15 @@ function S:Confirm(player,token)
  if self.X.DataService:GetProfile(player) and player.Parent==game:GetService("Players") then
   self.X.Temp[player]={}
   self.X.GardenActivityService:CancelGarden(player)
+  self.X.BuildTrialService:Remove(player)
   self.X.PollinatorService:Remove(player)
   self.X.GardenPlotService:Build(player)
   self.X:Send(player,"Ceremony",{Kind="Season",Text="New Season"})
-  self.X:Send(player,"Cards",self:Offers(plan.After))
+  if plan.After.Season.ActiveCard=="" then
+   self.X:Send(player,"Cards",self:Offers(plan.After))
+  else
+   self.X:Send(player,"Message","Season card retained: "..plan.After.Season.ActiveCard)
+  end
  end
  return true
 end
