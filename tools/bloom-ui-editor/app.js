@@ -351,8 +351,16 @@ function previewVisible(n){
  if(name==="SeedSatchelTemplate")return false;
  if(name==="InventoryPrototype")return scene==="inventory_v2";
  if(name==="WorkshopTemplate")return scene==="workshop";
+ if(name==="StateKits")return MENU_PREVIEW_SCENES.has(scene)&&scene!=="inventory_v2"&&scene!=="workshop";
+ if(p==="StateKits"){
+  const wanted={
+   fieldguide:"FieldGuideKit",map:"MapKit",trials:"TrialsKit",settings:"SettingsKit",
+   plant:"PlantKit",season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit"
+  }[scene];
+  return name===wanted;
+ }
  if(scene==="workshop"&&["HeaderIcon","PanelTitle","PanelSubtitle","HeaderAccent"].includes(name))return false;
- if(name==="Content"&&p==="MainPanel"&&(scene==="inventory_v2"||scene==="workshop"))return false;
+ if(name==="Content"&&p==="MainPanel"&&MENU_PREVIEW_SCENES.has(scene))return false;
 
  const hudNames=new Set(["ObjectiveCard","CurrencyHUD","MenuDock","RollHUD","VerticalRoulette","RollButton"]);
  if(hudNames.has(name))return scene==="gameplay";
