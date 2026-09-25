@@ -2,8 +2,23 @@ local RS=game:GetService("ReplicatedStorage") local L=require(RS.Config.Location
 function S:Init(x) self.X=x end
 function S:Sector(player) local char=player.Character local root=char and char:FindFirstChild("HumanoidRootPart") if not root then return "Center" end for id,s in pairs(L.Sectors) do if (root.Position-(self.X.Origin+s.Center)).Magnitude<55 then return id end end return "Center" end
 function S:Unlock(player,id)
- local p=self.X:Profile(player) local s=L.Sectors[id] if not p or not s or not self.X.U.Near(player,self.Gates[id].Position,C.InteractionDistance) or p.Hive.Level<s.Hive then return false end
- if not p.World.UnlockedSectors[id] then p.World.UnlockedSectors[id]=true self.X:Send(player,"Ceremony",{Kind="Sector",Text=s.Name.." unlocked"}) end return true
+ local p=self.X:Profile(player) local s=L.Sectors[id] local gate=s and self.Gates[id]
+ if not p or not s or not gate then return false end
+ if not self.X.U.Near(player,gate.Position,C.InteractionDistance) then return false end
+ if s.Requires and not p.World.UnlockedSectors[s.Requires] then
+  local required=L.Sectors[s.Requires]
+  self.X:Send(player,"Message","Unlock "..(required and required.Name or s.Requires).." first")
+  return false
+ end
+ if p.Hive.Level<s.Hive then
+  self.X:Send(player,"Message","Reach Hive "..s.Hive.." to unlock "..s.Name)
+  return false
+ end
+ if not p.World.UnlockedSectors[id] then
+  p.World.UnlockedSectors[id]=true
+  self.X:Send(player,"Ceremony",{Kind="Sector",Text=s.Name.." unlocked"})
+ end
+ return true
 end
 function S:Build()
  local centerFlower=self.X.FlowerService.Build(1,require(RS.Config.FlowersConfig).Species.StarBloom,self.X.Origin+Vector3.new(0,1,0)) centerFlower.Name="ServerBloom" centerFlower:ScaleTo(3) centerFlower.Parent=self.X.World
