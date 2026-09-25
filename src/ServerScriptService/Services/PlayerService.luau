@@ -157,6 +157,7 @@ function X:Start(data,services,names)
    if socialChanged then self:MarkStateDirty(player) end
    if self.SeasonService.Pending[player] and os.clock()>self.SeasonService.Pending[player].Expires then self.SeasonService.Pending[player]=nil end
    if not self.SeasonService.Pending[player] then
+    self.TutorialService:Tick(player)
     if self.MapService:Tick(player) then self:MarkStateDirty(player) end
     self.PollinatorService:Tick(player,C.TickSeconds)
     self.GardenActivityService:Tick(player)
