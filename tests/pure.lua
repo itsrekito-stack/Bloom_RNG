@@ -62,7 +62,7 @@ test("Workshop purchase prerequisites, balance, idempotence",function()
  local s=require(node("ServerScriptService/Services/WorkshopService")) s:Init({Profile=function() return p end,GardenPlotService={RefreshCapacity=function() end},TutorialService={Refresh=function() end},Emit=function() end})
  assert(not s:Buy({},"ROLL_2")) assert(s:Buy({},"ROLL_1")) assert(not s:Buy({},"ROLL_1")) assert(p.WorkshopV5.Points==4 and p.Currencies.Coins==970) assert(not s:Buy({},"LEGACY_1"))
 end)
-test("tutorial v3 gates future events and completes ordered flow",function()
+test("tutorial v4 gates future events and completes ordered flow",function()
  local player={} local p=Schema.CreateDefault() local completed=0 local sparks=0
  local service=require(node("ServerScriptService/Services/TutorialService"))
  local x={
@@ -106,7 +106,7 @@ test("tutorial reconnect preserves current-step completion",function()
  local resumed=make() resumed:Refresh(player) assert(p.Tutorial.Step==6)
 end)
 test("tutorial v2 profile beyond shortened flow migrates complete",function()
- local player={} local p=Schema.CreateDefault() p.Tutorial.Version=2 p.Tutorial.Step=14 p.Tutorial.Events={}
+ local player={} local p=Schema.CreateDefault() p.Tutorial.Version=2 p.Tutorial.Step=16 p.Tutorial.Events={}
  local s=require(node("ServerScriptService/Services/TutorialService"))
  s:Init({Profile=function() return p end,MarkStateDirty=function() end,EmitOnce=function(_,pl,event) p.Tutorial.Events[event]=1 end,U={Near=function() return false end},GardenActivityService={EnsureTutorialSpark=function() end},GardenPlotService={HivePosition=function() return Vector3.zero end,RefreshHivePrompt=function() end},InventoryService={Available=function() return 1 end},HiveService={Interact=function() end}})
  s:Refresh(player)
