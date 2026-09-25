@@ -6,6 +6,21 @@ C.RarityColors={
  Common=Color3.fromRGB(220,220,220),Uncommon=Color3.fromRGB(96,230,132),Rare=Color3.fromRGB(91,173,255),Epic=Color3.fromRGB(194,115,255),
  Legendary=Color3.fromRGB(255,187,82),Mythic=Color3.fromRGB(255,108,131),Exotic=Color3.fromRGB(255,92,220),Celestial=Color3.fromRGB(91,230,255),
 }
+C.BeeMastery={
+ Cap=10,
+ XPPerLevel={20,30,40,50,65,80,100,125,150},
+ Rewards={
+  [2]={WorkSpeed=.02},
+  [3]={Yield=.02},
+  [4]={WorkSpeed=.02},
+  [5]={AbilityCooldown=.05},
+  [6]={Yield=.03},
+  [7]={WorkSpeed=.03},
+  [8]={Yield=.03},
+  [9]={AbilityCooldown=.05},
+  [10]={WorkSpeed=.05,Yield=.05},
+ },
+}
 C.Traits={
  Meadow={Id="Meadow",Name="MEADOW",Short="M",Color=Color3.fromRGB(92,202,112),Description="Garden synergy. Matching bees can splash their work and occasionally cross-pollinate a second flower at the same time.",Breakpoints={{Count=2,Bonus={FlowerGrowthMultiplier=1.10,SplashChance=.12,SplashPercent=.20,DualPollinationChance=.08,DualPollinationPercent=.35}},{Count=4,Bonus={FlowerGrowthMultiplier=1.25,SplashChance=.22,SplashPercent=.35,DualPollinationChance=.18,DualPollinationPercent=.65}}}},
  Swift={Id="Swift",Name="SWIFT",Short="S",Color=Color3.fromRGB(70,190,242),Description="Mobility synergy. Faster travel and shorter active-ability cooldowns.",Breakpoints={{Count=2,Bonus={PollinatorTravelSpeedMultiplier=1.15,AbilityCooldownMultiplier=.90}},{Count=3,Bonus={PollinatorTravelSpeedMultiplier=1.35,AbilityCooldownMultiplier=.78}}}},
@@ -58,4 +73,25 @@ function C.GetTraitState(equipped:{string}?):{any}local counts=C.GetTraitCounts(
 function C.GetPassiveBonuses(equipped:{string}?):{[string]:number}local out={}for k,v in pairs(MULT_DEFAULT)do out[k]=v end if type(equipped)=="table"then for _,beeId in pairs(equipped)do local bee=type(beeId)=="string"and C.Get(beeId)or nil if bee and type(bee.Passive)=="table"then for stat,m in pairs(bee.Passive)do out[stat]=(out[stat]or 1)*(tonumber(m)or 1)end end end end return out end
 function C.GetAbilityDescription(id:string):string local bee=C.Get(id)if not bee or type(bee.Ability)~="table"then return"No active ability"end return tostring(bee.Ability.Description or bee.Ability.Name or"Ability")end
 function C.GetPassiveDescription(id:string):string local b=C.Get(id)if not b or type(b.Passive)~="table"then return"No passive bonus"end local a={}for k,v in pairs(b.Passive)do local pct=(tonumber(v)or 1)-1;a[#a+1]=(pct>=0 and"+"or"")..string.format("%.0f%%",pct*100).." "..k:gsub("Multiplier$",""):gsub("(%l)(%u)","%1 %2")end table.sort(a)return #a>0 and table.concat(a," • ")or"No passive bonus"end
+local function masteryRewardText(reward:any?):string
+ if type(reward)~="table" then return"No new bonus"end
+ local out={}
+ if reward.WorkSpeed then out[#out+1]="+"..tostring(math.floor(reward.WorkSpeed*100+.5)).."% work speed"end
+ if reward.Yield then out[#out+1]="+"..tostring(math.floor(reward.Yield*100+.5)).."% yield"end
+ if reward.AbilityCooldown then out[#out+1]="-"..tostring(math.floor(reward.AbilityCooldown*100+.5)).."% ability cooldown"end
+ return #out>0 and table.concat(out," • ")or"No new bonus"
+end
+function C.GetMasteryState(totalXP:number?):any
+ local cfg=C.BeeMastery local maxXP=0 for _,need in ipairs(cfg.XPPerLevel)do maxXP+=need end
+ local xp=math.clamp(tonumber(totalXP)or 0,0,maxXP) local level=1 local spent=0
+ while level<cfg.Cap do local need=cfg.XPPerLevel[level]or 0 if xp-spent<need then break end spent+=need level+=1 end
+ local work,yield,cooldown=1,1,1
+ for target=2,level do local reward=cfg.Rewards[target]if reward then work+=reward.WorkSpeed or 0 yield+=reward.Yield or 0 cooldown-=reward.AbilityCooldown or 0 end end
+ local isMax=level>=cfg.Cap local nextXP=isMax and 0 or(cfg.XPPerLevel[level]or 1)local currentXP=isMax and 0 or math.max(0,xp-spent)local nextReward=not isMax and cfg.Rewards[level+1]or nil
+ local bonus={}
+ if work>1 then bonus[#bonus+1]="+"..tostring(math.floor((work-1)*100+.5)).."% work"end
+ if yield>1 then bonus[#bonus+1]="+"..tostring(math.floor((yield-1)*100+.5)).."% yield"end
+ if cooldown<1 then bonus[#bonus+1]="-"..tostring(math.floor((1-cooldown)*100+.5)).."% cooldown"end
+ return{Level=level,Cap=cfg.Cap,TotalXP=xp,MaxXP=maxXP,XP=currentXP,NextXP=nextXP,Progress=isMax and 1 or math.clamp(currentXP/math.max(1,nextXP),0,1),IsMax=isMax,WorkSpeedMultiplier=work,YieldMultiplier=yield,AbilityCooldownMultiplier=math.max(.75,cooldown),BonusText=#bonus>0 and table.concat(bonus," • ")or"No mastery bonus yet",LevelRewardText=masteryRewardText(cfg.Rewards[level]),NextRewardText=isMax and"MAX"or masteryRewardText(nextReward)}
+end
 return table.freeze(C)

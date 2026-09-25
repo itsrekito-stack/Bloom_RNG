@@ -134,6 +134,7 @@ function S:Inventory(player,profile)
  for id,count in pairs(profile.Pollinators.BeeInventory) do
   local bee=Bees.Get(id)
   if bee and count>0 then
+   local mastery=Bees.GetMasteryState(profile.Pollinators.BeeMastery[id])
    table.insert(bees,{
     Id=id,
     DisplayName=bee.DisplayName,
@@ -142,6 +143,7 @@ function S:Inventory(player,profile)
     Equipped=equippedCounts[id] or 0,
     Traits=bee.Traits,
     Ability=bee.Ability and bee.Ability.Name or "",
+    Mastery=mastery,
    })
   end
  end

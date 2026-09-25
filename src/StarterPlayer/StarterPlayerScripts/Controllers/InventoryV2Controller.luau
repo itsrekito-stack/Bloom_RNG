@@ -118,7 +118,7 @@ local function buildItems(profile,inventory)
    table.insert(out.Bees,{
     Kind="Bee",Id=entry.Id,DisplayName=entry.DisplayName or cfg.DisplayName,Rarity=entry.Rarity or cfg.Rarity,
     Count=entry.Count or 0,Equipped=entry.Equipped or 0,Traits=entry.Traits or cfg.Traits or {},Ability=entry.Ability or (cfg.Ability and cfg.Ability.Name) or "",
-    Icon=Icons.GetBeeIcon(entry.Id),Favorite=false,Protected=false,
+    Mastery=entry.Mastery or Bees.GetMasteryState(0),Icon=Icons.GetBeeIcon(entry.Id),Favorite=false,Protected=false,
    })
   end
  end
@@ -403,7 +403,8 @@ function InventoryV2.Render(controller,profile,uiState)
    elseif item.Kind=="Bee" then
     local ability=Bees.GetAbilityDescription(item.Id)
     local passive=Bees.GetPassiveDescription(item.Id)
-    description.Text=passive.."  •  "..ability
+    local traits=#(item.Traits or {})>0 and table.concat(item.Traits,", ") or "None"
+    description.Text="Traits: "..traits.."  •  "..passive.."  •  "..ability.."  •  Mastery: "..tostring(item.Mastery.BonusText or "No mastery bonus yet")
    elseif item.Kind=="Resource" then
     description.Text=item.Description or "A Bloom RNG progression resource."
    else
@@ -440,10 +441,16 @@ function InventoryV2.Render(controller,profile,uiState)
     if ownedValue then ownedValue.Text=tostring(item.Count).."" end
     if freeLabel then freeLabel.Text="Equipped" end
     if freeValue then freeValue.Text=tostring(item.Equipped or 0).."" end
-    if masteryLabel then masteryLabel.Text="Traits" end
-    if masteryLevel then masteryLevel.Text=table.concat(item.Traits or {},", ") end
-    if masteryTrack then masteryTrack.Visible=false end
-    if masteryXP then masteryXP.Text=item.Ability~="" and item.Ability or "PASSIVE" end
+    if masteryLabel then masteryLabel.Text="Bee Mastery" end
+    if masteryLevel then masteryLevel.Text="Lv. "..tostring(item.Mastery.Level or 1).." / "..tostring(item.Mastery.Cap or 10) end
+    if masteryTrack then
+     masteryTrack.Visible=true
+     local fill=masteryTrack:FindFirstChild("MasteryFill")
+     if fill and fill:IsA("Frame") then fill.Size=UDim2.fromScale(math.clamp(tonumber(item.Mastery.Progress) or 0,0,1),1) end
+    end
+    if masteryXP then
+     masteryXP.Text=item.Mastery.IsMax and ("MAX • "..tostring(item.Mastery.BonusText or "")) or (compact(item.Mastery.XP).." / "..compact(item.Mastery.NextXP).." XP • NEXT "..tostring(item.Mastery.NextRewardText or ""))
+    end
    else
     if ownedLabel then ownedLabel.Text=item.Kind=="Resource" and "Amount" or "Slot" end
     if ownedValue then ownedValue.Text=item.Kind=="Resource" and compact(item.Count) or tostring(item.Slot or "Keepsake") end

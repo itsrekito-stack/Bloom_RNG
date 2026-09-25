@@ -34,7 +34,7 @@ jobs:
           sudo apt-get install -y liblua5.4-0
 
       - name: Validate check scripts
-        run: python -m py_compile tools/checks/phase2a_check.py tools/checks/ui_startergui_audit.py tools/checks/ui_viewport_check.py tools/checks/core_loop_contract_check.py tools/checks/workshop_effects_check.py tools/checks/inventory_v2_actions_check.py tools/checks/core_progression_path_check.py
+        run: python -m py_compile tools/checks/phase2a_check.py tools/checks/ui_startergui_audit.py tools/checks/ui_viewport_check.py tools/checks/core_loop_contract_check.py tools/checks/workshop_effects_check.py tools/checks/inventory_v2_actions_check.py tools/checks/core_progression_path_check.py tools/checks/bee_mastery_check.py
 
       - name: Bloom UI Studio JavaScript syntax
         run: node --check tools/bloom-ui-editor/app.js
@@ -53,6 +53,9 @@ jobs:
 
       - name: Core progression reachability
         run: python tools/checks/core_progression_path_check.py
+
+      - name: Bee Mastery contract
+        run: python tools/checks/bee_mastery_check.py
 
       - name: Authored UI and integration audit
         run: python tools/checks/ui_startergui_audit.py
