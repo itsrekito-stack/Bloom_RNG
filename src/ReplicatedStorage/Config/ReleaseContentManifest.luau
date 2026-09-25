@@ -48,4 +48,6 @@ return {
   MinimalGarden={Sector="SunnyOrchard",Event="Delivery",Advanced=true},
   MutationStudy={Sector="CrystalGreenhouse",Event="Mutation",Advanced=true},
  },
+ WorkshopBranches={"ROLL","GARDEN","BEES","ECONOMY","BLOOM","EXPLORATION","LEGACY"},
+ WorkshopNodesPerBranch=6,
 }
