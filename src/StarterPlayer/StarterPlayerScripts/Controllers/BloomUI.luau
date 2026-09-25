@@ -155,8 +155,15 @@ local function workshopCostText(node)
  return table.concat(parts,"  •  ")
 end
 
+function UI:MenuTemplate(name)
+ local kit=self.StateKits and self.Menu and self.StateKits:FindFirstChild(self.Menu.."Kit")
+ local template=kit and kit:FindFirstChild(name)
+ if template then return template end
+ return self.Templates and self.Templates:FindFirstChild(name)
+end
+
 function UI:Label(parent,text,height)
- local template=self.Templates and self.Templates:FindFirstChild("LabelTemplate")
+ local template=self:MenuTemplate("LabelTemplate")
  if not template or not template:IsA("TextLabel") then error("[BloomUI] Authored LabelTemplate missing") end
  local label=template:Clone()
  label.Name="Label"
@@ -169,7 +176,7 @@ function UI:Label(parent,text,height)
 end
 
 function UI:Section(parent,text)
- local template=self.Templates and self.Templates:FindFirstChild("SectionTemplate")
+ local template=self:MenuTemplate("SectionTemplate")
  if not template or not template:IsA("TextLabel") then error("[BloomUI] Authored SectionTemplate missing") end
  local label=template:Clone()
  label.Name="Section"
@@ -181,7 +188,7 @@ function UI:Section(parent,text)
 end
 
 function UI:Button(parent,text,fn,icon)
- local template=self.Templates and self.Templates:FindFirstChild("ButtonTemplate")
+ local template=self:MenuTemplate("ButtonTemplate")
  if not template or not template:IsA("TextButton") then error("[BloomUI] Authored ButtonTemplate missing") end
  local button=template:Clone()
  button.Name="Button"
@@ -633,7 +640,9 @@ function UI:RenderMenu(preserveInteraction)
  if self.PanelHeaderIcon then
   self.PanelHeaderIcon.Visible=not workshop
   if not workshop then
-   local headerImage=Icons.Get("Menus",name)
+   local kit=self.StateKits and self.StateKits:FindFirstChild(name.."Kit")
+   local kitIcon=kit and kit:FindFirstChild("KitHeader") and kit.KitHeader:FindFirstChild("StateIcon")
+   local headerImage=(kitIcon and kitIcon:IsA("ImageLabel") and kitIcon.Image) or Icons.Get("Menus",name)
    if headerImage=="" then
     if name=="Plant" then headerImage=Icons.Get("System","Garden")
     elseif name=="Season" or name=="Cards" then headerImage=Icons.Get("System","Flower")
@@ -1615,6 +1624,7 @@ function UI:BindStaticUI()
  self.Content=self.Panel:WaitForChild("Content")
  self.ContentLayout=self.Content:FindFirstChildOfClass("UIListLayout")
  self.Templates=self.Panel:FindFirstChild("Templates")
+ self.StateKits=self.Panel:FindFirstChild("StateKits")
 
  self.Reveal=root:WaitForChild("RewardReveal")
  self.RewardStroke=self.Reveal:FindFirstChildOfClass("UIStroke")
