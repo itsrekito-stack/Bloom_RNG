@@ -40,6 +40,7 @@ end
 
 function S:Update()
  if not self:IsSolarBloomStep() then return false end
+ self:RenderObjective()
  local ui=self.UI
  local visual=self.Visual
  if not visual then return false end
