@@ -62,15 +62,17 @@ function loadPrefs(){
   if(typeof p.showHidden==="boolean")state.showHidden=p.showHidden;
   if(typeof p.geometry==="boolean")state.geometry=p.geometry;
   if(Number.isFinite(p.inset))state.inset=p.inset;
-  if(["design","preview"].includes(p.mode))state.mode=p.mode;
-  if(p.previewScene==="seedbag")state.previewScene="inventory_v2";
-  else if(["gameplay","inventory_v2","workshop","fieldguide","map","trials","settings","reward","toast"].includes(p.previewScene))state.previewScene=p.previewScene;
+  state.activeUiState=null;
+  state.mode="preview";
+  state.previewScene="empty";
+  state.targetPath=DEFAULT_TARGET;
+  state.modelKey="bloom";
  }catch{}
 }
 function savePrefs(){
  localStorage.setItem(PREFS_KEY,JSON.stringify({
   viewport:state.viewport,zoom:state.zoom,snap:state.snap,labels:state.labels,grid:state.grid,
-  showHidden:state.showHidden,geometry:state.geometry,inset:state.inset,mode:state.mode,previewScene:state.previewScene
+  showHidden:state.showHidden,geometry:state.geometry,inset:state.inset
  }));
 }
 function syncToolbarFromState(){
