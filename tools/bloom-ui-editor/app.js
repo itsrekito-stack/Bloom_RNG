@@ -1847,7 +1847,13 @@ async function assistantSync(){
   if(data.invalid_model_fallback)toast("AI SYNC починил повреждённый JSON · старый файл сохранён в "+(data.recovery_backup||".recovery"));
   else if(data.recovered_from_editor)toast("AI SYNC восстановил JSON из памяти редактора"+(data.recovery_backup?" · backup: "+data.recovery_backup:""));
   else if(data.stashed&&data.restored)toast(data.changed?"AI SYNC готов · твои локальные изменения сохранены":"AI SYNC готов · локальные изменения возвращены");
-  if(data.changed)requestAnimationFrame(()=>focusSelected());
+  if(data.changed){
+   // AI SYNC can update the editor itself (index.html/app.js), not only the model.
+   // Reload so new UI STATE buttons and editor features appear immediately.
+   toast("AI SYNC готов · обновляю интерфейс редактора…");
+   setTimeout(()=>location.reload(),450);
+   return;
+  }
  }catch(e){
   toast("AI SYNC: "+e.message,true);
   await assistantStatus();
