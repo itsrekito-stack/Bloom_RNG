@@ -334,16 +334,14 @@ function UI:IsWorkshopExclusive()
 end
 
 function UI:ApplyWorkshopFocusVisibility()
- if not self:IsWorkshopExclusive() then return end
+ local exclusive=self:IsWorkshopExclusive()
+ if self.BoostHUD then self.BoostHUD:SetSuppressed(exclusive) end
+ if not exclusive then return end
  for _,gui in ipairs({
   self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.RollHUD,self.Roll,self.RouletteViewport,
   self.Guide,self.ToastRoot,self.Reveal,
  }) do
   if gui and gui:IsA("GuiObject") then gui.Visible=false end
- end
- if self.BoostHUD then
-  if self.BoostHUD.Root then self.BoostHUD.Root.Visible=false end
-  if self.BoostHUD.Tooltip then self.BoostHUD.Tooltip.Visible=false end
  end
 end
 
@@ -1149,10 +1147,7 @@ function UI:ApplyResponsiveLayout(width,height)
  self.Panel.Size=UDim2.fromOffset(math.max(300,width-16),math.max(300,height-108))
  self.Panel.Position=UDim2.new(.5,0,.52,0)
  self.Reveal.Size=UDim2.fromOffset(math.max(280,width-24),100)
- if self.BoostHUD and self.BoostHUD.Root then
-  self.BoostHUD.Root.Size=UDim2.fromOffset(math.max(280,math.min(360,width-20)),72)
-  self.BoostHUD.Root.Position=UDim2.new(0,10,1,-118)
- end
+ if self.BoostHUD then self.BoostHUD:ApplyResponsiveLayout(width) end
 end
 
 function UI:Render()
