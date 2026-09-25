@@ -56,6 +56,7 @@ function X:Request(player,action,a,b,c)
   if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end
   return self.FlowerProgressionService:Upgrade(player,a)
  elseif action=="Flag" then
+  if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end
   if not p.FlowerCollection.DiscoveredFlowers[a] then return false,"NOT_DISCOVERED" end
   if b~="LockedFlowers" and b~="FavoriteFlowers" then return false,"INVALID_ACTION" end
   p.FlowerCollection[b][a]=not p.FlowerCollection[b][a]
