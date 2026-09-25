@@ -17,6 +17,7 @@ mastery=read("src/ServerScriptService/Services/FlowerProgressionService.luau")
 workshop=read("src/ReplicatedStorage/Config/WorkshopConfig.luau")
 workshop_service=read("src/ServerScriptService/Services/WorkshopService.luau")
 season_plan=read("src/ReplicatedStorage/Shared/SeasonPlan.luau")
+season_service=read("src/ServerScriptService/Services/SeasonService.luau")
 
 # Flower duplicates already have a useful sink.
 need(cfg,"DustPerCopy=3","flower duplicate dust value")
@@ -68,6 +69,30 @@ if seasonal_coin_sink!=3780:
 if seasonal_dust_sink!=126:
     raise AssertionError(f"unexpected repeatable Workshop Dust sink: {seasonal_dust_sink}")
 
+# Ancient Nectar remains a long-term currency after the permanent Legacy tree is complete.
+need(cfg,"NectarDistillCost=1","post-Legacy Nectar distill cost")
+need(cfg,"NectarDistillDust=10","post-Legacy Nectar distill reward")
+need(season_service,"function S:LegacyComplete(p)","Legacy completion gate")
+need(season_service,'for i=1,6 do if not p.WorkshopV5.Nodes["LEGACY_"..i] then return false end end',"all six Legacy nodes required")
+need(season_service,'if not self:LegacyComplete(p) then return false,"LEGACY_REQUIRED" end',"distill blocked before full Legacy")
+need(season_service,'if p.Currencies.AncientNectar<cost then return false,"NECTAR_REQUIRED" end',"distill Nectar affordability")
+need(season_service,"p.Currencies.AncientNectar-=cost","repeatable Ancient Nectar spend")
+need(season_service,"p.Currencies.PetalDust+=Bloom.NectarDistillDust","distill reward")
+need(remote,"DistillNectar=true","fixed-argument distill remote schema")
+need(player,'elseif action=="DistillNectar" then return self.SeasonService:DistillNectar(player)',"distill server route")
+need(state,"NectarDistill={","distill state projection")
+need(state,"Unlocked=nectarUnlocked","distill unlock projection")
+need(client,'controller:Send("DistillNectar")',"Inventory V2 distill action")
+need(client,'"COMPLETE LEGACY TO DISTILL"',"pre-Legacy UI guidance")
+
+# Full LEGACY_6 raises the Season reward to 7 Nectar; distillation creates a bounded useful conversion.
+post_legacy_nectar_per_season=5+2
+post_legacy_dust_per_season=post_legacy_nectar_per_season*10
+if post_legacy_dust_per_season!=70:
+    raise AssertionError(f"unexpected post-Legacy distill capacity: {post_legacy_dust_per_season} Dust/Season")
+if post_legacy_dust_per_season>=seasonal_dust_sink:
+    raise AssertionError("Nectar distillation should supplement, not fully replace, the seasonal Petal Dust sink")
+
 print("endgame sinks: PASS")
-print(f"Duplicate sinks protected; repeatable seasonal Workshop sinks: {seasonal_coin_sink} Coins and {seasonal_dust_sink} Petal Dust.")
+print(f"Duplicate sinks protected; seasonal Workshop sinks {seasonal_coin_sink} Coins / {seasonal_dust_sink} Dust; post-Legacy Nectar can distill into up to {post_legacy_dust_per_season} Dust per base Season.")
 
