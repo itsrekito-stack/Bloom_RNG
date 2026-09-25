@@ -11,28 +11,59 @@ local function currentStep(profile)
  return T.Steps[profile.Tutorial.Step]
 end
 
+local function completionKey(step)
+ return "TutorialStep_"..step.Id
+end
+
 function S:Init(x)
  self.X=x
+end
+
+function S:LegacyStepComplete(p,step)
+ local events=p.Tutorial.Events
+ if step.Id=="HiveIntro" then return p.StarterBeeGranted or (events.StarterBee or 0)>0 or (events.Wake or 0)>0 end
+ if step.Id=="StarterBee" then return p.StarterBeeGranted or (events.StarterBee or 0)>0 end
+ if step.Id=="HiveUpgrade" then return p.Hive.Level>=2 or (events.HiveUpgrade or 0)>0 end
+ if step.Id=="WorkshopPurchase" then return next(p.WorkshopV5.Nodes)~=nil or (events.WorkshopPurchase or 0)>0 end
+ if step.Id=="SunnyVisit" then return (events.SunnyVisit or 0)>0 end
+ return (events[step.Event] or 0)>0
 end
 
 function S:Migrate(player,p)
  local t=p.Tutorial
  if t.Version==T.Version then return false end
 
- local wasComplete=t.Events.TutorialComplete or t.Step>#T.Steps+4
+ local wasComplete=t.Events.TutorialComplete or t.Step>17
  t.Version=T.Version
  if wasComplete then
   t.Step=#T.Steps+1
   t.Events.TutorialComplete=math.max(1,t.Events.TutorialComplete or 0)
+  print("[Tutorial] migrated completed profile to v"..T.Version.." player="..player.Name)
   return true
  end
 
- if p.StarterBeeGranted or (t.Events.StarterBee or 0)>0 then
-  t.Events.HiveApproach=math.max(1,t.Events.HiveApproach or 0)
-  t.Events.StarterBee=math.max(1,t.Events.StarterBee or 0)
+ for _,step in ipairs(T.Steps) do
+  if self:LegacyStepComplete(p,step) then
+   t.Events[completionKey(step)]=1
+  else
+   break
+  end
  end
  t.Step=1
  print("[Tutorial] migrated to v"..T.Version.." player="..player.Name)
+ return true
+end
+
+function S:RecordEvent(player,event)
+ local p=self.X:Profile(player)
+ if not p then return false end
+ self:Migrate(player,p)
+ local step=currentStep(p)
+ if not step or step.Event~=event then return false end
+ local key=completionKey(step)
+ if p.Tutorial.Events[key] then return false end
+ p.Tutorial.Events[key]=1
+ self.X:MarkStateDirty(player)
  return true
 end
 
@@ -88,18 +119,15 @@ function S:Refresh(player)
  self:Migrate(player,p)
 
  local old=t.Step
- while T.Steps[t.Step] do
-  local step=T.Steps[t.Step]
-  local complete=(t.Events[step.Event] or 0)>0
-  if not complete then break end
+ while T.Steps[t.Step] and t.Events[completionKey(T.Steps[t.Step])] do
   t.Step+=1
  end
 
  self:ApplyUnlocks(p)
 
  if t.Step~=old then
-  local cause=T.Steps[old] and T.Steps[old].Event or "migration"
-  print(string.format("[Tutorial] step %d -> %d event=%s player=%s",old,t.Step,tostring(cause),player.Name))
+  local completed=T.Steps[old]
+  print(string.format("[Tutorial] step %d -> %d event=%s player=%s",old,t.Step,completed and completed.Event or "migration",player.Name))
   self.LastWaiting[player]=nil
  end
 
@@ -130,6 +158,9 @@ function S:Tick(player)
    self.X:EmitOnce(player,"HiveApproach")
    return true
   end
+ elseif step.Id=="StarterBee" and p.StarterBeeGranted then
+  self.X:EmitOnce(player,"StarterBee")
+  return true
  elseif step.Id=="PollenSpark" then
   self.X.GardenActivityService:EnsureTutorialSpark(player)
  end
