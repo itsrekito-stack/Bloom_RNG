@@ -51,7 +51,7 @@ function S:Init(ui)
  local billText=Instance.new("TextLabel")
  billText.Size=UDim2.fromScale(1,1)
  billText.BackgroundTransparency=1
- billText.Text="ЦЕЛЬ\n▼"
+ billText.Text="TARGET\n▼"
  billText.TextSize=19
  billText.TextColor3=C.Gold
  billText.TextStrokeColor3=C.Black
@@ -170,7 +170,7 @@ function S:SetWorldTarget(pos,label)
   return
  end
  self.Target.Position=pos+Vector3.new(0,7,0)
- self.BillboardText.Text=(label or "ЦЕЛЬ").."\n▼"
+ self.BillboardText.Text=(label or "TARGET").."\n▼"
  self.Billboard.Enabled=true
 
  local root=self.UI.Player.Character and self.UI.Player.Character:FindFirstChild("HumanoidRootPart")
@@ -186,7 +186,7 @@ function S:SetWorldTarget(pos,label)
  end
  local distance=(root.Position-pos).Magnitude
  self.Beam.Enabled=distance>30
- self.UI.Guide.Text=(label or "Цель").."   •   "..math.floor(distance).." м"
+ self.UI.Guide.Text=(label or "Target").."   •   "..math.floor(distance).." м"
  self.UI.Guide.Visible=true
 end
 
@@ -194,18 +194,18 @@ function S:ResolveWorldTarget(target)
  local ui=self.UI
  local world=workspace:FindFirstChild("BloomWorld")
  local hivePos=ui.State and ui.State.HivePosition
- if target=="Hive" then return hivePos,"УЛЕЙ" end
+ if target=="Hive" then return hivePos,"HIVE" end
  if target=="Garden" then
   local plot=world and world:FindFirstChild("Garden_"..ui.Player.UserId)
   local ground=plot and plot:FindFirstChild("Ground")
-  if ground and ground:IsA("BasePart") then return ground.Position+Vector3.new(0,1,0),"САД" end
-  if hivePos then return hivePos-Vector3.new(0,1,19),"САД" end
+  if ground and ground:IsA("BasePart") then return ground.Position+Vector3.new(0,1,0),"GARDEN" end
+  if hivePos then return hivePos-Vector3.new(0,1,19),"GARDEN" end
  elseif target=="Token" then
   local token=ui.Activities:Target()
-  if token then return token.Position,"АКТИВНОСТЬ" end
+  if token then return token.Position,"ACTIVITY" end
  elseif target=="Workshop" then
   local part=world and world:FindFirstChild("Workshop")
-  if part and part:IsA("BasePart") then return part.Position,"МАСТЕРСКАЯ" end
+  if part and part:IsA("BasePart") then return part.Position,"WORKSHOP" end
  elseif L.Sectors[target] then
   local part=world and world:FindFirstChild(target.."Gate")
   if part and part:IsA("BasePart") then return part.Position,string.upper(L.Sectors[target].Name) end
@@ -227,11 +227,11 @@ function S:Update()
  if not target then return end
 
  if target=="Roll" then
-  if self:PlaceScreenTarget(ui.Roll,"НАЖМИ ROLL") then
+  if self:PlaceScreenTarget(ui.Roll,"PRESS ROLL") then
    -- The persistent guide banner already explains the action. Keeping a second
    -- callout above the bottom HUD caused it to overlap Bloom/Roll on short screens.
    self.Callout.Visible=false
-   ui.Guide.Text="Следующий шаг: запусти auto roll"
+   ui.Guide.Text="Next step: start auto roll"
    ui.Guide.Visible=true
   end
   return
@@ -239,8 +239,8 @@ function S:Update()
 
  if target=="SeedSatchel" then
   if ui.DockButtons.SeedSatchel and ui.DockButtons.SeedSatchel.Visible then ui.Dock.Visible=true end
-  if self:PlaceScreenTarget(ui.DockButtons.SeedSatchel,"ОТКРОЙ СУМКУ СЕМЯН") then
-   ui.Guide.Text="Следующий шаг: открой сумку семян"
+  if self:PlaceScreenTarget(ui.DockButtons.SeedSatchel,"OPEN INVENTORY") then
+   ui.Guide.Text="Next step: open your inventory"
    ui.Guide.Visible=true
   end
   return
@@ -248,7 +248,7 @@ function S:Update()
 
  local pos,label=self:ResolveWorldTarget(target)
  if target=="Token" and not pos then
-  ui.Guide.Text="Ожидай следующую активность — указатель появится автоматически"
+  ui.Guide.Text="Wait for the next activity — the pointer will appear automatically"
   ui.Guide.Visible=true
   return
  end
