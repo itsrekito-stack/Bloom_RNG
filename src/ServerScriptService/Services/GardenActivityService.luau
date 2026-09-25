@@ -68,6 +68,7 @@ function S:Collect(player,id,index,phase)
  if o.Kind=="CrossPollination" and o.Revision~=p.Garden.Revision then offers[id]=nil self:Push(player) return false end
  o.Index=o.Index+1 if o.Kind=="FireflyRoute" then self.X:Emit(player,"Firefly",1) end
  if o.Index>#o.Nodes then offers[id]=nil local temp=self.X.Temp[player] local kind=o.Kind
+  if not temp then warn("[Activity] missing runtime temp during completion kind="..tostring(kind).." player="..tostring(player.Name)) return false,"PROFILE_LOADING" end
   if kind=="DewDrop" then temp.Dew=math.min(A.DewMax,(temp.Dew or 0)+1)
   elseif kind=="NectarBud" then p.Currencies.Coins=p.Currencies.Coins+5
    local Flowers=require(RS.Config.FlowersConfig)
@@ -79,6 +80,7 @@ function S:Collect(player,id,index,phase)
   elseif kind=="CrystalResonance" then temp.Crystal=true temp.NeighbourUntil=os.clock()+30+E.Value(p,"EXPLORATION_3","CrystalSeconds",0) if p.Season.ActiveCard=="CrystalSeason" then temp.TemporaryMutationUntil=os.clock()+60 end
   elseif kind=="FireflyRoute" or kind=="ShadowBloom" then temp.Eclipse=true end
   self.X.RollService:Charge(player,A.Types[kind].Charge*E.Value(p,"BLOOM_2","ManualCharge",1)*(o.Sector and E.Value(p,"EXPLORATION_2","RouteCharge",1) or 1)*(p.Season.ActiveCard=="SummerSwarm" and 1.25 or 1))
+  self.X.BoostService:ApplyActivity(player,kind)
   self.X:Emit(player,kind,1) self.X:Emit(player,"ActivityCompleted",1)
   local completedSector=o.Sector or self.X.MapService:Sector(player)
   if completedSector and completedSector~="Center" then self.X:Emit(player,"WorldActivity",1) end
