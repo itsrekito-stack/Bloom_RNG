@@ -309,6 +309,11 @@ function S:Update()
  local p=ui.State.Profile
  local step=T.Steps[ui.ReplayIndex or p.Tutorial.Step]
 
+ if not ui.ReplayIndex and step then
+  if step.Id=="Delivery" and ui.Menu=="SeedSatchel" then ui:Close() end
+  if step.Id=="Synergy" and ui.Menu=="Workshop" then ui:Close() end
+ end
+
  self:HideWorldTarget()
  self:HideScreenTarget()
  ui.Guide.Visible=false
