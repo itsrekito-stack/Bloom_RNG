@@ -71,3 +71,11 @@ RoFlow keeps local Git-backed checkpoints in a separate **Backups** window.
 - Each version shows its source HEAD, snapshot SHA, commit subjects and changed files.
 - Restore creates a new safety version first, then applies the selected snapshot to the worktree without moving the current branch backwards.
 - Metadata is stored under `.roflow/` and is ignored by Git.
+
+
+## v0.002
+
+- Project connection no longer depends on backup initialization.
+- A backup failure cannot block opening Bloom_RNG, UI Studio, Git status, or AI Sync.
+- Backup initialization is best-effort and failures stay isolated to the Backups UI.
+- Product versioning now follows the visible RoFlow scheme: v0.001, v0.002, v0.003...

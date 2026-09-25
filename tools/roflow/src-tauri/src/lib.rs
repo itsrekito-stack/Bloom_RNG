@@ -451,7 +451,9 @@ fn set_project_root(path: String, state: State<AppState>) -> Result<ProjectStatu
         let mut guard = state.project_root.lock().map_err(|_| "Project state lock failed".to_string())?;
         *guard = Some(root.clone());
     }
-    ensure_initial_backup(&root)?;
+    // Backups are a convenience layer and must never block opening a valid project.
+    // Initialization is best-effort; the Backups window can surface its own errors.
+    let _ = ensure_initial_backup(&root);
     status_for(&root)
 }
 
@@ -573,7 +575,10 @@ fn safe_ai_sync(editor_model: Option<Value>, state: State<AppState>) -> Result<S
 #[tauri::command]
 fn list_backups(state: State<AppState>) -> Result<Vec<BackupEntry>, String> {
     let root = current_root(&state)?;
-    ensure_initial_backup(&root)?;
+    // Keep project access independent from backup health. If initial snapshot
+    // creation fails, return the existing list (possibly empty) instead of
+    // disconnecting the whole app.
+    let _ = ensure_initial_backup(&root);
     let mut backups = load_backup_store(&root).backups;
     backups.sort_by_key(|entry| std::cmp::Reverse(backup_number(&entry.version)));
     Ok(backups)

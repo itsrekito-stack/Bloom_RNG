@@ -15,7 +15,13 @@ async function refreshBackups(){
   $("#backupValue").textContent=latest?.version||"—";
   $("#backupStats").textContent=backups?.length?`${backups.length} saved version(s) · latest ${latest.title||"snapshot"}`:"No backups yet";
   $("#backupNavVersion").textContent=latest?.version||"—";
- }catch(e){log("Backup status failed: "+e)}
+ }catch(e){
+  $("#backupValue").textContent="ERROR";
+  $("#backupValue").style.color="#ff697b";
+  $("#backupStats").textContent="Backups unavailable · "+String(e);
+  $("#backupNavVersion").textContent="!";
+  log("Backup status failed: "+e)
+ }
 }
 async function refresh(){if(!state.root)return;try{const s=await invoke("project_status");applyStatus(s);await refreshBackups();log("Project status refreshed")}catch(e){log("Refresh failed: "+e);throw e}}
 async function chooseProject(){try{const selected=await dialog.open({directory:true,multiple:false,title:"Choose Bloom_RNG project"});if(selected){await connectRoot(selected);const frame=$("#uiStudioFrame");if(frame.contentWindow)frame.contentWindow.location.reload()}}catch(e){log("Project selection failed: "+e)}}
