@@ -1,4 +1,6 @@
-local C=require(game:GetService("ReplicatedStorage").Config.BloomConfig)
+local RS=game:GetService("ReplicatedStorage")
+local C=require(RS.Config.BloomConfig)
+local E=require(RS.Shared.WorkshopEffects)
 local S={}
 
 function S:Init(x)
@@ -24,7 +26,7 @@ function S:Upgrade(player,id)
  if type(id)~="string" or not p.FlowerCollection.DiscoveredFlowers[id] then return false,"NOT_DISCOVERED" end
  local m=p.FlowerCollection.FlowerMastery[id] or {Level=1,XP=0}
  if m.Level>=C.MasteryCap then return false,"MASTERY_MAX" end
- local cost=math.ceil(m.Level*5*(p.WorkshopV5.Nodes.ECONOMY_5 and .8 or 1))
+ local cost=math.ceil(m.Level*5*(1-E.Value(p,"ECONOMY_5","StudyDiscount",0)))
  if p.Currencies.PetalDust<cost then return false,"DUST_REQUIRED" end
  p.Currencies.PetalDust-=cost
  self:Add(player,id,m.Level*C.MasteryXP)
