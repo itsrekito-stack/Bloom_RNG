@@ -122,7 +122,7 @@ check('Active boost template authored hidden',boost_template is not None and boo
 check('Active boosts bottom-left authored anchor',boost_root is not None and boost_root.get('Properties',{}).get('AnchorPoint',{}).get('Vector2')==[0,1])
 check('Active boosts controller linked','self.BoostHUD=require(script.Parent.BoostHUDController)' in source and 'self.BoostHUD:Update(boosts,self.State.Revision)' in source)
 check('Active boost hover states','badge.MouseEnter:Connect' in boost_hud_source and 'badge.MouseLeave:Connect' in boost_hud_source and 'TweenService:Create(scale' in boost_hud_source)
-check('Active boost source breakdown','self.TooltipBreakdown.Text=self:TooltipText(item)' in boost_hud_source and 'Group="Bees"' in boost_service_source and 'Group="Activity"' in boost_service_source)
+check('Active boost source breakdown','self.TooltipBreakdown.Text=self:TooltipText(item)' in boost_hud_source and 'source(buckets,stat,"Bees",bee.DisplayName.." ×"..count' in boost_service_source and 'source(buckets,"Luck","Activity",tostring(solarCfg.Label or "Solar Bloom")' in boost_service_source)
 check('Workshop hides active boosts','self.BoostHUD.Root.Visible=false' in source and 'self.BoostHUD.Tooltip.Visible=false' in source)
 
 # BR-002: feature id and renderer are explicit and editor has one live inventory preview.
