@@ -137,6 +137,8 @@ check('boost HUD missing hierarchy fails fast','[BoostHUD] Authored boost HUD is
 # BR-002: feature id and renderer are explicit and editor has one live inventory preview.
 check('SeedSatchel explicitly routes to InventoryV2','MENU_RENDERERS={SeedSatchel="InventoryV2"}' in source)
 check('Inventory v2 backend linked','InventoryV2Controller' in source and 'InventoryV2.Render(self,p,ui)' in source)
+check('dynamic menus use authored state kits','self.StateKits=self.Panel:FindFirstChild("StateKits")' in source and 'function UI:MenuTemplate(name)' in source and 'self:MenuTemplate("ButtonTemplate")' in source)
+check('state kits are authored in ScreenGui',one('StateKits')[1] is not None and all(one(name+'Kit')[1] is not None for name in ['FieldGuide','Map','Trials','Settings','Plant','Season','Replay','Cards']))
 check('Inventory v2 rerender follows renderer','controller.MenuRenderer=="InventoryV2"' in inventory_v2_source)
 check('Inventory v2 binds authoritative inventory','uiState.Inventory' in inventory_v2_source and 'controller:Send("Dissolve"' in inventory_v2_source and 'controller:Send("EquipBee"' in inventory_v2_source)
 check('Inventory v2 does not bypass physical Plant flow','controller:Send("Plant"' not in inventory_v2_source and 'PLANT AT GARDEN' in inventory_v2_source)
@@ -145,14 +147,12 @@ check('BR-010 map exposes physical gate actionability','NearGate=nearGate' in ui
 check('BR-010 map tells Hive-ready players to use gate','Hive ready — go to the ' in ui_state_source and 'Use the world gate prompt to unlock' in ui_state_source)
 check('BR-010 trials expose shrine guidance','NearShrine=nearShrine' in ui_state_source and 'StartHint=startHint' in ui_state_source and 'Garden Trials shrine' in ui_state_source)
 check('BR-010 client renders derived world guidance','sector.UnlockHint' in source and 't.StartHint' in source and 'start them at sector shrines' in source)
-check('BR-013 preview mock state is explicitly non-runtime','MOCK DATA · NOT RUNTIME' in editor_source and 'MOCK PREVIEW · NOT RUNTIME' in editor_source)
-check('BR-013 preview terminology matches English runtime','TUTORIAL • 1/8' in editor_source and 'Fill Bloom and make a special roll' in editor_source and 'Permanent upgrades and progression branches' in editor_source)
-check('BR-013 old Russian runtime-preview labels removed',all(token not in editor_source for token in ['Розовый пион','Ромашка','Василёк','Мастерская','Справочник','Испытания']))
-check('BR-013 dead inventory mock removed','MOCK_PREVIEW_DATA.seeds' not in editor_source and '<div class="preview-inventory-v2">' not in editor_source)
-
-
+check('UI Studio uses desktop state rail','class="state-rail"' in editor_html and 'class="app-titlebar"' in editor_html and 'class="app-workspace"' in editor_html)
+check('UI Studio exposes all authored state buttons',all(('data-ui-state="'+state+'"') in editor_html for state in ['gameplay','inventory_v2','workshop','fieldguide','map','trials','settings','plant','season','replay','cards','reward','toast','tutorial','boosts','loading']))
+check('UI STATE toggles active state back to empty workspace','const closing=state.activeUiState===scene' in editor_source and 'state.activeUiState=null' in editor_source and 'Empty workspace' in editor_source)
+check('UI Studio removed HTML runtime mock injection','MOCK PREVIEW · NOT RUNTIME' not in editor_source and '<div class="preview-menu-generic">' not in editor_source and 'function injectRuntimePreview(){/* UI STATE shows authored Roblox instances only.' in editor_source)
+check('UI Studio switches authored loading ScreenGui model','LOADING_TARGET="src/ReplicatedFirst/BloomLoadingTemplate.model.json"' in editor_source and 'switchUiModel(LOADING_TARGET,"loading")' in editor_source)
 check('editor removed separate seedbag scene','value="seedbag"' not in editor_html and 'data-ui-state="seedbag"' not in editor_html)
-check('editor migrates stale seedbag preference','p.previewScene==="seedbag"' in editor_source and 'state.previewScene="inventory_v2"' in editor_source)
 
 # Duplicate-HUD guard.
 check('live-sync resolver exists','function UI:ResolveBloomGui()' in source)
