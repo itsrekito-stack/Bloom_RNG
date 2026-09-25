@@ -43,7 +43,7 @@ Traits={
 WorkshopHex={
 Core=71682727693014,Luck=73022903468214,Roll=96003454739859,AutoRoll=119772472490649,
 Economy=130962287537873,Garden=95197859726989,Duplicate=79588703542322,FruitDust=85961992422194,
-Loadout=77453527674761,Locked=135546891455390,Mastery=85961992422194,Bee=82707654930156,BeeHexagon=82707654930156,
+Loadout=77453527674761,Locked=135546891455390,LockedRoll=135546891455390,LockedGarden=135546891455390,LockedBees=135546891455390,LockedEconomy=135546891455390,LockedBloom=135546891455390,LockedExploration=135546891455390,LockedLegacy=135546891455390,Mastery=85961992422194,Bee=82707654930156,BeeHexagon=82707654930156,
 },
 }
 
@@ -67,7 +67,7 @@ C.WorkshopNodeIcons={
  LEGACY_1="Loadout",LEGACY_2="Loadout",LEGACY_3="Mastery",LEGACY_4="Loadout",LEGACY_5="Loadout",LEGACY_6="Mastery",
 }
 C.WorkshopLockedBranchIcons={
- ROLL="Locked",GARDEN="Locked",BEES="Locked",ECONOMY="Locked",BLOOM="Locked",EXPLORATION="Locked",LEGACY="Locked",
+ ROLL="LockedRoll",GARDEN="LockedGarden",BEES="LockedBees",ECONOMY="LockedEconomy",BLOOM="LockedBloom",EXPLORATION="LockedExploration",LEGACY="LockedLegacy",
 }
 function C.GetWorkshopNodeIcon(nodeId:string,locked:boolean?):string
  if locked then
