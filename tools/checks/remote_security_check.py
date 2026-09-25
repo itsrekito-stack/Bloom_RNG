@@ -33,6 +33,9 @@ need(remote,'local ACTIVITY_PHASE={Collect=true}',"Activity collect-only whiteli
 need(remote,'ACTIVITY_PHASE[c]==true',"Activity phase whitelist")
 need(remote,'if knownRevision~=nil and not integer(knownRevision,0,2147483647)',"StateRequest revision validation")
 need(remote,'if not self:Accept(player) then',"global per-player remote rate limit")
+need(remote,'xpcall(function() return self.X:Request(player,action,a,b,c) end,debug.traceback)',"request traceback capture")
+need(remote,'[SERVER_ERROR][',"server error diagnostic marker")
+need(remote,'message="Server error ["..requestErrorId.."] — see Output"',"client-visible error correlation id")
 
 # Server authority / progression invariants behind validated remotes.
 need(roll,'not p.Tutorial.FeatureUnlocks.Roll',"Roll progression lock")
