@@ -18,6 +18,7 @@ local L=require(RS.Config.LocationsConfig)
 local Theme=require(RS.Config.UIThemeConfig)
 local RollAudio=require(RS.Config.RollAudioConfig)
 local NumberFormatter=require(RS.Shared.NumberFormatter)
+local WorkshopEffects=require(RS.Shared.WorkshopEffects)
 local InventoryV2=require(script.Parent.InventoryV2Controller)
 
 local C=Theme.Colors
@@ -99,6 +100,7 @@ end
 local WORKSHOP_FEATURE_TEXT={
  PityDetails="Shows pity and the guaranteed new discovery",
  RepeatPlant="Replant the last seed",
+ GuaranteedAbilityToken="Rare bee abilities always offer an Overcharge token",
  PatternHints="Flower pattern hints",
  AutoDissolve="Auto-dissolve duplicates",
  DissolveFilters="Auto-dissolve filters by rarity",
@@ -968,6 +970,16 @@ function UI:RenderMenu()
     if preferredA~=preferredB then return preferredA end
     return tostring(a.DisplayName or a.Id)<tostring(b.DisplayName or b.Id)
    end)
+   if WorkshopEffects.Feature(p,"GARDEN_3","RepeatPlant") and self.LastSeed then
+    for _,item in ipairs(available) do
+     if item.Id==self.LastSeed then
+      self:Toast("Quick Replant • "..tostring(item.DisplayName or item.Id))
+      self:Send("Plant",slot,item.Id)
+      self:Close()
+      return
+     end
+    end
+   end
    if #available==0 then
     self:Label(self.Content,"No free flower copies are available. Roll or dissolve/manage planted copies first.",48)
    else
@@ -1384,18 +1396,19 @@ function UI:FindRouletteTarget(payload)
  self.RouletteVisualPool=pool return #pool
 end
 
-function UI:AnimateRouletteResult()
+function UI:AnimateRouletteResult(revealScale)
+ revealScale=math.max(.1,tonumber(revealScale) or 1)
  local slot=self.RouletteSlots and self.RouletteSlots.Current if not slot then return end
  local scale=slot:FindFirstChild("SlotScale")
  local icon=slot:FindFirstChild("Icon")
  if scale then
   scale.Scale=1.04
-  local pop=TweenService:Create(scale,TweenInfo.new(.18,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1.18}) pop:Play() pop.Completed:Wait()
-  TweenService:Create(scale,TweenInfo.new(.20,Enum.EasingStyle.Sine,Enum.EasingDirection.Out),{Scale=1.04}):Play()
+  local pop=TweenService:Create(scale,TweenInfo.new(.18*revealScale,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1.18}) pop:Play() pop.Completed:Wait()
+  TweenService:Create(scale,TweenInfo.new(.20*revealScale,Enum.EasingStyle.Sine,Enum.EasingDirection.Out),{Scale=1.04}):Play()
  end
  if icon and icon:IsA("ImageLabel") then
   icon.Rotation=-7
-  local swing=TweenService:Create(icon,TweenInfo.new(.16,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,1,true),{Rotation=7}) swing:Play() swing.Completed:Wait() icon.Rotation=0
+  local swing=TweenService:Create(icon,TweenInfo.new(.16*revealScale,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,1,true),{Rotation=7}) swing:Play() swing.Completed:Wait() icon.Rotation=0
  end
 end
 
@@ -1421,19 +1434,21 @@ function UI:ResolveRouletteReward(payload)
  local generation=self.RouletteGeneration
  task.spawn(function()
   local visualStart=os.clock()
+  local profile=self.State and self.State.Profile
+  local revealScale=WorkshopEffects.Value(profile,"ROLL_3","RevealScale",1)
   local target=self:FindRouletteTarget(payload)
   local steps=RollAudio.SettleSteps
   for i,duration in ipairs(steps) do
    if generation~=self.RouletteGeneration then break end
    local final=i==#steps
-   if not self:StepRoulette(duration,final and target or nil,generation) then break end
+   if not self:StepRoulette(duration*revealScale,final and target or nil,generation) then break end
   end
   if generation==self.RouletteGeneration then
-   local remaining=math.max(0,(RollAudio.MinimumVisualSpin or 0)-(os.clock()-visualStart))
+   local remaining=math.max(0,((RollAudio.MinimumVisualSpin or 0)*revealScale)-(os.clock()-visualStart))
    if remaining>0 then task.wait(remaining) end
    self:PlayRouletteRewardSound()
-   self:AnimateRouletteResult()
-   task.wait(RollAudio.ResultHold)
+   self:AnimateRouletteResult(revealScale)
+   task.wait(RollAudio.ResultHold*revealScale)
   end
   if generation~=self.RouletteGeneration then return end
   self.RouletteLanding=false
