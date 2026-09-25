@@ -26,38 +26,38 @@ local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0}
 
 local MENU_NAMES={
- SeedSatchel="Инвентарь",
- Workshop="Мастерская",
- FieldGuide="Справочник",
- Map="Карта",
- Trials="Испытания",
- Settings="Настройки",
- Plant="Посадка",
- Season="Смена сезона",
- Replay="Подсказки",
- Cards="Карты сезона",
+ SeedSatchel="Inventory",
+ Workshop="Workshop",
+ FieldGuide="Field Guide",
+ Map="Map",
+ Trials="Trials",
+ Settings="Settings",
+ Plant="Planting",
+ Season="Season Turn",
+ Replay="Tutorial Replay",
+ Cards="Season Cards",
 }
 local MENU_HINTS={
- SeedSatchel="Цветы, семена, пчёлы, ресурсы и keepsakes",
- Workshop="Постоянные улучшения и ветви прогрессии",
- FieldGuide="Коллекция, шансы и открытые синергии",
- Map="Сектора, открытия и переходы",
- Trials="Короткие испытания билда",
- Settings="Эффекты, звук и автоматизация",
- Plant="Выберите семя для свободной клумбы",
- Season="Проверьте изменения перед подтверждением",
- Replay="Повтор обучения без сброса прогресса",
- Cards="Выберите эффект нового сезона",
+ SeedSatchel="Flowers, seeds, bees, resources, and keepsakes",
+ Workshop="Permanent upgrades and progression branches",
+ FieldGuide="Collection, odds, and discovered synergies",
+ Map="Sectors, discoveries, and travel",
+ Trials="Short build trials",
+ Settings="Effects, sound, and automation",
+ Plant="Choose a seed for an empty flower bed",
+ Season="Review the changes before confirming",
+ Replay="Replay the tutorial without resetting progress",
+ Cards="Choose an effect for the new Season",
 }
 local SETTINGS_NAMES={
- ReducedEffects="Уменьшенные эффекты",
- ShowOtherPollinators="Показывать чужих пчёл",
- HideOtherPlayersTokens="Скрывать чужие активности",
- RareFeed="Показывать редкие находки",
- AutoDissolve="Авторастворение дубликатов",
+ ReducedEffects="Reduced effects",
+ ShowOtherPollinators="Show other players' bees",
+ HideOtherPlayersTokens="Hide other players' activities",
+ RareFeed="Show rare discoveries",
+ AutoDissolve="Auto-dissolve duplicates",
 }
 local JOURNEY={
- "Получи первую пчелу","Собери Pollen Spark","Доставка мёда","Сделай roll","Посади цветок","Заполни Bloom Meter","Сделай Bloom Roll","Улей уровня 2","Посети мастерскую","Купи узел Workshop","Создай синергию","Открой второй слот пчелы","Активируй Bee Trait","Посети Sunny Orchard","Пройди Solar Bloom","Открой 6 цветов","Открой Crystal Gate","Пройди испытание","Посети Crystal Greenhouse","Подготовь Season Turn",
+ "Get your first bee","Collect a Pollen Spark","Honey delivery","Make a roll","Plant a flower","Fill the Bloom Meter","Make a Bloom Roll","Reach Hive Level 2","Visit the Workshop","Buy a Workshop node","Create a synergy","Unlock the second bee slot","Activate a Bee Trait","Visit Sunny Orchard","Complete Solar Bloom","Discover 6 flowers","Unlock Crystal Gate","Complete a trial","Visit Crystal Greenhouse","Prepare a Season Turn",
 }
 
 local function make(class,parent,props)
@@ -96,51 +96,51 @@ local function compact(v)
 end
 
 local WORKSHOP_FEATURE_TEXT={
- PityDetails="Показывает pity и гарантию нового открытия",
- RepeatPlant="Повторная посадка последнего семени",
- PatternHints="Подсказки цветочных паттернов",
- AutoDissolve="Авторастворение дубликатов",
- DissolveFilters="Фильтры авторастворения по редкости",
- SeedMutation="Открывает мутации семян",
- EventRadar="Показывает мировые события",
- LaunchPads="Открывает быстрые переходы",
- KeepSeasonCard="Сохраняет карту между сезонами",
- MemoryMutation="Сохраняет мутацию в памяти",
- AdvancedTrials="Открывает усиленные испытания",
- ThirdMemory="Открывает дополнительную память",
+ PityDetails="Shows pity and the guaranteed new discovery",
+ RepeatPlant="Replant the last seed",
+ PatternHints="Flower pattern hints",
+ AutoDissolve="Auto-dissolve duplicates",
+ DissolveFilters="Auto-dissolve filters by rarity",
+ SeedMutation="Unlocks seed mutations",
+ EventRadar="Shows world events",
+ LaunchPads="Unlocks fast travel",
+ KeepSeasonCard="Keeps a card between Seasons",
+ MemoryMutation="Keeps a mutation in memory",
+ AdvancedTrials="Unlocks advanced trials",
+ ThirdMemory="Unlocks an additional memory slot",
 }
 
 local function workshopEffectText(rules)
- if not rules or next(rules)==nil then return "Центральный узел дерева улучшений" end
+ if not rules or next(rules)==nil then return "Central node of the upgrade tree" end
  local out={}
  for key,value in pairs(rules) do
   local text
   if key=="Feature" then text=WORKSHOP_FEATURE_TEXT[tostring(value)] or tostring(value)
-  elseif key=="RollCooldown" then text="Roll cooldown → "..tostring(value).."с"
-  elseif key=="Reserve" then text="Запас Bloom +"..tostring(value)
+  elseif key=="RollCooldown" then text="Roll cooldown → "..tostring(value).."s"
+  elseif key=="Reserve" then text="Bloom reserve +"..tostring(value)
   elseif key=="RevealScale" then text="Reveal time ×"..tostring(value)
-  elseif key=="FlowerSlots" then text="Слоты цветов +"..tostring(value)
-  elseif key=="Adjacency" then text="Радиус соседства +"..tostring(value)
+  elseif key=="FlowerSlots" then text="Flower slots +"..tostring(value)
+  elseif key=="Adjacency" then text="Adjacency radius +"..tostring(value)
   elseif key=="SynergyXP" then text="Synergy XP ×"..tostring(value)
-  elseif key=="BeeSlots" then text="Слоты пчёл +"..tostring(value)
-  elseif key=="TokenChance" then text="Шанс ability token +"..math.floor((tonumber(value) or 0)*100+.5).."%"
+  elseif key=="BeeSlots" then text="Bee slots +"..tostring(value)
+  elseif key=="TokenChance" then text="Ability token chance +"..math.floor((tonumber(value) or 0)*100+.5).."%"
   elseif key=="BeeXP" then text="Bee XP ×"..tostring(value)
   elseif key=="TraitCooldown" then text="Trait cooldown ×"..tostring(value)
-  elseif key=="AbilityYield" then text="Награды способностей ×"..tostring(value)
+  elseif key=="AbilityYield" then text="Ability rewards ×"..tostring(value)
   elseif key=="DustYield" then text="Petal Dust ×"..tostring(value)
   elseif key=="MilestoneCoins" then text="Milestone Coins +"..tostring(value)
-  elseif key=="StudyDiscount" then text="Цена Mastery −"..math.floor((tonumber(value) or 0)*100+.5).."%"
+  elseif key=="StudyDiscount" then text="Mastery cost −"..math.floor((tonumber(value) or 0)*100+.5).."%"
   elseif key=="CoinYield" then text="Coins ×"..tostring(value)
   elseif key=="ManualCharge" then text="Bloom charge ×"..tostring(value)
-  elseif key=="NewWeight" then text="Вес новых находок ×"..tostring(value)
-  elseif key=="MutationChance" then text="Шанс мутации +"..math.floor((tonumber(value) or 0)*100+.5).."%"
+  elseif key=="NewWeight" then text="New discovery weight ×"..tostring(value)
+  elseif key=="MutationChance" then text="Mutation chance +"..math.floor((tonumber(value) or 0)*100+.5).."%"
   elseif key=="SignatureWeight" then text="Signature weight ×"..tostring(value)
   elseif key=="RouteCharge" then text="Route charge ×"..tostring(value)
-  elseif key=="CrystalSeconds" then text="Crystal interaction "..tostring(value).."с"
+  elseif key=="CrystalSeconds" then text="Crystal interaction "..tostring(value).."s"
   elseif key=="WildInterval" then text="Wild interval ×"..tostring(value)
   elseif key=="EclipseWeight" then text="Eclipse weight ×"..tostring(value)
   elseif key=="MemoryMastery" then text="Memory Mastery +"..tostring(value)
-  elseif key=="SeasonNectar" then text="Ancient Nectar за сезон +"..tostring(value)
+  elseif key=="SeasonNectar" then text="Ancient Nectar per Season +"..tostring(value)
   else text=key.." "..tostring(value) end
   table.insert(out,text)
  end
@@ -916,18 +916,18 @@ function UI:RenderMenu()
    end)
   end
  elseif name=="FieldGuide" then
-  self:Section(self.Content,"Коллекция и реальные шансы")
-  self:Label(self.Content,"Шансы учитывают текущие модификаторы и гарантию нового открытия.",48)
+  self:Section(self.Content,"Collection and real odds")
+  self:Label(self.Content,"Odds include your current modifiers and the guaranteed new discovery.",48)
   for _,item in ipairs(self.State.Odds) do
-   self:Label(self.Content,item.DisplayName.."   •   "..item.Rarity..string.format("   •   %.6f%%",item.Chance*100)..(item.Undiscovered and "   •   НЕ ОТКРЫТ" or "   •   открыт"),38)
+   self:Label(self.Content,item.DisplayName.."   •   "..item.Rarity..string.format("   •   %.6f%%",item.Chance*100)..(item.Undiscovered and "   •   UNDISCOVERED" or "   •   discovered"),38)
   end
-  self:Section(self.Content,"Синергии")
-  self:Label(self.Content,"Пары: Daisy + Tulip; Sunflower + Clover.",36)
+  self:Section(self.Content,"Synergies")
+  self:Label(self.Content,"Pairs: Daisy + Tulip; Sunflower + Clover.",36)
   if p.WorkshopV5.Nodes.GARDEN_5 then self:Label(self.Content,"Crystal triangle: 1, 2, 6; Meadow line: 1, 2, 3; opposite: 1, 15.",48) end
   for id in pairs(p.GardenSynergies.Discovered) do self:Label(self.Content,id.."   •   mastery "..(p.GardenSynergies.Mastery[id] or 0),34) end
 
  elseif name=="Map" then
-  self:Section(self.Content,"Мир Bloom RNG")
+  self:Section(self.Content,"Bloom RNG World")
   local mapUI=ui.Map
   local pulse=mapUI and mapUI.Pulse or self.State.Pulse
   if p.WorkshopV5.Nodes.EXPLORATION_1 and pulse then self:Label(self.Content,"Biome Pulse  •  "..pulse.Sector,36) end
@@ -935,13 +935,13 @@ function UI:RenderMenu()
    local sector=mapUI and mapUI.Sectors and mapUI.Sectors[id]
    local unlocked=sector and sector.Unlocked or p.World.UnlockedSectors[id]
    local current=sector and sector.Current
-   self:Label(self.Content,L.Sectors[id].Name.."   •   "..(unlocked and "ОТКРЫТО" or "требуется Hive "..L.Sectors[id].Hive)..(current and "  •  ТЫ ЗДЕСЬ" or ""),36)
+   self:Label(self.Content,L.Sectors[id].Name.."   •   "..(unlocked and "UNLOCKED" or "requires Hive "..L.Sectors[id].Hive)..(current and "  •  YOU ARE HERE" or ""),36)
   end
   self:Section(self.Content,"Landmarks")
   local any=false
   for id in pairs(p.World.LandmarkDiscoveries) do any=true self:Label(self.Content,"✓  "..id,32) end
-  if not any then self:Label(self.Content,"Пока ничего не найдено.",32) end
-  self:Button(self.Content,"Открыть Build Trials",function() self:Open("Trials") end,Icons.Get("System","Quests"))
+  if not any then self:Label(self.Content,"Nothing discovered yet.",32) end
+  self:Button(self.Content,"Open Build Trials",function() self:Open("Trials") end,Icons.Get("System","Quests"))
 
  elseif name=="Trials" then
   self:Section(self.Content,"Build Trials")
@@ -962,43 +962,43 @@ function UI:RenderMenu()
   end
 
  elseif name=="Settings" then
-  self:Section(self.Content,"Интерфейс и эффекты")
+  self:Section(self.Content,"Interface and Effects")
   for _,id in ipairs({"ReducedEffects","ShowOtherPollinators","HideOtherPlayersTokens","RareFeed","AutoDissolve"}) do
    local on=p.Settings[id]==true
    local enabled=not (id=="AutoDissolve" and ui.Settings and not ui.Settings.AutoDissolveUnlocked)
-   local button=self:Button(self.Content,(SETTINGS_NAMES[id] or id).."   •   "..(on and "ВКЛ" or "ВЫКЛ"),function() self:Send("Setting",id,not on) end,Icons.Get("System",on and "Confirm" or "Minus"))
+   local button=self:Button(self.Content,(SETTINGS_NAMES[id] or id).."   •   "..(on and "ON" or "OFF"),function() self:Send("Setting",id,not on) end,Icons.Get("System",on and "Confirm" or "Minus"))
    button.Active=enabled
   end
-  self:Button(self.Content,"Громкость активностей   •   "..math.floor((p.Settings.TokenSoundVolume or 0)*100).."%",function() self:Send("Setting","TokenSoundVolume",(p.Settings.TokenSoundVolume+.25)%1.25) end,Icons.Get("System","Info"))
+  self:Button(self.Content,"Activity volume   •   "..math.floor((p.Settings.TokenSoundVolume or 0)*100).."%",function() self:Send("Setting","TokenSoundVolume",(p.Settings.TokenSoundVolume+.25)%1.25) end,Icons.Get("System","Info"))
   if p.WorkshopV5.Nodes.ECONOMY_2 then
-   self:Section(self.Content,"Фильтр авторастворения")
+   self:Section(self.Content,"Auto-Dissolve Filter")
    for _,rarity in ipairs(R.Order) do
     local on=p.Settings.DissolveRarities[rarity]==true
-    self:Button(self.Content,"Dissolve "..rarity.."   •   "..(on and "ВКЛ" or "ВЫКЛ"),function() self:Send("DissolveFilter",rarity) end,Icons.Get("WorkshopHex","Duplicate"))
+    self:Button(self.Content,"Dissolve "..rarity.."   •   "..(on and "ON" or "OFF"),function() self:Send("DissolveFilter",rarity) end,Icons.Get("WorkshopHex","Duplicate"))
    end
   end
-  self:Section(self.Content,"Обучение")
-  self:Button(self.Content,"Пропустить обучение",function() self:Send("Skip") end,Icons.Get("System","Warning"))
-  self:Button(self.Content,"Повторить подсказки",function() self:Send("Replay") end,Icons.Get("System","Tutorial"))
+  self:Section(self.Content,"Tutorial")
+  self:Button(self.Content,"Skip Tutorial",function() self:Send("Skip") end,Icons.Get("System","Warning"))
+  self:Button(self.Content,"Replay Tutorial",function() self:Send("Replay") end,Icons.Get("System","Tutorial"))
 
  elseif name=="Season" then
   local preview=self.MenuArg
-  self:Section(self.Content,"Что сохранится")
+  self:Section(self.Content,"What Will Be Kept")
   self:Label(self.Content,table.concat(preview.Keep,", "),38)
-  self:Section(self.Content,"Изменения")
+  self:Section(self.Content,"Changes")
   for _,diff in ipairs(preview.Diff) do self:Label(self.Content,diff.Path..":  "..tostring(diff.Before).."  →  "..tostring(diff.After),38) end
-  self:Button(self.Content,self.SeasonSecond and "ПОДТВЕРДИТЬ СБРОС СЕЗОНА" or "Продолжить",function() self:Send("SeasonConfirm",preview.Token) end,Icons.Get("System",self.SeasonSecond and "Warning" or "Confirm"))
+  self:Button(self.Content,self.SeasonSecond and "CONFIRM SEASON RESET" or "Continue",function() self:Send("SeasonConfirm",preview.Token) end,Icons.Get("System",self.SeasonSecond and "Warning" or "Confirm"))
 
  elseif name=="Replay" then
   local i=self.ReplayIndex or 1
   self.ReplayIndex=i
-  self:Section(self.Content,"Шаг "..i.." из "..#T.Steps)
+  self:Section(self.Content,"Step "..i.." of "..#T.Steps)
   self:Label(self.Content,T.Steps[i].Text,38)
-  self:Button(self.Content,"Следующий шаг",function() self.ReplayIndex=i%#T.Steps+1 self:RenderMenu() end,Icons.Get("System","ArrowRight"))
-  self:Button(self.Content,"Предыдущий шаг",function() self.ReplayIndex=(i-2)%#T.Steps+1 self:RenderMenu() end,Icons.Get("System","ArrowLeft"))
+  self:Button(self.Content,"Next Step",function() self.ReplayIndex=i%#T.Steps+1 self:RenderMenu() end,Icons.Get("System","ArrowRight"))
+  self:Button(self.Content,"Previous Step",function() self.ReplayIndex=(i-2)%#T.Steps+1 self:RenderMenu() end,Icons.Get("System","ArrowLeft"))
 
  elseif name=="Cards" then
-  self:Section(self.Content,"Выбор карты")
+  self:Section(self.Content,"Card Selection")
   for _,id in ipairs(self.State.Cards) do self:Button(self.Content,id,function() self:Send("Card",id) self:Close() end,Icons.Get("System","Confirm")) end
  end
 end
@@ -1046,19 +1046,19 @@ function UI:Render()
  local p=self.State.Profile
  local step=T.Steps[p.Tutorial.Step]
  if step then
-  self.ObjectiveTitle.Text="ОБУЧЕНИЕ  •  "..p.Tutorial.Step.."/"..#T.Steps
+  self.ObjectiveTitle.Text="TUTORIAL  •  "..p.Tutorial.Step.."/"..#T.Steps
   self.ObjectiveText.Text=step.Text
   self.ObjectiveProgressFill.Size=UDim2.fromScale(math.clamp((p.Tutorial.Step-1)/#T.Steps,0,1),1)
   self.ObjectiveProgress.Visible=true
  else
-  self.ObjectiveTitle.Text="JOURNEY  •  ШАГ "..tostring(p.Quests.JourneyStep or 1)
-  self.ObjectiveText.Text=JOURNEY[p.Quests.JourneyStep] or "Продолжай развивать сад"
+  self.ObjectiveTitle.Text="JOURNEY  •  STEP "..tostring(p.Quests.JourneyStep or 1)
+  self.ObjectiveText.Text=JOURNEY[p.Quests.JourneyStep] or "Keep growing your garden"
   self.ObjectiveProgress.Visible=false
  end
 
  self.CurrencyRows.Coins.Value.Text=compact(p.Currencies.Coins)
  self.CurrencyRows.Honey.Value.Text=compact(p.Hive.Honey)
- self.CurrencyRows.Hive.Value.Text="Уровень "..tostring(p.Hive.Level)
+ self.CurrencyRows.Hive.Value.Text="Level "..tostring(p.Hive.Level)
  self.CurrencyRows.PetalDust.Value.Text=compact(p.Currencies.PetalDust)
  self.CurrencyRows.PetalDust.Root.Visible=p.Tutorial.FeatureUnlocks.SeedSatchel==true
  self.CurrencyRows.AncientNectar.Value.Text=compact(p.Currencies.AncientNectar)
@@ -1643,7 +1643,7 @@ function UI:Start()
    if not payload.OK then
     if payload.Action=="Roll" and self.Auto then self:SetAutoRolling(false) end
     if not (payload.Action=="Ready" and payload.Reason=="PROFILE_LOADING") then
-     self:Toast(payload.Message or payload.Reason or "Действие пока недоступно")
+     self:Toast(payload.Message or payload.Reason or "Action is currently unavailable")
     end
    end
    if self.Menu and payload.Action~="Menu" and payload.Action~="Roll" and payload.Action~="Ready" then task.defer(function() self:RenderMenu() end) end
@@ -1725,14 +1725,14 @@ function UI:Start()
     lastStatus=status
     if status then print("[BloomUI] Profile state:",status) end
     if status=="Active" and self.ObjectiveTitle and self.ObjectiveText then
-     self.ObjectiveTitle.Text="СИНХРОНИЗАЦИЯ"
-     self.ObjectiveText.Text="Профиль загружен. Получаем состояние игры…"
+     self.ObjectiveTitle.Text="SYNCING"
+     self.ObjectiveText.Text="Profile loaded. Fetching game state…"
     end
    end
    if os.clock()-started>20 then
     local profileError=self.Player:GetAttribute("BloomProfileError")
     warn("[BloomUI] Still waiting for authoritative state",status,profileError)
-    self:Toast(profileError and ("Профиль: "..tostring(profileError)) or "Состояние профиля всё ещё синхронизируется…")
+    self:Toast(profileError and ("Profile: "..tostring(profileError)) or "Profile state is still syncing…")
     started=os.clock()+9999
    end
    task.wait(.75)
@@ -1749,7 +1749,7 @@ function UI:Start()
     self.Pending=false
     self.Auto=false
     self:StopRouletteAnimation()
-    self:Toast("Ответ сервера задержался. Auto выключен.")
+    self:Toast("Server response timed out. Auto was turned off.")
     if self.State then self:Render() end
    end
    if self.State then self.GuideController:Update() end
