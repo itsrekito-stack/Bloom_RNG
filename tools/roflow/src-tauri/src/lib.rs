@@ -299,7 +299,7 @@ fn default_roadmap_tasks() -> Vec<PlannerTask> {
         planner_task("release-content-c","5 · Balance & Content","Release content: freeze Workshop branches","Frozen: 7 shipping Workshop branches × 6 nodes; the exact 42 effect-backed node IDs are derived from the release manifest and CI-guarded.",true),
         planner_task("release-content-d","5 · Balance & Content","Release content: freeze IDs and configs","Completed: ReleaseContentManifest is the single v1 set contract for rarities, collectibles, world/trials, Workshop, Season cards and Journey IDs; CI blocks drift.",true),
         planner_task("release-sinks-a","5 · Balance & Content","Endgame sinks: duplicate flowers and bees","Completed: flowers retain dissolve + mastery value; free bee duplicates can be safely dismantled into Petal Dust without consuming equipped or final copies.",true),
-        planner_task("release-sinks-b","5 · Balance & Content","Endgame sinks: Coins and Petal Dust","Verify late-game balances still have meaningful repeatable or progression sinks.",false),
+        planner_task("release-sinks-b","5 · Balance & Content","Endgame sinks: Coins and Petal Dust","Verified: non-Legacy Workshop repurchases create repeatable 3,780-Coin / 126-Petal-Dust seasonal sinks, while Petal Dust also remains a Flower Mastery sink.",true),
         planner_task("release-sinks-c","5 · Balance & Content","Endgame sinks: Ancient Nectar / post-Season","Verify Legacy spending remains useful across multiple Seasons without dead stockpiles.",false),
 
         planner_task("release-br011","6 · Technical Cleanup","Remove FlowersConfig duplication (BR-011)","Use one authoritative initialization table instead of repeating derived metadata and weights.",true),
