@@ -2129,14 +2129,8 @@ $("#labelsToggle").onchange=e=>{state.labels=e.target.checked;renderViewport();u
 $("#gridToggle").onchange=e=>{state.grid=e.target.checked;els.stageScroller.classList.toggle("no-grid",!state.grid);savePrefs()};
 $("#geometryToggle").onchange=e=>{state.geometry=e.target.checked;renderViewport();updateOverlay();savePrefs();toast(state.geometry?"Geometry helpers включены":"Geometry helpers выключены")};
 $("#hiddenToggle").onchange=e=>{state.showHidden=e.target.checked;renderViewport();renderTree();updateOverlay();toast(state.showHidden?"Скрытые Roblox-объекты показаны только в редакторе":"Скрытые Roblox-объекты спрятаны");savePrefs()};
-$("#modeSelect").onchange=e=>{
- state.mode=e.target.value;
- $("#sceneSelect").disabled=!isPreview();
- $("#modeSelect").classList.toggle("preview-active",isPreview());
- renderAll();
- toast(isPreview()?"Runtime Preview включён — mock-данные не сохраняются":"Design mode — отображается файл как есть");savePrefs();
-};
-$("#sceneSelect").onchange=e=>{state.previewScene=e.target.value;renderAll();updateUiStateBar();savePrefs();};
+$("#modeSelect").onchange=()=>{};
+$("#sceneSelect").onchange=()=>{};
  $("#uiStateBar")?.addEventListener("click",e=>{const b=e.target.closest("[data-ui-state]");if(b)activateUiState(b.dataset.uiState)});
 $("#insetInput").onchange=e=>{state.inset=Math.max(0,+e.target.value);renderAll();savePrefs()};
 $("#bgBtn").onclick=()=>$("#bgInput").click();
