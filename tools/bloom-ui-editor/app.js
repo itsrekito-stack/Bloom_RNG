@@ -270,125 +270,132 @@ const MOCK_PREVIEW_DATA={
  }
 };
 
-const MENU_PREVIEW_SCENES=new Set(["inventory_v2","workshop","fieldguide","map","trials","settings"]);
+const MENU_PREVIEW_SCENES=new Set(["inventory_v2","workshop","fieldguide","map","trials","settings","plant","season","replay","cards"]);
 const PREVIEW_META={
  inventory_v2:{title:"Inventory",subtitle:"Flowers, seeds, bees, resources, and keepsakes"},
  workshop:{title:"Workshop",subtitle:"Permanent upgrades and progression branches"},
  fieldguide:{title:"Field Guide",subtitle:"Collection, odds, and discovered synergies"},
  map:{title:"Map",subtitle:"Sectors, discoveries, and travel"},
  trials:{title:"Trials",subtitle:"Short build trials started at sector shrines"},
- settings:{title:"Settings",subtitle:"Effects, sound, and automation"}
+ settings:{title:"Settings",subtitle:"Effects, sound, and automation"},
+ plant:{title:"Plant",subtitle:"Choose an available flower for this garden slot"},
+ season:{title:"Season",subtitle:"Reset progression for permanent Legacy growth"},
+ replay:{title:"Tutorial Replay",subtitle:"Review every tutorial step"},
+ cards:{title:"Season Cards",subtitle:"Choose the next seasonal modifier"}
 };
 
 function updateUiStateBar(){
  const bar=$("#uiStateBar");if(!bar)return;
- const current=state.mode==="design"?"design":state.previewScene;
+ const current=state.activeUiState;
  bar.querySelectorAll("[data-ui-state]").forEach(b=>b.classList.toggle("active",b.dataset.uiState===current));
- bar.classList.toggle("preview-active",state.mode==="preview");
+ bar.classList.toggle("preview-active",!!current);
+ const title=$("#activeStateTitle");
+ const caption=title?.closest(".state-caption");
+ if(title)title.textContent=current?(UI_STATE_TITLES[current]||current.toUpperCase()):"EMPTY WORKSPACE";
+ caption?.classList.toggle("live",!!current);
 }
-function activateUiState(scene){
- if(scene==="design"){
-  state.mode="design";
- }else{
-  state.mode="preview";
-  state.previewScene=scene;
+async function switchUiModel(path,key){
+ if(state.targetPath===path&&state.root)return true;
+ if(state.dirty&&!state.modelLoadFailed){
+  const saved=await flushAutoSave();
+  if(!saved)return false;
  }
+ state.targetPath=path;
+ state.modelKey=key;
+ localStorage.setItem("bloomTargetPath",path);
+ await pullProject();
+ updateStatus();
+ return !!state.root;
+}
+async function activateUiState(scene){
+ const closing=state.activeUiState===scene;
+ if(closing){
+  state.activeUiState=null;
+  state.mode="preview";
+  state.previewScene="empty";
+  syncToolbarFromState();renderAll();savePrefs();
+  toast("Empty workspace");
+  return;
+ }
+ if(scene==="loading"){
+  if(!(await switchUiModel(LOADING_TARGET,"loading")))return;
+ }else{
+  if(!(await switchUiModel(DEFAULT_TARGET,"bloom")))return;
+ }
+ state.activeUiState=scene;
+ state.mode="preview";
+ state.previewScene=scene;
  syncToolbarFromState();
  renderAll();
  savePrefs();
- toast(scene==="design"?"Design mode · authored Visible properties":"Runtime Preview · "+scene.toUpperCase()+" · MOCK DATA · NOT RUNTIME · JSON unchanged");
+ toast((UI_STATE_TITLES[scene]||scene)+" · authored Roblox UI");
 }
 
-function isPreview(){return state.mode==="preview"}
+function isPreview(){return !!state.activeUiState}
 function parentName(n){return findParent(n.__id)?.Name||""}
 function previewVisible(n){
- if(!isPreview())return null;
+ const scene=state.activeUiState;
+ if(!scene)return n===state.root?true:false;
+ if(state.modelKey==="loading")return scene==="loading"?null:false;
+
  const name=n.Name||"",p=parentName(n);
+ if(name==="SafeRoot")return true;
  if(name==="Templates"||p==="Templates"||name==="Tooltip")return false;
  if(name==="SeedSatchelTemplate")return false;
- if(name==="InventoryPrototype")return state.previewScene==="inventory_v2";
- if(name==="WorkshopTemplate")return state.previewScene==="workshop";
- if(state.previewScene==="workshop"&&["HeaderIcon","PanelTitle","PanelSubtitle","HeaderAccent"].includes(name))return false;
- if(name==="Content"&&p==="MainPanel"&&(state.previewScene==="inventory_v2"||state.previewScene==="workshop"))return false;
- if(["ObjectiveCard","CurrencyHUD","MenuDock","RollHUD","VerticalRoulette","RollButton"].includes(name))return true;
- if(name==="MainPanel")return MENU_PREVIEW_SCENES.has(state.previewScene);
- if(name==="RewardReveal")return state.previewScene==="reward";
- if(name==="Toast")return state.previewScene==="toast";
- if(name==="ModalShade")return MENU_PREVIEW_SCENES.has(state.previewScene);
- if(name==="TutorialGuideBanner")return false;
+ if(name==="InventoryPrototype")return scene==="inventory_v2";
+ if(name==="WorkshopTemplate")return scene==="workshop";
+ if(scene==="workshop"&&["HeaderIcon","PanelTitle","PanelSubtitle","HeaderAccent"].includes(name))return false;
+ if(name==="Content"&&p==="MainPanel"&&(scene==="inventory_v2"||scene==="workshop"))return false;
+
+ const hudNames=new Set(["ObjectiveCard","CurrencyHUD","MenuDock","RollHUD","VerticalRoulette","RollButton"]);
+ if(hudNames.has(name))return scene==="gameplay";
+ if(name==="MainPanel")return MENU_PREVIEW_SCENES.has(scene);
+ if(name==="ModalShade")return MENU_PREVIEW_SCENES.has(scene);
+ if(name==="RewardReveal")return scene==="reward";
+ if(name==="Toast")return scene==="toast";
+ if(name==="ActiveBoostsHUD"||name==="ActiveBoostTooltip")return scene==="boosts";
+ if(["TutorialGuideBanner","TutorialSpotlight","TutorialCallout","TutorialScreenArrow"].includes(name))return scene==="tutorial";
  return null;
 }
 function previewText(n,parentNode){
  if(!isPreview())return null;
+ const scene=state.activeUiState;
  const name=n.Name||"",p=parentNode?.Name||parentName(n);
- if(name==="ObjectiveTitle")return "TUTORIAL • 1/8";
- if(name==="ObjectiveText")return "Fill Bloom and make a special roll";
+ if(name==="ObjectiveTitle")return "JOURNEY • STEP 5";
+ if(name==="ObjectiveText")return "Build your garden and discover new blooms";
  if(name==="MeterLabel")return "BLOOM  38%  •  DISCOVERY  3/30";
- if(name==="RollButton"){if(Object.prototype.hasOwnProperty.call(n.Properties||{},"Text")&&(n.Properties.Text??"")==="")return "";return "ROLL"}
- if(name==="PanelTitle"&&PREVIEW_META[state.previewScene])return PREVIEW_META[state.previewScene].title;
- if(name==="PanelSubtitle"&&PREVIEW_META[state.previewScene])return PREVIEW_META[state.previewScene].subtitle;
- if(name==="RewardTitle"&&state.previewScene==="reward")return "Daisy";
- if(name==="RewardMeta"&&state.previewScene==="reward")return "Common • 1/25 • New";
- if(name==="ToastLabel"&&state.previewScene==="toast")return "+24 Petal Dust";
- if(name==="Value"&&MOCK_PREVIEW_DATA.currency[p]!=null)return MOCK_PREVIEW_DATA.currency[p];
- if(name==="Name"&&MOCK_PREVIEW_DATA.roulette[p])return MOCK_PREVIEW_DATA.roulette[p].name;
- if(name==="Chance"&&MOCK_PREVIEW_DATA.roulette[p])return MOCK_PREVIEW_DATA.roulette[p].chance;
+ if(name==="PanelTitle"&&PREVIEW_META[scene])return PREVIEW_META[scene].title;
+ if(name==="PanelSubtitle"&&PREVIEW_META[scene])return PREVIEW_META[scene].subtitle;
+ if(name==="RewardTitle"&&scene==="reward")return "Daisy";
+ if(name==="RewardMeta"&&scene==="reward")return "Common • 1/25 • New";
+ if(name==="ToastLabel"&&scene==="toast")return "+24 Petal Dust";
+ if(name==="TutorialCallout"&&scene==="tutorial")return "Follow the highlighted target";
+ if(name==="Value"&&MOCK_PREVIEW_DATA.currency[p]!=null&&scene==="gameplay")return MOCK_PREVIEW_DATA.currency[p];
+ if(name==="Name"&&MOCK_PREVIEW_DATA.roulette[p]&&scene==="gameplay")return MOCK_PREVIEW_DATA.roulette[p].name;
+ if(name==="Chance"&&MOCK_PREVIEW_DATA.roulette[p]&&scene==="gameplay")return MOCK_PREVIEW_DATA.roulette[p].chance;
  return null;
 }
 function previewImage(n,parentNode){
  if(!isPreview())return null;
+ const scene=state.activeUiState;
  const name=n.Name||"",p=parentNode?.Name||parentName(n);
- if(name==="RewardIcon"&&state.previewScene==="reward")return "rbxthumb://type=Asset&id=117046422836136&w=420&h=420";
- if(name==="HeaderIcon"&&state.previewScene==="inventory_v2")return "rbxthumb://type=Asset&id=102678620554602&w=420&h=420";
- if(name==="Icon"&&MOCK_PREVIEW_DATA.roulette[p])return MOCK_PREVIEW_DATA.roulette[p].image;
+ if(name==="RewardIcon"&&scene==="reward")return "rbxthumb://type=Asset&id=117046422836136&w=420&h=420";
+ if(name==="HeaderIcon"&&scene==="inventory_v2")return "rbxthumb://type=Asset&id=102678620554602&w=420&h=420";
+ if(name==="Icon"&&MOCK_PREVIEW_DATA.roulette[p]&&scene==="gameplay")return MOCK_PREVIEW_DATA.roulette[p].image;
  return null;
 }
 function previewSize(n){
  if(!isPreview())return null;
- if(n.Name==="MainPanel"&&state.previewScene==="workshop")return [[1,0],[1,0]];
- if(n.Name==="Header"&&state.previewScene==="workshop")return [[1,0],[0,0]];
- if(n.Name==="MainPanel"&&state.previewScene==="inventory_v2")return [[0,1220],[0,660]];
- if(n.Name==="MainPanel"&&MENU_PREVIEW_SCENES.has(state.previewScene))return [[0,600],[0,420]];
- if(n.Name==="ObjectiveProgressFill")return [[.38,0],[1,0]];
- if(n.Name==="BloomFill")return [[.38,0],[1,0]];
+ const scene=state.activeUiState;
+ if(n.Name==="MainPanel"&&scene==="workshop")return [[1,0],[1,0]];
+ if(n.Name==="Header"&&scene==="workshop")return [[1,0],[0,0]];
+ if(n.Name==="MainPanel"&&scene==="inventory_v2")return [[0,1220],[0,660]];
+ if(n.Name==="MainPanel"&&MENU_PREVIEW_SCENES.has(scene))return [[0,600],[0,420]];
+ if(n.Name==="ObjectiveProgressFill"&&scene==="gameplay")return [[.38,0],[1,0]];
+ if(n.Name==="BloomFill"&&scene==="gameplay")return [[.38,0],[1,0]];
  return null;
 }
-function injectRuntimePreview(n,el,parentNode){
- if(!isPreview())return;
- if(n.Name!=="Content"||parentNode?.Name!=="MainPanel"||!MENU_PREVIEW_SCENES.has(state.previewScene))return;
-
- // Inventory V2 and Workshop preview their authored prototypes directly.
- // Generic cards are illustrative only and never represent live profile data.
- if(state.previewScene==="inventory_v2"||state.previewScene==="workshop")return;
-
- const wrap=document.createElement("div");
- wrap.className="preview-runtime";
- const meta=PREVIEW_META[state.previewScene];
- const sceneCards={
-  fieldguide:["COLLECTION","Discovered items","Rare chances","Synergies"],
-  map:["WORLD MAP","Sector access","Gate guidance","Landmarks"],
-  trials:["BUILD TRIALS","Shrine access","Objectives","Completion"],
-  settings:["SETTINGS","Effects","Audio","Automation"]
- }[state.previewScene]||["MENU","Option A","Option B","Option C"];
-
- wrap.innerHTML=`
-  <div class="preview-menu-generic">
-   <div class="preview-menu-pill"><b>${sceneCards[0]}</b><span>MOCK PREVIEW · NOT RUNTIME</span></div>
-   <div class="preview-menu-columns">
-    <div class="preview-menu-list">
-     ${sceneCards.slice(1).map((x,i)=>`<div class="preview-menu-row ${i===0?"active":""}"><span>${x}</span><small>${i===0?"SELECTED":"OPEN"}</small></div>`).join("")}
-    </div>
-    <div class="preview-menu-detail">
-     <b>${meta?.title||"Menu"}</b>
-     <p>${meta?.subtitle||""}</p>
-     <div class="preview-menu-card"></div>
-     <div class="preview-action blue">PREVIEW ACTION</div>
-     <div class="preview-action">SECONDARY PREVIEW</div>
-    </div>
-   </div>
-  </div>`;
- el.appendChild(wrap);
-}
+function injectRuntimePreview(){/* UI STATE shows authored Roblox instances only. No HTML mock overlays. */}
 
 function setZoom(value,save=true){
  state.zoom=clamp(value,.25,1.5);
