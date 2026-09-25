@@ -1,6 +1,7 @@
 local RS=game:GetService("ReplicatedStorage")
 local C=require(RS.Config.BloomConfig)
 local Locations=require(RS.Config.LocationsConfig)
+local Bees=require(RS.Config.BeesConfig)
 
 local S={}
 
@@ -27,12 +28,20 @@ function S:Interact(player)
 
  if not p.StarterBeeGranted then
   p.StarterBeeGranted=true
-  self.X.InventoryService:Grant(player,"Bee","WorkerBee")
+  local isNew=self.X.InventoryService:Grant(player,"Bee","WorkerBee")
   p.Pollinators.EquippedBeeSlots[1]="WorkerBee"
   self.X.GardenSynergyService:Recalculate(player)
   self.X.GardenPlotService:RefreshHivePrompt(player)
   self.X:Emit(player,"StarterBee",1)
-  self.X:Send(player,"Message","Worker Bee joined your hive")
+  local starter=Bees.Get("WorkerBee")
+  self.X:Send(player,"Ceremony",{
+   Kind="StarterBee",
+   RewardKind="Bee",
+   RewardId="WorkerBee",
+   Text=(starter and starter.DisplayName or "Worker Bee").." joined your hive",
+   Rarity=starter and starter.Rarity or "Common",
+   IsNew=isNew==true,
+  })
   return true
  end
 
