@@ -144,7 +144,7 @@ function S:Refresh(player)
  local waitKey=tostring(t.Step)..":"..step.Event
  if self.LastWaiting[player]~=waitKey then
   self.LastWaiting[player]=waitKey
-  print(string.format("[Tutorial] waiting step=%d id=%s event=%s player=%s",t.Step,step.Id,step.Event,player.Name))
+  print(string.format("[Tutorial] waiting step=%d id=%s event=%s player=%s",t.Step,step.Id,step.Event,playerName(player)))
  end
  self:Assist(player,p)
 end
