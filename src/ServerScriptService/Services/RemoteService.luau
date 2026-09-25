@@ -10,7 +10,7 @@ local function errorId(player)
  return tostring(player and player.UserId or 0).."-"..tostring(S.ErrorSerial)
 end
 local function argText(v)
- return typeof(v)..":"..tostring(v)
+ return type(v)..":"..tostring(v)
 end
 function S:Validate(action,a,b,c)
  if NO_ARGS[action] then return a==nil and b==nil and c==nil,a==nil and b==nil and c==nil and nil or"INVALID_VALUE" end
