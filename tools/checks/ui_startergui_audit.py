@@ -116,14 +116,17 @@ check('legacy InventoryTileTemplate absent',one('InventoryTileTemplate')[1] is N
 boost_root_path,boost_root=one('ActiveBoostsHUD')
 boost_tooltip_path,boost_tooltip=one('ActiveBoostTooltip')
 boost_template=one('BoostTemplate')[1]
+boost_minimize=one('MinimizeButton')[1]
 check('Active boosts direct child of SafeRoot',boost_root_path==safe_path+'/ActiveBoostsHUD',boost_root_path or '')
 check('Active boost tooltip direct child of SafeRoot',boost_tooltip_path==safe_path+'/ActiveBoostTooltip',boost_tooltip_path or '')
 check('Active boost template authored hidden',boost_template is not None and boost_template.get('ClassName')=='ImageButton' and boost_template.get('Properties',{}).get('Visible') is False)
+check('Active boosts minimize button authored',boost_minimize is not None and boost_minimize.get('ClassName')=='TextButton' and boost_minimize.get('Properties',{}).get('Visible') is True)
 check('Active boosts bottom-left authored anchor',boost_root is not None and boost_root.get('Properties',{}).get('AnchorPoint',{}).get('Vector2')==[0,1])
 check('Active boosts controller linked','self.BoostHUD=require(script.Parent.BoostHUDController)' in source and 'self.BoostHUD:Update(boosts,self.State.Revision)' in source)
 check('Active boost hover states','badge.MouseEnter:Connect' in boost_hud_source and 'badge.MouseLeave:Connect' in boost_hud_source and 'TweenService:Create(scale' in boost_hud_source)
+check('Active boosts minimize behavior','function S:SetMinimized(minimized,animate)' in boost_hud_source and 'self.Toggle.Activated:Connect' in boost_hud_source and 'self.List.Visible=not self.Minimized and self.ItemCount>0' in boost_hud_source)
 check('Active boost source breakdown','self.TooltipBreakdown.Text=self:TooltipText(item)' in boost_hud_source and 'source(buckets,stat,"Bees",bee.DisplayName.." ×"..count' in boost_service_source and 'source(buckets,"Luck","Activity",tostring(solarCfg.Label or "Solar Bloom")' in boost_service_source)
-check('Workshop hides active boosts','self.BoostHUD.Root.Visible=false' in source and 'self.BoostHUD.Tooltip.Visible=false' in source)
+check('Workshop hides active boosts','self.BoostHUD:SetSuppressed(exclusive)' in source and 'function S:SetSuppressed(suppressed)' in boost_hud_source)
 check('BloomUI validates authored schema before choosing runtime clone','local REQUIRED_AUTHORED_UI={' in source and 'validateBloomGui(candidate)' in source and 'Rejecting stale PlayerGui/BloomUI' in source)
 check('stale runtime BloomUI replaced from current StarterGui','Replacing stale runtime HUD from current StarterGui template' in source and 'template:Clone()' in source)
 check('boost HUD never infinite-waits authored roots','WaitForChild("ActiveBoostsHUD")' not in boost_hud_source and 'WaitForChild("ActiveBoostTooltip")' not in boost_hud_source)
