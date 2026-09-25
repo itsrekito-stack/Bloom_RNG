@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+from pathlib import Path
+import json,re
+
+ROOT=Path(__file__).resolve().parents[2]
+
+def read(path):
+    return (ROOT/path).read_text(encoding="utf-8")
+
+def need(src,text,label):
+    if text not in src:
+        raise AssertionError(f"{label}: missing {text!r}")
+
+bloom=read("src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau")
+inventory=read("src/StarterPlayer/StarterPlayerScripts/Controllers/InventoryV2Controller.luau")
+boost=read("src/StarterPlayer/StarterPlayerScripts/Controllers/BoostHUDController.luau")
+tutorial=read("src/StarterPlayer/StarterPlayerScripts/Controllers/TutorialGuideController.luau")
+loading=read("src/ReplicatedFirst/LoadingScreen.client.luau")
+editor=read("tools/bloom-ui-editor/app.js")
+editor_html=read("tools/bloom-ui-editor/index.html")
+roflow=read("tools/roflow/src-tauri/src/lib.rs")
+model=json.loads(read("src/StarterGui/BloomUI.model.json"))
+loading_model=json.loads(read("src/ReplicatedFirst/BloomLoadingTemplate.model.json"))
+
+screen_classes=[
+    "ScreenGui","Frame","ScrollingFrame","TextLabel","TextButton","TextBox",
+    "ImageLabel","ImageButton","UICorner","UIStroke","UIPadding","UIScale",
+    "UIListLayout","UIGridLayout",
+]
+pattern=re.compile(r'Instance\.new\("('+"|".join(map(re.escape,screen_classes))+r')"\)')
+for name,src in [
+    ("BloomUI",bloom),
+    ("InventoryV2Controller",inventory),
+    ("BoostHUDController",boost),
+    ("LoadingScreen",loading),
+]:
+    hits=pattern.findall(src)
+    assert not hits, f"{name} creates ScreenGui UI at runtime: {hits}"
+
+# Tutorial world guidance may author BillboardGui/TextLabel in Workspace, but all
+# on-screen tutorial overlays must be real SafeRoot objects.
+assert 'Instance.new("Frame")' not in tutorial
+assert 'Instance.new("UIScale")' not in tutorial
+need(tutorial,'ui.SafeRoot:FindFirstChild("TutorialSpotlight")',"tutorial spotlight authored binding")
+need(tutorial,'ui.SafeRoot:FindFirstChild("TutorialCallout")',"tutorial callout authored binding")
+need(tutorial,'ui.SafeRoot:FindFirstChild("TutorialScreenArrow")',"tutorial arrow authored binding")
+
+def walk(node):
+    yield node
+    for child in node.get("Children",[]) or []:
+        yield from walk(child)
+
+nodes={n.get("Name"):n for n in walk(model)}
+for required in [
+    "TutorialSpotlight","TutorialCallout","TutorialScreenArrow",
+    "ActionHitboxTemplate","OverlayHitboxTemplate","SearchBoxTemplate","EmptyStateTemplate",
+    "StateKits","HoverScale","TutorialCompleteScale","WorkshopZoomScale",
+]:
+    assert required in nodes, f"authored BloomUI node missing: {required}"
+
+for kit in ["FieldGuideKit","MapKit","TrialsKit","SettingsKit","PlantKit","SeasonKit","ReplayKit","CardsKit"]:
+    assert kit in nodes, f"authored UI state kit missing: {kit}"
+
+need(bloom,'function UI:MenuTemplate(name)',"dynamic menu authored template resolver")
+need(bloom,'self.StateKits=self.Panel:FindFirstChild("StateKits")',"state kit runtime binding")
+need(inventory,'componentTemplate(button,"ActionHitboxTemplate"):Clone()',"inventory authored hitbox clone")
+need(inventory,'componentTemplate(searchBar,"SearchBoxTemplate"):Clone()',"inventory authored search clone")
+need(boost,'badge:FindFirstChild("HoverScale")',"boost authored hover scale")
+
+assert loading_model.get("ClassName")=="ScreenGui"
+assert loading_model.get("Name")=="BloomLoadingTemplate"
+loading_nodes={n.get("Name"):n for n in walk(loading_model)}
+for required in ["Background","Card","ProgressTrack","ProgressFill","Status","Detail","ResponsiveScale"]:
+    assert required in loading_nodes, f"authored loading node missing: {required}"
+need(loading,'RF:WaitForChild("BloomLoadingTemplate",10)',"loading authored model binding")
+assert 'Instance.new("ScreenGui")' not in loading
+
+states=["gameplay","inventory_v2","workshop","fieldguide","map","trials","settings","plant","season","replay","cards","reward","toast","tutorial","boosts","loading"]
+for state in states:
+    assert f'data-ui-state="{state}"' in editor_html, f"UI STATE button missing: {state}"
+need(editor,'const closing=state.activeUiState===scene',"UI STATE toggle-off behavior")
+need(editor,'state.activeUiState=null',"empty workspace state")
+assert "MOCK PREVIEW · NOT RUNTIME" not in editor
+assert '<div class="preview-menu-generic">' not in editor
+need(editor,'LOADING_TARGET="src/ReplicatedFirst/BloomLoadingTemplate.model.json"',"loading model editor target")
+need(roflow,'const LOADING_MODEL_PATH: &str = "src/ReplicatedFirst/BloomLoadingTemplate.model.json";',"RoFlow loading model path")
+need(roflow,'fn ui_model_path(requested: Option<String>)',"RoFlow model path whitelist")
+
+print("UI authoring contract: PASS")
+print("Permanent screen UI is authored in Roblox GUI models; runtime code only binds/clones authored templates.")
