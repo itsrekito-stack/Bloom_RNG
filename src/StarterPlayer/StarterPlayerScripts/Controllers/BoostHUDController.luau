@@ -5,7 +5,7 @@ local Icons=require(RS.Config.IconsConfig)
 local Theme=require(RS.Config.UIThemeConfig)
 
 local C=Theme.Colors
-local S={Badges={}}
+local S={Badges={},ItemsByBadge={}}
 
 local function cloneData(value)
  if type(value)~="table" then return value end
@@ -36,6 +36,7 @@ function S:Init(ui)
  self.TooltipBreakdown=self.Tooltip:WaitForChild("Breakdown")
  self.LastRevision=nil
  self.Hovered=nil
+ self.ItemsByBadge={}
  self.Root.Visible=true
  self.Tooltip.Visible=false
 end
@@ -53,6 +54,7 @@ function S:Clear()
   if badge and badge.Parent then badge:Destroy() end
  end
  table.clear(self.Badges)
+ table.clear(self.ItemsByBadge)
 end
 
 function S:SourceRemaining(source)
@@ -133,6 +135,7 @@ function S:Update(payload,revision)
  self:Clear()
 
  local items=payload and payload.Items or {}
+ self.Root.Visible=not self.UI:IsWorkshopExclusive()
  self.Empty.Visible=#items==0
  self.List.Visible=#items>0
 
@@ -156,6 +159,7 @@ function S:Update(payload,revision)
   if value and value:IsA("TextLabel") then value.Text=tostring(item.ValueText or "") end
 
   badge:SetAttribute("BoostId",tostring(item.Id or ""))
+  self.ItemsByBadge[badge]=item
   self:BindBadge(badge,item)
   table.insert(self.Badges,badge)
  end
@@ -163,29 +167,19 @@ end
 
 function S:Tick()
  for _,badge in ipairs(self.Badges) do
-  if badge.Parent then
-   local id=badge:GetAttribute("BoostId")
-   if id=="SolarBloom" then
-    local hovered=self.Hovered and self.Hovered.Badge==badge
-    local item=hovered and self.Hovered.Item or nil
-    if not item then
-     for _,candidate in ipairs(self.Badges) do
-      if candidate==badge and self.Hovered and self.Hovered.Badge==candidate then item=self.Hovered.Item break end
-     end
-    end
-    local data=item
-    if not data then
-     -- The server will remove expired boosts; no local state mutation is needed when not hovered.
-    elseif data._ExpiresAt then
-     local seconds=remaining(data._ExpiresAt)
-     local value=badge:FindFirstChild("Value")
-     if value and value:IsA("TextLabel") then value.Text=timedText(seconds) or "0s" end
-    end
-   end
+  local item=self.ItemsByBadge[badge]
+  if badge.Parent and item and item._ExpiresAt then
+   local seconds=remaining(item._ExpiresAt)
+   local value=badge:FindFirstChild("Value")
+   if value and value:IsA("TextLabel") then value.Text=timedText(seconds) or "0s" end
+   if not seconds or seconds<=0 then badge.Visible=false end
   end
  end
- if self.Hovered and self.Hovered.Badge and self.Hovered.Badge.Parent then
+ if self.Hovered and self.Hovered.Badge and self.Hovered.Badge.Parent and self.Hovered.Badge.Visible then
   self:PlaceTooltip(self.Hovered.Badge,self.Hovered.Item)
+ elseif self.Hovered then
+  self.Hovered=nil
+  self.Tooltip.Visible=false
  end
 end
 
