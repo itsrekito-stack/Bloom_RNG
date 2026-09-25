@@ -116,7 +116,7 @@ check('Inventory v2 rerender follows renderer','controller.MenuRenderer=="Invent
 check('Inventory v2 binds authoritative inventory','uiState.Inventory' in inventory_v2_source and 'controller:Send("Dissolve"' in inventory_v2_source and 'controller:Send("EquipBee"' in inventory_v2_source)
 check('Inventory v2 does not bypass physical Plant flow','controller:Send("Plant"' not in inventory_v2_source and 'PLANT AT GARDEN' in inventory_v2_source)
 check('physical Plant picker renderer exists','elseif name=="Plant" then' in source and 'self:Send("Plant",slot,item.Id)' in source and 'ui.Inventory and ui.Inventory.Flowers' in source)
-check('BR-010 map exposes physical gate actionability','NearGate=nearGate' in ui_state_source and 'CanUnlock=not unlocked and hiveReady and nearGate' in ui_state_source and 'UnlockHint=hint' in ui_state_source)
+check('BR-010 map exposes physical gate actionability','NearGate=nearGate' in ui_state_source and 'PrerequisiteReady=prerequisiteReady' in ui_state_source and 'CanUnlock=not unlocked and prerequisiteReady and hiveReady and nearGate' in ui_state_source and 'UnlockHint=hint' in ui_state_source)
 check('BR-010 map tells Hive-ready players to use gate','Hive ready — go to the ' in ui_state_source and 'Use the world gate prompt to unlock' in ui_state_source)
 check('BR-010 trials expose shrine guidance','NearShrine=nearShrine' in ui_state_source and 'StartHint=startHint' in ui_state_source and 'Garden Trials shrine' in ui_state_source)
 check('BR-010 client renders derived world guidance','sector.UnlockHint' in source and 't.StartHint' in source and 'start them at sector shrines' in source)
