@@ -30,6 +30,7 @@ function S:Interact(player)
   self.X.InventoryService:Grant(player,"Bee","WorkerBee")
   p.Pollinators.EquippedBeeSlots[1]="WorkerBee"
   self.X.GardenSynergyService:Recalculate(player)
+  self.X.GardenPlotService:RefreshHivePrompt(player)
   self.X:Emit(player,"StarterBee",1)
   self.X:Send(player,"Message","Worker Bee joined your hive")
   return true
