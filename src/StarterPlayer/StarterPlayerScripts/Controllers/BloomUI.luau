@@ -1742,6 +1742,12 @@ function UI:ApplyState(payload,source)
  end
  if not self.RouletteLanding then self:BuildRouletteVisualPool(true) end
  self:Render()
+ if firstState then
+  self:ApplySafeArea()
+  self.Player:SetAttribute("BloomFirstRenderRevision",tonumber(payload.Revision) or 0)
+  self.Player:SetAttribute("BloomStateReady",true)
+  print("[BloomUI] First authoritative render ready revision:",tonumber(payload.Revision) or 0)
+ end
 
  local nextTutorialStep=payload.Profile.Tutorial and payload.Profile.Tutorial.Step or nil
  if previousTutorialStep and previousTutorialStep<=#T.Steps and nextTutorialStep and nextTutorialStep>#T.Steps then
@@ -1771,6 +1777,8 @@ end
 function UI:Start()
  print("[BloomUI] Starting client build:",CLIENT_BUILD)
  self.Player:SetAttribute("BloomClientReady",false)
+ self.Player:SetAttribute("BloomStateReady",false)
+ self.Player:SetAttribute("BloomFirstRenderRevision",nil)
  self.Player:GetAttributeChangedSignal("BloomProfileState"):Connect(function()
   local status=self.Player:GetAttribute("BloomProfileState")
   if status then print("[BloomUI] Profile state attribute:",status) end
