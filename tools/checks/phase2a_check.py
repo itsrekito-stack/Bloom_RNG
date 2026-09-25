@@ -20,9 +20,11 @@ local syntaxPaths={
  "ServerScriptService/Services/DataService", "ServerScriptService/Services/SeasonService",
  "ServerScriptService/Services/PlayerService", "ServerScriptService/Services/WorkshopService",
  "ServerScriptService/Services/GardenPlotService", "ServerScriptService/Services/StatsService",
- "ServerScriptService/Services/UIStateService", "ServerScriptService/Data/ProfileDomain",
- "ServerScriptService/Data/ProfileSchema", "ServerScriptService/Data/DataConfig",
- "ReplicatedStorage/Shared/GardenRules"
+ "ServerScriptService/Services/UIStateService", "ServerScriptService/Services/RemoteService",
+ "ServerScriptService/Services/RollService", "ServerScriptService/Services/MetaProgressionService",
+ "ServerScriptService/Services/MapService", "ServerScriptService/Services/SocialService",
+ "ServerScriptService/Data/ProfileDomain", "ServerScriptService/Data/ProfileSchema",
+ "ServerScriptService/Data/DataConfig", "ReplicatedStorage/Shared/GardenRules"
 }
 for _,path in ipairs(syntaxPaths) do assert(load(sources[path],path,"t",_G)) end
 print("STATIC PASS "..#syntaxPaths.." changed Luau modules through Lua 5.4 compatibility checks (not a Luau typecheck)")
