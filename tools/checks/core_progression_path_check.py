@@ -91,7 +91,8 @@ if 'elseif kind=="NectarBud" then\n  local nearest=nil local distance=math.huge'
 
 # Season requirements must not exceed shipped content.
 flower_ids=re.findall(r'species\("([^"]+)"',flowers)
-bee_ids=re.findall(r'^ ([A-Za-z0-9_]+)=\{Id="',bees,re.M)
+bee_block=bees.split("C.Bees={",1)[1].split("\nlocal Rarity=",1)[0]
+bee_ids=re.findall(r'^ ([A-Za-z0-9_]+)=\{Id="',bee_block,re.M)
 required_flowers=int(number(season,"Flowers"))
 required_bees=int(number(season,"Bees"))
 required_trials=int(number(season,"Trials"))
