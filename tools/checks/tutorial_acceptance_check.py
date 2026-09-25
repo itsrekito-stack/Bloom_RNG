@@ -17,6 +17,8 @@ bloom=read("src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau")
 activity=read("src/ServerScriptService/Services/GardenActivityService.luau")
 activity_client=read("src/StarterPlayer/StarterPlayerScripts/Controllers/ActivityController.luau")
 roll=read("src/ServerScriptService/Services/RollService.luau")
+hive=read("src/ServerScriptService/Services/HiveService.luau")
+reward_presenter=read("src/StarterPlayer/StarterPlayerScripts/Controllers/RewardPresentationController.luau")
 pollinator_client=read("src/StarterPlayer/StarterPlayerScripts/Controllers/PollinatorController.luau")
 
 def need(src,text,label):
@@ -87,6 +89,12 @@ need(guide,'self.SynergyLink.Enabled=true',"synergy adjacency line")
 need(guide,'if step.Id=="Delivery" and ui.Menu=="SeedSatchel" then ui:Close() end',"Inventory handoff")
 need(guide,'if step.Id=="Synergy" and ui.Menu=="Workshop" then ui:Close() end',"Workshop handoff")
 need(pollinator_client,'function S:Target(ownerOnly)',"bee target accessor")
+need(hive,'Kind="StarterBee"',"starter Bee reward ceremony")
+need(hive,'RewardKind="Bee"',"starter Bee reward kind")
+need(hive,'RewardId="WorkerBee"',"starter Bee reward id")
+need(reward_presenter,'if r.Ceremony=="StarterBee" then',"starter Bee presentation branch")
+need(reward_presenter,'Icons.GetBeeIcon(r.Id or "WorkerBee")',"starter Bee icon presentation")
+need(bloom,'Kind=payload.RewardKind or "Ceremony"',"ceremony reward metadata routing")
 
 def clamp(v,lo,hi):
     return max(lo,min(v,hi))
