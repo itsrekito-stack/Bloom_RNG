@@ -828,7 +828,7 @@ function hasDrawableGui(){
 }
 function updateEmptyCanvas(){
  const box=$("#emptyCanvas");if(!box)return;
- box.classList.toggle("hidden",hasDrawableGui());
+ box.classList.toggle("hidden",!!state.activeUiState);
 }
 function renderAll(){
  renderViewport();renderTree();renderInspector();updateOverlay();updateStatus();updateEmptyCanvas();
@@ -844,9 +844,6 @@ function renderViewport(){
  $(".roblox-topbar").style.display=state.inset>0?"flex":"none";
  els.guiRoot.style.top=state.inset+"px";
  els.guiRoot.innerHTML="";
- if(isPreview()){
-  const wm=document.createElement("div");wm.className="preview-mode-watermark";wm.textContent="RUNTIME PREVIEW · MOCK DATA · NOT RUNTIME · "+state.previewScene.toUpperCase();els.guiRoot.appendChild(wm);
- }
  const children=state.root.ClassName==="ScreenGui"?state.root.Children:[state.root];
  for(const c of children) if(!MODIFIERS.has(c.ClassName)) renderGuiNode(c,els.guiRoot,null);
  renderGeometryBase();
@@ -1273,10 +1270,12 @@ function updatePixelReadout(){
  if(box)[...box.querySelectorAll("strong")].forEach((s,i)=>s.textContent=vals[i]);
 }
 function updateStatus(){
- const n=selected(),count=state.selectedIds.size;const mode=isPreview()?`PREVIEW · ${state.previewScene} · MOCK DATA · NOT RUNTIME`:(hasProjectConnection()?"Project connected":"Design");
+ const n=selected(),count=state.selectedIds.size;
+ const mode=state.activeUiState?(UI_STATE_TITLES[state.activeUiState]||state.activeUiState):"Empty workspace";
  const saveState=state.autoSaving?" ↻ AUTO SAVE":state.lastAutoSaveError?" ⚠ SAVE ERROR":state.dirty?" ●":" ✓";
- els.status.textContent=saveState+" "+mode+" · "+(count>1?`${count} объектов выбрано · `:"")+(n?`${n.Name} [${n.ClassName}]`:"");
+ els.status.textContent=saveState+" "+mode+" · "+(count>1?`${count} objects · `:"")+(n?`${n.Name} [${n.ClassName}]`:"");
  els.target.textContent=state.targetPath;
+ updateUiStateBar();
 }
 
 function isLayoutParent(n){return !!n&&(modifier(n,"UIListLayout")||modifier(n,"UIGridLayout"))}
