@@ -1459,10 +1459,10 @@ function UI:ResolveRouletteReward(payload)
  if type(payload)~="table" or self.RouletteLanding then return end
 
  -- A server reward can arrive after the player pressed STOP.
- -- Never resurrect the roulette in that case; just present the granted reward.
+ -- The item is already granted server-side; do not resurrect the roulette
+ -- and do not show a separate RewardReveal card.
  if not self.Auto and not self.RouletteRunning then
   if self.RouletteViewport then self.RouletteViewport.Visible=false end
-  if self.Rewards then self.Rewards:Enqueue(payload) end
   return
  end
 
@@ -1489,7 +1489,8 @@ function UI:ResolveRouletteReward(payload)
    task.wait(RollAudio.ResultHold)
   end
   self.RouletteLanding=false
-  if self.Rewards then self.Rewards:Enqueue(payload) end
+  -- Normal roll rewards are shown only by the roulette itself.
+  -- RewardReveal is reserved for non-roll ceremonies.
   if self.Auto then
    self:StartRouletteAnimation()
   elseif self.RouletteViewport then
