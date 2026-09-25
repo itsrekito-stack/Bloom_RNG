@@ -24,6 +24,24 @@ local function timedText(seconds)
  return tostring(math.max(0,math.ceil(seconds))).."s"
 end
 
+local function payloadSignature(payload)
+ local parts={}
+ for _,item in ipairs(payload and payload.Items or {}) do
+  table.insert(parts,tostring(item.Id or ""))
+  table.insert(parts,tostring(item.Label or ""))
+  table.insert(parts,tostring(item.Total or ""))
+  if item.Remaining==nil then table.insert(parts,tostring(item.ValueText or "")) end
+  table.insert(parts,tostring(item.Description or ""))
+  for _,source in ipairs(item.Sources or {}) do
+   table.insert(parts,tostring(source.Group or ""))
+   table.insert(parts,tostring(source.Name or ""))
+   table.insert(parts,tostring(source.ValueText or ""))
+   table.insert(parts,tostring(source.Description or ""))
+  end
+ end
+ return table.concat(parts,"\31")
+end
+
 function S:Init(ui)
  self.UI=ui
  self.Root=ui.SafeRoot:FindFirstChild("ActiveBoostsHUD")
@@ -43,6 +61,7 @@ function S:Init(ui)
   error("[BoostHUD] Authored boost HUD hierarchy is incomplete. Re-sync BloomUI.model.json before Play.")
  end
  self.LastRevision=nil
+ self.LastSignature=nil
  self.ExpandedSize=self.Root.Size
  self.Minimized=false
  self.Suppressed=false
@@ -184,10 +203,13 @@ function S:BindBadge(badge,item)
 end
 
 function S:Update(payload,revision)
- if revision~=nil and revision==self.LastRevision then
+ local signature=payloadSignature(payload)
+ if signature==self.LastSignature then
+  self.LastRevision=revision
   self:SetSuppressed(self.UI:IsWorkshopExclusive())
   return
  end
+ self.LastSignature=signature
  self.LastRevision=revision
  self:Clear()
 
