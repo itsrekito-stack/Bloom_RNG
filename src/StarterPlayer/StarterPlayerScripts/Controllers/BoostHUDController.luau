@@ -26,14 +26,20 @@ end
 
 function S:Init(ui)
  self.UI=ui
- self.Root=ui.SafeRoot:WaitForChild("ActiveBoostsHUD")
- self.List=self.Root:WaitForChild("BoostList")
- self.Template=self.List:WaitForChild("BoostTemplate")
- self.Empty=self.Root:WaitForChild("EmptyLabel")
- self.Tooltip=ui.SafeRoot:WaitForChild("ActiveBoostTooltip")
- self.TooltipTitle=self.Tooltip:WaitForChild("Title")
- self.TooltipTotal=self.Tooltip:WaitForChild("Total")
- self.TooltipBreakdown=self.Tooltip:WaitForChild("Breakdown")
+ self.Root=ui.SafeRoot:FindFirstChild("ActiveBoostsHUD")
+ self.Tooltip=ui.SafeRoot:FindFirstChild("ActiveBoostTooltip")
+ if not self.Root or not self.Tooltip then
+  error("[BoostHUD] Authored boost HUD is missing from canonical BloomUI. Expected SafeRoot/ActiveBoostsHUD and SafeRoot/ActiveBoostTooltip.")
+ end
+ self.List=self.Root:FindFirstChild("BoostList")
+ self.Empty=self.Root:FindFirstChild("EmptyLabel")
+ self.Template=self.List and self.List:FindFirstChild("BoostTemplate")
+ self.TooltipTitle=self.Tooltip:FindFirstChild("Title")
+ self.TooltipTotal=self.Tooltip:FindFirstChild("Total")
+ self.TooltipBreakdown=self.Tooltip:FindFirstChild("Breakdown")
+ if not self.List or not self.Template or not self.Empty or not self.TooltipTitle or not self.TooltipTotal or not self.TooltipBreakdown then
+  error("[BoostHUD] Authored boost HUD hierarchy is incomplete. Re-sync BloomUI.model.json before Play.")
+ end
  self.LastRevision=nil
  self.Hovered=nil
  self.ItemsByBadge={}
