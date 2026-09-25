@@ -40,6 +40,7 @@ local REASONS={
  COINS_REQUIRED="Not enough Coins",
  DUST_REQUIRED="Not enough Petal Dust",
  NECTAR_REQUIRED="Not enough Ancient Nectar",
+ LEGACY_REQUIRED="Complete all Legacy Workshop nodes first",
  MASTERY_MAX="Mastery is already at max level",
  TOO_FAR="Move closer to the object",
  WRONG_SECTOR="Move to the required location",
@@ -166,6 +167,12 @@ function S:Inventory(player,profile)
   EquippedBeeSlots=self.X.U.Copy(profile.Pollinators.EquippedBeeSlots),
   Keepsakes=self.X.U.Copy(profile.Season.Keepsakes),
   Traits=Bees.GetTraitState(profile.Pollinators.EquippedBeeSlots),
+  NectarDistill={
+   Unlocked=self.X.SeasonService:LegacyComplete(profile),
+   CanDistill=self.X.SeasonService:LegacyComplete(profile) and profile.Currencies.AncientNectar>=Bloom.NectarDistillCost,
+   Cost=Bloom.NectarDistillCost,
+   Dust=Bloom.NectarDistillDust,
+  },
  }
 end
 
