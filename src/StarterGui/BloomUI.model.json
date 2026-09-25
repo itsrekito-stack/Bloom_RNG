@@ -27639,7 +27639,7 @@
             "BorderSizePixel": 0,
             "ZIndex": 30,
             "Visible": true,
-            "ClipsDescendants": false
+            "ClipsDescendants": true
           },
           "Children": [
             {
@@ -27784,7 +27784,7 @@
                 },
                 "BackgroundTransparency": 1,
                 "BorderSizePixel": 0,
-                "ScrollBarThickness": 2,
+                "ScrollBarThickness": 0,
                 "ScrollBarImageColor3": [
                   0.345,
                   0.694,
