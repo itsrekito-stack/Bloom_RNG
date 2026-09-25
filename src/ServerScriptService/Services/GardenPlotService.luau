@@ -4,6 +4,25 @@ local S={Plots={},Used={}}
 function S:Init(x) self.X=x end
 function S:Position(player,slot) local plot=self.Plots[player] return plot and plot.Origin+G.Position(slot) end
 function S:HivePosition(player) local plot=self.Plots[player] return plot and plot.Origin+Vector3.new(0,1,19) end
+function S:AddFlowerXP(player,i,amount)
+ local p=self.X:Profile(player) if not p or type(i)~="number" or i%1~=0 or type(amount)~="number" or amount~=amount or amount<=0 then return false end
+ local slot=p.Garden.Slots[i] local flower=slot and slot.SpeciesId and F.Species[slot.SpeciesId] if not flower then return false end
+ local growth=flower.GrowthProfile or {XPPerLevel=C.FlowerLevelXP,MaxLevel=C.MasteryCap,ScalePerLevel=.025}
+ local xpPerLevel=math.max(1,tonumber(growth.XPPerLevel) or C.FlowerLevelXP) local maxLevel=math.max(1,math.floor(tonumber(growth.MaxLevel) or C.MasteryCap))
+ local level=math.clamp(math.floor(tonumber(slot.Level) or 1),1,maxLevel) local xp=math.max(0,tonumber(slot.XP) or 0)+amount
+ while level<maxLevel do local need=level*xpPerLevel if xp<need then break end xp-=need level+=1 end
+ if level>=maxLevel then xp=math.min(xp,level*xpPerLevel) end
+ slot.Level=level slot.XP=xp slot.TotalPollination=math.max(0,tonumber(slot.TotalPollination) or 0)+amount
+ self.X.FlowerProgressionService:Add(player,slot.SpeciesId,amount)
+ local plot=self.Plots[player] local model=plot and plot.Flowers[i]
+ if model then
+  local scalePerLevel=tonumber(growth.ScalePerLevel) or .025 model:ScaleTo(1+math.min(2,(level-1)*scalePerLevel))
+  local levelText=model:FindFirstChild("LevelText",true) local fill=model:FindFirstChild("ProgressFill",true)
+  if levelText then levelText.Text=flower.DisplayName.." • LV."..level end
+  if fill then fill.Size=UDim2.fromScale(level>=maxLevel and 1 or math.clamp(xp/math.max(1,level*xpPerLevel),0,1),1) end
+ end
+ return true
+end
 function S:Build(player)
  local p=self.X:Profile(player) if not p then return end local plot=self.Plots[player]
  if not plot then local i=1 while self.Used[i] do i=i+1 end self.Used[i]=true local a=(i-1)%12*math.pi*2/12 local r=105+math.floor((i-1)/12)*60 local origin=self.X.Origin+Vector3.new(math.cos(a)*r,0,math.sin(a)*r)
@@ -18,7 +37,7 @@ function S:Build(player)
   local pad=self.X:Part(content,"Slot_"..i,pos,Vector3.new(5,.3,5),unlocked and Color3.fromRGB(190,145,90) or Color3.fromRGB(75,80,85),false)
   pad:SetAttribute("OwnerUserId",player.UserId) pad:SetAttribute("SlotId",i)
   if unlocked then self.X:Prompt(pad,"Plant / replace",function(who) if who==player then self.X:Send(player,"PlantPicker",i) end end)
-   local slot=p.Garden.Slots[i] local f=slot and F.Species[slot.SpeciesId] if f then local m=self.X.FlowerService.Build(i,f,pos+Vector3.new(0,.2,0)) m.Parent=content m:ScaleTo(1+math.min(2,(slot.Level-1)*.025)) plot.Flowers[i]=m end
+   local slot=p.Garden.Slots[i] local f=slot and F.Species[slot.SpeciesId] if f then local growth=f.GrowthProfile or {} local scalePerLevel=tonumber(growth.ScalePerLevel) or .025 local m=self.X.FlowerService.Build(i,f,pos+Vector3.new(0,.2,0)) m.Parent=content m:ScaleTo(1+math.min(2,((slot.Level or 1)-1)*scalePerLevel)) plot.Flowers[i]=m end
   end
  end
  self.X.GardenSynergyService:Recalculate(player)
