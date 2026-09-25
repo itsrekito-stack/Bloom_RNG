@@ -242,7 +242,7 @@ def merge_remote_changes(base, local, remote):
 REQUIRED_RUNTIME_UI_CHILDREN = {
     "ObjectiveCard", "CurrencyHUD", "MenuDock", "RollHUD", "VerticalRoulette",
     "TutorialGuideBanner", "Toast", "ModalShade", "MainPanel", "RewardReveal",
-    "ActiveBoostsHUD", "ActiveBoostTooltip",
+    "ActiveBoostsHUD", "ActiveBoostTooltip", "MinimizeButton",
 }
 
 
