@@ -60,8 +60,12 @@ test("active boosts aggregate bee luck and Solar Bloom",function()
   Send=function(_,pl,kind,payload) if kind=="Message" then messages[#messages+1]=payload end end,
  }
  service:Init(x)
+ local B=require(rs.Config.BeesConfig)
+ local traitBonuses=B.GetTraitBonuses(p.Pollinators.EquippedBeeSlots)
+ local passiveBonuses=B.GetPassiveBonuses(p.Pollinators.EquippedBeeSlots)
+ local expectedBase=(traitBonuses.LuckMultiplier or 1)*(passiveBonuses.LuckMultiplier or 1)
  local base=stats:Get(p).Luck
- assert(base>1.45,"three Scholar Bees should aggregate passive + Arcane luck")
+ assert(math.abs(base-expectedBase)<1e-6 and base>1,"three Scholar Bees should aggregate configured passive + trait luck")
  local before=service:Snapshot(player,p)
  local luckBefore=nil local beeSource=false local traitSource=false
  for _,item in ipairs(before.Items) do
