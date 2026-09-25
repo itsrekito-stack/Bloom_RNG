@@ -21,8 +21,9 @@ function X:Emit(player,event,n)
  -- Tutorial progression is core state and must commit before optional telemetry/trial hooks.
  local tutorialOK,tutorialErr=xpcall(function() self.TutorialService:Refresh(player) end,debug.traceback)
  if not tutorialOK then
-  warn("[Bloom] Tutorial refresh error",event,tutorialErr)
-  error(tutorialErr)
+  local activeTutorial=T.Steps[p.Tutorial.Step]~=nil
+  warn("[Bloom][TUTORIAL_HOOK_ERROR] event="..tostring(event).." step="..tostring(p.Tutorial.Step).." player="..tostring(player.Name).."\n"..tostring(tutorialErr))
+  if activeTutorial then error(tutorialErr) end
  end
  if event=="ActivityCompleted" then self:Send(player,"TokenCollected",true) end
 
@@ -200,6 +201,7 @@ function X:Start(data,services,names)
     if self.MapService:Tick(player) then self:MarkStateDirty(player) end
     self.PollinatorService:Tick(player,C.TickSeconds)
     self.GardenActivityService:Tick(player)
+    if self.BoostService:Tick(player) then self:MarkStateDirty(player) end
     if self.MetaProgressionService:Tick(player) then self:MarkStateDirty(player) end
     self.AnalyticsService:Tick(player,C.TickSeconds)
    end
