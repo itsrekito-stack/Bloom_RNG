@@ -4,7 +4,7 @@ import json,sys
 ROOT=Path(__file__).resolve().parents[2]
 model=json.loads((ROOT/'src/StarterGui/BloomUI.model.json').read_text(encoding='utf-8'))
 project=json.loads((ROOT/'default.project.json').read_text(encoding='utf-8'))
-source=(ROOT/'src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau').read_text(encoding='utf-8')
+source=(ROOT/'src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau').read_text(encoding='utf-8')\ninventory_v2_source=(ROOT/'src/StarterPlayer/StarterPlayerScripts/Controllers/InventoryV2Controller.luau').read_text(encoding='utf-8')
 audio=(ROOT/'src/ReplicatedStorage/Config/RollAudioConfig.luau').read_text(encoding='utf-8')
 checks=[]
 
@@ -97,13 +97,20 @@ check('42px roulette step','StepPixels=42' in audio and 'Position=UDim2.fromOffs
 marker=one('CurrentMarker')[1]
 check('current slot clearly marked',marker is not None and {'LeftPointer','RightPointer','CurrentLabel'}.issubset({c.get('Name') for c in marker.get('Children',[])}))
 
-# Editable dynamic component templates.
+# Editable dynamic component templates + Inventory v2.
 check('Templates folder authored',templates is not None)
-for name in ['ButtonTemplate','LabelTemplate','SectionTemplate','InventoryTileTemplate']:
+for name in ['ButtonTemplate','LabelTemplate','SectionTemplate']:
     n=one(name)[1]
     check(name+' authored',n is not None and n.get('Properties',{}).get('Visible') is False)
 check('menu helpers clone authored templates','self.Templates and self.Templates:FindFirstChild("ButtonTemplate")' in source and 'LabelTemplate' in source and 'SectionTemplate' in source)
-check('Pet-Sim inventory tile clones template','InventoryTileTemplate' in source and 'CellSize=UDim2.fromOffset(64,64)' in source and 'SelectedDetails' in source)
+inventory_prototype=one('InventoryPrototype')[1]
+item_card=one('ItemCardTemplate')[1]
+check('InventoryPrototype authored',inventory_prototype is not None and inventory_prototype.get('Properties',{}).get('Visible') is False)
+check('Inventory v2 item card authored',item_card is not None and item_card.get('Properties',{}).get('Visible') is False)
+check('legacy SeedSatchelTemplate removed',one('SeedSatchelTemplate')[1] is None)
+check('legacy InventoryTileTemplate removed',one('InventoryTileTemplate')[1] is None)
+check('Inventory v2 backend linked','InventoryV2Controller' in source and 'InventoryV2.Render(self,p,ui)' in source)
+check('Inventory v2 binds authoritative inventory','uiState.Inventory' in inventory_v2_source and 'controller:Send("Dissolve"' in inventory_v2_source and 'controller:Send("EquipBee"' in inventory_v2_source)
 
 # Duplicate-HUD guard.
 check('live-sync resolver exists','function UI:ResolveBloomGui()' in source)
