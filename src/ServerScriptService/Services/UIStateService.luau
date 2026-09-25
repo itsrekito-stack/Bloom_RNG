@@ -16,6 +16,7 @@ local REASONS={
  RESPEC_GARDEN_OCCUPIED="Respec would remove occupied flower beds. Keep these capacity upgrades",
  GARDEN_PROGRESS_PROTECTED="This flower has progression. Replacing it would lose that progress",
  PROFILE_LOADING="Profile is still loading",
+ NOT_STUDIO="This developer action is available only in Roblox Studio",
  SERVER_ERROR="Server error",
  RATE_LIMITED="Too many requests, try again",
  LOCKED="Feature is still locked",
