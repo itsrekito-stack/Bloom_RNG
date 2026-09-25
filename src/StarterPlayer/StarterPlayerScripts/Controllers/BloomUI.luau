@@ -21,9 +21,9 @@ local NumberFormatter=require(RS.Shared.NumberFormatter)
 local InventoryV2=require(script.Parent.InventoryV2Controller)
 
 local C=Theme.Colors
-local CLIENT_BUILD="state-sync-v5-revision-coalesced-2026-09-25"
+local CLIENT_BUILD="roll-correlation-v6-2026-09-25"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
-local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0}
+local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
 local MENU_RENDERERS={SeedSatchel="InventoryV2"}
 local MENU_NAMES={
@@ -1142,7 +1142,14 @@ function UI:RollNow(automatic)
  if self.Pending or self.RouletteLanding or (self.Rewards and self.Rewards.Busy) or os.clock()<self.NextRoll or not self.State then return end
  self.Pending=true
  self.PendingAt=os.clock()
- self:Send("Roll",automatic==true)
+ self.RollRequestSequence=(self.RollRequestSequence or 0)%2147483646+1
+ local requestId=self.RollRequestSequence
+ self.PendingRollRequest=requestId
+ self.PendingRollSession=self.RollSession or 0
+ self.RollRequestSessions[requestId]=self.PendingRollSession
+ local stale=requestId-64
+ if stale>0 then self.RollRequestSessions[stale]=nil end
+ self:Send("Roll",automatic==true,requestId)
 end
 
 function UI:BuildRouletteVisualPool(preserveCursor)
@@ -1319,7 +1326,9 @@ end
 
 function UI:SetAutoRolling(enabled)
  if enabled and (not self.State or self.State.Profile.Tutorial.FeatureUnlocks.Roll~=true) then return end
- self.Auto=enabled==true
+ local nextAuto=enabled==true
+ if self.Auto~=nextAuto then self.RollSession=(self.RollSession or 0)+1 end
+ self.Auto=nextAuto
  if self.Auto then
   self:StartRouletteAnimation()
   task.defer(function() self:RollNow(true) end)
@@ -1356,6 +1365,9 @@ end
 
 function UI:ResolveRouletteReward(payload)
  if type(payload)~="table" or self.RouletteLanding then return end
+ local requestId=payload.RequestId
+ local requestSession=requestId and self.RollRequestSessions[requestId] or self.PendingRollSession
+ if requestSession~=nil and requestSession~=(self.RollSession or 0) then return end
 
  -- A server reward can arrive after the player pressed STOP.
  -- The item is already granted server-side; do not resurrect the roulette
@@ -1378,7 +1390,7 @@ function UI:ResolveRouletteReward(payload)
   for i,duration in ipairs(steps) do
    if generation~=self.RouletteGeneration then break end
    local final=i==#steps
-   if not self:StepRoulette(duration,final and target or nil,nil) then break end
+   if not self:StepRoulette(duration,final and target or nil,generation) then break end
   end
   if generation==self.RouletteGeneration then
    local remaining=math.max(0,(RollAudio.MinimumVisualSpin or 0)-(os.clock()-visualStart))
@@ -1387,6 +1399,7 @@ function UI:ResolveRouletteReward(payload)
    self:AnimateRouletteResult()
    task.wait(RollAudio.ResultHold)
   end
+  if generation~=self.RouletteGeneration then return end
   self.RouletteLanding=false
   -- Normal roll rewards are shown only by the roulette itself.
   -- RewardReveal is reserved for non-roll ceremonies.
@@ -1671,13 +1684,22 @@ function UI:Start()
   if kind=="State" then
    self:ApplyState(payload,"Event")
   elseif kind=="Ack" then
+   local relevant=true
+   local rollSession=nil
    if payload.Action=="Roll" then
-    self.Pending=false
-    self.NextRoll=math.max(self.NextRoll,os.clock()+.2)
-    if self.State then self:Render() end
+    local requestId=payload.RequestId
+    rollSession=requestId and self.RollRequestSessions[requestId] or self.PendingRollSession
+    relevant=requestId==nil or requestId==self.PendingRollRequest or self.RollRequestSessions[requestId]~=nil
+    if relevant and (requestId==nil or requestId==self.PendingRollRequest) then
+     self.Pending=false
+     self.PendingRollRequest=nil
+     self.PendingRollSession=nil
+     self.NextRoll=math.max(self.NextRoll,os.clock()+.2)
+     if self.State then self:Render() end
+    end
    end
-   if not payload.OK then
-    if payload.Action=="Roll" and self.Auto then self:SetAutoRolling(false) end
+   if relevant and not payload.OK then
+    if payload.Action=="Roll" and self.Auto and rollSession==(self.RollSession or 0) then self:SetAutoRolling(false) end
     if not (payload.Action=="Ready" and payload.Reason=="PROFILE_LOADING") then
      self:Toast(payload.Message or payload.Reason or "Action is currently unavailable")
     end

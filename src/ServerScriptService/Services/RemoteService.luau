@@ -29,12 +29,14 @@ function S:Start()
  end
  self.Request.OnServerEvent:Connect(function(player,action,a,b,c)
   if type(action)~="string" or #action>32 then return end
+  local rollRequestId=nil
+  if action=="Roll" and type(b)=="number" and b%1==0 and b>=1 and b<=2147483647 then rollRequestId=b end
   if not self:Accept(player) then
-   self.X:Send(player,"Ack",{Action=action,OK=false,Reason="RATE_LIMITED",Message=self.X.UIStateService:ReasonText("RATE_LIMITED")})
+   self.X:Send(player,"Ack",{Action=action,RequestId=rollRequestId,OK=false,Reason="RATE_LIMITED",Message=self.X.UIStateService:ReasonText("RATE_LIMITED")})
    return
   end
   if type(a)=="string" and #a>100 or type(b)=="string" and #b>100 or type(c)=="string" and #c>100 then
-   self.X:Send(player,"Ack",{Action=action,OK=false,Reason="INVALID_VALUE",Message=self.X.UIStateService:ReasonText("INVALID_VALUE")})
+   self.X:Send(player,"Ack",{Action=action,RequestId=rollRequestId,OK=false,Reason="INVALID_VALUE",Message=self.X.UIStateService:ReasonText("INVALID_VALUE")})
    return
   end
   if not self.X:Profile(player) then
@@ -46,7 +48,7 @@ function S:Start()
   local success=ok and result~=false
   local finalReason=ok and reason or "SERVER_ERROR"
   if success and self.X:ActionMutatesState(action) then self.X:MarkStateDirty(player) end
-  self.X:Send(player,"Ack",{Action=action,OK=success,Reason=finalReason,Message=success and nil or self.X.UIStateService:ReasonText(finalReason)})
+  self.X:Send(player,"Ack",{Action=action,RequestId=rollRequestId,OK=success,Reason=finalReason,Message=success and nil or self.X.UIStateService:ReasonText(finalReason)})
   if success then self.X:Push(player) end
  end)
 end
