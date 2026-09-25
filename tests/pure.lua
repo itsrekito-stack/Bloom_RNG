@@ -106,11 +106,11 @@ test("tutorial reconnect preserves current-step completion",function()
  local resumed=make() resumed:Refresh(player) assert(p.Tutorial.Step==6)
 end)
 test("tutorial v2 profile beyond shortened flow migrates complete",function()
- local player={} local p=Schema.CreateDefault() p.Tutorial.Version=2 p.Tutorial.Step=14 p.Tutorial.Events={} local completed=0
+ local player={} local p=Schema.CreateDefault() p.Tutorial.Version=2 p.Tutorial.Step=14 p.Tutorial.Events={}
  local s=require(node("ServerScriptService/Services/TutorialService"))
- s:Init({Profile=function() return p end,MarkStateDirty=function() end,EmitOnce=function(_,pl,event) p.Tutorial.Events[event]=1 if event=="TutorialComplete" then completed=completed+1 end end,U={Near=function() return false end},GardenActivityService={EnsureTutorialSpark=function() end},GardenPlotService={HivePosition=function() return Vector3.zero end,RefreshHivePrompt=function() end},InventoryService={Available=function() return 1 end},HiveService={Interact=function() end}})
+ s:Init({Profile=function() return p end,MarkStateDirty=function() end,EmitOnce=function(_,pl,event) p.Tutorial.Events[event]=1 end,U={Near=function() return false end},GardenActivityService={EnsureTutorialSpark=function() end},GardenPlotService={HivePosition=function() return Vector3.zero end,RefreshHivePrompt=function() end},InventoryService={Available=function() return 1 end},HiveService={Interact=function() end}})
  s:Refresh(player)
- assert(p.Tutorial.Version==3 and p.Tutorial.Step==14 and completed==1)
+ assert(p.Tutorial.Version==3 and p.Tutorial.Step==14 and p.Tutorial.Events.TutorialComplete==1)
 end)
 test("tutorial skip does not grant economy assists",function()
  local player={} local p=Schema.CreateDefault() p.StarterBeeGranted=true
