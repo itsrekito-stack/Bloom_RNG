@@ -17729,6 +17729,13 @@
                                       "Children": []
                                     }
                                   ]
+                                },
+                                {
+                                  "ClassName": "UIScale",
+                                  "Name": "WorkshopZoomScale",
+                                  "Properties": {
+                                    "Scale": 1
+                                  }
                                 }
                               ]
                             }
