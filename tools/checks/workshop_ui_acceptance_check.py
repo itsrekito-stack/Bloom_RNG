@@ -37,6 +37,16 @@ for token in (
 ):
     need(state,token,'server workshop state')
 
+# Workshop fullscreen geometry must not consume the renderer branch.
+# A previous elseif made renderer=="Workshop" unreachable, producing only the dark modal shell.
+need(ui,'-- Geometry and renderer dispatch must stay separate so Workshop can render.','workshop renderer reachability marker')
+assert 'self.Content.ScrollBarThickness=0\n elseif renderer=="InventoryV2" then' not in ui, "workshop renderer unreachable behind geometry elseif"
+need(ui,'if renderer=="InventoryV2" then','separate renderer dispatch')
+need(ui,'elseif renderer=="Workshop" then','workshop renderer dispatch')
+need(ui,'shell=template:Clone()','WorkshopTemplate runtime clone')
+need(ui,'shell.Name="WorkshopRuntime"','Workshop runtime identity')
+need(ui,'shell.Visible=true','Workshop runtime visibility')
+
 for token in (
     'owned=backend.Owned==true',
     'revealed=backend.Revealed==true',
