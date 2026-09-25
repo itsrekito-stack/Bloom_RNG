@@ -56,6 +56,7 @@ def pos(name):
 
 safe_path,_=one('SafeRoot')
 roulette_path,roulette=one('VerticalRoulette')
+roulette_clip=one('RouletteClip')[1]
 button_path,_=one('RollButton')
 rollhud_path,_=one('RollHUD')
 panel=one('MainPanel')[1]
@@ -79,7 +80,9 @@ for name in ['ObjectiveCard','CurrencyHUD','MenuDock','RollHUD','VerticalRoulett
     check(name+' authored',one(name)[1] is not None)
     check(name+' valid size',valid_udim2(name))
 
-check('roulette clips descendants',roulette is not None and roulette.get('Properties',{}).get('ClipsDescendants') is True)
+check('roulette content is clipped',
+      (roulette is not None and roulette.get('Properties',{}).get('ClipsDescendants') is True)
+      or (roulette_clip is not None and roulette_clip.get('Properties',{}).get('ClipsDescendants') is True))
 check('main panel authored',panel is not None)
 
 for role in ['Next','Current','Previous']:
