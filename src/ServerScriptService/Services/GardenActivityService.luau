@@ -80,7 +80,7 @@ function S:Collect(player,id,index,phase)
   elseif kind=="CrystalResonance" then temp.Crystal=true temp.NeighbourUntil=os.clock()+30+E.Value(p,"EXPLORATION_3","CrystalSeconds",0) if p.Season.ActiveCard=="CrystalSeason" then temp.TemporaryMutationUntil=os.clock()+60 end
   elseif kind=="FireflyRoute" or kind=="ShadowBloom" then temp.Eclipse=true end
   self.X.RollService:Charge(player,A.Types[kind].Charge*E.Value(p,"BLOOM_2","ManualCharge",1)*(o.Sector and E.Value(p,"EXPLORATION_2","RouteCharge",1) or 1)*(p.Season.ActiveCard=="SummerSwarm" and 1.25 or 1))
-  self.X.BoostService:ApplyActivity(player,kind)
+  if self.X.BoostService then self.X.BoostService:ApplyActivity(player,kind) end
   self.X:Emit(player,kind,1) self.X:Emit(player,"ActivityCompleted",1)
   local completedSector=o.Sector or self.X.MapService:Sector(player)
   if completedSector and completedSector~="Center" then self.X:Emit(player,"WorldActivity",1) end
