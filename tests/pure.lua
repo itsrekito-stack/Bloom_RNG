@@ -13,6 +13,12 @@ test("odds normalized, 10000 samples known",function()
  local pool,total=Pool.Build(p,1,{}) local sum=0 for _,v in ipairs(pool) do sum=sum+v.Chance end assert(math.abs(sum-1)<1e-9)
  for i=1,10000 do local t=math.random()*total local selected=pool[#pool] for _,v in ipairs(pool) do t=t-v.Weight if t<=0 then selected=v break end end assert(selected.Kind=="FlowerSeed" and F.Exists(selected.Id) or selected.Kind=="Bee" and B.Exists(selected.Id)) end
 end)
+test("roll pool tolerates missing temporary runtime state",function()
+ local p=Schema.CreateDefault()
+ p.RollState.SpecialRollReady=true
+ local pool,total=require(rs.Config.RollPoolConfig).Build(p,1,nil)
+ assert(type(pool)=="table" and #pool>0 and total>0)
+end)
 test("discovery guarantee only undiscovered",function() local p=Schema.CreateDefault() p.RollState.DiscoveryPity=29 local pool=require(rs.Config.RollPoolConfig).Build(p,1,{}) for _,v in ipairs(pool) do assert(v.Undiscovered) end end)
 test("all-discovered guarantee safe fallback",function() local p=Schema.CreateDefault() for id in pairs(require(rs.Config.FlowersConfig).Species) do p.FlowerCollection.DiscoveredFlowers[id]=true end for id in pairs(require(rs.Config.BeesConfig).Bees) do p.Pollinators.DiscoveredBees[id]=true end p.RollState.DiscoveryPity=29 local pool,total=require(rs.Config.RollPoolConfig).Build(p,1,{}) assert(#pool>0 and total>0) end)
 test("ownership, dissolve protection, remaining copy",function()
