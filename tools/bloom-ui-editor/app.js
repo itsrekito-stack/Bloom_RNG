@@ -291,6 +291,7 @@ function previewVisible(n){
  if(name==="Templates"||p==="Templates"||name==="Tooltip")return false;
  if(name==="SeedSatchelTemplate")return state.previewScene==="seedbag";
  if(name==="WorkshopTemplate")return state.previewScene==="workshop";
+ if(state.previewScene==="workshop"&&["HeaderIcon","PanelTitle","PanelSubtitle","HeaderAccent"].includes(name))return false;
  if(name==="Content"&&p==="MainPanel"&&(state.previewScene==="seedbag"||state.previewScene==="workshop"))return false;
  if(["ObjectiveCard","CurrencyHUD","MenuDock","RollHUD","VerticalRoulette","RollButton"].includes(name))return true;
  if(name==="MainPanel")return MENU_PREVIEW_SCENES.has(state.previewScene);
@@ -327,6 +328,7 @@ function previewImage(n,parentNode){
 function previewSize(n){
  if(!isPreview())return null;
  if(n.Name==="MainPanel"&&state.previewScene==="workshop")return [[1,0],[1,0]];
+ if(n.Name==="Header"&&state.previewScene==="workshop")return [[1,0],[0,0]];
  if(n.Name==="MainPanel"&&state.previewScene==="seedbag")return [[0,640],[0,500]];
  if(n.Name==="MainPanel"&&MENU_PREVIEW_SCENES.has(state.previewScene))return [[0,600],[0,420]];
  if(n.Name==="ObjectiveProgressFill")return [[.38,0],[1,0]];
