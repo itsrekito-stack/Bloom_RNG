@@ -2,6 +2,7 @@ local RS=game:GetService("ReplicatedStorage")
 local F=require(RS.Config.FlowersConfig)
 local B=require(RS.Config.BeesConfig)
 local C=require(RS.Config.BloomConfig)
+local E=require(RS.Shared.WorkshopEffects)
 
 local S={}
 
@@ -65,7 +66,7 @@ function S:Dissolve(player,id,n)
  f.OwnedSeedCopies[id]-=n
  p.Currencies.PetalDust+=n*C.DustPerCopy
   *(p.Season.ActiveCard=="AutumnFortune" and 1.5 or 1)
-  *(p.WorkshopV5.Nodes.ECONOMY_3 and 1.2 or 1)
+  *E.Value(p,"ECONOMY_3","DustYield",1)
  self.X.FlowerProgressionService:Add(player,id,n)
  return true
 end
