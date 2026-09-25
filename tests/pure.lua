@@ -65,7 +65,7 @@ test("active boosts aggregate bee luck and Solar Bloom",function()
  local passiveBonuses=B.GetPassiveBonuses(p.Pollinators.EquippedBeeSlots)
  local expectedBase=(traitBonuses.LuckMultiplier or 1)*(passiveBonuses.LuckMultiplier or 1)
  local base=stats:Get(p).Luck
- assert(math.abs(base-expectedBase)<1e-6 and base>1,"three Scholar Bees should aggregate configured passive + trait luck")
+ assert(math.abs(base-expectedBase)<1e-6,"StatsService luck mismatch base="..tostring(base).." expected="..tostring(expectedBase)) assert(expectedBase>1,"configured Scholar Bee luck did not aggregate expected="..tostring(expectedBase).." trait="..tostring(traitBonuses.LuckMultiplier).." passive="..tostring(passiveBonuses.LuckMultiplier))
  local before=service:Snapshot(player,p)
  local luckBefore=nil local beeSource=false local traitSource=false
  for _,item in ipairs(before.Items) do
