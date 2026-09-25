@@ -560,14 +560,14 @@
       "id": "release-publish-config",
       "group": "8 · Release",
       "title": "Verify Roblox publish / API / DataStore configuration",
-      "detail": "Confirm production place, API access, DataStore names, permissions and no TEST store is used by the release build.",
+      "detail": "Static source/CI guard is complete: production and Studio DataStores are separated and TEST leakage is blocked. Creator Dashboard place/API/permission verification still requires Roblox-side access.",
       "done": false
     },
     {
       "id": "release-store-page",
       "group": "8 · Release",
       "title": "Prepare game icon, thumbnails and description",
-      "detail": "Ship a coherent Roblox store page that accurately represents the release build.",
+      "detail": "English title/short description/full description plus icon/thumbnail creative briefs are ready in docs/BLOOM_RNG_STORE_PAGE_PACKAGE.md. Final release-candidate art capture/upload remains open.",
       "done": false
     },
     {
