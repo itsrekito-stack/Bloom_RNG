@@ -53,17 +53,25 @@ need(hud,'badge.MouseEnter:Connect',"boost hover interaction")
 need(hud,'self.TooltipBreakdown.Text=self:TooltipText(item)',"boost tooltip breakdown")
 need(hud,'self.ItemsByBadge[badge]=item',"runtime boost timer data retained")
 need(hud,'TweenService:Create(scale',"boost hover scale feedback")
+need(hud,'function S:SetMinimized(minimized,animate)',"boost HUD minimize state")
+need(hud,'self.Toggle.Activated:Connect',"authored minimize button binding")
+need(hud,'self.Toggle.Text=self.Minimized and "+" or "−"', "minimize/expand visual state")
+need(hud,'self.List.Visible=not self.Minimized and self.ItemCount>0',"collapsed list visibility")
+need(hud,'function S:ApplyResponsiveLayout(width)',"collapsed HUD responsive sizing")
 need(journey,'Reward: +20% Roll Luck for 60s',"Solar Bloom reward explained before completion")
 
 root=nodes.get("ActiveBoostsHUD")
 tooltip=nodes.get("ActiveBoostTooltip")
 template=nodes.get("BoostTemplate")
+minimize=nodes.get("MinimizeButton")
 if not root or root.get("ClassName")!="Frame":
     raise AssertionError("authored ActiveBoostsHUD frame missing")
 if not tooltip or tooltip.get("ClassName")!="Frame":
     raise AssertionError("authored ActiveBoostTooltip frame missing")
 if not template or template.get("ClassName")!="ImageButton":
     raise AssertionError("authored BoostTemplate button missing")
+if not minimize or minimize.get("ClassName")!="TextButton":
+    raise AssertionError("authored Active Boosts minimize button missing")
 if template.get("Properties",{}).get("Visible") is not False:
     raise AssertionError("BoostTemplate must stay authored but hidden")
 if root.get("Properties",{}).get("AnchorPoint",{}).get("Vector2") != [0,1]:
