@@ -66,7 +66,14 @@ C.WorkshopNodeIcons={
  EXPLORATION_1="Luck",EXPLORATION_2="Loadout",EXPLORATION_3="Luck",EXPLORATION_4="Garden",EXPLORATION_5="Luck",EXPLORATION_6="Loadout",
  LEGACY_1="Loadout",LEGACY_2="Loadout",LEGACY_3="Mastery",LEGACY_4="Loadout",LEGACY_5="Loadout",LEGACY_6="Mastery",
 }
-function C.GetWorkshopNodeIcon(nodeId:string):string
+C.WorkshopLockedBranchIcons={
+ ROLL="Locked",GARDEN="Locked",BEES="Locked",ECONOMY="Locked",BLOOM="Locked",EXPLORATION="Locked",LEGACY="Locked",
+}
+function C.GetWorkshopNodeIcon(nodeId:string,locked:boolean?):string
+ if locked then
+  local branch=string.match(nodeId,"^([^_]+)") or ""
+  return C.GetWorkshopHexIcon(C.WorkshopLockedBranchIcons[branch] or "Locked")
+ end
  local key=C.WorkshopNodeIcons[nodeId] or "Locked"
  return C.GetWorkshopHexIcon(key)
 end
