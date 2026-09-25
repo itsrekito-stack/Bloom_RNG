@@ -24,6 +24,7 @@ rarity=read("src/ReplicatedStorage/Config/RarityConfig.luau")
 locations=read("src/ReplicatedStorage/Config/LocationsConfig.luau")
 trials=read("src/ReplicatedStorage/Config/BuildTrialConfig.luau")
 workshop=read("src/ReplicatedStorage/Config/WorkshopConfig.luau")
+workshop_effects=read("src/ReplicatedStorage/Config/WorkshopEffectsConfig.luau")
 activities=read("src/ReplicatedStorage/Config/ActivityConfig.luau")
 season=read("src/ReplicatedStorage/Config/SeasonConfig.luau")
 meta=read("src/ServerScriptService/Services/MetaProgressionService.luau")
@@ -53,7 +54,20 @@ EXPECTED_TRIALS={}
 for m in re.finditer(r'^\s*(\w+)=\{Sector="([^"]+)",Event="([^"]+)",Advanced=(true|false)\},?\s*$',trial_manifest,re.M):
     EXPECTED_TRIALS[m.group(1)]=(m.group(2),m.group(3),m.group(4)=="true")
 
-EXPECTED_WORKSHOP_BRANCHES={"ROLL","GARDEN","BEES","ECONOMY","BLOOM","EXPLORATION","LEGACY"}
+workshop_branch_manifest=re.search(r'WorkshopBranches=\{([^}]*)\}',manifest)
+if not workshop_branch_manifest:
+    raise AssertionError("release Workshop branch manifest missing")
+EXPECTED_WORKSHOP_BRANCH_LIST=re.findall(r'"([^"]+)"',workshop_branch_manifest.group(1))
+EXPECTED_WORKSHOP_BRANCHES=set(EXPECTED_WORKSHOP_BRANCH_LIST)
+workshop_count_manifest=re.search(r'WorkshopNodesPerBranch=(\d+)',manifest)
+if not workshop_count_manifest:
+    raise AssertionError("release Workshop node count manifest missing")
+EXPECTED_WORKSHOP_NODES_PER_BRANCH=int(workshop_count_manifest.group(1))
+EXPECTED_WORKSHOP_NODE_IDS={
+    f"{branch}_{index}"
+    for branch in EXPECTED_WORKSHOP_BRANCH_LIST
+    for index in range(1,EXPECTED_WORKSHOP_NODES_PER_BRANCH+1)
+}
 EXPECTED_SEASON_CARDS={"SpringResonance","SummerSwarm","AutumnFortune","CrystalSeason","TwilightSeason"}
 EXPECTED_JOURNEY=[
     "StarterBee","PollenSpark","Delivery","Roll","Plant","Charge","BloomRoll","Hive2",
@@ -89,7 +103,9 @@ for line in trials.splitlines():
 branch_match=re.search(r'Branches=\{([^}]*)\}',workshop)
 if not branch_match:
     raise AssertionError("Workshop branch list missing")
-actual_branches=set(re.findall(r'"([^"]+)"',branch_match.group(1)))
+actual_branch_list=re.findall(r'"([^"]+)"',branch_match.group(1))
+actual_branches=set(actual_branch_list)
+actual_workshop_effect_ids=set(re.findall(r'([A-Z]+_[1-6])=\{',workshop_effects))
 
 actual_activities=set(re.findall(r'([A-Za-z0-9_]+)=\{Life=',activities))
 
@@ -114,12 +130,13 @@ if actual_trials!=EXPECTED_TRIALS:
 if actual_activities!=EXPECTED_ACTIVITIES:
     raise AssertionError(f"release activities changed: missing={sorted(EXPECTED_ACTIVITIES-actual_activities)} extra={sorted(actual_activities-EXPECTED_ACTIVITIES)}")
 
-for label,actual,expected in [
-    ("Workshop branches",actual_branches,EXPECTED_WORKSHOP_BRANCHES),
-    ("Season cards",actual_cards,EXPECTED_SEASON_CARDS),
-]:
-    if actual!=expected:
-        raise AssertionError(f"release {label} changed: missing={sorted(expected-actual)} extra={sorted(actual-expected)}")
+if actual_branch_list!=EXPECTED_WORKSHOP_BRANCH_LIST:
+    raise AssertionError(f"release Workshop branch order changed: expected={EXPECTED_WORKSHOP_BRANCH_LIST} actual={actual_branch_list}")
+if actual_workshop_effect_ids!=EXPECTED_WORKSHOP_NODE_IDS:
+    raise AssertionError(f"release Workshop node/effect set changed: missing={sorted(EXPECTED_WORKSHOP_NODE_IDS-actual_workshop_effect_ids)} extra={sorted(actual_workshop_effect_ids-EXPECTED_WORKSHOP_NODE_IDS)}")
+
+if actual_cards!=EXPECTED_SEASON_CARDS:
+    raise AssertionError(f"release Season cards changed: missing={sorted(EXPECTED_SEASON_CARDS-actual_cards)} extra={sorted(actual_cards-EXPECTED_SEASON_CARDS)}")
 
 if actual_journey!=EXPECTED_JOURNEY:
     raise AssertionError(f"release Journey changed: expected={EXPECTED_JOURNEY} actual={actual_journey}")
@@ -134,6 +151,8 @@ if len(actual_trials)!=8:
     raise AssertionError("release must ship 8 trials")
 if len(actual_branches)!=7:
     raise AssertionError("release must ship 7 Workshop branches")
+if EXPECTED_WORKSHOP_NODES_PER_BRANCH!=6 or len(actual_workshop_effect_ids)!=42:
+    raise AssertionError("release must ship exactly 6 Workshop nodes per branch / 42 effect-backed nodes")
 if len(actual_activities)!=12:
     raise AssertionError("release must ship 12 activity types")
 if len(actual_cards)!=5:
@@ -178,4 +197,4 @@ if season_trial_ids!=["MeadowCircuit","SwiftRoute","CrystalTriangle"]:
 
 print("release content lock: PASS")
 print("v1 content: 12 flowers, 13 bees, 3 locations, 8 trials, 7 Workshop branches, 12 activities, 5 Season cards, 20 Journey objectives.")
-print("Flower/bee metadata, location progression roles, activity IDs and base/advanced trial roles are frozen by ReleaseContentManifest.")
+print("Flower/bee metadata, world/trial roles and all 42 Workshop node IDs are frozen by ReleaseContentManifest.")
