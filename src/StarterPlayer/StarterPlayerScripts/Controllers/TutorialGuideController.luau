@@ -7,23 +7,6 @@ local Theme=require(RS.Config.UIThemeConfig)
 local C=Theme.Colors
 local S={}
 
-local function corner(x,r)
- local c=Instance.new("UICorner")
- c.CornerRadius=UDim.new(0,r)
- c.Parent=x
- return c
-end
-
-local function outline(x,color,thickness,transparency)
- local s=Instance.new("UIStroke")
- s.Color=color
- s.Thickness=thickness
- s.Transparency=transparency or 0
- s.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
- s.Parent=x
- return s
-end
-
 local function worldPosition(target)
  if typeof(target)=="Vector3" then return target end
  if typeof(target)=="Instance" then
@@ -140,58 +123,21 @@ function S:Init(ui)
  self.SynergyLinkEnd=linkEnd
  self.SynergyLink=synergyLink
 
- local frame=Instance.new("Frame")
- frame.Name="TutorialSpotlight"
- frame.AnchorPoint=Vector2.new(.5,.5)
- frame.BackgroundColor3=C.Gold
- frame.BackgroundTransparency=.92
- frame.BorderSizePixel=0
- frame.Visible=false
- frame.ZIndex=90
- frame.Parent=ui.SafeRoot
- corner(frame,Theme.Radius.Large)
+ local frame=ui.SafeRoot:FindFirstChild("TutorialSpotlight")
+ local callout=ui.SafeRoot:FindFirstChild("TutorialCallout")
+ local arrow=ui.SafeRoot:FindFirstChild("TutorialScreenArrow")
+ if not frame or not callout or not arrow then
+  error("[TutorialGuide] Authored tutorial screen UI is incomplete. Expected TutorialSpotlight, TutorialCallout and TutorialScreenArrow in SafeRoot.")
+ end
  self.Spotlight=frame
- self.SpotlightStroke=outline(frame,C.Gold,4,0)
- self.SpotlightScale=Instance.new("UIScale")
- self.SpotlightScale.Scale=1
- self.SpotlightScale.Parent=frame
-
- local callout=Instance.new("TextLabel")
- callout.Name="TutorialCallout"
- callout.AnchorPoint=Vector2.new(.5,.5)
- callout.Size=UDim2.fromOffset(230,42)
- callout.BackgroundColor3=C.Panel
- callout.BackgroundTransparency=.02
- callout.BorderSizePixel=0
- callout.Text=""
- callout.TextColor3=C.Text
- callout.TextSize=12
- callout.Font=Enum.Font.GothamBold
- callout.TextWrapped=true
- callout.Visible=false
- callout.ZIndex=92
- callout.Parent=ui.SafeRoot
- corner(callout,Theme.Radius.Medium)
- outline(callout,C.BorderDark,2,0)
+ self.SpotlightStroke=frame:FindFirstChildOfClass("UIStroke")
+ self.SpotlightScale=frame:FindFirstChild("SpotlightScale")
  self.Callout=callout
-
- local arrow=Instance.new("TextLabel")
- arrow.Name="TutorialScreenArrow"
- arrow.AnchorPoint=Vector2.new(.5,.5)
- arrow.Size=UDim2.fromOffset(28,28)
- arrow.BackgroundTransparency=1
- arrow.Text="▼"
- arrow.TextColor3=C.Gold
- arrow.TextStrokeColor3=C.Black
- arrow.TextStrokeTransparency=.25
- arrow.TextSize=24
- arrow.Font=Enum.Font.GothamBlack
- arrow.Visible=false
- arrow.ZIndex=93
- arrow.Parent=ui.SafeRoot
  self.ScreenArrow=arrow
- self.ScreenArrowScale=Instance.new("UIScale")
- self.ScreenArrowScale.Parent=arrow
+ self.ScreenArrowScale=arrow:FindFirstChild("ArrowScale")
+ if not self.SpotlightStroke or not self.SpotlightScale or not self.ScreenArrowScale then
+  error("[TutorialGuide] Authored tutorial screen UI modifiers are incomplete.")
+ end
 
  TweenService:Create(self.SpotlightScale,TweenInfo.new(.6,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,-1,true),{Scale=1.06}):Play()
  TweenService:Create(self.SpotlightStroke,TweenInfo.new(.6,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,-1,true),{Transparency=.4,Thickness=2}):Play()
