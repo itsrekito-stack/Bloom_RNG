@@ -613,6 +613,34 @@ function UI:RenderMenu()
   self.PanelClose.ZIndex=workshop and 120 or 53
  end
 
+ -- Bloom UI Studio previews Inventory v2 on a 1220x660 MainPanel.
+ -- Mirror that authored canvas at runtime instead of inheriting the generic
+ -- 600x420 menu size. Narrower desktop screens are capped to the viewport.
+ if not workshop then
+  local safeSize=self.SafeRoot and self.SafeRoot.AbsoluteSize or Vector2.new(1366,768)
+  local safeW=safeSize.X>100 and safeSize.X or 1366
+  local safeH=safeSize.Y>100 and safeSize.Y or 768
+
+  self.Panel.AnchorPoint=Vector2.new(.5,.5)
+  self.Panel.Position=UDim2.new(.5,0,.51,0)
+
+  if self.IsMobileLayout then
+   self.Panel.Size=UDim2.fromOffset(math.max(300,safeW-16),math.max(300,safeH-108))
+  elseif name=="SeedSatchel" then
+   self.Panel.Size=UDim2.fromOffset(math.min(1220,math.max(700,safeW-24)),math.min(660,math.max(500,safeH-24)))
+  else
+   self.Panel.Size=UDim2.fromOffset(600,420)
+  end
+
+  -- Workshop makes Content fullscreen; restore normal authored menu geometry.
+  self.Content.Position=UDim2.fromOffset(9,60)
+  self.Content.Size=UDim2.new(1,-18,1,-68)
+  self.Content.ZIndex=52
+  self.Content.AutomaticCanvasSize=Enum.AutomaticSize.Y
+  self.Content.ScrollingEnabled=true
+  self.Content.ScrollBarThickness=4
+ end
+
  self.Content.CanvasPosition=Vector2.new()
 
  if workshop then
@@ -628,6 +656,12 @@ function UI:RenderMenu()
   self.Content.ScrollingEnabled=false
   self.Content.ScrollBarThickness=0
  elseif name=="SeedSatchel" then
+  -- Inventory v2 owns its own ItemGrid scrolling. Keep outer Content fixed,
+  -- exactly like the Bloom UI Studio inventory preview.
+  self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
+  self.Content.CanvasSize=UDim2.fromOffset(0,0)
+  self.Content.ScrollingEnabled=false
+  self.Content.ScrollBarThickness=0
   InventoryV2.Render(self,p,ui)
 
  elseif name=="Workshop" then
