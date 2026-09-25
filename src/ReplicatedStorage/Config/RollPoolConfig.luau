@@ -1,6 +1,7 @@
 local F=require(script.Parent.FlowersConfig) local B=require(script.Parent.BeesConfig) local R=require(script.Parent.RarityConfig) local C=require(script.Parent.BloomConfig) local E=require(script.Parent.Parent.Shared.WorkshopEffects)
 local S={}
 function S.Build(p,luck,temp)
+ temp=temp or {}
  local pool={} local function add(kind,items) for id,v in pairs(items) do
   local unlocked=kind=="Bee" if kind=="FlowerSeed" then for sector in pairs(v.AllowedBiomes) do if p.World.UnlockedSectors[sector] or sector=="SunnyOrchard" then unlocked=true end end end
   if unlocked then local discovered=kind=="Bee" and p.Pollinators.DiscoveredBees[id] or kind=="FlowerSeed" and p.FlowerCollection.DiscoveredFlowers[id]
