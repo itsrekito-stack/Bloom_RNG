@@ -14,7 +14,7 @@ return {
   Overcharge={Life=8,Steps=1,Charge=4,CheckpointRadius=5},
   BloomSurge={Life=45,Steps=5,Charge=12,CheckpointRadius=4.75},
   PollenWind={Life=45,Steps=5,Charge=12,CheckpointRadius=4.75},
-  SolarBloom={Life=30,Steps=3,Charge=12,CheckpointRadius=5.5},
+  SolarBloom={Life=30,Steps=3,Charge=12,CheckpointRadius=5.5,Boost={Duration=60,LuckMultiplier=1.20,Label="Solar Bloom",Description="+20% Roll Luck for 60s"}},
   CrystalResonance={Life=35,Steps=3,Charge=12,CheckpointRadius=5},
   ShadowBloom={Life=10,Steps=1,Charge=12,CheckpointRadius=4.5},
   FireflyRoute={Life=40,Steps=5,Charge=12,CheckpointRadius=4.5},
