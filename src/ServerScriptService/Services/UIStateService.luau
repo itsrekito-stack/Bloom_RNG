@@ -158,20 +158,24 @@ function S:Workshop(player,profile)
  local canRespec=false
  for id,node in pairs(Workshop.Nodes) do
   local reason=workshopReason(profile,node)
+  local owned=id=="CORE" or profile.WorkshopV5.Nodes[id]==true
+  local parentOwned=node.Parent=="CORE" or (node.Parent and profile.WorkshopV5.Nodes[node.Parent]==true) or node.Parent==nil
+  local revealed=owned or id=="CORE" or parentOwned
   if id~="CORE" and profile.WorkshopV5.Nodes[id] and not node.Permanent then canRespec=true end
   nodes[id]={
    Id=id,
-   Owned=id=="CORE" or profile.WorkshopV5.Nodes[id]==true,
-   Available=reason==nil,
-   Reason=reason,
-   ReasonText=reason and self:ReasonText(reason) or nil,
+   Owned=owned,
+   Revealed=revealed,
+   Available=revealed and reason==nil,
+   Reason=revealed and reason or "PARENT_REQUIRED",
+   ReasonText=revealed and reason and self:ReasonText(reason) or nil,
    Parent=node.Parent,
-   Hive=node.Hive or 0,
-   Cost=node.Cost or 0,
-   Coins=node.Coins or 0,
-   Dust=node.Dust or 0,
-   Nectar=node.Nectar or 0,
-   Permanent=node.Permanent==true,
+   Hive=revealed and (node.Hive or 0) or nil,
+   Cost=revealed and (node.Cost or 0) or nil,
+   Coins=revealed and (node.Coins or 0) or nil,
+   Dust=revealed and (node.Dust or 0) or nil,
+   Nectar=revealed and (node.Nectar or 0) or nil,
+   Permanent=revealed and node.Permanent==true or false,
   }
  end
  return {Points=profile.WorkshopV5.Points,Nodes=nodes,CanRespec=canRespec}
