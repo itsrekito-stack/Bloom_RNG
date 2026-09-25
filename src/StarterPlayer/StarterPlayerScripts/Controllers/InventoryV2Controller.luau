@@ -117,7 +117,8 @@ local function buildItems(profile,inventory)
   if cfg then
    table.insert(out.Bees,{
     Kind="Bee",Id=entry.Id,DisplayName=entry.DisplayName or cfg.DisplayName,Rarity=entry.Rarity or cfg.Rarity,
-    Count=entry.Count or 0,Equipped=entry.Equipped or 0,Traits=entry.Traits or cfg.Traits or {},Ability=entry.Ability or (cfg.Ability and cfg.Ability.Name) or "",
+    Count=entry.Count or 0,Equipped=entry.Equipped or 0,Free=entry.Free or 0,CanDissolve=entry.CanDissolve==true,DissolveValue=entry.DissolveValue or 0,
+    Traits=entry.Traits or cfg.Traits or {},Ability=entry.Ability or (cfg.Ability and cfg.Ability.Name) or "",
     Mastery=entry.Mastery or Bees.GetMasteryState(0),Icon=Icons.GetBeeIcon(entry.Id),Favorite=false,Protected=false,
    })
   end
@@ -492,7 +493,7 @@ function InventoryV2.Render(controller,profile,uiState)
    end
    setButton(favorite,false)
    setButton(protect,false)
-   setButton(dissolve,false)
+   setButton(dissolve,true,"DISMANTLE ×1  •  +"..tostring(item.DissolveValue or 0).." DUST",item.CanDissolve==true,function() controller:Send("DissolveBee",item.Id,1) end)
    setButton(mastery,false)
   else
    setButton(plant,false)
