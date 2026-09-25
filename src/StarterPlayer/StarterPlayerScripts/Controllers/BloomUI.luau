@@ -665,7 +665,10 @@ function UI:RenderMenu()
   self.Content.CanvasSize=UDim2.fromOffset(0,0)
   self.Content.ScrollingEnabled=false
   self.Content.ScrollBarThickness=0
- elseif renderer=="InventoryV2" then
+ end
+
+ -- Geometry and renderer dispatch must stay separate so Workshop can render.
+ if renderer=="InventoryV2" then
   -- SeedSatchel is the persistent feature/unlock id; InventoryV2 is its only
   -- live renderer. Keep the outer Content fixed because ItemGrid scrolls itself.
   self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
