@@ -272,7 +272,7 @@ fn default_roadmap_tasks() -> Vec<PlannerTask> {
         planner_task("release-br013","3 · UI & Inventory","Remove preview/runtime drift (BR-013)","Keep mock editor data clearly separate from runtime and remove stale/Russian player-facing preview labels.",true),
 
         planner_task("release-core-loop","4 · Core Progression","Validate the complete progression loop","Verified by deterministic core progression reachability checks through Season Turn; Studio runtime acceptance remains separate.",true),
-        planner_task("release-roll-loop","4 · Core Progression","Finalize Roll / Bloom / pity loop","Confirm reward cadence, Bloom charge/use, duplicate outcomes and roulette presentation all agree with server results.",false),
+        planner_task("release-roll-loop","4 · Core Progression","Finalize Roll / Bloom / pity loop","Verified: server-authoritative reward/pity/Bloom contracts, bounded pity/reserve, config-driven meter and roulette-only normal reward presentation.",true),
         planner_task("release-garden","4 · Core Progression","Finalize Garden progression and synergies","Verify slot capacity, planting, flower XP/levels, mutations, synergies, dismantling and ownership invariants.",false),
         planner_task("release-bees","4 · Core Progression","Finalize Bee traits, abilities and equipment","Verify ability cooldowns/effects, rarity, equipment caps and trait presentation for all release bees.",false),
         planner_task("release-bee-mastery","4 · Core Progression","Give Bee Mastery a clear player-facing reward","Implemented: 10-level server-authoritative mastery ladder, runtime bonuses, XP multipliers, Inventory V2 progress and level-up feedback.",true),

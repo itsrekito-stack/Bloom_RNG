@@ -8,9 +8,9 @@ function S:Roll(player,automatic,requestId)
  local pool,total=self:Odds(player) if total<=0 then return false,"EMPTY_POOL" end
  local target=rng:NextNumber()*total local item=pool[#pool] for _,v in ipairs(pool) do target=target-v.Weight if target<=0 then item=v break end end
  self.Last[player]=os.clock() local special=p.RollState.SpecialRollReady local new=self.X.InventoryService:Grant(player,item.Kind,item.Id)
- p.RollState.TotalRolls=p.RollState.TotalRolls+1 p.RollState.DiscoveryPity=new and 0 or p.RollState.DiscoveryPity+1
+ p.RollState.TotalRolls=p.RollState.TotalRolls+1 p.RollState.DiscoveryPity=new and 0 or math.min(C.DiscoveryThreshold,p.RollState.DiscoveryPity+1)
  local temp=self.X.Temp[player] temp.Dew=0
- if special then p.RollState.BloomCharge=E.Value(p,"ROLL_2","Reserve",0)+E.Value(p,"BLOOM_4","Reserve",0) p.RollState.SpecialRollReady=false
+ if special then local reserve=E.Value(p,"ROLL_2","Reserve",0)+E.Value(p,"BLOOM_4","Reserve",0) p.RollState.BloomCharge=math.clamp(reserve,0,math.max(0,C.BloomMax-1)) p.RollState.SpecialRollReady=false
   if item.Kind=="FlowerSeed" and p.WorkshopV5.Nodes.BLOOM_1 and rng:NextNumber()<C.SpecialMutationChance+(temp.Crystal and .15 or 0)+E.Value(p,"BLOOM_5","MutationChance",0) then temp.SeedMutation={Id=item.Id,Mutation="Radiant"} end temp.Crystal=nil temp.Eclipse=nil self.X:Emit(player,"BloomRoll",1)
  end
  self.X:Emit(player,"Roll",1) if automatic then self.X:Emit(player,"AutoRoll",1) end

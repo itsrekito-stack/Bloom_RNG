@@ -17,6 +17,7 @@ local R=require(RS.Config.RarityConfig)
 local L=require(RS.Config.LocationsConfig)
 local Theme=require(RS.Config.UIThemeConfig)
 local RollAudio=require(RS.Config.RollAudioConfig)
+local BloomConfig=require(RS.Config.BloomConfig)
 local NumberFormatter=require(RS.Shared.NumberFormatter)
 local WorkshopEffects=require(RS.Shared.WorkshopEffects)
 local InventoryV2=require(script.Parent.InventoryV2Controller)
@@ -1174,10 +1175,13 @@ function UI:Render()
  end
  if self.Auto and not self.RouletteRunning and not self.RouletteLanding then self:StartRouletteAnimation() end
 
- local charge=math.clamp(tonumber(p.RollState.BloomCharge) or 0,0,100)
- local pity=math.min(30,tonumber(p.RollState.DiscoveryPity) or 0)
- self.MeterLabel.Text=string.format("BLOOM  %.0f%%     •     DISCOVERY  %d/30",charge,pity)..(p.WorkshopV5.Nodes.ROLL_4 and pity>=29 and "  •  NEW GUARANTEED" or "")
- self.BloomFill.Size=UDim2.fromScale(charge/100,1)
+ local bloomMax=math.max(1,tonumber(BloomConfig.BloomMax) or 100)
+ local pityMax=math.max(1,math.floor(tonumber(BloomConfig.DiscoveryThreshold) or 30))
+ local charge=math.clamp(tonumber(p.RollState.BloomCharge) or 0,0,bloomMax)
+ local pity=math.clamp(math.floor(tonumber(p.RollState.DiscoveryPity) or 0),0,pityMax)
+ local bloomPercent=charge/bloomMax*100
+ self.MeterLabel.Text=string.format("BLOOM  %.0f%%     •     DISCOVERY  %d/%d",bloomPercent,pity,pityMax)..(p.WorkshopV5.Nodes.ROLL_4 and pity>=pityMax-1 and "  •  NEW GUARANTEED" or "")
+ self.BloomFill.Size=UDim2.fromScale(charge/bloomMax,1)
  self.MeterArea.Visible=rollUnlocked and (p.Tutorial.Step>=10 or p.Tutorial.Skipped)
 
  for name,b in pairs(self.DockButtons) do b.Visible=name=="Settings" or p.Tutorial.FeatureUnlocks[name]==true end
