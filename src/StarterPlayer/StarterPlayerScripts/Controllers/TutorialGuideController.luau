@@ -99,6 +99,47 @@ function S:Init(ui)
  highlight.Parent=anchor
  self.WorldHighlight=highlight
 
+ local secondaryHighlight=Instance.new("Highlight")
+ secondaryHighlight.Name="BloomTutorialSecondaryHighlight"
+ secondaryHighlight.FillColor=C.Blue
+ secondaryHighlight.FillTransparency=.9
+ secondaryHighlight.OutlineColor=C.Gold
+ secondaryHighlight.OutlineTransparency=.08
+ secondaryHighlight.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+ secondaryHighlight.Enabled=false
+ secondaryHighlight.Parent=anchor
+ self.SecondaryWorldHighlight=secondaryHighlight
+
+ local linkStart=Instance.new("Part")
+ linkStart.Name="BloomTutorialLinkStart"
+ linkStart.Transparency=1
+ linkStart.Anchored=true
+ linkStart.CanCollide=false
+ linkStart.CanTouch=false
+ linkStart.CanQuery=false
+ linkStart.Size=Vector3.new(.2,.2,.2)
+ linkStart.Parent=workspace
+ local linkEnd=linkStart:Clone()
+ linkEnd.Name="BloomTutorialLinkEnd"
+ linkEnd.Parent=workspace
+ local linkStartAttachment=Instance.new("Attachment")
+ linkStartAttachment.Parent=linkStart
+ local linkEndAttachment=Instance.new("Attachment")
+ linkEndAttachment.Parent=linkEnd
+ local synergyLink=Instance.new("Beam")
+ synergyLink.Attachment0=linkStartAttachment
+ synergyLink.Attachment1=linkEndAttachment
+ synergyLink.Width0=.08
+ synergyLink.Width1=.08
+ synergyLink.FaceCamera=true
+ synergyLink.Color=ColorSequence.new(C.Gold)
+ synergyLink.Transparency=NumberSequence.new(.18)
+ synergyLink.Enabled=false
+ synergyLink.Parent=anchor
+ self.SynergyLinkStart=linkStart
+ self.SynergyLinkEnd=linkEnd
+ self.SynergyLink=synergyLink
+
  local frame=Instance.new("Frame")
  frame.Name="TutorialSpotlight"
  frame.AnchorPoint=Vector2.new(.5,.5)
@@ -168,6 +209,9 @@ function S:HideWorldTarget()
  self.Beam.Enabled=false
  self.WorldHighlight.Enabled=false
  self.WorldHighlight.Adornee=nil
+ self.SecondaryWorldHighlight.Enabled=false
+ self.SecondaryWorldHighlight.Adornee=nil
+ self.SynergyLink.Enabled=false
 end
 
 function S:PlaceScreenTarget(button,label,helper)
@@ -293,6 +337,16 @@ function S:ResolveWorldTarget(step)
  return nil,nil
 end
 
+function S:SetSynergyPartner(primary,partner)
+ if not primary or not partner or not primary:IsA("BasePart") or not partner:IsA("BasePart") then return false end
+ self.SecondaryWorldHighlight.Adornee=partner
+ self.SecondaryWorldHighlight.Enabled=true
+ self.SynergyLinkStart.Position=primary.Position+Vector3.new(0,1.2,0)
+ self.SynergyLinkEnd.Position=partner.Position+Vector3.new(0,1.2,0)
+ self.SynergyLink.Enabled=true
+ return true
+end
+
 function S:Missing(step)
  local key=tostring(step.Id)..":"..tostring(step.Target)
  if self.LastMissingKey~=key then
@@ -331,6 +385,35 @@ function S:Update()
   return
  end
 
+ if step.Target=="RouletteReward" then
+  local resultTarget=ui.RouletteViewport
+  if resultTarget and resultTarget.Visible then
+   if self:PlaceScreenTarget(resultTarget,"FLOWER SEED",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+  else
+   ui.Guide.Text=step.Helper or "Your Flower Seed is secured. Watch the roulette result."
+   ui.Guide.Visible=true
+   self.LastMissingKey=nil
+  end
+  return
+ end
+
+ if step.Target=="InventoryStats" then
+  if ui.Menu~="SeedSatchel" then
+   local button=ui.DockButtons.SeedSatchel
+   if button and button.Visible then ui.Dock.Visible=true end
+   if self:PlaceScreenTarget(button,"OPEN INVENTORY",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+   return
+  end
+  local runtime=ui.Content and ui.Content:FindFirstChild("InventoryV2Runtime",true)
+  local stats=runtime and runtime:FindFirstChild("StatsCard",true)
+  if stats and stats:IsA("GuiObject") and stats.Visible then
+   if self:PlaceScreenTarget(stats,"OWNED • AVAILABLE • MASTERY",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+  else
+   self:Missing(step)
+  end
+  return
+ end
+
  if step.Target=="WorkshopNode" then
   local runtime=ui.WorkshopRuntime
   local node=runtime and runtime:FindFirstChild("Node_"..tostring(step.NodeId or "ROLL_1"),true)
@@ -351,6 +434,9 @@ function S:Update()
  local target,label=self:ResolveWorldTarget(step)
  if target then
   self:SetWorldTarget(target,label,step.Helper)
+  if step.Target=="SynergySlot" then
+   self:SetSynergyPartner(target,self:GardenSlot(step.PartnerSlot or 1))
+  end
   self.LastMissingKey=nil
  else
   self:Missing(step)
