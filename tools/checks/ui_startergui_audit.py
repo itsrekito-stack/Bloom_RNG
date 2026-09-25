@@ -161,7 +161,7 @@ check('roll request sequence exists','RollRequestSequence' in source and 'RollRe
 check('roll request id sent to server','self:Send("Roll",automatic==true,requestId)' in source)
 check('server reward echoes request id','RequestId=requestId' in roll_source)
 check('remote ack echoes request id','RequestId=rollRequestId' in remote_source)
-check('landing settle is generation guarded','self:StepRoulette(duration,final and target or nil,generation)' in source)
+check('landing settle is generation guarded','final and target or nil,generation)' in source and 'if generation and generation~=self.RouletteGeneration then return false end' in source)
 check('stale landing cannot clear new session','if generation~=self.RouletteGeneration then return end\n  self.RouletteLanding=false' in source)
 
 check('first state reveals HUD','local firstState=self.State==nil' in source and 'self.ObjectiveCard.Visible=true' in source and 'self.CurrencyHUD.Visible=true' in source)
