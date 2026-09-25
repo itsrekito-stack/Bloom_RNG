@@ -35,7 +35,7 @@ location_manifest=section(manifest,"Locations={","\n },\n Activities={")
 activity_match=re.search(r'Activities=\{([^}]*)\}',manifest)
 if not activity_match:
     raise AssertionError("release activity manifest missing")
-trial_manifest=section(manifest,"Trials={","\n },\n}")
+trial_manifest=section(manifest,"Trials={","\n },\n WorkshopBranches={")
 
 EXPECTED_FLOWERS={
     m.group(1):m.group(2)
