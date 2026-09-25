@@ -307,12 +307,18 @@ async function switchUiModel(path,key){
   const saved=await flushAutoSave();
   if(!saved)return false;
  }
+ const previousPath=state.targetPath,previousKey=state.modelKey,previousRoot=state.root;
  state.targetPath=path;
  state.modelKey=key;
+ const loaded=await pullProject();
+ if(!loaded){
+  state.targetPath=previousPath;state.modelKey=previousKey;state.root=previousRoot;
+  updateStatus();
+  return false;
+ }
  localStorage.setItem("bloomTargetPath",path);
- await pullProject();
  updateStatus();
- return !!state.root;
+ return true;
 }
 async function activateUiState(scene){
  const closing=state.activeUiState===scene;
@@ -2019,11 +2025,16 @@ async function pullProject(){
   if(ROFLOW_NATIVE){
    const text=await roflowInvoke("read_ui_model",{path:state.targetPath});
    state.nativeProjectReady=true;
-   setRoot(JSON.parse(String(text).replace(/^\uFEFF/,"")),"Загружено из Roblox/Rojo файла");
-   return;
+   setRoot(JSON.parse(String(text).replace(/^\uFEFF/,"")),"Loaded "+state.targetPath);
+   return true;
   }
-  const h=await getFile(state.targetPath,false),f=await h.getFile(),raw=JSON.parse(await f.text());setRoot(raw,"Загружено из Roblox/Rojo файла")
- }catch(e){toast("Не удалось прочитать: "+e.message,true)}
+  const h=await getFile(state.targetPath,false),f=await h.getFile(),raw=JSON.parse(await f.text());
+  setRoot(raw,"Loaded "+state.targetPath);
+  return true;
+ }catch(e){
+  toast("Could not read "+state.targetPath+": "+e.message,true);
+  return false;
+ }
 }
 async function pushProject(){
  const ok=await writeCurrentModel({silent:false,force:true});
