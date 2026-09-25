@@ -14,6 +14,7 @@ const IMAGE_CLASSES=new Set(["ImageLabel","ImageButton"]);
 const CONTAINERS=new Set(["ScreenGui","Frame","ScrollingFrame","TextButton","ImageButton"]);
 const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 const LOADING_TARGET="src/ReplicatedFirst/BloomLoadingTemplate.model.json";
+function lastGoodModelKey(){return state?.targetPath===LOADING_TARGET?"BloomUIStudioLastGoodModelLoading":"BloomUIStudioLastGoodModel"}
 const UI_STATE_TITLES={
  gameplay:"HUD",inventory_v2:"Inventory",workshop:"Workshop",fieldguide:"Field Guide",map:"Map",trials:"Trials",
  settings:"Settings",plant:"Plant Picker",season:"Season",replay:"Tutorial Replay",cards:"Cards",
@@ -130,7 +131,7 @@ function setRoot(raw,label="Модель загружена"){
   state.selectedIds=new Set([state.selectedId]);
   state.selectionAnchorId=state.selectedId;
   state.history=[];state.future=[];state.dirty=false;state.modelLoadFailed=false;
-  try{localStorage.setItem("BloomUIStudioLastGoodModel",JSON.stringify(stripNode(state.root)))}catch{}
+  try{localStorage.setItem(lastGoodModelKey(),JSON.stringify(stripNode(state.root)))}catch{}
   const push=$("#pushBtn");if(push){push.disabled=false;push.title="Записать модель в игру"}
   syncInsetFromRoot();renderAll();toast(label);
  }catch(e){console.error("[Bloom UI Studio] model/render error",e);toast("Ошибка модели: "+e.message,true)}
@@ -181,6 +182,10 @@ function redo(){if(!state.future.length)return;state.history.push(serialize(fals
 
 function currentModelLooksSafe(){
  if(!state.root||state.root.ClassName!=="ScreenGui")return false;
+ if(state.targetPath===LOADING_TARGET){
+  const background=(state.root.Children||[]).find(x=>x.Name==="Background"&&x.ClassName==="Frame");
+  return !!background&&(background.Children||[]).length>0;
+ }
  const safe=(state.root.Children||[]).find(x=>x.Name==="SafeRoot"&&x.ClassName==="Frame");
  return !!safe&&(safe.Children||[]).length>0;
 }
@@ -1970,7 +1975,7 @@ async function writeCurrentModel({silent=false,force=false}={}){
   state.dirty=false;
   state.modelLoadFailed=false;
   state.lastAutoSaveError="";
-  try{localStorage.setItem("BloomUIStudioLastGoodModel",serialize(false))}catch{}
+  try{localStorage.setItem(lastGoodModelKey(),serialize(false))}catch{}
   const push=$("#pushBtn");
   if(push){push.disabled=false;push.title="Записать модель в игру"}
   updateStatus();
@@ -2040,7 +2045,7 @@ async function loadInitial(){
    return;
   }catch(e){
    state.nativeProjectReady=false;
-   const backup=localStorage.getItem("BloomUIStudioLastGoodModel");
+   const backup=localStorage.getItem(lastGoodModelKey());
    if(backup){try{state.root=normalizeNode(JSON.parse(backup));state.selectedId=state.root.__id;state.selectedIds=new Set([state.selectedId]);state.selectionAnchorId=state.selectedId;renderAll()}catch{}}
    const push=$("#pushBtn");if(push){push.disabled=true;push.title="Сначала выбери проект в RoFlow"}
    toast("RoFlow: выбери папку Bloom_RNG, чтобы открыть модель",true);
@@ -2058,7 +2063,7 @@ async function loadInitial(){
    }catch(parseError){
     console.error("[Bloom UI Studio] BloomUI.model.json parse error",parseError);
     state.modelLoadFailed=true;
-    const backup=localStorage.getItem("BloomUIStudioLastGoodModel");
+    const backup=localStorage.getItem(lastGoodModelKey());
     let recovered=false;
     if(backup){
      try{
@@ -2084,7 +2089,7 @@ async function loadInitial(){
   throw new Error("BloomUI.model.json не найден");
  }catch(e){
   state.modelLoadFailed=true;
-  const backup=localStorage.getItem("BloomUIStudioLastGoodModel");
+  const backup=localStorage.getItem(lastGoodModelKey());
   if(backup){try{state.root=normalizeNode(JSON.parse(backup));state.selectedId=state.root.__id;state.selectedIds=new Set([state.selectedId]);state.selectionAnchorId=state.selectedId;renderAll()}catch{}}
   const push=$("#pushBtn");if(push){push.disabled=true;push.title="Заблокировано: исходная модель не загружена"}
   toast("Не удалось загрузить BloomUI.model.json. Сохранение заблокировано: "+e.message,true);
