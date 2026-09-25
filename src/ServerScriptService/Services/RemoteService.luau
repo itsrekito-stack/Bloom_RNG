@@ -1,6 +1,6 @@
 local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.BloomConfig) local S={Buckets={},StateRequests={}}
 local NO_ARGS={Ready=true,Respec=true,Skip=true,Replay=true,SeasonCancel=true,DistillNectar=true}
-local ACTIVITY_PHASE={Begin=true,Collect=true,Cancel=true}
+local ACTIVITY_PHASE={Collect=true}
 local function finite(v) return type(v)=="number" and v==v and math.abs(v)~=math.huge end
 local function integer(v,min,max) return finite(v) and v%1==0 and v>=min and v<=max end
 local function short(v,max,allowEmpty) return type(v)=="string" and #v<=max and (allowEmpty or #v>0) end
