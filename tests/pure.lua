@@ -44,18 +44,18 @@ test("roll independent players, 100 cycles, cooldown and one-time Bloom",functio
  assert(roll:Roll(a,false)) assert(profiles[a].RollState.BloomCharge==0) assert(roll:Roll(b,false)) assert(not roll:Roll(a,false))
  for i=1,100 do roll.Last[a]=-100 assert(roll:Roll(a,true)) end assert(profiles[a].RollState.TotalRolls==101 and profiles[b].RollState.TotalRolls==1 and rewards==102)
 end)
-test("activity owner, body contact, order, expiry, duplicate rejection",function()
- local player,other={},{} local p=Schema.CreateDefault() local touching=true local events={}
- local service=require(node("ServerScriptService/Services/GardenActivityService")) local x={Profile=function(_,who) if who==player then return p end end,Temp={[player]={}},U={CharacterTouchesSphere=function() return touching end},Emit=function(_,pl,event) events[event]=(events[event] or 0)+1 end,Send=function() end,RollService={Charge=function() end},SocialService={Contribute=function() end},PollinatorService={AddMastery=function() end},MapService={Sector=function() return "SunnyOrchard" end},GardenPlotService={HivePosition=function() return Vector3.zero end,Position=function(_,pl,i) return Vector3.new(i*7,0,0) end}}
+test("activity owner, checkpoint reach, order, expiry, duplicate rejection",function()
+ local player,other={},{} local p=Schema.CreateDefault() local within=true local events={}
+ local service=require(node("ServerScriptService/Services/GardenActivityService")) local x={Profile=function(_,who) if who==player then return p end end,Temp={[player]={}},U={WithinCheckpoint=function() return within end},Emit=function(_,pl,event) events[event]=(events[event] or 0)+1 end,Send=function() end,RollService={Charge=function() end},SocialService={Contribute=function() end},PollinatorService={AddMastery=function() end},MapService={Sector=function() return "SunnyOrchard" end},GardenPlotService={HivePosition=function() return Vector3.zero end,Position=function(_,pl,i) return Vector3.new(i*7,0,0) end}}
  service:Init(x) service.Offers[player]={token={Id="token",Kind="PollenTrail",Index=1,Nodes={Vector3.zero,Vector3.new(3,0,0)},Expires=os.clock()+5,Revision=0}}
- assert(not service:Collect(other,"token",1,"Collect")) touching=false assert(not service:Collect(player,"token",1,"Collect")) touching=true assert(not service:Collect(player,"token",2,"Collect")) assert(service:Collect(player,"token",1,"Collect")) assert(service:Collect(player,"token",2,"Collect")) assert(not service:Collect(player,"token",2,"Collect")) assert(events.PollenTrail==1 and events.ActivityCompleted==1 and events.WorldActivity==1)
- service.Offers[player].expired={Id="expired",Kind="PollenSpark",Index=1,Nodes={Vector3.zero},Expires=-1} assert(not service:Collect(player,"expired",1,"Collect"))
+ assert(not service:Collect(other,"token",1,"Reach")) within=false assert(not service:Collect(player,"token",1,"Reach")) within=true assert(not service:Collect(player,"token",2,"Reach")) assert(service:Collect(player,"token",1,"Reach")) assert(service:Collect(player,"token",2,"Reach")) assert(not service:Collect(player,"token",2,"Reach")) assert(events.PollenTrail==1 and events.ActivityCompleted==1 and events.WorldActivity==1)
+ service.Offers[player].expired={Id="expired",Kind="PollenSpark",Index=1,Nodes={Vector3.zero},Expires=-1} assert(not service:Collect(player,"expired",1,"Reach"))
 end)
-test("activity collection accepts touch Collect only",function()
+test("activity collection accepts checkpoint Reach only",function()
  local player={} local p=Schema.CreateDefault() local s=require(node("ServerScriptService/Services/GardenActivityService"))
- local x={Profile=function() return p end,Temp={[player]={}},U={CharacterTouchesSphere=function() return true end},Emit=function() end,Send=function() end,RollService={Charge=function() end},SocialService={Contribute=function() end},PollinatorService={AddMastery=function() end},MapService={Sector=function() return "Center" end}}
+ local x={Profile=function() return p end,Temp={[player]={}},U={WithinCheckpoint=function() return true end},Emit=function() end,Send=function() end,RollService={Charge=function() end},SocialService={Contribute=function() end},PollinatorService={AddMastery=function() end},MapService={Sector=function() return "Center" end}}
  s:Init(x) s.Offers[player]={touch={Id="touch",Kind="PollenSpark",Index=1,Nodes={Vector3.zero},Expires=os.clock()+10}}
- assert(not s:Collect(player,"touch",1,"Begin")) assert(not s:Collect(player,"touch",1,"Cancel")) assert(s:Collect(player,"touch",1,"Collect"))
+ assert(not s:Collect(player,"touch",1,"Begin")) assert(not s:Collect(player,"touch",1,"Collect")) assert(s:Collect(player,"touch",1,"Reach"))
 end)
 test("Workshop purchase prerequisites, balance, idempotence",function()
  local p=Schema.CreateDefault() p.Hive.Level=8 p.Tutorial.FeatureUnlocks.Workshop=true p.WorkshopV5.Points=5 p.Currencies.Coins=1000
@@ -168,7 +168,7 @@ end)
 test("tutorial Pollen Spark offer is tagged, deduped and respawns after expiry",function()
  local player={Character={FindFirstChildOfClass=function() return {Health=100} end}} local p=Schema.CreateDefault()
  local service=require(node("ServerScriptService/Services/GardenActivityService"))
- local x={Profile=function() return p end,Temp={[player]={}},U={CharacterTouchesSphere=function() return false end},Emit=function() end,Send=function() end,GardenPlotService={HivePosition=function() return Vector3.zero end,Position=function(_,pl,i) return Vector3.new(i*7,0,0) end}}
+ local x={Profile=function() return p end,Temp={[player]={}},U={WithinCheckpoint=function() return false end},Emit=function() end,Send=function() end,GardenPlotService={HivePosition=function() return Vector3.zero end,Position=function(_,pl,i) return Vector3.new(i*7,0,0) end}}
  service:Init(x)
  assert(service:EnsureTutorialSpark(player))
  local count=0 local first
