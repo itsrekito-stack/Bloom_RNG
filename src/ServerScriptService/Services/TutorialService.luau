@@ -29,6 +29,7 @@ function S:LegacyStepComplete(p,step)
  if step.Id=="StarterBee" then return p.StarterBeeGranted or (events.StarterBee or 0)>0 end
  if step.Id=="HiveUpgrade" then return p.Hive.Level>=2 or (events.HiveUpgrade or 0)>0 end
  if step.Id=="WorkshopPurchase" then return next(p.WorkshopV5.Nodes)~=nil or (events.WorkshopPurchase or 0)>0 end
+ if step.Id=="InventoryExplain" then return (events.InventoryReviewed or 0)>0 or (events.SatchelOpen or 0)>0 end
  if step.Id=="SunnyVisit" then return (events.SunnyVisit or 0)>0 end
  return (events[step.Event] or 0)>0
 end
@@ -37,7 +38,7 @@ function S:Migrate(player,p)
  local t=p.Tutorial
  if t.Version==T.Version then return false end
 
- local wasComplete=t.Events.TutorialComplete or t.Step>#T.Steps
+ local wasComplete=t.Skipped or t.Events.TutorialComplete or t.Step>#T.Steps
  t.Version=T.Version
  if wasComplete then
   t.Step=#T.Steps+1
@@ -167,6 +168,10 @@ function S:Tick(player)
   return true
  elseif step.Id=="PollenSpark" then
   self.X.GardenActivityService:EnsureTutorialSpark(player)
+ elseif step.Id=="FirstSeed" and (p.Tutorial.Events.SeedReward or 0)>0 then
+  self:RecordEvent(player,"SeedReward")
+  self:Refresh(player)
+  return true
  elseif step.Id=="SunnyVisit" then
   if self.X.MapService:Sector(player)=="SunnyOrchard" then
    self.X:Emit(player,"SunnyVisit",1)
