@@ -26,7 +26,13 @@ function S:ShowCard(r)
  ui.RewardMeta.Text=meta
  ui.RewardMeta.TextColor3=rarityColor
  ui.RewardHint.Text=r.Ceremony and "" or "click to speed up"
- ui.RewardIcon.Image=r.Ceremony and Icons.Get("System",r.Ceremony=="Hive" and "Hive" or "Flower") or Icons.GetRewardIcon(r.Kind,r.Id)
+ if r.Ceremony=="StarterBee" then
+  ui.RewardIcon.Image=Icons.GetBeeIcon(r.Id or "WorkerBee")
+ elseif r.Ceremony then
+  ui.RewardIcon.Image=Icons.Get("System",r.Ceremony=="Hive" and "Hive" or "Flower")
+ else
+  ui.RewardIcon.Image=Icons.GetRewardIcon(r.Kind,r.Id)
+ end
  ui.RewardIcon.Rotation=0
  ui.RevealScale.Scale=.9
  TweenService:Create(ui.RevealScale,TweenInfo.new(.22,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
