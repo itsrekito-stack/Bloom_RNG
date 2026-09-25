@@ -12,6 +12,7 @@ use std::{
 use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindowBuilder};
 
 const MODEL_PATH: &str = "src/StarterGui/BloomUI.model.json";
+const LOADING_MODEL_PATH: &str = "src/ReplicatedFirst/BloomLoadingTemplate.model.json";
 const PLANNER_DEFAULTS_PATH: &str = "tools/roflow/planner-defaults.json";
 
 #[derive(Default)]
@@ -907,17 +908,27 @@ fn project_status(state: State<AppState>) -> Result<ProjectStatus, String> {
     status_for(&current_root(&state)?)
 }
 
-#[tauri::command]
-fn read_ui_model(state: State<AppState>) -> Result<String, String> {
-    let root = current_root(&state)?;
-    fs::read_to_string(root.join(MODEL_PATH)).map_err(|e| format!("Failed to read {MODEL_PATH}: {e}"))
+fn ui_model_path(requested: Option<String>) -> Result<&'static str, String> {
+    match requested.as_deref().unwrap_or(MODEL_PATH) {
+        MODEL_PATH => Ok(MODEL_PATH),
+        LOADING_MODEL_PATH => Ok(LOADING_MODEL_PATH),
+        other => Err(format!("Unsupported UI model path: {other}")),
+    }
 }
 
 #[tauri::command]
-fn write_ui_model(contents: String, state: State<AppState>) -> Result<(), String> {
+fn read_ui_model(path: Option<String>, state: State<AppState>) -> Result<String, String> {
     let root = current_root(&state)?;
+    let model_path = ui_model_path(path)?;
+    fs::read_to_string(root.join(model_path)).map_err(|e| format!("Failed to read {model_path}: {e}"))
+}
+
+#[tauri::command]
+fn write_ui_model(contents: String, path: Option<String>, state: State<AppState>) -> Result<(), String> {
+    let root = current_root(&state)?;
+    let model_path = ui_model_path(path)?;
     serde_json::from_str::<Value>(&contents).map_err(|e| format!("Refusing to write invalid JSON: {e}"))?;
-    fs::write(root.join(MODEL_PATH), contents).map_err(|e| format!("Failed to write {MODEL_PATH}: {e}"))
+    fs::write(root.join(model_path), contents).map_err(|e| format!("Failed to write {model_path}: {e}"))
 }
 
 #[tauri::command]
