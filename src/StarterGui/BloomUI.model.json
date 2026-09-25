@@ -3024,7 +3024,7 @@
             "BackgroundTransparency": 0.06,
             "BorderSizePixel": 0,
             "ZIndex": 25,
-            "Visible": true,
+            "Visible": false,
             "ClipsDescendants": false,
             "Position": {
               "UDim2": [
