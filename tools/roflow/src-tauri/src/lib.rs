@@ -765,6 +765,26 @@ fn child_index(values: &[Value]) -> (Vec<String>, HashMap<String, Value>) {
     (order, map)
 }
 
+fn is_required_runtime_ui_child(value: &Value) -> bool {
+    matches!(
+        value.get("Name").and_then(Value::as_str),
+        Some(
+            "ObjectiveCard"
+                | "CurrencyHUD"
+                | "MenuDock"
+                | "RollHUD"
+                | "VerticalRoulette"
+                | "TutorialGuideBanner"
+                | "Toast"
+                | "ModalShade"
+                | "MainPanel"
+                | "RewardReveal"
+                | "ActiveBoostsHUD"
+                | "ActiveBoostTooltip"
+        )
+    )
+}
+
 fn merge_children(base: &[Value], local: &[Value], remote: &[Value]) -> Vec<Value> {
     let (_bo, bm) = child_index(base);
     let (lo, lm) = child_index(local);
@@ -778,7 +798,7 @@ fn merge_children(base: &[Value], local: &[Value], remote: &[Value]) -> Vec<Valu
         match (bm.get(&key), lm.get(&key)) {
             (None, _) => out.push(r.clone()),
             (Some(b), None) => {
-                if b != r {
+                if is_required_runtime_ui_child(r) || b != r {
                     out.push(r.clone());
                 }
             }
