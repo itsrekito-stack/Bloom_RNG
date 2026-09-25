@@ -1833,7 +1833,7 @@ async function assistantStatus(){
 }
 async function reloadModelFromServer(label="AI изменения загружены"){
  if(ROFLOW_NATIVE){
-  const raw=await roflowInvoke("read_ui_model");
+  const raw=await roflowInvoke("read_ui_model",{path:state.targetPath});
   let model;
   try{model=JSON.parse(String(raw).replace(/^\uFEFF/,""))}catch{throw new Error("BloomUI.model.json содержит неверный JSON")}
   state.nativeProjectReady=true;
@@ -1864,7 +1864,7 @@ async function assistantSync(){
   if(ROFLOW_NATIVE){
    if(status?.ok===false)throw new Error(status?.error||"RoFlow project недоступен");
    if(status?.dirty)toast("AI SYNC: backup → stash → pull → merge → restore");
-   const data=await roflowInvoke("safe_ai_sync",{editorModel:state.root?stripNode(state.root):null});
+   const data=await roflowInvoke("safe_ai_sync",{editorModel:state.targetPath===DEFAULT_TARGET&&state.root?stripNode(state.root):null});
    await reloadModelFromServer(data.changed?"AI UI обновлён из GitHub":"AI SYNC: уже актуально");
    await assistantStatus();
    if(data.modelMerged)toast(data.changed?"AI SYNC готов · UI изменения объединены":"AI SYNC готов · локальный UI сохранён");
@@ -1877,7 +1877,7 @@ async function assistantSync(){
   if(status.dirty)toast("AI SYNC: сохраняю локальные изменения → pull → возвращаю их обратно");
   const {r,data}=await apiJson(base+"/api/git/pull",{
    method:"POST",headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({editor_model:state.root?stripNode(state.root):null}),
+   body:JSON.stringify({editor_model:state.targetPath===DEFAULT_TARGET&&state.root?stripNode(state.root):null}),
    timeout:50000
   });
   if(!r.ok||!data.ok){
