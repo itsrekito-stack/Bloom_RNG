@@ -8,7 +8,7 @@ function S.BuildSeasonTurnPlan(profile)
  after.Garden.Slots[1]={SpeciesId=flower,Level=1,XP=0,Mutation=profile.WorkshopV5.Nodes.LEGACY_3 and profile.Season.Keepsakes.Flower and "Memory" or "",TotalPollination=0}
  after.World.UnlockedSectors={Center=true} after.Season.Count=profile.Season.Count+1 after.Season.ActiveCard=profile.WorkshopV5.Nodes.LEGACY_1 and profile.Season.ActiveCard or "" after.Season.CompletedGoals={}
  after.RollState.BloomCharge=0 after.RollState.SpecialRollReady=false
- for id in pairs(after.WorkshopV5.Nodes) do if not after.WorkshopV5.LegacyNodes[id] then after.WorkshopV5.Nodes[id]=nil after.WorkshopV5.Points=after.WorkshopV5.Points+1 end end
+ for id in pairs(after.WorkshopV5.Nodes) do if not after.WorkshopV5.LegacyNodes[id] then local node=require(RS.Config.WorkshopConfig).Nodes[id] after.WorkshopV5.Nodes[id]=nil after.WorkshopV5.Points=after.WorkshopV5.Points+(node and node.Cost or 0) end end
  local bee=profile.Season.Keepsakes.Bee or "WorkerBee" after.Pollinators.BeeInventory[bee]=math.max(1,after.Pollinators.BeeInventory[bee] or 0) after.Pollinators.EquippedBeeSlots={bee}
  if profile.WorkshopV5.Nodes.LEGACY_2 and profile.Season.Keepsakes.Bee then after.Pollinators.BeeMastery[bee]=(tonumber(after.Pollinators.BeeMastery[bee]) or 0)+E.Value(profile,"LEGACY_2","MemoryMastery",0) end
  if profile.WorkshopV5.Nodes.LEGACY_5 and profile.Season.Keepsakes.Flower2 then local id=profile.Season.Keepsakes.Flower2 after.FlowerCollection.OwnedSeedCopies[id]=math.max(id==flower and 2 or 1,after.FlowerCollection.OwnedSeedCopies[id] or 0) after.Garden.Slots[2]={SpeciesId=id,Level=1,XP=0,Mutation="Memory",TotalPollination=0} end
