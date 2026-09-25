@@ -136,7 +136,7 @@ need(bloom,'self.ObjectiveTitle.Text="TUTORIAL COMPLETE"',"completion title")
 need(bloom,'self.ObjectiveText.Text="Your garden journey begins now."',"completion copy")
 need(bloom,'if previousTutorialStep and previousTutorialStep<=#T.Steps and nextTutorialStep and nextTutorialStep>#T.Steps then',"completion transition")
 need(bloom,'self.ObjectiveTitle.Text="JOURNEY  •  STEP "',"Journey handoff")
-need(bloom,'local step=T.Steps[ui.ReplayIndex or p.Tutorial.Step]',"persisted guide resume")
+need(guide,'local step=T.Steps[ui.ReplayIndex or p.Tutorial.Step]',"persisted guide resume")
 need(bloom,'self.ReplayIndex=i%#T.Steps+1',"Replay next is config-driven")
 need(bloom,'self.ReplayIndex=(i-2)%#T.Steps+1',"Replay previous is config-driven")
 
