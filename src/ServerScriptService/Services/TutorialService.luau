@@ -7,7 +7,7 @@ function S:Refresh(player)
   local unlocked=rule.Step and t.Step>=rule.Step or rule.Event and (t.Events[rule.Event] or 0)>0 or rule.Node and p.WorkshopV5.Nodes[rule.Node]==true
   if rule.Node then t.FeatureUnlocks[id]=unlocked==true elseif unlocked then t.FeatureUnlocks[id]=true end
  end
- if old<=#T.Steps and t.Step>#T.Steps then self.X:EmitOnce(player,"TutorialComplete") end
+ if t.Step>#T.Steps and not t.Events.TutorialComplete then self.X:EmitOnce(player,"TutorialComplete") end
 end
 function S:Skip(player)
  local p=self.X:Profile(player) if not p then return end
