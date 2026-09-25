@@ -51,6 +51,10 @@ need(ui,'self.BoostHUD:Update(boosts,self.State.Revision)',"boost HUD renders au
 need(ui,'if self.BoostHUD then self.BoostHUD:Tick() end',"boost HUD timer ticks")
 need(hud,'badge.MouseEnter:Connect',"boost hover interaction")
 need(hud,'self.TooltipBreakdown.Text=self:TooltipText(item)',"boost tooltip breakdown")
+need(hud,'local line=group',"compact tooltip source line")
+assert 'table.insert(lines,tostring(item.Description))' not in hud, "boost tooltip must not show long item descriptions"
+assert 'table.insert(lines,"  "..tostring(entry.Description))' not in hud, "boost tooltip must not show long source descriptions"
+need(hud,'local height=math.clamp(58+math.max(1,sourceCount)*20,78,180)',"compact tooltip height")
 need(hud,'self.ItemsByBadge[badge]=item',"runtime boost timer data retained")
 need(hud,'TweenService:Create(scale',"boost hover scale feedback")
 need(hud,'function S:SetMinimized(minimized,animate)',"boost HUD minimize state")
