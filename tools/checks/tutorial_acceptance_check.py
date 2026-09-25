@@ -13,7 +13,7 @@ activity_client=(ROOT/'src/StarterPlayer/StarterPlayerScripts/Controllers/Activi
 
 targets=set(re.findall(r'Target="([^"]+)"',config))
 screen={'Roll','SeedSatchel'}
-world={'Hive','Garden','Token','SectorActivity','Workshop'}
+world={'Hive','Garden','Token','Workshop'}
 sectors=set(re.findall(r'(SunnyOrchard|CrystalGreenhouse|TwilightGrove)=\{',locations))
 unknown=targets-screen-world-sectors
 assert not unknown, f"tutorial has unmapped targets: {sorted(unknown)}"
@@ -24,7 +24,6 @@ for token in (
     'if target=="Hive" then',
     'if target=="Garden" then',
     'elseif target=="Token" then',
-    'elseif target=="SectorActivity" then',
     'elseif target=="Workshop" then',
     'elseif L.Sectors[target] then',
 ):
@@ -51,13 +50,12 @@ for root_w,root_h in ((1366,768),(1280,720)):
         x,y,w,h=place(root_w,root_h,*target)
         assert x>=7.99 and y>=7.99 and x+w<=root_w-7.99 and y+h<=root_h-7.99, (root_w,root_h,target,(x,y,w,h))
 
-assert 'Event="WorldActivity",Text="Complete an activity in the sector",Target="SectorActivity"' in config, "sector activity tutorial step missing"
-assert 'local completedSector=o.Sector or self.X.MapService:Sector(player)' in activity, "activity completion must derive physical sector"
-assert 'if completedSector and completedSector~="Center" then self.X:Emit(player,"WorldActivity",1) end' in activity, "sector activity must advance tutorial"
+assert 'Event="TutorialActivity",Text="Complete an activity",Target="Token"' in config, "final tutorial activity step missing"
+assert 'local tutorialStep=T.Steps[p.Tutorial.Step]' in activity, "activity completion must inspect current tutorial step"
+assert 'if tutorialStep and tutorialStep.Event=="TutorialActivity" then self.X:Emit(player,"TutorialActivity",1) end' in activity, "the next completed activity must advance the final tutorial step"
+assert 'local completedSector=o.Sector or self.X.MapService:Sector(player)' in activity, "sector activity analytics must remain separate from tutorial progression"
+assert 'if completedSector and completedSector~="Center" then self.X:Emit(player,"WorldActivity",1) end' in activity, "sector activity event must remain available"
 assert 'workspace:GetPartsInPart(part,self.TouchParams)' in activity_client, "activity tutorial target must be touch-collected"
-assert 'local token=ui.Activities:Target(true)' in guide, "final tutorial must target a sector activity only"
-assert 'tutorialStep and tutorialStep.Event=="WorldActivity"' in (ROOT/'src/ServerScriptService/Services/MapService.luau').read_text(), "final tutorial must guarantee a sector activity spawn"
-assert 'self.X.GardenActivityService:HasSectorOffer(player,sector)' in (ROOT/'src/ServerScriptService/Services/MapService.luau').read_text(), "tutorial sector activity must not duplicate existing offers"
 assert "ProximityPrompt" not in activity_client, "activity tutorial must not require E/ProximityPrompt"
 
 assert 'p.Tutorial.Step=#T.Steps+1' in service, "Skip must follow TutorialConfig length"
