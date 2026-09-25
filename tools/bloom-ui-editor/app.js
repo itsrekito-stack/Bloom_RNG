@@ -257,7 +257,7 @@ const PREVIEW_DATA={
 
 const MENU_PREVIEW_SCENES=new Set(["seedbag","workshop","fieldguide","map","trials","settings"]);
 const PREVIEW_META={
- seedbag:{title:"Инвентарь",subtitle:"Цветы, пчёлы, семена и прогресс коллекции"},
+ seedbag:{title:"Сумка семян",subtitle:"Цветы, пчёлы, мастерство и экипировка"},
  workshop:{title:"Мастерская",subtitle:"Постоянные улучшения и ветви прогрессии"},
  fieldguide:{title:"Справочник",subtitle:"Коллекция, шансы и открытые синергии"},
  map:{title:"Карта",subtitle:"Сектора, открытия и переходы"},
@@ -289,8 +289,7 @@ function previewVisible(n){
  if(!isPreview())return null;
  const name=n.Name||"",p=parentName(n);
  if(name==="Templates"||p==="Templates"||name==="Tooltip")return false;
- if(name==="SeedSatchelTemplate")return false;
- if(name==="InventoryTemplate")return state.previewScene==="seedbag";
+ if(name==="SeedSatchelTemplate")return state.previewScene==="seedbag";
  if(name==="WorkshopTemplate")return state.previewScene==="workshop";
  if(state.previewScene==="workshop"&&["HeaderIcon","PanelTitle","PanelSubtitle","HeaderAccent"].includes(name))return false;
  if(name==="Content"&&p==="MainPanel"&&(state.previewScene==="seedbag"||state.previewScene==="workshop"))return false;
@@ -330,7 +329,7 @@ function previewSize(n){
  if(!isPreview())return null;
  if(n.Name==="MainPanel"&&state.previewScene==="workshop")return [[1,0],[1,0]];
  if(n.Name==="Header"&&state.previewScene==="workshop")return [[1,0],[0,0]];
- if(n.Name==="MainPanel"&&state.previewScene==="seedbag")return [[0,1220],[0,660]];
+ if(n.Name==="MainPanel"&&state.previewScene==="seedbag")return [[0,640],[0,500]];
  if(n.Name==="MainPanel"&&MENU_PREVIEW_SCENES.has(state.previewScene))return [[0,600],[0,420]];
  if(n.Name==="ObjectiveProgressFill")return [[.38,0],[1,0]];
  if(n.Name==="BloomFill")return [[.38,0],[1,0]];
