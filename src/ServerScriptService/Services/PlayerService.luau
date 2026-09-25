@@ -1,10 +1,17 @@
 local RS=game:GetService("ReplicatedStorage") local Players=game:GetService("Players") local U=require(RS.Shared.BloomUtil) local C=require(RS.Config.BloomConfig) local T=require(RS.Config.TutorialConfig) local L=require(RS.Config.LocationsConfig)
-local X={Temp={},Revisions={},Connections={},ClientReadyConnections={},U=U}
+local X={Temp={},Revisions={},StateRevisions={},LastPushedStateRevision={},Connections={},ClientReadyConnections={},U=U}
+local STATE_NEUTRAL={Ready=true,Menu=true,Replay=true,SeasonCancel=true}
+function X:StateRevision(player) return self.StateRevisions[player] or 0 end
+function X:MarkStateDirty(player)
+ if not self.Temp[player] then return end
+ self.StateRevisions[player]=(self.StateRevisions[player] or 0)+1
+end
+function X:ActionMutatesState(action) return STATE_NEUTRAL[action]~=true end
 function X:Profile(player) return self.DataService:GetProfile(player) end
 function X:Send(player,kind,payload) if player.Parent==Players then self.RemoteService.Event:FireClient(player,kind,payload) end end
 function X:Broadcast(kind,payload) for _,p in ipairs(Players:GetPlayers()) do self:Send(p,kind,payload) end end
 function X:Emit(player,event,n)
- local p=self:Profile(player) if not p then return end p.Tutorial.Events[event]=(p.Tutorial.Events[event] or 0)+(n or 1) self.Revisions[player]=(self.Revisions[player] or 0)+1
+ local p=self:Profile(player) if not p then return end p.Tutorial.Events[event]=(p.Tutorial.Events[event] or 0)+(n or 1) self.Revisions[player]=(self.Revisions[player] or 0)+1 self:MarkStateDirty(player)
  self.AnalyticsService:Event(player,event,n or 1) if event=="ActivityCompleted" then self:Send(player,"TokenCollected",true) end self.TutorialService:Refresh(player)
  if event~="Trial" then self.BuildTrialService:Event(player,event,n or 1) end
 end
@@ -14,18 +21,21 @@ function X:Part(parent,name,pos,size,color,collide)
 end
 function X:Prompt(part,text,callback)
  local prompt=Instance.new("ProximityPrompt") prompt.ActionText=text prompt.ObjectText=part.Name prompt.RequiresLineOfSight=false prompt.MaxActivationDistance=12 prompt.Parent=part
- prompt.Triggered:Connect(function(player) if self:Profile(player) and U.Near(player,part.Position,C.InteractionDistance) and self.RemoteService:Accept(player) then callback(player) self:Push(player) end end) return prompt
+ prompt.Triggered:Connect(function(player) if self:Profile(player) and U.Near(player,part.Position,C.InteractionDistance) and self.RemoteService:Accept(player) then local changed=callback(player) if changed~=false then self:MarkStateDirty(player) end self:Push(player) end end) return prompt
 end
 function X:Snapshot(player)
  local p=self:Profile(player) if not p then return nil end
  self.TutorialService:Refresh(player)
  local uiState=self.UIStateService:Snapshot(player)
- local public={Profile=U.Copy(p),Synergies=self.GardenSynergyService.Active[player] or {},BeeCapacity=self.StatsService:BeeCapacity(p),HivePosition=self.GardenPlotService:HivePosition(player),Trial=uiState and uiState.Trials and uiState.Trials.Active or nil,ServerBloom=self.SocialService.Progress,Pulse=self.SocialService.Pulse,Cards=self.SeasonService:Offers(p),Odds=self.RollService:Odds(player),UI=uiState}
+ local public={Revision=self:StateRevision(player),Profile=U.Copy(p),Synergies=self.GardenSynergyService.Active[player] or {},BeeCapacity=self.StatsService:BeeCapacity(p),HivePosition=self.GardenPlotService:HivePosition(player),Trial=uiState and uiState.Trials and uiState.Trials.Active or nil,ServerBloom=self.SocialService.Progress,Pulse=self.SocialService.Pulse,Cards=self.SeasonService:Offers(p),Odds=self.RollService:Odds(player),UI=uiState}
  public.Profile.LegacyArchive=nil public.Profile.Telemetry=nil public.Profile.Migrations=nil
  return public
 end
-function X:Push(player)
+function X:Push(player,force)
+ local revision=self:StateRevision(player)
+ if not force and self.LastPushedStateRevision[player]==revision then return false end
  local public=self:Snapshot(player) if not public then return false end
+ self.LastPushedStateRevision[player]=public.Revision
  self:Send(player,"State",public)
  local p=public.Profile
  local leader=player:FindFirstChild("leaderstats") if leader then leader.Coins.Value=math.floor(p.Currencies.Coins) leader.Hive.Value=p.Hive.Level end
@@ -88,7 +98,7 @@ function X:Request(player,action,a,b,c)
  return false,"INVALID_ACTION"
 end
 function X:Loaded(player)
- if self.Temp[player] then return end local p=self:Profile(player) if not p then return end player:SetAttribute("BloomGameplayReady",false) self.Temp[player]={} self.Revisions[player]=0
+ if self.Temp[player] then return end local p=self:Profile(player) if not p then return end player:SetAttribute("BloomGameplayReady",false) self.Temp[player]={} self.Revisions[player]=0 self.StateRevisions[player]=0 self.LastPushedStateRevision[player]=-1
  local leader=Instance.new("Folder") leader.Name="leaderstats" leader.Parent=player for _,name in ipairs({"Coins","Hive"}) do local v=Instance.new("IntValue") v.Name=name v.Parent=leader end
  self.GardenPlotService:Build(player)
  if p.StarterBeeGranted and next(p.Pollinators.BeeInventory) then p.Tutorial.Events.StarterBee=math.max(1,p.Tutorial.Events.StarterBee or 0) else p.StarterBeeGranted=false end
@@ -98,16 +108,16 @@ function X:Loaded(player)
  self.ClientReadyConnections[player]=player:GetAttributeChangedSignal("BloomClientReady"):Connect(function()
   if player:GetAttribute("BloomClientReady")==true and self:Profile(player) then
    print("[Bloom] Client UI ready, pushing authoritative state:",player.Name)
-   task.defer(function() self:Push(player) end)
+   task.defer(function() self:Push(player,true) end)
   end
  end)
- spawn() self:EmitOnce(player,"Wake") player:SetAttribute("BloomGameplayReady",true) self:Push(player)
+ spawn() self:EmitOnce(player,"Wake") player:SetAttribute("BloomGameplayReady",true) self:Push(player,true)
  if p.Migrations.BloomSummary and not p.Migrations.BloomSummaryLogged then print("[Bloom] migrated",player.UserId,p.Migrations.BloomSummary.PetalDust) p.Migrations.BloomSummaryLogged=true end
 end
 function X:Remove(player)
  self.AnalyticsService:Flush(player)
  for _,name in ipairs(self.ServiceNames) do local s=self[name] if s.Remove then s:Remove(player) end end
- if self.Connections[player] then self.Connections[player]:Disconnect() self.Connections[player]=nil end if self.ClientReadyConnections[player] then self.ClientReadyConnections[player]:Disconnect() self.ClientReadyConnections[player]=nil end self.Temp[player]=nil self.Revisions[player]=nil
+ if self.Connections[player] then self.Connections[player]:Disconnect() self.Connections[player]=nil end if self.ClientReadyConnections[player] then self.ClientReadyConnections[player]:Disconnect() self.ClientReadyConnections[player]=nil end self.Temp[player]=nil self.Revisions[player]=nil self.StateRevisions[player]=nil self.LastPushedStateRevision[player]=nil
 end
 function X:Start(data,services,names)
  self.DataService=data self.ServiceNames=names for _,name in ipairs(names) do self[name]=services[name] end
@@ -119,10 +129,18 @@ function X:Start(data,services,names)
  data:GetProfileLoadedSignal():Connect(function(player) self:Loaded(player) end)
  Players.PlayerRemoving:Connect(function(player) self:Remove(player) end)
  for _,player in ipairs(Players:GetPlayers()) do if data:IsLoaded(player) then self:Loaded(player) end end
- task.spawn(function() local sync=0 while true do task.wait(C.TickSeconds) sync=sync+C.TickSeconds self.SocialService:Tick()
+ task.spawn(function() local sync=0 while true do task.wait(C.TickSeconds) sync=sync+C.TickSeconds local socialChanged=self.SocialService:Tick()
   for _,player in ipairs(Players:GetPlayers()) do if self:Profile(player) and self.Temp[player] then local ok,err=xpcall(function()
+   if socialChanged then self:MarkStateDirty(player) end
    if self.SeasonService.Pending[player] and os.clock()>self.SeasonService.Pending[player].Expires then self.SeasonService.Pending[player]=nil end
-   if not self.SeasonService.Pending[player] then self.MapService:Tick(player) self.PollinatorService:Tick(player,C.TickSeconds) self.GardenActivityService:Tick(player) self.MetaProgressionService:Tick(player) self.AnalyticsService:Tick(player,C.TickSeconds) end
+   if not self.SeasonService.Pending[player] then
+    if self.MapService:Tick(player) then self:MarkStateDirty(player) end
+    self.PollinatorService:Tick(player,C.TickSeconds)
+    self.GardenActivityService:Tick(player)
+    if self.MetaProgressionService:Tick(player) then self:MarkStateDirty(player) end
+    self.AnalyticsService:Tick(player,C.TickSeconds)
+   end
+   if self.BuildTrialService.Active[player] and sync>=C.SyncSeconds then self:MarkStateDirty(player) end
    if sync>=C.SyncSeconds then self:Push(player) end
   end,debug.traceback) if not ok then warn("[Bloom] Tick",err) end end end if sync>=C.SyncSeconds then sync=0 end
  end end)

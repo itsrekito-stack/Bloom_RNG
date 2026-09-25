@@ -21,7 +21,7 @@ local NumberFormatter=require(RS.Shared.NumberFormatter)
 local InventoryV2=require(script.Parent.InventoryV2Controller)
 
 local C=Theme.Colors
-local CLIENT_BUILD="inventory-v2-backend-v1-2026-09-25"
+local CLIENT_BUILD="state-sync-v5-revision-coalesced-2026-09-25"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0}
 
@@ -1590,6 +1590,7 @@ function UI:ApplyState(payload,source)
   return false
  end
  local firstState=self.State==nil
+ if not firstState and payload.Revision~=nil and self.State.Revision==payload.Revision then return false end
  self.State=payload
  if firstState then
   self.ObjectiveCard.Visible=true
@@ -1707,7 +1708,7 @@ function UI:Start()
   local attempts=0
   while self.Gui.Parent and not self.State do
    attempts=attempts+1
-   local ok,payload,reason=pcall(function() return self.StateRequest:InvokeServer() end)
+   local ok,payload,reason=pcall(function() return self.StateRequest:InvokeServer(self.State and self.State.Revision or nil) end)
    if ok and payload then
     if self:ApplyState(payload,"StateRequest") then
      self:Send("Ready")

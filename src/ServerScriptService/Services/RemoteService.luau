@@ -12,12 +12,13 @@ function S:Accept(player)
  local now=os.clock() local b=self.Buckets[player] or {Time=now,Tokens=C.RemoteBurst} self.Buckets[player]=b b.Tokens=math.min(C.RemoteBurst,b.Tokens+(now-b.Time)*C.RemoteRate) b.Time=now if b.Tokens<1 then return false end b.Tokens=b.Tokens-1 return true
 end
 function S:Start()
- print("[RemoteService] State sync ready: state-sync-v4-ui-backend-2026-09-25")
- self.StateRequest.OnServerInvoke=function(player)
+ print("[RemoteService] State sync ready: state-sync-v5-revision-coalesced-2026-09-25")
+ self.StateRequest.OnServerInvoke=function(player,knownRevision)
   local now=os.clock() local last=self.StateRequests[player] or -100
   if now-last<.4 then return nil,"RATE_LIMITED" end
   self.StateRequests[player]=now
   if not self.X:Profile(player) then return nil,"PROFILE_LOADING" end
+  if type(knownRevision)=="number" and knownRevision==self.X:StateRevision(player) then return nil,"NOT_MODIFIED",knownRevision end
   local ok,state=pcall(function() return self.X:Snapshot(player) end)
   if not ok then
    warn("[Bloom] StateRequest error",player.Name,state)
@@ -42,9 +43,11 @@ function S:Start()
   end
   local ok,result,reason=pcall(function() return self.X:Request(player,action,a,b,c) end)
   if not ok then warn("[Bloom] Request error",action,result) end
+  local success=ok and result~=false
   local finalReason=ok and reason or "SERVER_ERROR"
-  self.X:Send(player,"Ack",{Action=action,OK=ok and result~=false,Reason=finalReason,Message=(ok and result~=false) and nil or self.X.UIStateService:ReasonText(finalReason)})
-  self.X:Push(player)
+  if success and self.X:ActionMutatesState(action) then self.X:MarkStateDirty(player) end
+  self.X:Send(player,"Ack",{Action=action,OK=success,Reason=finalReason,Message=success and nil or self.X.UIStateService:ReasonText(finalReason)})
+  if success then self.X:Push(player) end
  end)
 end
 function S:Remove(player) self.Buckets[player]=nil self.StateRequests[player]=nil end

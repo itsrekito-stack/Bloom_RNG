@@ -38,6 +38,8 @@ function S:Tick(player)
  if p.Season.ActiveCard=="TwilightSeason" and sector=="TwilightGrove" and os.clock()>(temp.NextPersonalEclipse or 0) then temp.NextPersonalEclipse=os.clock()+90 temp.PersonalEclipseUntil=os.clock()+45 self.X.GardenActivityService:Offer(player,"FireflyRoute",self.X.Origin+L.Sectors[sector].Center,sector) end
  if pulse and pulse.Sector==sector and os.clock()>(temp.NextWild or 0) then temp.NextWild=os.clock()+25 self.X.GardenActivityService:Offer(player,sector=="TwilightGrove" and "ShadowBloom" or L.Sectors[sector].Activity,self.X.Origin+L.Sectors[sector].Center,sector) end
  if sector=="SunnyOrchard" then self.X:EmitOnce(player,"SunnyVisit") end
- local temp=self.X.Temp[player] if temp.Sector~=sector then temp.Sector=sector self.X.GardenSynergyService:Recalculate(player) end
+ local temp=self.X.Temp[player] local changed=temp.Sector~=sector
+ if changed then temp.Sector=sector self.X.GardenSynergyService:Recalculate(player) end
+ return changed
 end
 return S
