@@ -1184,7 +1184,7 @@ function UI:Render()
  local charge=math.clamp(tonumber(p.RollState.BloomCharge) or 0,0,bloomMax)
  local pity=math.clamp(math.floor(tonumber(p.RollState.DiscoveryPity) or 0),0,pityMax)
  local bloomPercent=charge/bloomMax*100
- self.MeterLabel.Text=string.format("BLOOM  %.0f%%     •     DISCOVERY  %d/%d",bloomPercent,pity,pityMax)..(p.WorkshopV5.Nodes.ROLL_4 and pity>=pityMax-1 and "  •  NEW GUARANTEED" or "")
+ self.MeterLabel.Text=string.format("BLOOM  %.0f%%     •     DISCOVERY  %d/%d",bloomPercent,pity,pityMax)..(p.WorkshopV5.Nodes.ROLL_4 and pity>=pityMax-1 and "  •  PITY READY" or "")
  self.BloomFill.Size=UDim2.fromScale(charge/bloomMax,1)
  self.MeterArea.Visible=rollUnlocked and (p.Tutorial.Step>=10 or p.Tutorial.Skipped)
 
