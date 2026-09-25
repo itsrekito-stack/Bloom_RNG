@@ -113,6 +113,8 @@ check('SeedSatchel explicitly routes to InventoryV2','MENU_RENDERERS={SeedSatche
 check('Inventory v2 backend linked','InventoryV2Controller' in source and 'InventoryV2.Render(self,p,ui)' in source)
 check('Inventory v2 rerender follows renderer','controller.MenuRenderer=="InventoryV2"' in inventory_v2_source)
 check('Inventory v2 binds authoritative inventory','uiState.Inventory' in inventory_v2_source and 'controller:Send("Dissolve"' in inventory_v2_source and 'controller:Send("EquipBee"' in inventory_v2_source)
+check('Inventory v2 does not bypass physical Plant flow','controller:Send("Plant"' not in inventory_v2_source and 'PLANT AT GARDEN' in inventory_v2_source)
+check('physical Plant picker renderer exists','elseif name=="Plant" then' in source and 'self:Send("Plant",slot,item.Id)' in source and 'ui.Inventory and ui.Inventory.Flowers' in source)
 check('editor removed separate seedbag scene','value="seedbag"' not in editor_html and 'data-ui-state="seedbag"' not in editor_html)
 check('editor migrates stale seedbag preference','p.previewScene==="seedbag"' in editor_source and 'state.previewScene="inventory_v2"' in editor_source)
 

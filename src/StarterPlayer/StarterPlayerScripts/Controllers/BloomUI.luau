@@ -950,6 +950,39 @@ function UI:RenderMenu()
     end)
    end
   end
+ elseif name=="Plant" then
+  local slot=tonumber(self.MenuArg)
+  self:Section(self.Content,slot and ("Garden Slot "..tostring(slot)) or "Garden")
+  if not slot then
+   self:Label(self.Content,"Use an unlocked garden pad to choose where to plant.",40)
+  else
+   self:Label(self.Content,"Choose a free flower copy for this physical garden slot.",42)
+   local flowers=ui.Inventory and ui.Inventory.Flowers or {}
+   local available={}
+   for _,item in ipairs(flowers) do
+    if (tonumber(item.Free) or 0)>0 then table.insert(available,item) end
+   end
+   table.sort(available,function(a,b)
+    local preferredA=a.Id==self.LastSeed
+    local preferredB=b.Id==self.LastSeed
+    if preferredA~=preferredB then return preferredA end
+    return tostring(a.DisplayName or a.Id)<tostring(b.DisplayName or b.Id)
+   end)
+   if #available==0 then
+    self:Label(self.Content,"No free flower copies are available. Roll or dissolve/manage planted copies first.",48)
+   else
+    for _,item in ipairs(available) do
+     local label=(item.Id==self.LastSeed and "★  " or "")..tostring(item.DisplayName or item.Id).."   •   "..tostring(item.Rarity or "Common").."   •   x"..tostring(item.Free)
+     self:Button(self.Content,label,function()
+      self.LastSeed=item.Id
+      self:Send("Plant",slot,item.Id)
+      self:Close()
+     end,Icons.GetFlowerIcon(item.Id))
+    end
+   end
+   self:Button(self.Content,"Cancel",function() self:Close() end,Icons.Get("System","Close"))
+  end
+
  elseif name=="FieldGuide" then
   self:Section(self.Content,"Collection and real odds")
   self:Label(self.Content,"Odds include your current modifiers and the guaranteed new discovery.",48)

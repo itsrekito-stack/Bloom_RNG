@@ -464,10 +464,11 @@ function InventoryV2.Render(controller,profile,uiState)
 
   if item.Kind=="Flower" or item.Kind=="Seed" then
    local slot=firstFreeGardenSlot(profile)
-   local canPlant=(item.Free or 0)>0 and slot~=nil
-   setButton(plant,true,canPlant and "PLANT" or ((item.Free or 0)<=0 and "NO FREE COPY" or "NO FREE PLOT"),canPlant,function()
+   local canPrepare=(item.Free or 0)>0 and slot~=nil
+   setButton(plant,true,canPrepare and "PLANT AT GARDEN" or ((item.Free or 0)<=0 and "NO FREE COPY" or "NO FREE PLOT"),canPrepare,function()
     controller.LastSeed=item.Id
-    controller:Send("Plant",slot,item.Id)
+    controller:Close()
+    controller:Toast("Flower selected. Go to an unlocked garden pad and use its Plant prompt.")
    end)
    setButton(favorite,true,item.Favorite and "★  REMOVE FAVORITE" or "★  FAVORITE",true,function() controller:Send("Flag",item.Id,"FavoriteFlowers") end)
    setButton(protect,true,item.Protected and "◆  UNPROTECT" or "◆  PROTECT",true,function() controller:Send("Flag",item.Id,"LockedFlowers") end)
