@@ -485,30 +485,55 @@ function UI:RenderMenu()
  local ui=self.State.UI or {}
  local name=self.Menu
  self:ClearPanel()
+ local workshop=name=="Workshop"
  self.PanelTitle.Text=MENU_NAMES[name] or name
  self.PanelSubtitle.Text=MENU_HINTS[name] or ""
- if self.PanelHeaderIcon then
-  local headerImage=Icons.Get("Menus",name)
-  if headerImage=="" then
-   if name=="Plant" then headerImage=Icons.Get("System","Garden")
-   elseif name=="Season" or name=="Cards" then headerImage=Icons.Get("System","Flower")
-   elseif name=="Replay" then headerImage=Icons.Get("System","Tutorial")
-   else headerImage=Icons.Get("System","Info") end
-  end
-  self.PanelHeaderIcon.Image=headerImage
+
+ if self.PanelHeader then
+  self.PanelHeader.Size=workshop and UDim2.new(1,0,0,0) or UDim2.new(1,0,0,54)
+  self.PanelHeader.BackgroundTransparency=workshop and 1 or .05
+  self.PanelHeader.ZIndex=workshop and 118 or 51
  end
+ self.PanelTitle.Visible=not workshop
+ self.PanelSubtitle.Visible=not workshop
+ if self.PanelHeaderIcon then
+  self.PanelHeaderIcon.Visible=not workshop
+  if not workshop then
+   local headerImage=Icons.Get("Menus",name)
+   if headerImage=="" then
+    if name=="Plant" then headerImage=Icons.Get("System","Garden")
+    elseif name=="Season" or name=="Cards" then headerImage=Icons.Get("System","Flower")
+    elseif name=="Replay" then headerImage=Icons.Get("System","Tutorial")
+    else headerImage=Icons.Get("System","Info") end
+   end
+   self.PanelHeaderIcon.Image=headerImage
+  end
+ end
+ if self.PanelHeaderAccent then self.PanelHeaderAccent.Visible=not workshop end
+ if self.PanelClose then
+  self.PanelClose.Visible=true
+  self.PanelClose.Position=workshop and UDim2.new(1,-48,0,12) or UDim2.new(1,-44,0,10)
+  self.PanelClose.ZIndex=workshop and 120 or 53
+ end
+
  self.Content.CanvasPosition=Vector2.new()
 
- if name=="Workshop" then
-  -- Workshop is a full-screen workspace. The tree itself pans independently.
+ if workshop then
+  -- Workshop is intentionally chrome-free: only the close button floats above the map.
   self.Panel.AnchorPoint=Vector2.new(.5,.5)
   self.Panel.Position=UDim2.fromScale(.5,.5)
   self.Panel.Size=UDim2.fromScale(1,1)
+  self.Content.Position=UDim2.fromOffset(0,0)
+  self.Content.Size=UDim2.fromScale(1,1)
+  self.Content.ZIndex=52
   self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
   self.Content.CanvasSize=UDim2.fromOffset(0,0)
   self.Content.ScrollingEnabled=false
   self.Content.ScrollBarThickness=0
  else
+  self.Content.Position=UDim2.new(0,9,0,60)
+  self.Content.Size=UDim2.new(1,-18,1,-68)
+  self.Content.ZIndex=51
   self.Content.AutomaticCanvasSize=Enum.AutomaticSize.Y
   self.Content.ScrollingEnabled=true
   self.Content.ScrollBarThickness=name=="SeedSatchel" and 0 or 5
@@ -692,33 +717,8 @@ function UI:RenderMenu()
    shell.Position=UDim2.new()
    shell.LayoutOrder=1
 
-   local top=shell:WaitForChild("WorkshopTop")
-   self.WorkshopZoomLabel=top:FindFirstChild("Zoom")
-   local controlsHint=top:FindFirstChild("ControlsHint")
-   if controlsHint and controlsHint:IsA("TextLabel") then
-    controlsHint.Text="LMB DRAG  •  WHEEL ZOOM  •  CLICK SELECT  •  CLICK AGAIN UPGRADE"
-   end
-
+   self.WorkshopZoomLabel=nil
    local workshopUI=ui.Workshop
-   top.Points.Text=tostring(workshopUI and workshopUI.Points or p.WorkshopV5.Points).." POINTS"
-
-   local respecButton=top:FindFirstChild("RespecButton")
-   if respecButton and respecButton:IsA("TextButton") then
-    local canRespec=not workshopUI or workshopUI.CanRespec==true
-    respecButton.Active=canRespec
-    respecButton.TextColor3=canRespec and C.Muted or C.Faint
-    local base=respecButton.BackgroundColor3
-    respecButton.MouseEnter:Connect(function()
-     if canRespec then TweenService:Create(respecButton,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelHover}):Play() end
-    end)
-    respecButton.MouseLeave:Connect(function()
-     TweenService:Create(respecButton,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=base}):Play()
-    end)
-    respecButton.Activated:Connect(function()
-     if canRespec then self:Send("Respec") end
-    end)
-   end
-
    local body=shell:WaitForChild("WorkshopBody")
    local treePanel=body:WaitForChild("TreePanel")
    local canvas=treePanel:WaitForChild("TreeCanvas")
@@ -1461,10 +1461,13 @@ function UI:BindStaticUI()
  self.Panel=root:WaitForChild("MainPanel")
  self.PanelScale=self.Panel:FindFirstChild("PanelScale") or self.Panel:FindFirstChildOfClass("UIScale")
  local header=self.Panel:WaitForChild("Header")
+ self.PanelHeader=header
  self.PanelHeaderIcon=header:FindFirstChild("HeaderIcon")
  self.PanelTitle=header:WaitForChild("PanelTitle")
  self.PanelSubtitle=header:WaitForChild("PanelSubtitle")
+ self.PanelHeaderAccent=header:FindFirstChild("HeaderAccent")
  local close=header:WaitForChild("Close")
+ self.PanelClose=close
  close.Activated:Connect(function() self:Close() end)
  close.MouseEnter:Connect(function() TweenService:Create(close,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.Danger}):Play() end)
  close.MouseLeave:Connect(function() TweenService:Create(close,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelRaised}):Play() end)
