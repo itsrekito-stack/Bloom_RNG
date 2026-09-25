@@ -1531,7 +1531,7 @@ function UI:BindStaticUI()
  -- The only supported reel is SafeRoot/VerticalRoulette.
  for _,legacy in ipairs(self.RollHUD:GetDescendants()) do
   local lower=string.lower(legacy.Name)
-  if legacy:IsA("GuiObject") and (string.find(lower,"roulette",1,true) or string.find(lower,"reel",1,true)) then
+  if legacy:IsA("GuiObject") and (string.find(lower,"roulette",1,true) or hasLegacyReelToken(lower)) then
    legacy:Destroy()
   end
  end
