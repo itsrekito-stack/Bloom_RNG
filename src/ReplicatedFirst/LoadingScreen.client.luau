@@ -16,127 +16,25 @@ if old then old:Destroy() end
 player:SetAttribute("BloomAssetsReady",false)
 player:SetAttribute("BloomGameReady",false)
 
-local gui=Instance.new("ScreenGui")
+local template=RF:WaitForChild("BloomLoadingTemplate",10)
+if not template or not template:IsA("ScreenGui") then
+ error("[BloomLoading] Authored ReplicatedFirst/BloomLoadingTemplate ScreenGui is missing")
+end
+local gui=template:Clone()
 gui.Name="BloomLoading"
-gui.IgnoreGuiInset=true
-gui.DisplayOrder=1000
-gui.ResetOnSpawn=false
-gui.ZIndexBehavior=Enum.ZIndexBehavior.Global
+gui.Enabled=true
 gui.Parent=playerGui
 
-local bg=Instance.new("Frame")
-bg.Size=UDim2.fromScale(1,1)
-bg.BackgroundColor3=Color3.fromRGB(13,18,24)
-bg.BorderSizePixel=0
-bg.Parent=gui
-
-local card=Instance.new("Frame")
-card.AnchorPoint=Vector2.new(.5,.5)
-card.Position=UDim2.fromScale(.5,.5)
-card.Size=UDim2.fromOffset(470,184)
-card.BackgroundColor3=Color3.fromRGB(20,27,36)
-card.BorderSizePixel=0
-card.Parent=bg
-local cardCorner=Instance.new("UICorner")
-cardCorner.CornerRadius=UDim.new(0,20)
-cardCorner.Parent=card
-local cardStroke=Instance.new("UIStroke")
-cardStroke.Color=Color3.fromRGB(7,10,14)
-cardStroke.Thickness=3
-cardStroke.Parent=card
-
-local accent=Instance.new("Frame")
-accent.Size=UDim2.fromOffset(5,58)
-accent.Position=UDim2.fromOffset(18,24)
-accent.BackgroundColor3=Color3.fromRGB(84,174,255)
-accent.BorderSizePixel=0
-accent.Parent=card
-
-local title=Instance.new("TextLabel")
-title.Size=UDim2.new(1,-92,0,34)
-title.Position=UDim2.fromOffset(36,22)
-title.BackgroundTransparency=1
-title.Text="BLOOM RNG"
-title.TextColor3=Color3.fromRGB(245,248,252)
-title.TextSize=25
-title.Font=Enum.Font.GothamBlack
-title.TextXAlignment=Enum.TextXAlignment.Left
-title.Parent=card
-
-local percent=Instance.new("TextLabel")
-percent.AnchorPoint=Vector2.new(1,0)
-percent.Size=UDim2.fromOffset(64,30)
-percent.Position=UDim2.new(1,-28,0,24)
-percent.BackgroundTransparency=1
-percent.Text="0%"
-percent.TextColor3=Color3.fromRGB(102,224,166)
-percent.TextSize=16
-percent.Font=Enum.Font.GothamBold
-percent.TextXAlignment=Enum.TextXAlignment.Right
-percent.Parent=card
-
-local subtitle=Instance.new("TextLabel")
-subtitle.Size=UDim2.new(1,-72,0,36)
-subtitle.Position=UDim2.fromOffset(36,57)
-subtitle.BackgroundTransparency=1
-subtitle.Text="Preparing a fully synchronized session…"
-subtitle.TextColor3=Color3.fromRGB(166,184,202)
-subtitle.TextSize=12
-subtitle.TextWrapped=true
-subtitle.Font=Enum.Font.Gotham
-subtitle.TextXAlignment=Enum.TextXAlignment.Left
-subtitle.TextYAlignment=Enum.TextYAlignment.Top
-subtitle.Parent=card
-
-local track=Instance.new("Frame")
-track.Size=UDim2.new(1,-72,0,10)
-track.Position=UDim2.fromOffset(36,119)
-track.BackgroundColor3=Color3.fromRGB(34,45,58)
-track.BorderSizePixel=0
-track.Parent=card
-local trackCorner=Instance.new("UICorner")
-trackCorner.CornerRadius=UDim.new(0,5)
-trackCorner.Parent=track
-
-local fill=Instance.new("Frame")
-fill.Size=UDim2.fromScale(0,1)
-fill.BackgroundColor3=Color3.fromRGB(102,224,166)
-fill.BorderSizePixel=0
-fill.Parent=track
-local fillCorner=Instance.new("UICorner")
-fillCorner.CornerRadius=UDim.new(0,5)
-fillCorner.Parent=fill
-local gradient=Instance.new("UIGradient")
-gradient.Color=ColorSequence.new({
- ColorSequenceKeypoint.new(0,Color3.fromRGB(84,174,255)),
- ColorSequenceKeypoint.new(1,Color3.fromRGB(102,224,166)),
-})
-gradient.Parent=fill
-
-local status=Instance.new("TextLabel")
-status.Size=UDim2.new(1,-72,0,20)
-status.Position=UDim2.fromOffset(36,138)
-status.BackgroundTransparency=1
-status.Text="LOADING EXPERIENCE"
-status.TextColor3=Color3.fromRGB(116,136,156)
-status.TextSize=10
-status.Font=Enum.Font.GothamBold
-status.TextXAlignment=Enum.TextXAlignment.Left
-status.Parent=card
-
-local detail=Instance.new("TextLabel")
-detail.Size=UDim2.new(1,-72,0,16)
-detail.Position=UDim2.fromOffset(36,157)
-detail.BackgroundTransparency=1
-detail.Text="Waiting for Roblox replication…"
-detail.TextColor3=Color3.fromRGB(78,94,112)
-detail.TextSize=9
-detail.Font=Enum.Font.Gotham
-detail.TextXAlignment=Enum.TextXAlignment.Left
-detail.Parent=card
-
-local scale=Instance.new("UIScale")
-scale.Parent=card
+local bg=gui:WaitForChild("Background")
+local card=bg:WaitForChild("Card")
+local title=card:WaitForChild("Title")
+local percent=card:WaitForChild("Percent")
+local subtitle=card:WaitForChild("Subtitle")
+local track=card:WaitForChild("ProgressTrack")
+local fill=track:WaitForChild("ProgressFill")
+local status=card:WaitForChild("Status")
+local detail=card:WaitForChild("Detail")
+local scale=card:WaitForChild("ResponsiveScale")
 local function resize()
  local camera=workspace.CurrentCamera
  local w=camera and camera.ViewportSize.X or 1366
