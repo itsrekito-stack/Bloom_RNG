@@ -252,10 +252,15 @@ function S:Tick(player,dt)
 
  local states=self.States[player] or {}
  self.States[player]=states
+ local capacity=self.X.StatsService:BeeCapacity(profile)
+ for index,state in pairs(states) do
+  local equipped=profile.Pollinators.EquippedBeeSlots[index]
+  if type(index)~="number" or index>capacity or equipped~=state.Id then states[index]=nil end
+ end
  local stats=self.X.StatsService:Get(profile)
 
  for index,id in pairs(profile.Pollinators.EquippedBeeSlots) do
-  if type(index)=="number" and index<=self.X.StatsService:BeeCapacity(profile) then
+  if type(index)=="number" and index<=capacity then
    local bee=B.Get(id)
    if bee then
     local mastery=B.GetMasteryState(profile.Pollinators.BeeMastery[id])
