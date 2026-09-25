@@ -12,7 +12,7 @@ local function currentStep(profile)
 end
 
 local function playerName(player)
- return tostring(player and (playerName(player) or player.UserId) or "?")
+ return tostring(player and (player.Name or player.UserId) or "?")
 end
 
 local function completionKey(step)
@@ -42,7 +42,7 @@ function S:Migrate(player,p)
  if wasComplete then
   t.Step=#T.Steps+1
   t.Events.TutorialComplete=math.max(1,t.Events.TutorialComplete or 0)
-  print("[Tutorial] migrated completed profile to v"..T.Version.." player="..player.Name)
+  print("[Tutorial] migrated completed profile to v"..T.Version.." player="..playerName(player))
   return true
  end
 
