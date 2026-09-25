@@ -1,4 +1,5 @@
 --!strict
+local Bloom=require(script.Parent.BloomConfig)
 local C={Species={}}
 
 local DROP_WEIGHTS={
@@ -65,7 +66,7 @@ local function initializeDerived()
   end
   flower.AllowedBiomes=allowedBiomes
 
-  flower.GrowthProfile={XPPerLevel=20,MaxLevel=100,ScalePerLevel=.025}
+  flower.GrowthProfile={XPPerLevel=Bloom.FlowerLevelXP,MaxLevel=Bloom.MasteryCap,ScalePerLevel=.025}
   flower.Tags={
    allowedBiomes.CrystalGreenhouse and "Crystal"
     or allowedBiomes.TwilightGrove and "Twilight"
