@@ -130,3 +130,17 @@ jobs:
 
       - name: Desktop viewport geometry
         run: python tools/checks/ui_viewport_check.py
+
+      - name: Package clean release candidate
+        run: |
+          mkdir -p /tmp/bloom-release
+          cp /tmp/BloomRNG.rbxl /tmp/bloom-release/BloomRNG.rbxl
+          sha256sum /tmp/bloom-release/BloomRNG.rbxl > /tmp/bloom-release/BloomRNG.rbxl.sha256
+          printf '{"commit":"%s","ref":"%s","workflowRun":"%s","rojo":"7.7.0"}\n' "$GITHUB_SHA" "$GITHUB_REF" "$GITHUB_RUN_ID" > /tmp/bloom-release/release-source.json
+
+      - name: Upload clean release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: BloomRNG-clean-${{ github.sha }}
+          path: /tmp/bloom-release/
+          retention-days: 14

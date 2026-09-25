@@ -588,14 +588,14 @@
       "id": "release-final-checkpoint",
       "group": "8 · Release",
       "title": "Create final checkpoint and release commit/tag",
-      "detail": "Record the exact source state used for the public build so rollback and hotfixes are straightforward.",
+      "detail": "CI now packages every fully green clean Rojo build as a source-bound BloomRNG.rbxl artifact with SHA-256 and commit metadata. Final release commit/tag still waits for RC/runtime acceptance.",
       "done": false
     },
     {
       "id": "release-publish",
       "group": "8 · Release",
       "title": "Publish Bloom RNG",
-      "detail": "Build/publish the verified release candidate and perform an immediate live smoke test.",
+      "detail": "A reproducible clean BloomRNG.rbxl artifact is now produced only after the full deterministic suite passes. Actual Roblox publish and immediate live smoke test remain release-time actions.",
       "done": false
     },
     {
