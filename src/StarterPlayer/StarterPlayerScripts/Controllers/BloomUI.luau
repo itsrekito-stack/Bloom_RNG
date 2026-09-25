@@ -579,8 +579,8 @@ function UI:Open(name,arg)
  self.MenuArg=arg
  self:SetPanelVisible(true)
  if name=="Workshop" then self:SetWorkshopFocus(true) end
- if name~="Plant" and name~="Season" and name~="Cards" and name~="Replay" then self:Send("Menu",name) end
  self:RenderMenu()
+ if name~="Plant" and name~="Season" and name~="Cards" and name~="Replay" then self:Send("Menu",name) end
  self:ApplyWorkshopFocusVisibility()
 end
 
