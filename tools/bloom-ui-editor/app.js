@@ -13,6 +13,12 @@ const TEXT_CLASSES=new Set(["TextLabel","TextButton","TextBox"]);
 const IMAGE_CLASSES=new Set(["ImageLabel","ImageButton"]);
 const CONTAINERS=new Set(["ScreenGui","Frame","ScrollingFrame","TextButton","ImageButton"]);
 const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
+const LOADING_TARGET="src/ReplicatedFirst/BloomLoadingTemplate.model.json";
+const UI_STATE_TITLES={
+ gameplay:"HUD",inventory_v2:"Inventory",workshop:"Workshop",fieldguide:"Field Guide",map:"Map",trials:"Trials",
+ settings:"Settings",plant:"Plant Picker",season:"Season",replay:"Tutorial Replay",cards:"Cards",
+ reward:"Reward",toast:"Toast",tutorial:"Tutorial Guidance",boosts:"Active Boosts",loading:"Loading Screen"
+};
 
 function roflowTauri(){
  try{
@@ -30,7 +36,7 @@ function hasProjectConnection(){return ROFLOW_NATIVE?state.nativeProjectReady:!!
 const state={
  root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,geometry:true,inset:36,mode:"design",previewScene:"gameplay",
  projectHandle:null,nativeProjectReady:false,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
- history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[],assistantSyncing:false,bridgeBase:"",modelLoadFailed:false,autoSaveTimer:null,autoSaving:false,autoSaveQueued:false,lastAutoSaveError:""
+ activeUiState:null,modelKey:"bloom",history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[],assistantSyncing:false,bridgeBase:"",modelLoadFailed:false,autoSaveTimer:null,autoSaving:false,autoSaveQueued:false,lastAutoSaveError:""
 };
 
 let idCounter=1;
