@@ -1,5 +1,15 @@
-local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.BloomConfig) local B=require(RS.Config.BeesConfig) local F=require(RS.Config.FlowersConfig) local R=require(RS.Config.RarityConfig) local E=require(RS.Shared.WorkshopEffects) local S={States={}}
+local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.BloomConfig) local B=require(RS.Config.BeesConfig) local R=require(RS.Config.RarityConfig) local E=require(RS.Shared.WorkshopEffects) local S={States={}}
 function S:Init(x) self.X=x end
+function S:AddMastery(player,id,baseAmount,abilityMultiplier)
+ local p=self.X:Profile(player) local bee=type(id)=="string" and B.Get(id) or nil if not p or not bee then return false end
+ local amount=tonumber(baseAmount) or 0 if amount<=0 then return false end
+ local before=B.GetMasteryState(p.Pollinators.BeeMastery[id]) if before.IsMax then p.Pollinators.BeeMastery[id]=before.MaxXP return false end
+ local stats=self.X.StatsService:Get(p) local gain=amount*E.Value(p,"BEES_3","BeeXP",1)*(stats.BeeMasteryXP or 1)*(tonumber(abilityMultiplier) or 1)
+ if gain<=0 then return false end
+ local total=math.min(before.MaxXP,before.TotalXP+gain) p.Pollinators.BeeMastery[id]=total
+ local after=B.GetMasteryState(total) if after.Level>before.Level then self.X:Send(player,"Message",bee.DisplayName.." Mastery Lv. "..after.Level.." • "..after.LevelRewardText) end
+ return true
+end
 function S:Tick(player,dt)
  local p=self.X:Profile(player) local t=self.X.Temp[player] if not p or not p.StarterBeeGranted then return end local states=self.States[player] or {} self.States[player]=states local stats=self.X.StatsService:Get(p)
  local flowerSlots={} for i,s in ipairs(p.Garden.Slots) do if s.SpeciesId then table.insert(flowerSlots,i) end end if #flowerSlots==0 then return end
@@ -18,13 +28,8 @@ function S:Tick(player,dt)
    local bonus=((t.TemporaryMutationUntil or 0)>os.clock() and 1.1 or 1)*((t.NeighbourUntil or 0)>os.clock() and 1.15 or 1)*((t.BlessingUntil or 0)>os.clock() and 1.05 or 1)
    local active=(state.ActiveUntil or 0)>os.clock() local yield=C.HoneyPerDelivery*stats.Yield*mastery.YieldMultiplier*bonus*(active and (bee.Ability.RewardMultiplier or 1)*E.Value(p,"BEES_6","AbilityYield",1)*(p.Season.ActiveCard=="TwilightSeason" and 1.15 or 1) or 1)
    p.Hive.Honey=p.Hive.Honey+yield p.Hive.TotalHoney=p.Hive.TotalHoney+yield p.Currencies.Coins=p.Currencies.Coins+C.CoinsPerDelivery*stats.Yield*mastery.YieldMultiplier*bonus*E.Value(p,"ECONOMY_6","CoinYield",1)
-   slot.XP=slot.XP+1 slot.TotalPollination=slot.TotalPollination+1 if slot.XP>=slot.Level*C.FlowerLevelXP and slot.Level<C.MasteryCap then slot.XP=0 slot.Level=slot.Level+1 local model=self.X.GardenPlotService.Plots[player].Flowers[state.Slot] if model then model:ScaleTo(1+math.min(2,(slot.Level-1)*.025)) end end
-   local flowerModel=self.X.GardenPlotService.Plots[player].Flowers[state.Slot]
-   if flowerModel then local text=flowerModel:FindFirstChild("LevelText",true) local fill=flowerModel:FindFirstChild("ProgressFill",true) if text then text.Text=F.Species[slot.SpeciesId].DisplayName.." • LV."..slot.Level end if fill then fill.Size=UDim2.fromScale(math.clamp(slot.XP/(slot.Level*C.FlowerLevelXP),0,1),1) end end
-   self.X.FlowerProgressionService:Add(player,slot.SpeciesId,1)
-   local masteryGain=E.Value(p,"BEES_3","BeeXP",1)*(stats.BeeMasteryXP or 1)*(active and (bee.Ability.BeeMasteryXPMultiplier or 1) or 1)
-   local masteryTotal=math.min(mastery.MaxXP,mastery.TotalXP+masteryGain) p.Pollinators.BeeMastery[id]=masteryTotal
-   local masteryAfter=B.GetMasteryState(masteryTotal) if masteryAfter.Level>mastery.Level then self.X:Send(player,"Message",bee.DisplayName.." Mastery Lv. "..masteryAfter.Level.." • "..masteryAfter.LevelRewardText) end
+   self.X.GardenPlotService:AddFlowerXP(player,state.Slot,1)
+   self:AddMastery(player,id,1,active and (bee.Ability.BeeMasteryXPMultiplier or 1) or 1)
    self.X.RollService:Charge(player,C.Charge.Delivery*(p.Season.ActiveCard=="SummerSwarm" and .75 or 1)) self.X:Emit(player,"Delivery",1) self.X.SocialService:Contribute(player,1)
    for synergy in pairs(self.X.GardenSynergyService.Active[player] or {}) do p.GardenSynergies.Mastery[synergy]=(p.GardenSynergies.Mastery[synergy] or 0)+E.Value(p,"GARDEN_6","SynergyXP",1) end
    state.Slot=flowerSlots[(table.find(flowerSlots,state.Slot) or 1)%#flowerSlots+1]
