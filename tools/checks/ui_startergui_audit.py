@@ -6,6 +6,8 @@ model=json.loads((ROOT/'src/StarterGui/BloomUI.model.json').read_text(encoding='
 project=json.loads((ROOT/'default.project.json').read_text(encoding='utf-8'))
 source=(ROOT/'src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau').read_text(encoding='utf-8')
 inventory_v2_source=(ROOT/'src/StarterPlayer/StarterPlayerScripts/Controllers/InventoryV2Controller.luau').read_text(encoding='utf-8')
+boost_hud_source=(ROOT/'src/StarterPlayer/StarterPlayerScripts/Controllers/BoostHUDController.luau').read_text(encoding='utf-8')
+boost_service_source=(ROOT/'src/ServerScriptService/Services/BoostService.luau').read_text(encoding='utf-8')
 ui_state_source=(ROOT/'src/ServerScriptService/Services/UIStateService.luau').read_text(encoding='utf-8')
 player_source=(ROOT/'src/ServerScriptService/Services/PlayerService.luau').read_text(encoding='utf-8')
 remote_source=(ROOT/'src/ServerScriptService/Services/RemoteService.luau').read_text(encoding='utf-8')
@@ -78,7 +80,7 @@ def valid_udim2(name):
     value=size(name)
     return isinstance(value,list) and len(value)==2 and all(isinstance(part,list) and len(part)==2 for part in value)
 
-for name in ['ObjectiveCard','CurrencyHUD','MenuDock','RollHUD','VerticalRoulette','RollButton','MainPanel','Toast','RewardReveal']:
+for name in ['ObjectiveCard','CurrencyHUD','MenuDock','RollHUD','VerticalRoulette','RollButton','MainPanel','Toast','RewardReveal','ActiveBoostsHUD','ActiveBoostTooltip']:
     check(name+' authored',one(name)[1] is not None)
     check(name+' valid size',valid_udim2(name))
 
@@ -110,6 +112,18 @@ check('InventoryPrototype authored',inventory_prototype is not None and inventor
 check('Inventory v2 item card authored',item_card is not None and item_card.get('Properties',{}).get('Visible') is False)
 check('legacy SeedSatchelTemplate absent',one('SeedSatchelTemplate')[1] is None)
 check('legacy InventoryTileTemplate absent',one('InventoryTileTemplate')[1] is None)
+
+boost_root_path,boost_root=one('ActiveBoostsHUD')
+boost_tooltip_path,boost_tooltip=one('ActiveBoostTooltip')
+boost_template=one('BoostTemplate')[1]
+check('Active boosts direct child of SafeRoot',boost_root_path==safe_path+'/ActiveBoostsHUD',boost_root_path or '')
+check('Active boost tooltip direct child of SafeRoot',boost_tooltip_path==safe_path+'/ActiveBoostTooltip',boost_tooltip_path or '')
+check('Active boost template authored hidden',boost_template is not None and boost_template.get('ClassName')=='ImageButton' and boost_template.get('Properties',{}).get('Visible') is False)
+check('Active boosts bottom-left authored anchor',boost_root is not None and boost_root.get('Properties',{}).get('AnchorPoint',{}).get('Vector2')==[0,1])
+check('Active boosts controller linked','self.BoostHUD=require(script.Parent.BoostHUDController)' in source and 'self.BoostHUD:Update(boosts,self.State.Revision)' in source)
+check('Active boost hover states','badge.MouseEnter:Connect' in boost_hud_source and 'badge.MouseLeave:Connect' in boost_hud_source and 'TweenService:Create(scale' in boost_hud_source)
+check('Active boost source breakdown','self.TooltipBreakdown.Text=self:TooltipText(item)' in boost_hud_source and 'Group="Bees"' in boost_service_source and 'Group="Activity"' in boost_service_source)
+check('Workshop hides active boosts','self.BoostHUD.Root.Visible=false' in source and 'self.BoostHUD.Tooltip.Visible=false' in source)
 
 # BR-002: feature id and renderer are explicit and editor has one live inventory preview.
 check('SeedSatchel explicitly routes to InventoryV2','MENU_RENDERERS={SeedSatchel="InventoryV2"}' in source)
