@@ -1079,6 +1079,14 @@ function UI:RenderMenu()
   self:Section(self.Content,"Tutorial")
   self:Button(self.Content,"Skip Tutorial",function() self:Send("Skip") end,Icons.Get("System","Warning"))
   self:Button(self.Content,"Replay Tutorial",function() self:Send("Replay") end,Icons.Get("System","Tutorial"))
+  if RunService:IsStudio() then
+   self:Section(self.Content,"Studio Tutorial Test")
+   self:Label(self.Content,"Starts a session-only fresh profile. Your saved Studio profile is restored when Play ends.",42)
+   self:Button(self.Content,"RESTART TUTORIAL V4 (STUDIO)",function()
+    self:Send("StudioTutorialReset")
+    self:Close()
+   end,Icons.Get("System","Tutorial"))
+  end
 
  elseif name=="Season" then
   local preview=self.MenuArg
