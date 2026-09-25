@@ -1,8 +1,13 @@
 -- Release contract only. Gameplay data remains authoritative in FlowersConfig / BeesConfig.
 return {
  Version=1,
+ ReleaseId="BloomRNG-v1",
  LegacyFruitsShipping=false,
  FlowerIconPolicy="DedicatedAssetOrSystemFlowerFallback",
+ RarityOrder={"Common","Uncommon","Rare","Epic","Legendary","Mythic","Celestial"},
+ SeasonCards={"SpringResonance","SummerSwarm","AutumnFortune","CrystalSeason","TwilightSeason"},
+ SeasonKeyTrials={"MeadowCircuit","SwiftRoute","CrystalTriangle"},
+ Journey={"StarterBee","PollenSpark","Delivery","Roll","Plant","Charge","BloomRoll","Hive2","WorkshopVisit","WorkshopPurchase","Synergy","BeeSlots","Trait","SunnyVisit","SolarBloom","Discover6","CrystalGate","Trial","CrystalVisit","SeasonReady"},
  Flowers={
   Daisy={Rarity="Common"},
   Tulip={Rarity="Common"},
