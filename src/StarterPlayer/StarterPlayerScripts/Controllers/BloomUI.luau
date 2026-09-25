@@ -76,25 +76,6 @@ local JOURNEY={
  "Get your first bee","Collect a Pollen Spark","Honey delivery","Make a roll","Plant a flower","Fill the Bloom Meter","Make a Bloom Roll","Reach Hive Level 2","Visit the Workshop","Buy a Workshop node","Create a synergy","Unlock the second bee slot","Activate a Bee Trait","Visit Sunny Orchard","Complete Solar Bloom","Discover 6 flowers","Unlock Crystal Gate","Complete a trial","Visit Crystal Greenhouse","Prepare a Season Turn",
 }
 
-local function make(class,parent,props)
- local x=Instance.new(class)
- for k,v in pairs(props or {}) do x[k]=v end
- x.Parent=parent
- return x
-end
-
-local function corner(x,r)
- return make("UICorner",x,{CornerRadius=UDim.new(0,r or Theme.Radius.Medium)})
-end
-
-local function outline(x,color,thickness,transparency)
- return make("UIStroke",x,{Color=color or C.BorderDark,Thickness=thickness or Theme.Stroke.Control,Transparency=transparency or Theme.Stroke.DarkTransparency,ApplyStrokeMode=Enum.ApplyStrokeMode.Border})
-end
-
-local function pad(x,l,r,t,b)
- return make("UIPadding",x,{PaddingLeft=UDim.new(0,l or 0),PaddingRight=UDim.new(0,r or l or 0),PaddingTop=UDim.new(0,t or l or 0),PaddingBottom=UDim.new(0,b or t or l or 0)})
-end
-
 local function hover(button,base,over)
  button.AutoButtonColor=false
  button.MouseEnter:Connect(function()
@@ -174,96 +155,52 @@ local function workshopCostText(node)
  return table.concat(parts,"  •  ")
 end
 
-function UI:Text(parent,text,size,props)
- props=props or {}
- local label=make("TextLabel",parent,{
-  Size=size or UDim2.new(1,0,0,24),
-  Position=props.Position or UDim2.new(),
-  AnchorPoint=props.AnchorPoint or Vector2.new(),
-  BackgroundTransparency=props.BackgroundTransparency==nil and 1 or props.BackgroundTransparency,
-  BackgroundColor3=props.BackgroundColor3 or C.Panel,
-  BorderSizePixel=0,
-  Text=text or "",
-  TextColor3=props.TextColor3 or C.Text,
-  TextSize=props.TextSize or 14,
-  TextWrapped=props.TextWrapped~=false,
-  TextXAlignment=props.TextXAlignment or Enum.TextXAlignment.Left,
-  TextYAlignment=props.TextYAlignment or Enum.TextYAlignment.Center,
-  Font=props.Font or Enum.Font.Gotham,
-  ZIndex=props.ZIndex or ((parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1),
-  Visible=props.Visible==nil and true or props.Visible,
- })
- if props.Name then label.Name=props.Name end
- if props.AutomaticSize then label.AutomaticSize=props.AutomaticSize end
- return label
-end
-
 function UI:Label(parent,text,height)
  local template=self.Templates and self.Templates:FindFirstChild("LabelTemplate")
- local label
- if template and template:IsA("TextLabel") then
-  label=template:Clone()
-  label.Name="Label"
-  label.Visible=true
-  label.Parent=parent
-  label.Text=text or ""
-  label.Size=UDim2.new(1,0,0,height or 30)
-  label.ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1
- else
-  label=self:Text(parent,text,UDim2.new(1,0,0,height or 30),{BackgroundTransparency=.32,BackgroundColor3=C.PanelSoft,TextColor3=C.Muted,TextSize=11,TextWrapped=true})
-  corner(label,Theme.Radius.Medium)
-  outline(label,C.BorderSoft,1,.46)
-  pad(label,10,10,4,4)
- end
+ if not template or not template:IsA("TextLabel") then error("[BloomUI] Authored LabelTemplate missing") end
+ local label=template:Clone()
+ label.Name="Label"
+ label.Visible=true
+ label.Parent=parent
+ label.Text=text or ""
+ label.Size=UDim2.new(1,0,0,height or 30)
+ label.ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1
  return label
 end
 
 function UI:Section(parent,text)
  local template=self.Templates and self.Templates:FindFirstChild("SectionTemplate")
- local label
- if template and template:IsA("TextLabel") then
-  label=template:Clone()
-  label.Name="Section"
-  label.Visible=true
-  label.Parent=parent
-  label.Text=string.upper(text or "")
-  label.ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1
- else
-  label=self:Text(parent,string.upper(text or ""),UDim2.new(1,0,0,18),{TextColor3=C.Blue,TextSize=10,Font=Enum.Font.GothamBold})
-  pad(label,2,2,0,0)
- end
+ if not template or not template:IsA("TextLabel") then error("[BloomUI] Authored SectionTemplate missing") end
+ local label=template:Clone()
+ label.Name="Section"
+ label.Visible=true
+ label.Parent=parent
+ label.Text=string.upper(text or "")
+ label.ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1
  return label
 end
 
 function UI:Button(parent,text,fn,icon)
  local template=self.Templates and self.Templates:FindFirstChild("ButtonTemplate")
- local b
- if template and template:IsA("TextButton") then
-  b=template:Clone()
-  b.Name="Button"
-  b.Visible=true
-  b.Parent=parent
-  b.Text=text or ""
-  b.ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1
-  local img=b:FindFirstChild("Icon")
-  local padding=b:FindFirstChild("Padding") or b:FindFirstChildOfClass("UIPadding")
-  if img and img:IsA("ImageLabel") then
-   img.Visible=icon~=nil and icon~=""
-   img.Image=icon or ""
-   img.ZIndex=b.ZIndex+1
-  end
-  b.TextXAlignment=(icon and icon~="") and Enum.TextXAlignment.Left or Enum.TextXAlignment.Center
-  if padding then padding.PaddingLeft=UDim.new(0,(icon and icon~="") and 36 or 10) end
- else
-  local base=C.PanelRaised
-  b=make("TextButton",parent,{Size=UDim2.new(1,0,0,34),BackgroundColor3=base,BorderSizePixel=0,Text=text,TextColor3=C.Text,TextSize=12,TextWrapped=true,TextXAlignment=icon and icon~="" and Enum.TextXAlignment.Left or Enum.TextXAlignment.Center,Font=Enum.Font.GothamMedium,ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1})
-  corner(b,Theme.Radius.Medium)
-  outline(b,C.BorderDark,Theme.Stroke.Control,.12)
-  if icon and icon~="" then make("ImageLabel",b,{Name="Icon",Size=UDim2.fromOffset(22,22),Position=UDim2.fromOffset(8,6),BackgroundTransparency=1,Image=icon,ScaleType=Enum.ScaleType.Fit,ZIndex=b.ZIndex+1}) pad(b,36,10,0,0) else pad(b,10,10,0,0) end
+ if not template or not template:IsA("TextButton") then error("[BloomUI] Authored ButtonTemplate missing") end
+ local button=template:Clone()
+ button.Name="Button"
+ button.Visible=true
+ button.Parent=parent
+ button.Text=text or ""
+ button.ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1
+ local img=button:FindFirstChild("Icon")
+ local padding=button:FindFirstChild("Padding") or button:FindFirstChildOfClass("UIPadding")
+ if img and img:IsA("ImageLabel") then
+  img.Visible=icon~=nil and icon~=""
+  img.Image=icon or ""
+  img.ZIndex=button.ZIndex+1
  end
- hover(b,C.PanelRaised,C.PanelHover)
- b.Activated:Connect(fn)
- return b
+ button.TextXAlignment=(icon and icon~="") and Enum.TextXAlignment.Left or Enum.TextXAlignment.Center
+ if padding then padding.PaddingLeft=UDim.new(0,(icon and icon~="") and 36 or 10) end
+ hover(button,C.PanelRaised,C.PanelHover)
+ button.Activated:Connect(fn)
+ return button
 end
 
 function UI:Send(action,a,b,c)
@@ -448,11 +385,7 @@ function UI:BindWorkshopPan(canvas,nodes)
  )
  if panMap and panMap:IsA("GuiObject") then
   zoomScale=panMap:FindFirstChild("WorkshopZoomScale")
-  if not zoomScale then
-   zoomScale=Instance.new("UIScale")
-   zoomScale.Name="WorkshopZoomScale"
-   zoomScale.Parent=panMap
-  end
+  if not zoomScale or not zoomScale:IsA("UIScale") then error("[BloomUI] Workshop PanMap/WorkshopZoomScale missing") end
  end
 
  local zoomMin=.5
@@ -906,22 +839,8 @@ function UI:RenderMenu(preserveInteraction)
      local nodeScale=node:FindFirstChild("NodeScale")
      local selectionGlow=node:FindFirstChild("SelectionGlow")
 
-     if not nodeScale then
-      nodeScale=Instance.new("UIScale")
-      nodeScale.Name="NodeScale"
-      nodeScale.Parent=node
-     end
-     if not selectionGlow and icon and icon:IsA("ImageLabel") then
-      selectionGlow=icon:Clone()
-      selectionGlow.Name="SelectionGlow"
-      selectionGlow.Size=UDim2.new(1,18,1,18)
-      selectionGlow.Position=UDim2.fromOffset(-9,-9)
-      selectionGlow.ImageColor3=C.Gold
-      selectionGlow.ImageTransparency=.58
-      selectionGlow.ZIndex=math.max(1,icon.ZIndex-1)
-      selectionGlow.Visible=false
-      selectionGlow.Parent=node
-     end
+     if not nodeScale or not nodeScale:IsA("UIScale") then error("[BloomUI] Workshop node missing authored NodeScale: "..id) end
+     if not selectionGlow or not selectionGlow:IsA("ImageLabel") then error("[BloomUI] Workshop node missing authored SelectionGlow: "..id) end
 
      if label and label:IsA("TextLabel") then label.Visible=false end
      if level and level:IsA("TextLabel") then level.Visible=false end
@@ -1398,11 +1317,7 @@ function UI:SetRouletteSlot(slot,data,role)
   chance.TextSize=current and 10 or 9
  end
  local scale=slot:FindFirstChild("SlotScale")
- if not scale then
-  scale=Instance.new("UIScale")
-  scale.Name="SlotScale"
-  scale.Parent=slot
- end
+ if not scale or not scale:IsA("UIScale") then error("[BloomUI] Roulette slot missing authored SlotScale: "..slot.Name) end
  scale.Scale=current and 1.04 or .92
 end
 
@@ -1885,11 +1800,7 @@ function UI:ApplyState(payload,source)
   self.ObjectiveProgress.Visible=true
   self.ObjectiveProgressFill.Size=UDim2.fromScale(1,1)
   local scale=self.ObjectiveCard:FindFirstChild("TutorialCompleteScale")
-  if not scale then
-   scale=Instance.new("UIScale")
-   scale.Name="TutorialCompleteScale"
-   scale.Parent=self.ObjectiveCard
-  end
+  if not scale or not scale:IsA("UIScale") then error("[BloomUI] ObjectiveCard/TutorialCompleteScale missing") end
   scale.Scale=1.08
   TweenService:Create(scale,TweenInfo.new(.45,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
   task.delay(1.5,function()
