@@ -1153,6 +1153,7 @@ function UI:Render()
   self.ObjectiveTitle.Text="JOURNEY  •  STEP "..tostring(p.Quests.JourneyStep or 1)
   self.ObjectiveText.Text=JOURNEY[p.Quests.JourneyStep] or "Keep growing your garden"
   self.ObjectiveProgress.Visible=false
+  if self.JourneyGuideController then self.JourneyGuideController:RenderObjective() end
  end
 
  self.CurrencyRows.Coins.Value.Text=compact(p.Currencies.Coins)
@@ -1200,7 +1201,10 @@ function UI:Render()
  self.MeterArea.Visible=rollUnlocked and (p.Tutorial.Step>=(T.IndexById.Delivery or 8) or p.Tutorial.Skipped)
 
  for name,b in pairs(self.DockButtons) do b.Visible=name=="Settings" or p.Tutorial.FeatureUnlocks[name]==true end
- if not self:IsWorkshopExclusive() then self.GuideController:Update() end
+ if not self:IsWorkshopExclusive() then
+  self.GuideController:Update()
+  if self.JourneyGuideController then self.JourneyGuideController:Update() end
+ end
  self.GardenPresentation:Update()
  self:ApplyWorkshopFocusVisibility()
 end
@@ -1769,6 +1773,8 @@ function UI:Start()
  self.Bees:Init(self)
  self.GuideController=require(script.Parent.TutorialGuideController)
  self.GuideController:Init(self)
+ self.JourneyGuideController=require(script.Parent.JourneyGuideController)
+ self.JourneyGuideController:Init(self,self.GuideController)
  self.GardenPresentation=require(script.Parent.GardenPresentationController)
  self.GardenPresentation:Init(self)
 
@@ -1911,7 +1917,10 @@ function UI:Start()
     self:Toast("Server response timed out. Auto was turned off.")
     if self.State then self:Render() end
    end
-   if self.State then self.GuideController:Update() end
+   if self.State then
+    self.GuideController:Update()
+    if self.JourneyGuideController then self.JourneyGuideController:Update() end
+   end
    if self.ToastUntil and os.clock()>self.ToastUntil then self.ToastRoot.Visible=false self.ToastUntil=nil end
   end
  end)
