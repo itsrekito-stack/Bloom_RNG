@@ -284,3 +284,45 @@ test('successful Season caller rebuilds exactly once with committed data',functi
  assert(season:Confirm(player,'turn'));assert(rebuilt==1 and trialRemoved==1 and s:GetProfile(player) and not season.Pending[player]);season.Eligible=previousEligible
 end) end)
 os.clock=oldClock;os.time=oldTime;game=oldGame
+
+
+test('representative legacy profiles retain ownership and survive release rejoin',function() scenario(function()
+ local s,db,new=setup()
+ local fixtures={
+  {Id=101,Data={Inventory={Apple=2,Banana=1},DiscoveredFruits={Apple=true,Banana=true},FruitMastery={Apple={Level=5}},Currencies={FruitDust=4,AncientSeeds=2},UnlockedSectors={StarterOrchard=true},WorkshopV2={Points=3},LegacyArchive={Preexisting='keep'}}},
+  {Id=102,Data={Inventory={Dragonfruit=1,UnknownFruit=2},DiscoveredFruits={Dragonfruit=true},Currencies={FruitDust=1},WorkshopV2={Points=2},LegacyArchive={Tag='fixture-2'}}},
+  {Id=103,Data={Inventory={Watermelon=2,Coconut=1},FruitMastery={Watermelon=7},Currencies={FruitDust=0,AncientSeeds=5},UnlockedSectors={StarterOrchard=true,CrystalGreenhouse=true},WorkshopV2={Points=6}}},
+ }
+ for _,fixture in ipairs(fixtures) do
+  local key='Player_'..fixture.Id
+  db.Values[key]={Revision=7,Data=U.Copy(fixture.Data)}
+  local p=new(fixture.Id)
+  local migrated=U.Copy(s:GetProfile(p))
+  assert(migrated.Migrations.BloomReworkV1 and migrated.SchemaVersion==5)
+  assert(type(migrated.FlowerCollection)=='table' and type(migrated.Pollinators)=='table' and type(migrated.WorkshopV5)=='table')
+  assert(migrated.WorkshopV5.Points>=tonumber((fixture.Data.WorkshopV2 or {}).Points or 0))
+  assert(type(migrated.LegacyArchive)=='table')
+  if fixture.Id==101 then
+   assert(migrated.FlowerCollection.OwnedSeedCopies.Daisy>=3)
+   assert(migrated.FlowerCollection.OwnedSeedCopies.Tulip>=1)
+   assert(migrated.FlowerCollection.FlowerMastery.Daisy.Level>=5)
+   assert(migrated.World.UnlockedSectors.SunnyOrchard==true)
+   assert(migrated.LegacyArchive.Preexisting=='keep')
+  elseif fixture.Id==102 then
+   assert(migrated.FlowerCollection.OwnedSeedCopies.EmberDahlia>=1)
+   assert(migrated.Currencies.PetalDust>=3)
+   assert(migrated.LegacyArchive.Tag=='fixture-2')
+  elseif fixture.Id==103 then
+   assert(migrated.FlowerCollection.OwnedSeedCopies.CrystalRose>=2)
+   assert(migrated.FlowerCollection.OwnedSeedCopies.PrismBloom>=1)
+   assert(migrated.FlowerCollection.FlowerMastery.CrystalRose.Level>=7)
+   assert(migrated.World.UnlockedSectors.CrystalGreenhouse==true)
+  end
+  local before=U.Copy(migrated)
+  assert(s:ReleaseProfile(p).Code=='SUCCESS')
+  assert(db.Values[key].Data.Migrations.BloomReworkV1==true and not db.Values[key].Session)
+  local rejoined=new(fixture.Id)
+  assert(equal(before,s:GetProfile(rejoined)),'migrated profile changed across release/rejoin for '..fixture.Id)
+  assert(s:ReleaseProfile(rejoined).Code=='SUCCESS')
+ end
+end) end)

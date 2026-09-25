@@ -12,7 +12,7 @@ end
 function S:Skip(player)
  local p=self.X:Profile(player) if not p then return end
  if not p.StarterBeeGranted then self.X.HiveService:Interact(player) end
- p.Tutorial.Step=19 p.Tutorial.Skipped=true for id,r in pairs(Features) do if not r.Node then p.Tutorial.FeatureUnlocks[id]=true end end
+ p.Tutorial.Step=#T.Steps+1 p.Tutorial.Skipped=true for id,r in pairs(Features) do if not r.Node then p.Tutorial.FeatureUnlocks[id]=true end end
 end
 function S:Replay(player) self.X:Send(player,"Replay",T.Steps) end
 return S
