@@ -11,9 +11,27 @@ function X:Profile(player) return self.DataService:GetProfile(player) end
 function X:Send(player,kind,payload) if player.Parent==Players then self.RemoteService.Event:FireClient(player,kind,payload) end end
 function X:Broadcast(kind,payload) for _,p in ipairs(Players:GetPlayers()) do self:Send(p,kind,payload) end end
 function X:Emit(player,event,n)
- local p=self:Profile(player) if not p then return end p.Tutorial.Events[event]=(p.Tutorial.Events[event] or 0)+(n or 1) self.Revisions[player]=(self.Revisions[player] or 0)+1 self:MarkStateDirty(player)
- self.AnalyticsService:Event(player,event,n or 1) if event=="ActivityCompleted" then self:Send(player,"TokenCollected",true) end self.TutorialService:Refresh(player)
- if event~="Trial" then self.BuildTrialService:Event(player,event,n or 1) end
+ local p=self:Profile(player) if not p then return end
+ local amount=n or 1
+ p.Tutorial.Events[event]=(p.Tutorial.Events[event] or 0)+amount
+ self.Revisions[player]=(self.Revisions[player] or 0)+1
+ self:MarkStateDirty(player)
+
+ -- Tutorial progression is core state and must commit before optional telemetry/trial hooks.
+ local tutorialOK,tutorialErr=xpcall(function() self.TutorialService:Refresh(player) end,debug.traceback)
+ if not tutorialOK then
+  warn("[Bloom] Tutorial refresh error",event,tutorialErr)
+  error(tutorialErr)
+ end
+ if event=="ActivityCompleted" then self:Send(player,"TokenCollected",true) end
+
+ local analyticsOK,analyticsErr=xpcall(function() self.AnalyticsService:Event(player,event,amount) end,debug.traceback)
+ if not analyticsOK then warn("[Bloom] Analytics hook error",event,analyticsErr) end
+
+ if event~="Trial" then
+  local trialOK,trialErr=xpcall(function() self.BuildTrialService:Event(player,event,amount) end,debug.traceback)
+  if not trialOK then warn("[Bloom] Trial hook error",event,trialErr) end
+ end
 end
 function X:EmitOnce(player,event) local p=self:Profile(player) if p and not p.Tutorial.Events[event] then self:Emit(player,event,1) end end
 function X:Part(parent,name,pos,size,color,collide)
