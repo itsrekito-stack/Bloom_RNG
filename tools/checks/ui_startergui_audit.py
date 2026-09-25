@@ -124,6 +124,10 @@ check('Active boosts controller linked','self.BoostHUD=require(script.Parent.Boo
 check('Active boost hover states','badge.MouseEnter:Connect' in boost_hud_source and 'badge.MouseLeave:Connect' in boost_hud_source and 'TweenService:Create(scale' in boost_hud_source)
 check('Active boost source breakdown','self.TooltipBreakdown.Text=self:TooltipText(item)' in boost_hud_source and 'source(buckets,stat,"Bees",bee.DisplayName.." ×"..count' in boost_service_source and 'source(buckets,"Luck","Activity",tostring(solarCfg.Label or "Solar Bloom")' in boost_service_source)
 check('Workshop hides active boosts','self.BoostHUD.Root.Visible=false' in source and 'self.BoostHUD.Tooltip.Visible=false' in source)
+check('BloomUI validates authored schema before choosing runtime clone','local REQUIRED_AUTHORED_UI={' in source and 'validateBloomGui(candidate)' in source and 'Rejecting stale PlayerGui/BloomUI' in source)
+check('stale runtime BloomUI replaced from current StarterGui','Replacing stale runtime HUD from current StarterGui template' in source and 'template:Clone()' in source)
+check('boost HUD never infinite-waits authored roots','WaitForChild("ActiveBoostsHUD")' not in boost_hud_source and 'WaitForChild("ActiveBoostTooltip")' not in boost_hud_source)
+check('boost HUD missing hierarchy fails fast','[BoostHUD] Authored boost HUD is missing from canonical BloomUI' in boost_hud_source and '[BoostHUD] Authored boost HUD hierarchy is incomplete' in boost_hud_source)
 
 # BR-002: feature id and renderer are explicit and editor has one live inventory preview.
 check('SeedSatchel explicitly routes to InventoryV2','MENU_RENDERERS={SeedSatchel="InventoryV2"}' in source)
