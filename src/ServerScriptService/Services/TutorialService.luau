@@ -33,7 +33,7 @@ function S:Migrate(player,p)
  local t=p.Tutorial
  if t.Version==T.Version then return false end
 
- local wasComplete=t.Events.TutorialComplete or t.Step>17
+ local wasComplete=t.Events.TutorialComplete or t.Step>#T.Steps
  t.Version=T.Version
  if wasComplete then
   t.Step=#T.Steps+1
