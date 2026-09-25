@@ -125,11 +125,12 @@ local function buildItems(profile,inventory)
  end
 
  local currencies=profile.Currencies or {}
+ local distill=inventory.NectarDistill or {}
  local resources={
   {Id="Coins",DisplayName="Coins",Count=currencies.Coins or 0,Description="Main currency for progression and upgrades."},
   {Id="Honey",DisplayName="Honey",Count=(profile.Hive and profile.Hive.Honey) or 0,Description="Honey delivered to the hive by your bees."},
   {Id="PetalDust",DisplayName="Petal Dust",Count=currencies.PetalDust or 0,Description="A duplicate resource used for Mastery and upgrades."},
-  {Id="AncientNectar",DisplayName="Ancient Nectar",Count=currencies.AncientNectar or 0,Description="A rare seasonal resource for late-game progression."},
+  {Id="AncientNectar",DisplayName="Ancient Nectar",Count=currencies.AncientNectar or 0,Description="Permanent seasonal currency for Legacy progression and post-Legacy distillation.",DistillUnlocked=distill.Unlocked==true,CanDistill=distill.CanDistill==true,DistillCost=distill.Cost or 1,DistillDust=distill.Dust or 0},
  }
  for _,entry in ipairs(resources) do
   entry.Kind="Resource"
@@ -494,6 +495,13 @@ function InventoryV2.Render(controller,profile,uiState)
    setButton(favorite,false)
    setButton(protect,false)
    setButton(dissolve,true,"DISMANTLE ×1  •  +"..tostring(item.DissolveValue or 0).." DUST",item.CanDissolve==true,function() controller:Send("DissolveBee",item.Id,1) end)
+   setButton(mastery,false)
+  elseif item.Kind=="Resource" and item.Id=="AncientNectar" then
+   setButton(plant,false)
+   setButton(favorite,false)
+   setButton(protect,false)
+   local label=item.DistillUnlocked and ("DISTILL "..tostring(item.DistillCost or 1).." NECTAR  →  +"..tostring(item.DistillDust or 0).." DUST") or "COMPLETE LEGACY TO DISTILL"
+   setButton(dissolve,true,label,item.CanDistill==true,function() controller:Send("DistillNectar") end)
    setButton(mastery,false)
   else
    setButton(plant,false)
