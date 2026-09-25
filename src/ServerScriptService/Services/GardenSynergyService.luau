@@ -1,7 +1,7 @@
-local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.GardenSynergyConfig) local F=require(RS.Config.FlowersConfig) local B=require(RS.Config.BeesConfig) local S={Active={}}
+local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.GardenSynergyConfig) local F=require(RS.Config.FlowersConfig) local B=require(RS.Config.BeesConfig) local E=require(RS.Shared.WorkshopEffects) local S={Active={}}
 function S:Init(x) self.X=x end
 function S:Recalculate(player)
- local p=self.X:Profile(player) if not p then return end local slots=p.Garden.Slots local range=1+(p.WorkshopV5.Nodes.GARDEN_2 and 1 or 0)+(p.Season.ActiveCard=="SpringResonance" and 1 or 0) local traits=B.GetTraitCounts(p.Pollinators.EquippedBeeSlots) local active={}
+ local p=self.X:Profile(player) if not p then return end local slots=p.Garden.Slots local range=1+E.Value(p,"GARDEN_2","Adjacency",0)+(p.Season.ActiveCard=="SpringResonance" and 1 or 0) local traits=B.GetTraitCounts(p.Pollinators.EquippedBeeSlots) local active={}
  local function tag(i,t) local f=slots[i] and F.Species[slots[i].SpeciesId] return f and table.find(f.Tags,t)~=nil end
  for _,r in ipairs(C.Recipes) do local matches={} local yes=false
   if r.Kind=="Pair" then for i,a in ipairs(slots) do for j,b in ipairs(slots) do if a.SpeciesId==r.Species[1] and b.SpeciesId==r.Species[2] and C.Adjacent(i,j,range) then yes=true matches={i,j} end end end
