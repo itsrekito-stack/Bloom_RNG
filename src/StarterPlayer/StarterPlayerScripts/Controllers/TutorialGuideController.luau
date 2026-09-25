@@ -24,28 +24,37 @@ local function outline(x,color,thickness,transparency)
  return s
 end
 
+local function worldPosition(target)
+ if typeof(target)=="Vector3" then return target end
+ if typeof(target)=="Instance" then
+  if target:IsA("BasePart") then return target.Position end
+  if target:IsA("Model") then return target:GetPivot().Position end
+ end
+ return nil
+end
+
 function S:Init(ui)
  self.UI=ui
 
- local a=Instance.new("Part")
- a.Name="LocalGuideTarget"
- a.Transparency=1
- a.Anchored=true
- a.CanCollide=false
- a.CanTouch=false
- a.CanQuery=false
- a.Size=Vector3.new(.25,.25,.25)
- a.Parent=workspace
- self.Target=a
+ local anchor=Instance.new("Part")
+ anchor.Name="LocalGuideTarget"
+ anchor.Transparency=1
+ anchor.Anchored=true
+ anchor.CanCollide=false
+ anchor.CanTouch=false
+ anchor.CanQuery=false
+ anchor.Size=Vector3.new(.25,.25,.25)
+ anchor.Parent=workspace
+ self.Target=anchor
 
  local bill=Instance.new("BillboardGui")
  bill.Name="BloomTutorialWorldArrow"
- bill.Size=UDim2.fromOffset(190,72)
- bill.StudsOffset=Vector3.new(0,1.5,0)
+ bill.Size=UDim2.fromOffset(210,76)
+ bill.StudsOffset=Vector3.new(0,1.6,0)
  bill.AlwaysOnTop=true
- bill.MaxDistance=220
+ bill.MaxDistance=260
  bill.Enabled=false
- bill.Parent=a
+ bill.Parent=anchor
  self.Billboard=bill
 
  local billText=Instance.new("TextLabel")
@@ -55,14 +64,14 @@ function S:Init(ui)
  billText.TextSize=19
  billText.TextColor3=C.Gold
  billText.TextStrokeColor3=C.Black
- billText.TextStrokeTransparency=.35
+ billText.TextStrokeTransparency=.28
  billText.Font=Enum.Font.GothamBlack
  billText.TextWrapped=true
  billText.Parent=bill
  self.BillboardText=billText
 
  self.Attachment=Instance.new("Attachment")
- self.Attachment.Parent=a
+ self.Attachment.Parent=anchor
  self.Beam=Instance.new("Beam")
  self.Beam.Attachment1=self.Attachment
  self.Beam.Width0=.09
@@ -77,7 +86,18 @@ function S:Init(ui)
   NumberSequenceKeypoint.new(1,.42),
  })
  self.Beam.Enabled=false
- self.Beam.Parent=a
+ self.Beam.Parent=anchor
+
+ local highlight=Instance.new("Highlight")
+ highlight.Name="BloomTutorialHighlight"
+ highlight.FillColor=C.Gold
+ highlight.FillTransparency=.82
+ highlight.OutlineColor=C.Blue
+ highlight.OutlineTransparency=.05
+ highlight.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+ highlight.Enabled=false
+ highlight.Parent=anchor
+ self.WorldHighlight=highlight
 
  local frame=Instance.new("Frame")
  frame.Name="TutorialSpotlight"
@@ -98,7 +118,7 @@ function S:Init(ui)
  local callout=Instance.new("TextLabel")
  callout.Name="TutorialCallout"
  callout.AnchorPoint=Vector2.new(.5,.5)
- callout.Size=UDim2.fromOffset(190,38)
+ callout.Size=UDim2.fromOffset(230,42)
  callout.BackgroundColor3=C.Panel
  callout.BackgroundTransparency=.02
  callout.BorderSizePixel=0
@@ -114,16 +134,43 @@ function S:Init(ui)
  outline(callout,C.BorderDark,2,0)
  self.Callout=callout
 
+ local arrow=Instance.new("TextLabel")
+ arrow.Name="TutorialScreenArrow"
+ arrow.AnchorPoint=Vector2.new(.5,.5)
+ arrow.Size=UDim2.fromOffset(28,28)
+ arrow.BackgroundTransparency=1
+ arrow.Text="▼"
+ arrow.TextColor3=C.Gold
+ arrow.TextStrokeColor3=C.Black
+ arrow.TextStrokeTransparency=.25
+ arrow.TextSize=24
+ arrow.Font=Enum.Font.GothamBlack
+ arrow.Visible=false
+ arrow.ZIndex=93
+ arrow.Parent=ui.SafeRoot
+ self.ScreenArrow=arrow
+ self.ScreenArrowScale=Instance.new("UIScale")
+ self.ScreenArrowScale.Parent=arrow
+
  TweenService:Create(self.SpotlightScale,TweenInfo.new(.6,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,-1,true),{Scale=1.06}):Play()
  TweenService:Create(self.SpotlightStroke,TweenInfo.new(.6,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,-1,true),{Transparency=.4,Thickness=2}):Play()
+ TweenService:Create(self.ScreenArrowScale,TweenInfo.new(.5,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut,-1,true),{Scale=1.16}):Play()
 end
 
 function S:HideScreenTarget()
  self.Spotlight.Visible=false
  self.Callout.Visible=false
+ self.ScreenArrow.Visible=false
 end
 
-function S:PlaceScreenTarget(button,label)
+function S:HideWorldTarget()
+ self.Billboard.Enabled=false
+ self.Beam.Enabled=false
+ self.WorldHighlight.Enabled=false
+ self.WorldHighlight.Adornee=nil
+end
+
+function S:PlaceScreenTarget(button,label,helper)
  local ui=self.UI
  local root=ui.SafeRoot
  if not button or not button.Parent or not button.Visible or not root or root.AbsoluteSize.X<=0 then
@@ -146,37 +193,47 @@ function S:PlaceScreenTarget(button,label)
  self.Spotlight.Position=UDim2.fromOffset(cx,cy)
  self.Spotlight.Visible=true
 
- local calloutW=math.min(210,math.max(140,rootSize.X-20))
- self.Callout.Size=UDim2.fromOffset(calloutW,38)
+ local calloutW=math.min(260,math.max(150,rootSize.X-20))
+ self.Callout.Size=UDim2.fromOffset(calloutW,42)
  self.Callout.Text=label
- local above=cy-h*.5-30
- local calloutY
- if above>26 then
-  calloutY=above
- else
-  calloutY=cy+h*.5+30
- end
- calloutY=math.clamp(calloutY,22,rootSize.Y-22)
+ local above=cy-h*.5-34
+ local calloutY=above>28 and above or cy+h*.5+34
+ calloutY=math.clamp(calloutY,24,rootSize.Y-24)
  local calloutX=math.clamp(cx,calloutW*.5+8,rootSize.X-calloutW*.5-8)
  self.Callout.Position=UDim2.fromOffset(calloutX,calloutY)
  self.Callout.Visible=true
+
+ local arrowY=math.clamp(cy-h*.5-14,14,rootSize.Y-14)
+ self.ScreenArrow.Position=UDim2.fromOffset(cx,arrowY)
+ self.ScreenArrow.Visible=true
+
+ if helper and helper~="" then
+  ui.Guide.Text=helper
+  ui.Guide.Visible=true
+ end
  return true
 end
 
-function S:SetWorldTarget(pos,label)
- if not pos then
-  self.Billboard.Enabled=false
-  self.Beam.Enabled=false
-  return
- end
+function S:SetWorldTarget(target,label,helper)
+ local pos=worldPosition(target)
+ if not pos then self:HideWorldTarget() return false end
+
  self.Target.Position=pos+Vector3.new(0,7,0)
  self.BillboardText.Text=(label or "TARGET").."\n▼"
  self.Billboard.Enabled=true
 
+ if typeof(target)=="Instance" then
+  self.WorldHighlight.Adornee=target
+  self.WorldHighlight.Enabled=true
+ else
+  self.WorldHighlight.Adornee=nil
+  self.WorldHighlight.Enabled=false
+ end
+
  local root=self.UI.Player.Character and self.UI.Player.Character:FindFirstChild("HumanoidRootPart")
  if not root then
   self.Beam.Enabled=false
-  return
+  return true
  end
  if not self.RootAttachment or self.RootAttachment.Parent~=root then
   if self.RootAttachment then self.RootAttachment:Destroy() end
@@ -185,32 +242,65 @@ function S:SetWorldTarget(pos,label)
   self.Beam.Attachment0=self.RootAttachment
  end
  local distance=(root.Position-pos).Magnitude
- self.Beam.Enabled=distance>30
- self.UI.Guide.Text=(label or "Target").."   •   "..math.floor(distance).." m"
+ self.Beam.Enabled=distance>15
+ self.UI.Guide.Text=(helper or label or "Target").."  •  "..math.floor(distance).." studs"
  self.UI.Guide.Visible=true
+ return true
 end
 
-function S:ResolveWorldTarget(target)
- local ui=self.UI
+function S:PlayerPlot()
  local world=workspace:FindFirstChild("BloomWorld")
- local hivePos=ui.State and ui.State.HivePosition
- if target=="Hive" then return hivePos,"HIVE" end
- if target=="Garden" then
-  local plot=world and world:FindFirstChild("Garden_"..ui.Player.UserId)
+ return world and world:FindFirstChild("Garden_"..self.UI.Player.UserId)
+end
+
+function S:GardenSlot(slot)
+ local plot=self:PlayerPlot()
+ if not plot then return nil end
+ return plot:FindFirstChild("Slot_"..tostring(slot),true)
+end
+
+function S:ResolveWorldTarget(step)
+ local ui=self.UI
+ local target=step.Target
+ local world=workspace:FindFirstChild("BloomWorld")
+ local plot=self:PlayerPlot()
+
+ if target=="Hive" then
+  local hive=plot and plot:FindFirstChild("Hive")
+  if hive and hive:IsA("BasePart") then return hive,"HIVE" end
+  return ui.State and ui.State.HivePosition,"HIVE"
+ elseif target=="Bee" then
+  local bee=ui.Bees and ui.Bees:Target(true)
+  if bee then return bee,"YOUR BEE" end
   local ground=plot and plot:FindFirstChild("Ground")
-  if ground and ground:IsA("BasePart") then return ground.Position+Vector3.new(0,1,0),"GARDEN" end
-  if hivePos then return hivePos-Vector3.new(0,1,19),"GARDEN" end
- elseif target=="Token" then
-  local token=ui.Activities:Target()
-  if token then return token.Position,"ACTIVITY" end
+  if ground then return ground,"GARDEN" end
+ elseif target=="TutorialToken" then
+  local token=ui.Activities and ui.Activities:Target("Tutorial")
+  if token then return token,"TOUCH" end
+ elseif target=="GardenSlot" then
+  local slot=self:GardenSlot(step.Slot or 3)
+  if slot then return slot,"PLANT HERE" end
+ elseif target=="SynergySlot" then
+  local slot=self:GardenSlot(step.Slot or 2)
+  if slot then return slot,"SYNERGY SLOT" end
  elseif target=="Workshop" then
   local part=world and world:FindFirstChild("Workshop")
-  if part and part:IsA("BasePart") then return part.Position,"WORKSHOP" end
+  if part and part:IsA("BasePart") then return part,"WORKSHOP" end
  elseif L.Sectors[target] then
-  local part=world and world:FindFirstChild(target.."Gate")
-  if part and part:IsA("BasePart") then return part.Position,string.upper(L.Sectors[target].Name) end
+  local gate=world and world:FindFirstChild(target.."Gate")
+  if gate and gate:IsA("BasePart") then return gate,string.upper(L.Sectors[target].Name) end
  end
  return nil,nil
+end
+
+function S:Missing(step)
+ local key=tostring(step.Id)..":"..tostring(step.Target)
+ if self.LastMissingKey~=key then
+  self.LastMissingKey=key
+  warn(string.format("[Tutorial] target missing step=%s target=%s",tostring(step.Id),tostring(step.Target)))
+ end
+ self.UI.Guide.Text=step.Helper or "Target is loading. The guide will reconnect automatically."
+ self.UI.Guide.Visible=true
 end
 
 function S:Update()
@@ -218,41 +308,48 @@ function S:Update()
  if not ui.State then return end
  local p=ui.State.Profile
  local step=T.Steps[ui.ReplayIndex or p.Tutorial.Step]
- local target=step and step.Target
 
- self.Billboard.Enabled=false
- self.Beam.Enabled=false
+ self:HideWorldTarget()
  self:HideScreenTarget()
  ui.Guide.Visible=false
- if not target then return end
+ if not step then self.LastMissingKey=nil return end
 
- if target=="Roll" then
-  if self:PlaceScreenTarget(ui.Roll,"PRESS ROLL") then
-   -- The persistent guide banner already explains the action. Keeping a second
-   -- callout above the bottom HUD caused it to overlap Bloom/Roll on short screens.
-   self.Callout.Visible=false
-   ui.Guide.Text="Next step: start auto roll"
-   ui.Guide.Visible=true
+ if step.Target=="Roll" then
+  if self:PlaceScreenTarget(ui.Roll,"CLICK ROLL",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+  return
+ end
+
+ if step.Target=="SeedSatchel" then
+  local button=ui.DockButtons.SeedSatchel
+  if button and button.Visible then ui.Dock.Visible=true end
+  if self:PlaceScreenTarget(button,"OPEN INVENTORY",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+  return
+ end
+
+ if step.Target=="WorkshopNode" then
+  local runtime=ui.WorkshopRuntime
+  local node=runtime and runtime:FindFirstChild("Node_"..tostring(step.NodeId or "ROLL_1"),true)
+  if node and node:IsA("GuiObject") and node.Visible then
+   if self:PlaceScreenTarget(node,"BUY "..tostring(step.NodeId or "ROLL_1"),step.Helper) then self.LastMissingKey=nil return end
+  end
+  local world=workspace:FindFirstChild("BloomWorld")
+  local workshop=world and world:FindFirstChild("Workshop")
+  if workshop then
+   self:SetWorldTarget(workshop,"WORKSHOP","Open the Workshop to continue.")
+   self.LastMissingKey=nil
+  else
+   self:Missing(step)
   end
   return
  end
 
- if target=="SeedSatchel" then
-  if ui.DockButtons.SeedSatchel and ui.DockButtons.SeedSatchel.Visible then ui.Dock.Visible=true end
-  if self:PlaceScreenTarget(ui.DockButtons.SeedSatchel,"OPEN INVENTORY") then
-   ui.Guide.Text="Next step: open your inventory"
-   ui.Guide.Visible=true
-  end
-  return
+ local target,label=self:ResolveWorldTarget(step)
+ if target then
+  self:SetWorldTarget(target,label,step.Helper)
+  self.LastMissingKey=nil
+ else
+  self:Missing(step)
  end
-
- local pos,label=self:ResolveWorldTarget(target)
- if target=="Token" and not pos then
-  ui.Guide.Text="Wait for the next activity — the pointer will appear automatically"
-  ui.Guide.Visible=true
-  return
- end
- if pos then self:SetWorldTarget(pos,label) end
 end
 
 return S
