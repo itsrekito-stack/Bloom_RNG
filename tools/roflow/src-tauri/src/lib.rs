@@ -781,6 +781,7 @@ fn is_required_runtime_ui_child(value: &Value) -> bool {
                 | "RewardReveal"
                 | "ActiveBoostsHUD"
                 | "ActiveBoostTooltip"
+                | "MinimizeButton"
         )
     )
 }
