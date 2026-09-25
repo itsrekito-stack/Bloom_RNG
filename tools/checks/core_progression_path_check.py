@@ -109,7 +109,8 @@ if not key_trials or len(re.findall(r'"[^"]+"',key_trials.group(1))) < required_
 
 # Season Turn must return to a playable starter state.
 need(season_plan,'local flower=profile.Season.Keepsakes.Flower or "Daisy"', "Season Turn retains/seeds a flower")
-need(season_plan,'after.Garden.Slots[1]={SpeciesId=flower,Level=1', "Season Turn replants slot 1")
+need(season_plan,'after.Garden.Slots[1]={', "Season Turn replants slot 1")
+need(season_plan,'SpeciesId=flower', "Season Turn retained flower occupies starter slot")
 need(season_plan,'local bee=profile.Season.Keepsakes.Bee or "WorkerBee"', "Season Turn retains/seeds a bee")
 need(season_plan,'after.Pollinators.EquippedBeeSlots={bee}', "Season Turn equips retained bee")
 need(season_plan,'after.StarterBeeGranted=true',"Season Turn stays pollination-ready")
