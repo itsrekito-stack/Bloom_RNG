@@ -243,6 +243,9 @@ REQUIRED_RUNTIME_UI_CHILDREN = {
     "ObjectiveCard", "CurrencyHUD", "MenuDock", "RollHUD", "VerticalRoulette",
     "TutorialGuideBanner", "Toast", "ModalShade", "MainPanel", "RewardReveal",
     "ActiveBoostsHUD", "ActiveBoostTooltip", "MinimizeButton",
+    "TutorialSpotlight", "TutorialCallout", "TutorialScreenArrow", "StateKits",
+    "ActionHitboxTemplate", "OverlayHitboxTemplate", "SearchBoxTemplate", "EmptyStateTemplate",
+    "HoverScale", "TutorialCompleteScale", "SlotScale", "WorkshopZoomScale",
 }
 
 
