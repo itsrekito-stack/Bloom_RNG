@@ -1,4 +1,4 @@
-local RS=game:GetService("ReplicatedStorage") local L=require(RS.Config.LocationsConfig) local C=require(RS.Config.BloomConfig) local S={Landmarks={},Gates={}}
+local RS=game:GetService("ReplicatedStorage") local L=require(RS.Config.LocationsConfig) local C=require(RS.Config.BloomConfig) local T=require(RS.Config.TutorialConfig) local S={Landmarks={},Gates={}}
 function S:Init(x) self.X=x end
 function S:Sector(player) local char=player.Character local root=char and char:FindFirstChild("HumanoidRootPart") if not root then return "Center" end for id,s in pairs(L.Sectors) do if (root.Position-(self.X.Origin+s.Center)).Magnitude<55 then return id end end return "Center" end
 function S:Unlock(player,id)
@@ -48,6 +48,11 @@ end
 function S:Tick(player)
  local p=self.X:Profile(player) local sector=self:Sector(player) if sector~="Center" and not p.World.UnlockedSectors[sector] then
   local root=player.Character and player.Character:FindFirstChild("HumanoidRootPart") if root then local s=L.Sectors[sector] root.CFrame=CFrame.new(self.X.Origin+s.Center-s.Center.Unit*62+Vector3.new(0,4,0)) end return
+ end
+ local tutorialStep=T.Steps[p.Tutorial.Step]
+ if tutorialStep and tutorialStep.Event=="WorldActivity" and sector~="Center" and not self.X.GardenActivityService:HasSectorOffer(player,sector) then
+  local sectorCfg=L.Sectors[sector]
+  if sectorCfg then self.X.GardenActivityService:Offer(player,sectorCfg.Activity,self.X.Origin+sectorCfg.Center,sector,nil,true) end
  end
  local pulse=self.X.SocialService.Pulse local temp=self.X.Temp[player]
  if p.Season.ActiveCard=="TwilightSeason" and sector=="TwilightGrove" and os.clock()>(temp.NextPersonalEclipse or 0) then temp.NextPersonalEclipse=os.clock()+90 temp.PersonalEclipseUntil=os.clock()+45 self.X.GardenActivityService:Offer(player,"FireflyRoute",self.X.Origin+L.Sectors[sector].Center,sector) end
