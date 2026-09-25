@@ -1820,7 +1820,13 @@ function UI:Start()
    end
    if relevant and not payload.OK then
     if payload.Action=="Roll" and self.Auto and rollSession==(self.RollSession or 0) then self:SetAutoRolling(false) end
-    if not (payload.Action=="Ready" and payload.Reason=="PROFILE_LOADING") then
+    local silentActivity=payload.Action=="Activity" and (
+     payload.Reason=="STALE_ACTIVITY"
+     or payload.Reason=="ACTIVITY_EXPIRED"
+     or payload.Reason=="ACTIVITY_CHANGED"
+     or payload.Reason=="TOO_FAR"
+    )
+    if not silentActivity and not (payload.Action=="Ready" and payload.Reason=="PROFILE_LOADING") then
      self:Toast(payload.Message or payload.Reason or "Action is currently unavailable")
     end
    end
