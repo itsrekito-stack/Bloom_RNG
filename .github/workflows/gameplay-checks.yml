@@ -28,6 +28,20 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install Rojo 7.7.0
+        run: |
+          curl -L https://github.com/rojo-rbx/rojo/releases/download/v7.7.0/rojo-7.7.0-linux-x86_64.zip -o /tmp/rojo.zip
+          unzip -q /tmp/rojo.zip -d /tmp/rojo
+          chmod +x /tmp/rojo/rojo
+          echo "/tmp/rojo" >> "$GITHUB_PATH"
+
+      - name: Clean Rojo build
+        run: |
+          rojo --version
+          rojo build default.project.json -o /tmp/BloomRNG.rbxl
+          test -s /tmp/BloomRNG.rbxl
+
+
       - name: Install Lua runtime
         run: |
           sudo apt-get update
