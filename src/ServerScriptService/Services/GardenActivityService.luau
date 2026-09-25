@@ -14,8 +14,14 @@ function S:Offer(player,kind,position,sector,bee,priority)
  if kind=="BloomSurge" then self.X.Temp[player].Hotspot=position self.X.Temp[player].HotspotUntil=os.clock()+cfg.Life end
  self.X:Emit(player,"ActivityOffered",1) self:Push(player) return true
 end
+function S:HasSectorOffer(player,sector)
+ for _,o in pairs(self.Offers[player] or {}) do
+  if o.Sector==sector and o.Expires>=workspace:GetServerTimeNow() then return true end
+ end
+ return false
+end
 function S:Push(player)
- local list={} for _,o in pairs(self.Offers[player] or {}) do local cfg=A.Types[o.Kind] table.insert(list,{Id=o.Id,Kind=o.Kind,Position=o.Nodes[o.Index],Index=o.Index,Count=#o.Nodes,Expires=o.Expires,Radius=(cfg and cfg.Radius) or .75}) end
+ local list={} for _,o in pairs(self.Offers[player] or {}) do local cfg=A.Types[o.Kind] table.insert(list,{Id=o.Id,Kind=o.Kind,Position=o.Nodes[o.Index],Index=o.Index,Count=#o.Nodes,Expires=o.Expires,Radius=(cfg and cfg.Radius) or .75,Sector=o.Sector}) end
  self.X:Send(player,"Activities",list)
 end
 function S:Collect(player,id,index,phase)
