@@ -1,0 +1,9 @@
+Bloom RNG Today status — 2026-09-25
+BR-005: DONE (8c548972)
+BR-007: DONE (77578b66)
+BR-002: DONE (2f29d0ba)
+BR-008: DONE (aa57c3a7)
+Deterministic gameplay/persistence: 53 PASS
+Authored UI/integration audit: PASS
+Desktop geometry 1920x1080 / 1366x768 / 1280x720: PASS
+Studio-only acceptance: NOT RUN (Roblox Studio unavailable to CI)
