@@ -198,11 +198,15 @@ function S:Map(player,profile)
   local cfg=Locations.Sectors[id]
   local unlocked=profile.World.UnlockedSectors[id]==true
   local hiveReady=profile.Hive.Level>=cfg.Hive
+  local prerequisiteReady=not cfg.Requires or profile.World.UnlockedSectors[cfg.Requires]==true
   local gate=self.X.MapService.Gates[id]
   local nearGate=gate~=nil and self.X.U.Near(player,gate.Position,Bloom.InteractionDistance)
   local hint
   if unlocked then
    hint="Unlocked"
+  elseif not prerequisiteReady then
+   local required=Locations.Sectors[cfg.Requires]
+   hint="Unlock "..(required and required.Name or cfg.Requires).." first"
   elseif not hiveReady then
    hint="Reach Hive "..cfg.Hive
   elseif nearGate then
@@ -214,11 +218,13 @@ function S:Map(player,profile)
    Id=id,
    Name=cfg.Name,
    Unlocked=unlocked,
+   Requires=cfg.Requires,
+   PrerequisiteReady=prerequisiteReady,
    HiveRequired=cfg.Hive,
    HiveReady=hiveReady,
    NearGate=nearGate,
    Current=current==id,
-   CanUnlock=not unlocked and hiveReady and nearGate,
+   CanUnlock=not unlocked and prerequisiteReady and hiveReady and nearGate,
    UnlockHint=hint,
   }
  end
