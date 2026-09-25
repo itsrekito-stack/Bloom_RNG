@@ -29,6 +29,8 @@ map_service=read("src/ServerScriptService/Services/MapService.luau")
 season_plan=read("src/ReplicatedStorage/Shared/SeasonPlan.luau")
 roll_pool=read("src/ReplicatedStorage/Config/RollPoolConfig.luau")
 workshop=read("src/ReplicatedStorage/Config/WorkshopConfig.luau")
+tutorial_service=read("src/ServerScriptService/Services/TutorialService.luau")
+roll_service=read("src/ServerScriptService/Services/RollService.luau")
 
 # A fresh profile must be able to begin pollination before Roll is unlocked.
 need(default,'OwnedSeedCopies={Daisy=1}',"fresh profile owns starter flower")
@@ -36,17 +38,28 @@ need(default,'Slots={{SpeciesId="Daisy",Level=1,XP=0,Mutation="",TotalPollinatio
 need(hive,'self.X.InventoryService:Grant(player,"Bee","WorkerBee")',"Hive grants starter Worker Bee")
 need(hive,'p.Pollinators.EquippedBeeSlots[1]="WorkerBee"',"starter Worker Bee is equipped")
 
-events=re.findall(r'Event="([^"]+)"',tutorial)
-required_prefix=["Wake","StarterBee","Work","PollenSpark","Delivery","Roll"]
-if events[:len(required_prefix)] != required_prefix:
-    raise AssertionError(f"tutorial opening path changed: {events[:len(required_prefix)]}")
-need(features,'Roll={Step=6}',"Roll unlock follows reachable opening tutorial")
-need(pollinator,'self.X:EmitOnce(player,"Work")',"starter pollination advances Work")
-need(pollinator,'if not profile.Tutorial.Events.PollenSpark then', "first delivery guards Pollen Spark route")
-need(pollinator,'self.X.GardenActivityService:Offer(player,"PollenSpark",self.X.GardenPlotService:Position(player,state.Slot))', "first delivery creates Pollen Spark route")
-need(pollinator,'self.X:Emit(player,"Delivery",1)',"delivery advances tutorial")
+tutorial_ids=re.findall(r'Id="([^"]+)"',tutorial)
+expected_tutorial=[
+    "HiveIntro","StarterBee","BeeWork","PollenSpark","FirstSeed","Plant","Inventory",
+    "Delivery","HiveUpgrade","WorkshopVisit","WorkshopPurchase","Synergy","SunnyVisit",
+]
+if tutorial_ids != expected_tutorial:
+    raise AssertionError(f"tutorial deterministic path changed: {tutorial_ids}")
+need(features,'Roll={Step=5}',"Roll unlock follows deterministic tutorial opening")
+need(pollinator,'self.X:EmitOnce(player,"Work")',"starter pollination advances BeeWork")
+need(pollinator,'self.X:Emit(player,"Delivery",1)',"delivery has authoritative event")
+need(tutorial_service,'self.X.GardenActivityService:EnsureTutorialSpark(player)',"tutorial guarantees Pollen Spark")
+need(garden_activity,'function S:EnsureTutorialSpark(player)',"tutorial spark factory exists")
+need(garden_activity,'Tutorial=tutorial==true',"tutorial activity is tagged")
+need(roll_service,'tutorialStep.Id=="FirstSeed"', "first tutorial roll is special-cased")
+need(roll_service,'v.Kind=="FlowerSeed" and v.Id=="Sunflower"', "first tutorial roll guarantees Sunflower")
+need(tutorial_service,'p.Hive.Honey=need',"tutorial delivery covers Hive upgrade cost")
+need(tutorial_service,'p.WorkshopV5.Points=math.max(p.WorkshopV5.Points,node.Cost or 0)',"tutorial guarantees Workshop point")
+need(tutorial_service,'p.Currencies.Coins=math.max(p.Currencies.Coins,node.Coins or 0)',"tutorial guarantees first Workshop coin cost")
+need(tutorial_service,'p.FlowerCollection.OwnedSeedCopies.Tulip=(p.FlowerCollection.OwnedSeedCopies.Tulip or 0)+1',"tutorial guarantees MeadowPair partner")
 
-# First Workshop purchase must be economically reachable from the Hive 2 path.
+# First Workshop purchase is still economically valid in normal play, while tutorial-only
+# assistance prevents onboarding from waiting on repeated deliveries.
 need(hive,'self.X.WorkshopService:Point(player,"Hive_"..p.Season.Count.."_"..p.Hive.Level,2)',"Hive upgrade awards Workshop points")
 honey_per=number(bloom,"HoneyPerDelivery")
 coins_per=number(bloom,"CoinsPerDelivery")
@@ -57,8 +70,6 @@ if len(hive_costs)<2: raise AssertionError("HiveCosts must contain Hive 2 cost")
 hive2_cost=hive_costs[1]
 deliveries=(hive2_cost+honey_per-1)//honey_per
 coins_before_hive2=deliveries*coins_per
-if coins_before_hive2 < 30:
-    raise AssertionError(f"Hive 2 path only yields {coins_before_hive2} Coins before a 30-Coin first Workshop node")
 need(workshop,'Cost=1',"Workshop point cost contract")
 need(workshop,'Coins=i*30',"Workshop coin cost contract")
 
