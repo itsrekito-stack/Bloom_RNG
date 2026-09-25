@@ -60,6 +60,35 @@ function X:Push(player,force)
  local leader=player:FindFirstChild("leaderstats") if leader then leader.Coins.Value=math.floor(p.Currencies.Coins) leader.Hive.Value=p.Hive.Level end
  return true
 end
+function X:ResetStudioTutorial(player)
+ local ok,reason=self.DataService:BeginStudioTransientProfile(player)
+ if not ok then return false,reason end
+
+ self.SeasonService:Remove(player)
+ self.BuildTrialService:Remove(player)
+ self.GardenActivityService:Remove(player)
+ self.PollinatorService:Remove(player)
+ self.RollService:Remove(player)
+ self.GardenSynergyService:Remove(player)
+ self.TutorialService:Remove(player)
+ self.GardenPlotService:Remove(player)
+
+ self.Temp[player]={}
+ self.LastPushedStateRevision[player]=-1
+ self.GardenPlotService:Build(player)
+ self.GardenActivityService:Push(player)
+ self:Send(player,"Bees",{})
+ self:MarkStateDirty(player)
+
+ local root=player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+ local hive=self.GardenPlotService:HivePosition(player)
+ if root and hive then root.CFrame=CFrame.new(hive+Vector3.new(0,4,8)) end
+
+ print("[Tutorial] Studio fresh-start profile activated player="..tostring(player.Name))
+ self:Send(player,"Message","Studio tutorial test started • session progress will not be saved")
+ return true
+end
+
 function X:Request(player,action,a,b,c)
  local p=self:Profile(player) if not p then return false,"PROFILE_LOADING" end
  if action=="SeasonCancel" then self.SeasonService.Pending[player]=nil return true end
@@ -93,6 +122,7 @@ function X:Request(player,action,a,b,c)
  elseif action=="DistillNectar" then return self.SeasonService:DistillNectar(player)
  elseif action=="Skip" then self.TutorialService:Skip(player) return true
  elseif action=="Replay" then self.TutorialService:Replay(player) return true
+ elseif action=="StudioTutorialReset" then return self:ResetStudioTutorial(player)
  elseif action=="Menu" then
   if a==false then
    local closing=self.Temp[player].MenuName
