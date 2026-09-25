@@ -242,7 +242,7 @@ fn default_today_tasks() -> Vec<PlannerTask> {
         planner_task("today-br008-verify","Runtime","Fix roulette request/session race (BR-008)","Implemented with RequestId, RollSession and generation guards; automated assertions are green.",true),
         planner_task("today-br006","Runtime","Scale public bee/activity replication (BR-006)","Implemented with per-recipient visibility/radius filtering and bounded cadence.",true),
         planner_task("today-inventory-plant","UI / Inventory","Route Inventory planting through physical garden pads","Implemented: inventory selection now hands off to the proximity-gated garden PlantPicker flow.",true),
-        planner_task("today-core-contract","QA","Add automated core-loop contract acceptance","Guard roll → inventory → garden → bees → hive/Workshop wiring in gameplay CI. This supplements but does not pretend to be a Roblox Studio playtest.",false),
+        planner_task("today-core-contract","QA","Add automated core-loop contract acceptance","Guard roll → inventory → garden → bees → hive/Workshop wiring in gameplay CI. This supplements but does not pretend to be a Roblox Studio playtest.",true),
         planner_task("today-playtest","QA","Studio-only core-loop acceptance at 1366×768 and 1280×720","Runtime-only acceptance remains: roll → inventory → garden → bees → hive → Workshop, including real input/focus and visual behavior.",false),
         planner_task("today-stable-main","QA","Record blockers and leave main buildable","Keep gameplay CI green, write explicit Studio-only blockers, and leave main without half-finished changes.",false),
     ]
@@ -268,8 +268,8 @@ fn default_roadmap_tasks() -> Vec<PlannerTask> {
         planner_task("release-hud-responsive","3 · UI & Inventory","Finish HUD/responsive pass","Verify safe areas and authored HUD layout at 1920×1080, 1366×768 and 1280×720 without overlap.",false),
         planner_task("release-tutorial","3 · UI & Inventory","Finish intro/tutorial guidance","Ensure arrows, indicators and tutorial progression point to real world/UI targets and remain on-screen.",false),
         planner_task("release-workshop-ui","3 · UI & Inventory","Finish Workshop interaction polish","Verify fullscreen exclusivity, pan, wheel zoom, node selection, locked/hidden nodes and readable costs.",false),
-        planner_task("release-br010","3 · UI & Inventory","Clarify world gate / shrine feedback (BR-010)","Make unlock requirements and blocked interactions understandable in the physical world.",false),
-        planner_task("release-br013","3 · UI & Inventory","Remove preview/runtime drift (BR-013)","Keep mock editor data clearly separate from runtime and remove stale/Russian player-facing preview labels.",false),
+        planner_task("release-br010","3 · UI & Inventory","Clarify world gate / shrine feedback (BR-010)","Make unlock requirements and blocked interactions understandable in the physical world.",true),
+        planner_task("release-br013","3 · UI & Inventory","Remove preview/runtime drift (BR-013)","Keep mock editor data clearly separate from runtime and remove stale/Russian player-facing preview labels.",true),
 
         planner_task("release-core-loop","4 · Core Progression","Validate the complete progression loop","Starter bee → flower → pollination → currencies → roll → garden → Workshop → sectors/trials → season must work end-to-end.",false),
         planner_task("release-roll-loop","4 · Core Progression","Finalize Roll / Bloom / pity loop","Confirm reward cadence, Bloom charge/use, duplicate outcomes and roulette presentation all agree with server results.",false),
@@ -287,8 +287,8 @@ fn default_roadmap_tasks() -> Vec<PlannerTask> {
         planner_task("release-content","5 · Balance & Content","Lock the release content set","Choose the flowers, bees, locations, quests, trials and Workshop branches that are actually shipping in v1.",false),
         planner_task("release-sinks","5 · Balance & Content","Verify duplicate and endgame sinks","Make sure extra copies and accumulated currencies continue to have useful destinations after the early game.",false),
 
-        planner_task("release-br011","6 · Technical Cleanup","Remove FlowersConfig duplication (BR-011)","Use one authoritative initialization table instead of repeating derived metadata and weights.",false),
-        planner_task("release-br012","6 · Technical Cleanup","Document and unify config authority (BR-012)","Remove or document literal effect values that can drift from Workshop/config definitions.",false),
+        planner_task("release-br011","6 · Technical Cleanup","Remove FlowersConfig duplication (BR-011)","Use one authoritative initialization table instead of repeating derived metadata and weights.",true),
+        planner_task("release-br012","6 · Technical Cleanup","Document and unify config authority (BR-012)","Remove or document literal effect values that can drift from Workshop/config definitions.",true),
         planner_task("release-legacy","6 · Technical Cleanup","Remove dead legacy routes and scripts","Delete only confirmed-unused Fruit/Research/old UI paths after repository search and runtime verification.",false),
         planner_task("release-remote-security","6 · Technical Cleanup","Final remote validation/security pass","Recheck argument shape, rate limits, ownership, proximity and server-authoritative rewards for every mutation action.",false),
 
