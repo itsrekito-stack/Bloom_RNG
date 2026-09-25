@@ -32,6 +32,7 @@ for text,label in [
  ('controller:Send("Flag",item.Id,"LockedFlowers")',"Protect action"),
  ('controller:Send("Dissolve",item.Id,1)',"Flower dissolve action"),
  ('controller:Send("DissolveBee",item.Id,1)',"Bee dismantle action"),
+ ('controller:Send("DistillNectar")',"Ancient Nectar distill action"),
  ('controller:Send("FlowerUpgrade",item.Id)',"Mastery action"),
  ('controller:Send("EquipBee","",equippedSlot)',"Bee unequip action"),
  ('controller:Send("EquipBee",item.Id,slot)',"Bee equip action"),
@@ -53,6 +54,7 @@ for text,label in [
  ('elseif action=="EquipBee" then return self.InventoryService:EquipBee(player,a,b)',"Equip server route"),
  ('return self.InventoryService:Dissolve(player,a,b)',"Flower dissolve server route"),
  ('return self.InventoryService:DissolveBee(player,a,b)',"Bee dismantle server route"),
+ ('return self.SeasonService:DistillNectar(player)',"Ancient Nectar distill server route"),
  ('return self.FlowerProgressionService:Upgrade(player,a)',"Mastery server route"),
  ('if b~="LockedFlowers" and b~="FavoriteFlowers" then return false,"INVALID_ACTION" end',"Flag field allowlist"),
 ]:
@@ -90,6 +92,7 @@ for text,label in [
  ('Protected=locked',"protected projection"),
  ('EquippedBeeSlots=self.X.U.Copy(profile.Pollinators.EquippedBeeSlots)',"equipped slots projection"),
  ('DissolveValue=Bloom.BeeDustPerCopy',"bee dismantle value projection"),
+ ('NectarDistill={',"Ancient Nectar distill projection"),
 ]:
     need(state,text,label)
 
