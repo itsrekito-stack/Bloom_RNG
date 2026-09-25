@@ -5,7 +5,7 @@ local Icons=require(RS.Config.IconsConfig)
 local Theme=require(RS.Config.UIThemeConfig)
 
 local C=Theme.Colors
-local S={Badges={},ItemsByBadge={}}
+local S={Badges={},ItemsByBadge={},Minimized=false,Suppressed=false,ItemCount=0}
 
 local function cloneData(value)
  if type(value)~="table" then return value end
@@ -34,17 +34,66 @@ function S:Init(ui)
  self.List=self.Root:FindFirstChild("BoostList")
  self.Empty=self.Root:FindFirstChild("EmptyLabel")
  self.Template=self.List and self.List:FindFirstChild("BoostTemplate")
+ self.Title=self.Root:FindFirstChild("Title")
+ self.Toggle=self.Root:FindFirstChild("MinimizeButton")
  self.TooltipTitle=self.Tooltip:FindFirstChild("Title")
  self.TooltipTotal=self.Tooltip:FindFirstChild("Total")
  self.TooltipBreakdown=self.Tooltip:FindFirstChild("Breakdown")
- if not self.List or not self.Template or not self.Empty or not self.TooltipTitle or not self.TooltipTotal or not self.TooltipBreakdown then
+ if not self.List or not self.Template or not self.Empty or not self.Title or not self.Toggle or not self.TooltipTitle or not self.TooltipTotal or not self.TooltipBreakdown then
   error("[BoostHUD] Authored boost HUD hierarchy is incomplete. Re-sync BloomUI.model.json before Play.")
  end
  self.LastRevision=nil
+ self.ExpandedSize=self.Root.Size
+ self.Minimized=false
+ self.Suppressed=false
+ self.ItemCount=0
  self.Hovered=nil
  self.ItemsByBadge={}
  self.Root.Visible=true
  self.Tooltip.Visible=false
+
+ self.Toggle.Activated:Connect(function()
+  self:SetMinimized(not self.Minimized,true)
+ end)
+ self.Toggle.MouseEnter:Connect(function()
+  TweenService:Create(self.Toggle,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelHover,TextColor3=C.Text}):Play()
+ end)
+ self.Toggle.MouseLeave:Connect(function()
+  TweenService:Create(self.Toggle,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.Panel,TextColor3=C.Muted}):Play()
+ end)
+ self:SetMinimized(false,false)
+end
+
+function S:SetSuppressed(suppressed)
+ self.Suppressed=suppressed==true
+ self.Root.Visible=not self.Suppressed
+ if self.Suppressed then
+  self.Hovered=nil
+  self.Tooltip.Visible=false
+ end
+end
+
+function S:ApplyResponsiveLayout(width)
+ self.ExpandedSize=UDim2.fromOffset(math.max(280,math.min(360,(tonumber(width) or 360)-20)),72)
+ self.Root.Position=UDim2.new(0,10,1,-118)
+ if not self.Minimized then self.Root.Size=self.ExpandedSize end
+end
+
+function S:SetMinimized(minimized,animate)
+ self.Minimized=minimized==true
+ self.Hovered=nil
+ self.Tooltip.Visible=false
+ self.Toggle.Text=self.Minimized and "+" or "−"
+ self.Toggle.TooltipText=self.Minimized and "Expand active boosts" or "Minimize active boosts"
+ self.Title.Text=self.Minimized and ("BOOSTS  •  "..tostring(self.ItemCount)) or "ACTIVE BOOSTS"
+ self.List.Visible=not self.Minimized and self.ItemCount>0
+ self.Empty.Visible=not self.Minimized and self.ItemCount==0
+ local target=self.Minimized and UDim2.fromOffset(132,30) or (self.ExpandedSize or UDim2.fromOffset(360,72))
+ if animate then
+  TweenService:Create(self.Root,TweenInfo.new(Theme.Motion.Normal,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=target}):Play()
+ else
+  self.Root.Size=target
+ end
 end
 
 function S:Icon(item)
@@ -136,14 +185,17 @@ function S:BindBadge(badge,item)
 end
 
 function S:Update(payload,revision)
- if revision~=nil and revision==self.LastRevision then return end
+ if revision~=nil and revision==self.LastRevision then
+  self:SetSuppressed(self.UI:IsWorkshopExclusive())
+  return
+ end
  self.LastRevision=revision
  self:Clear()
 
  local items=payload and payload.Items or {}
- self.Root.Visible=not self.UI:IsWorkshopExclusive()
- self.Empty.Visible=#items==0
- self.List.Visible=#items>0
+ self.ItemCount=#items
+ self:SetSuppressed(self.UI:IsWorkshopExclusive())
+ self:SetMinimized(self.Minimized,false)
 
  for index,raw in ipairs(items) do
   local item=cloneData(raw)
@@ -181,7 +233,7 @@ function S:Tick()
    if not seconds or seconds<=0 then badge.Visible=false end
   end
  end
- if self.Hovered and self.Hovered.Badge and self.Hovered.Badge.Parent and self.Hovered.Badge.Visible then
+ if not self.Minimized and self.Hovered and self.Hovered.Badge and self.Hovered.Badge.Parent and self.Hovered.Badge.Visible then
   self:PlaceTooltip(self.Hovered.Badge,self.Hovered.Item)
  elseif self.Hovered then
   self.Hovered=nil
