@@ -45,10 +45,10 @@ test("roll independent players, 100 cycles, cooldown and one-time Bloom",functio
  for i=1,100 do roll.Last[a]=-100 assert(roll:Roll(a,true)) end assert(profiles[a].RollState.TotalRolls==101 and profiles[b].RollState.TotalRolls==1 and rewards==102)
 end)
 test("activity owner, body contact, order, expiry, duplicate rejection",function()
- local player,other={},{} local p=Schema.CreateDefault() p.Tutorial.Step=18 local touching=true local events={}
+ local player,other={},{} local p=Schema.CreateDefault() local touching=true local events={}
  local service=require(node("ServerScriptService/Services/GardenActivityService")) local x={Profile=function(_,who) if who==player then return p end end,Temp={[player]={}},U={CharacterTouchesSphere=function() return touching end},Emit=function(_,pl,event) events[event]=(events[event] or 0)+1 end,Send=function() end,RollService={Charge=function() end},SocialService={Contribute=function() end},PollinatorService={AddMastery=function() end},MapService={Sector=function() return "SunnyOrchard" end},GardenPlotService={HivePosition=function() return Vector3.zero end,Position=function(_,pl,i) return Vector3.new(i*7,0,0) end}}
  service:Init(x) service.Offers[player]={token={Id="token",Kind="PollenTrail",Index=1,Nodes={Vector3.zero,Vector3.new(3,0,0)},Expires=os.clock()+5,Revision=0}}
- assert(not service:Collect(other,"token",1,"Collect")) touching=false assert(not service:Collect(player,"token",1,"Collect")) touching=true assert(not service:Collect(player,"token",2,"Collect")) assert(service:Collect(player,"token",1,"Collect")) assert(service:Collect(player,"token",2,"Collect")) assert(not service:Collect(player,"token",2,"Collect")) assert(events.PollenTrail==1 and events.ActivityCompleted==1 and events.TutorialActivity==1 and events.WorldActivity==1)
+ assert(not service:Collect(other,"token",1,"Collect")) touching=false assert(not service:Collect(player,"token",1,"Collect")) touching=true assert(not service:Collect(player,"token",2,"Collect")) assert(service:Collect(player,"token",1,"Collect")) assert(service:Collect(player,"token",2,"Collect")) assert(not service:Collect(player,"token",2,"Collect")) assert(events.PollenTrail==1 and events.ActivityCompleted==1 and events.WorldActivity==1)
  service.Offers[player].expired={Id="expired",Kind="PollenSpark",Index=1,Nodes={Vector3.zero},Expires=-1} assert(not service:Collect(player,"expired",1,"Collect"))
 end)
 test("activity collection accepts touch Collect only",function()
@@ -62,11 +62,19 @@ test("Workshop purchase prerequisites, balance, idempotence",function()
  local s=require(node("ServerScriptService/Services/WorkshopService")) s:Init({Profile=function() return p end,GardenPlotService={RefreshCapacity=function() end},TutorialService={Refresh=function() end},Emit=function() end})
  assert(not s:Buy({},"ROLL_2")) assert(s:Buy({},"ROLL_1")) assert(not s:Buy({},"ROLL_1")) assert(p.WorkshopV5.Points==4 and p.Currencies.Coins==970) assert(not s:Buy({},"LEGACY_1"))
 end)
-test("tutorial has 18 steps, reconnect progress, unlocks",function()
- local p=Schema.CreateDefault() local service=require(node("ServerScriptService/Services/TutorialService")) service:Init({Profile=function() return p end,EmitOnce=function() end})
- local T=require(rs.Config.TutorialConfig) assert(#T.Steps==18)
- for i=1,18 do local e=T.Steps[i].Event if e=="Deliveries" then p.Tutorial.Events.Delivery=3 else p.Tutorial.Events[e]=1 end service:Refresh({}) assert(p.Tutorial.Step>=i+1) end
- local copy=U.Copy(p) assert(Schema.Prepare(copy)) assert(copy.Tutorial.Step==19 and copy.Tutorial.FeatureUnlocks.Roll and copy.Tutorial.FeatureUnlocks.Trials)
+test("tutorial has 17 steps, reconnect progress, unlocks",function()
+ local p=Schema.CreateDefault() local completed=0 local service=require(node("ServerScriptService/Services/TutorialService"))
+ service:Init({Profile=function() return p end,EmitOnce=function(_,pl,event) if event=="TutorialComplete" then completed=completed+1 p.Tutorial.Events.TutorialComplete=1 end end})
+ local T=require(rs.Config.TutorialConfig) assert(#T.Steps==17)
+ for i=1,17 do local e=T.Steps[i].Event if e=="Deliveries" then p.Tutorial.Events.Delivery=3 else p.Tutorial.Events[e]=1 end service:Refresh({}) assert(p.Tutorial.Step>=i+1) end
+ assert(p.Tutorial.Step==18 and completed==1)
+ local copy=U.Copy(p) assert(Schema.Prepare(copy)) assert(copy.Tutorial.Step==18 and copy.Tutorial.FeatureUnlocks.Roll and copy.Tutorial.FeatureUnlocks.Trials)
+end)
+test("shortened tutorial releases profiles stuck on old step 18",function()
+ local p=Schema.CreateDefault() p.Tutorial.Step=18 local completed=0
+ local service=require(node("ServerScriptService/Services/TutorialService"))
+ service:Init({Profile=function() return p end,EmitOnce=function(_,pl,event) if event=="TutorialComplete" then completed=completed+1 p.Tutorial.Events.TutorialComplete=1 end end})
+ service:Refresh({}) assert(p.Tutorial.Step==18 and completed==1)
 end)
 test("one-time point source and preservation of Nectar",function()
  local p=Schema.CreateDefault() local s=require(node("ServerScriptService/Services/WorkshopService")) s:Init({Profile=function() return p end}) s:Point({},"same",2) s:Point({},"same",2) assert(p.WorkshopV5.Points==2 and p.Currencies.AncientNectar==0)
