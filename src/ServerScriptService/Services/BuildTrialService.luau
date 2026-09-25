@@ -13,6 +13,10 @@ function S:StartTrial(player,id)
  local pos=self.X.Origin+location.Center+Vector3.new(0,2,30)
  if not self.X.U.Near(player,pos,14) then return false,"TOO_FAR" end
  self.Active[player]={Advanced=p.WorkshopV5.Nodes.LEGACY_4==true,Id=id,Start=os.clock(),Counts={},Revision=p.Garden.Revision}
+ if id=="SwiftRoute" then
+  local offered=self.X.GardenActivityService:Offer(player,"PollenTrail",pos,cfg.Sector,nil,true)
+  if not offered then self.Active[player]=nil return false,"ACTIVITY_UNAVAILABLE" end
+ end
  self.X:Send(player,"Message",cfg.Name.." started")
  return true
 end

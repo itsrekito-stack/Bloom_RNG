@@ -1,8 +1,8 @@
 local RS=game:GetService("ReplicatedStorage") local A=require(RS.Config.ActivityConfig) local C=require(RS.Config.BloomConfig) local G=require(RS.Config.GardenSynergyConfig) local E=require(RS.Shared.WorkshopEffects) local Http=game:GetService("HttpService") local S={Offers={}}
 function S:Init(x) self.X=x end
-function S:Offer(player,kind,position,sector,bee)
+function S:Offer(player,kind,position,sector,bee,priority)
  local p=self.X:Profile(player) local cfg=A.Types[kind] if not p or not cfg then return false end
- local offers=self.Offers[player] or {} self.Offers[player]=offers local count=0 for _ in pairs(offers) do count=count+1 end if count>=A.MaxVisible then return false end
+ local offers=self.Offers[player] or {} self.Offers[player]=offers local count=0 for _ in pairs(offers) do count=count+1 end if count>=A.MaxVisible and not priority then return false end
  if kind=="Overcharge" and not bee then return false end
  local id=Http:GenerateGUID(false) local nodes={} local origin=self.X.GardenPlotService:HivePosition(player)
  if kind=="NectarBud" then
@@ -30,10 +30,7 @@ function S:Collect(player,id,index,phase)
    for i,slot in ipairs(p.Garden.Slots) do if slot.SpeciesId and (self.X.GardenPlotService:Position(player,i)-o.Nodes[1]).Magnitude<15 then local effect=Flowers.Species[slot.SpeciesId].PollinationEffect
     if effect=="NeighbourBoost" then temp.NeighbourUntil=os.clock()+20 elseif effect=="SwiftWindow" then temp.SwiftUntil=os.clock()+15 elseif effect=="LuckDew" then temp.Dew=math.min(A.DewMax,(temp.Dew or 0)+1) elseif effect=="CoinPod" then p.Currencies.Coins=p.Currencies.Coins+3 elseif effect=="Astral" then temp.Eclipse=true elseif effect=="Pulse" then slot.XP=slot.XP+3 slot.TotalPollination=slot.TotalPollination+3 end
    end end if Random.new():NextNumber()<A.MutationChance then for _,slot in ipairs(p.Garden.Slots) do if slot.SpeciesId then slot.Mutation="Dewkissed" self.X:Emit(player,"Mutation",1) break end end end
-  elseif kind=="NectarBud" then
-  local nearest=nil local distance=math.huge for i,s in ipairs(p.Garden.Slots) do if s.SpeciesId then local pos=self.X.GardenPlotService:Position(player,i) local d=(pos-position).Magnitude if d<distance then distance=d nearest=pos end end end
-  if not nearest then return false end nodes[1]=nearest+Vector3.new(0,3,0)
- elseif kind=="CrossPollination" then temp.NeighbourUntil=os.clock()+20
+  elseif kind=="CrossPollination" then temp.NeighbourUntil=os.clock()+20
   elseif kind=="Overcharge" then temp.OverchargeBee=o.Bee
   elseif kind=="CrystalResonance" then temp.Crystal=true temp.NeighbourUntil=os.clock()+30+E.Value(p,"EXPLORATION_3","CrystalSeconds",0) if p.Season.ActiveCard=="CrystalSeason" then temp.TemporaryMutationUntil=os.clock()+60 end
   elseif kind=="FireflyRoute" or kind=="ShadowBloom" then temp.Eclipse=true end

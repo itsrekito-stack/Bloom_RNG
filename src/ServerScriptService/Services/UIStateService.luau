@@ -46,6 +46,7 @@ local REASONS={
  SECTOR_LOCKED="Unlock this location first",
  TRIAL_LOCKED="Trials are still locked",
  TRIAL_RUNNING="A trial is already running",
+ ACTIVITY_UNAVAILABLE="Trial route could not spawn. Try again",
  COOLDOWN="Wait for the cooldown to finish",
  EMPTY_POOL="No rewards are available in the roulette",
  SEASON_PREVIEW_OPEN="Finish the Season confirmation first",
