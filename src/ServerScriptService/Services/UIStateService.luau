@@ -192,13 +192,30 @@ function S:Map(player,profile)
  local sectors={}
  for _,id in ipairs(Locations.Order) do
   local cfg=Locations.Sectors[id]
+  local unlocked=profile.World.UnlockedSectors[id]==true
+  local hiveReady=profile.Hive.Level>=cfg.Hive
+  local gate=self.X.MapService.Gates[id]
+  local nearGate=gate~=nil and self.X.U.Near(player,gate.Position,Bloom.InteractionDistance)
+  local hint
+  if unlocked then
+   hint="Unlocked"
+  elseif not hiveReady then
+   hint="Reach Hive "..cfg.Hive
+  elseif nearGate then
+   hint="Use the world gate prompt to unlock"
+  else
+   hint="Hive ready — go to the "..cfg.Name.." gate"
+  end
   sectors[id]={
    Id=id,
    Name=cfg.Name,
-   Unlocked=profile.World.UnlockedSectors[id]==true,
+   Unlocked=unlocked,
    HiveRequired=cfg.Hive,
+   HiveReady=hiveReady,
+   NearGate=nearGate,
    Current=current==id,
-   CanUnlock=profile.World.UnlockedSectors[id]~=true and profile.Hive.Level>=cfg.Hive,
+   CanUnlock=not unlocked and hiveReady and nearGate,
+   UnlockHint=hint,
   }
  end
  return {
@@ -214,24 +231,33 @@ function S:Trials(player,profile)
  local list={}
  for id,cfg in pairs(Trials) do
   local unlocked=profile.World.UnlockedSectors[cfg.Sector]==true
+  local location=Locations.Sectors[cfg.Sector]
+  local startPos=location and self.X.Origin+location.Center+Vector3.new(0,2,30) or nil
+  local nearShrine=startPos~=nil and self.X.U.Near(player,startPos,14)
   local reason=nil
   if self.X.BuildTrialService.Active[player] then reason="TRIAL_RUNNING"
   elseif not profile.Tutorial.FeatureUnlocks.Trials then reason="TRIAL_LOCKED"
   elseif not unlocked then reason="SECTOR_LOCKED"
   elseif current~=cfg.Sector then reason="WRONG_SECTOR"
-  else
-   local location=Locations.Sectors[cfg.Sector]
-   local startPos=location and self.X.Origin+location.Center+Vector3.new(0,2,30) or nil
-   if not startPos or not self.X.U.Near(player,startPos,14) then reason="TOO_FAR" end
+  elseif not nearShrine then reason="TOO_FAR"
   end
+  local startHint
+  if reason=="TRIAL_RUNNING" then startHint="Finish the active trial first"
+  elseif reason=="TRIAL_LOCKED" then startHint="Unlock Build Trials through progression"
+  elseif reason=="SECTOR_LOCKED" then startHint="Unlock "..(location and location.Name or cfg.Sector).." at its world gate first"
+  elseif reason=="WRONG_SECTOR" then startHint="Travel to "..(location and location.Name or cfg.Sector).." and find its Garden Trials shrine"
+  elseif reason=="TOO_FAR" then startHint="Go to the Garden Trials shrine in "..(location and location.Name or cfg.Sector)
+  else startHint="At shrine — ready to start" end
   table.insert(list,{
    Id=id,
    Name=cfg.Name,
    Sector=cfg.Sector,
    Completed=profile.Quests.Trials[id]==true,
    CanStart=reason==nil,
+   NearShrine=nearShrine,
    Reason=reason,
    ReasonText=reason and self:ReasonText(reason) or nil,
+   StartHint=startHint,
    Target=cfg.Target,
    Event=cfg.Event,
    Seconds=cfg.Seconds,

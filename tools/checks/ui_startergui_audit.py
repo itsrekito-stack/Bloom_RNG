@@ -6,6 +6,7 @@ model=json.loads((ROOT/'src/StarterGui/BloomUI.model.json').read_text(encoding='
 project=json.loads((ROOT/'default.project.json').read_text(encoding='utf-8'))
 source=(ROOT/'src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau').read_text(encoding='utf-8')
 inventory_v2_source=(ROOT/'src/StarterPlayer/StarterPlayerScripts/Controllers/InventoryV2Controller.luau').read_text(encoding='utf-8')
+ui_state_source=(ROOT/'src/ServerScriptService/Services/UIStateService.luau').read_text(encoding='utf-8')
 player_source=(ROOT/'src/ServerScriptService/Services/PlayerService.luau').read_text(encoding='utf-8')
 remote_source=(ROOT/'src/ServerScriptService/Services/RemoteService.luau').read_text(encoding='utf-8')
 roll_source=(ROOT/'src/ServerScriptService/Services/RollService.luau').read_text(encoding='utf-8')
@@ -115,6 +116,11 @@ check('Inventory v2 rerender follows renderer','controller.MenuRenderer=="Invent
 check('Inventory v2 binds authoritative inventory','uiState.Inventory' in inventory_v2_source and 'controller:Send("Dissolve"' in inventory_v2_source and 'controller:Send("EquipBee"' in inventory_v2_source)
 check('Inventory v2 does not bypass physical Plant flow','controller:Send("Plant"' not in inventory_v2_source and 'PLANT AT GARDEN' in inventory_v2_source)
 check('physical Plant picker renderer exists','elseif name=="Plant" then' in source and 'self:Send("Plant",slot,item.Id)' in source and 'ui.Inventory and ui.Inventory.Flowers' in source)
+check('BR-010 map exposes physical gate actionability','NearGate=nearGate' in ui_state_source and 'CanUnlock=not unlocked and hiveReady and nearGate' in ui_state_source and 'UnlockHint=hint' in ui_state_source)
+check('BR-010 map tells Hive-ready players to use gate','Hive ready — go to the ' in ui_state_source and 'Use the world gate prompt to unlock' in ui_state_source)
+check('BR-010 trials expose shrine guidance','NearShrine=nearShrine' in ui_state_source and 'StartHint=startHint' in ui_state_source and 'Garden Trials shrine' in ui_state_source)
+check('BR-010 client renders derived world guidance','sector.UnlockHint' in source and 't.StartHint' in source and 'start them at sector shrines' in source)
+
 check('editor removed separate seedbag scene','value="seedbag"' not in editor_html and 'data-ui-state="seedbag"' not in editor_html)
 check('editor migrates stale seedbag preference','p.previewScene==="seedbag"' in editor_source and 'state.previewScene="inventory_v2"' in editor_source)
 

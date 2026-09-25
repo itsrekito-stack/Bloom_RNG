@@ -1003,13 +1003,15 @@ function UI:RenderMenu()
    local sector=mapUI and mapUI.Sectors and mapUI.Sectors[id]
    local unlocked=sector and sector.Unlocked or p.World.UnlockedSectors[id]
    local current=sector and sector.Current
-   self:Label(self.Content,L.Sectors[id].Name.."   •   "..(unlocked and "UNLOCKED" or "requires Hive "..L.Sectors[id].Hive)..(current and "  •  YOU ARE HERE" or ""),36)
+   local hint=sector and sector.UnlockHint or (unlocked and "Unlocked" or "Reach Hive "..L.Sectors[id].Hive)
+   local marker=current and "  •  YOU ARE HERE" or ""
+   self:Label(self.Content,L.Sectors[id].Name.."   •   "..hint..marker,44)
   end
   self:Section(self.Content,"Landmarks")
   local any=false
   for id in pairs(p.World.LandmarkDiscoveries) do any=true self:Label(self.Content,"✓  "..id,32) end
   if not any then self:Label(self.Content,"Nothing discovered yet.",32) end
-  self:Button(self.Content,"Open Build Trials",function() self:Open("Trials") end,Icons.Get("System","Quests"))
+  self:Button(self.Content,"View Build Trials  •  start them at sector shrines",function() self:Open("Trials") end,Icons.Get("System","Quests"))
 
  elseif name=="Trials" then
   self:Section(self.Content,"Build Trials")
@@ -1019,7 +1021,8 @@ function UI:RenderMenu()
   end
   if trialsUI and type(trialsUI.Items)=="table" then
    for _,t in ipairs(trialsUI.Items) do
-    local suffix=t.CanStart and "" or (t.ReasonText and "  •  "..t.ReasonText or "")
+    local hint=t.StartHint or (t.ReasonText and t.ReasonText or "")
+    local suffix=hint~="" and "  •  "..hint or ""
     local button=self:Button(self.Content,(t.Completed and "✓  " or "")..t.Name.."   •   "..t.Sector..suffix,function() self:Send("Trial",t.Id) end,Icons.Get("System","Quests"))
     button.Active=t.CanStart==true
    end
