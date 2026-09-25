@@ -1,0 +1,518 @@
+{
+  "ClassName": "ScreenGui",
+  "Name": "BloomLoadingTemplate",
+  "Properties": {
+    "IgnoreGuiInset": true,
+    "DisplayOrder": 1000,
+    "ResetOnSpawn": false,
+    "ZIndexBehavior": "Global",
+    "Enabled": false
+  },
+  "Children": [
+    {
+      "ClassName": "Frame",
+      "Name": "Background",
+      "Properties": {
+        "Size": {
+          "UDim2": [
+            [
+              1,
+              0
+            ],
+            [
+              1,
+              0
+            ]
+          ]
+        },
+        "BackgroundColor3": [
+          0.05,
+          0.071,
+          0.094
+        ],
+        "BorderSizePixel": 0,
+        "ZIndex": 1,
+        "Visible": true
+      },
+      "Children": [
+        {
+          "ClassName": "Frame",
+          "Name": "Card",
+          "Properties": {
+            "AnchorPoint": {
+              "Vector2": [
+                0.5,
+                0.5
+              ]
+            },
+            "Position": {
+              "UDim2": [
+                [
+                  0.5,
+                  0
+                ],
+                [
+                  0.5,
+                  0
+                ]
+              ]
+            },
+            "Size": {
+              "UDim2": [
+                [
+                  0,
+                  470
+                ],
+                [
+                  0,
+                  184
+                ]
+              ]
+            },
+            "BackgroundColor3": [
+              0.078,
+              0.106,
+              0.141
+            ],
+            "BorderSizePixel": 0,
+            "ZIndex": 2,
+            "Visible": true
+          },
+          "Children": [
+            {
+              "ClassName": "UICorner",
+              "Name": "UICorner",
+              "Properties": {
+                "CornerRadius": {
+                  "UDim": [
+                    0,
+                    20
+                  ]
+                }
+              }
+            },
+            {
+              "ClassName": "UIStroke",
+              "Name": "UIStroke",
+              "Properties": {
+                "Color": [
+                  0.027,
+                  0.039,
+                  0.055
+                ],
+                "Thickness": 3,
+                "Transparency": 0,
+                "ApplyStrokeMode": "Border"
+              }
+            },
+            {
+              "ClassName": "UIScale",
+              "Name": "ResponsiveScale",
+              "Properties": {
+                "Scale": 1
+              }
+            },
+            {
+              "ClassName": "Frame",
+              "Name": "Accent",
+              "Properties": {
+                "Size": {
+                  "UDim2": [
+                    [
+                      0,
+                      5
+                    ],
+                    [
+                      0,
+                      58
+                    ]
+                  ]
+                },
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      18
+                    ],
+                    [
+                      0,
+                      24
+                    ]
+                  ]
+                },
+                "BackgroundColor3": [
+                  0.329,
+                  0.682,
+                  1
+                ],
+                "BorderSizePixel": 0,
+                "ZIndex": 3,
+                "Visible": true
+              }
+            },
+            {
+              "ClassName": "ImageLabel",
+              "Name": "Icon",
+              "Properties": {
+                "Size": {
+                  "UDim2": [
+                    [
+                      0,
+                      24
+                    ],
+                    [
+                      0,
+                      24
+                    ]
+                  ]
+                },
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      36
+                    ],
+                    [
+                      0,
+                      27
+                    ]
+                  ]
+                },
+                "BackgroundTransparency": 1,
+                "BorderSizePixel": 0,
+                "Image": "rbxassetid://87460754924995",
+                "ImageColor3": [
+                  1,
+                  0.73,
+                  0.18
+                ],
+                "ScaleType": "Fit",
+                "ZIndex": 4,
+                "Visible": true
+              }
+            },
+            {
+              "ClassName": "TextLabel",
+              "Name": "Title",
+              "Properties": {
+                "Size": {
+                  "UDim2": [
+                    [
+                      1,
+                      -128
+                    ],
+                    [
+                      0,
+                      34
+                    ]
+                  ]
+                },
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      68
+                    ],
+                    [
+                      0,
+                      22
+                    ]
+                  ]
+                },
+                "BackgroundTransparency": 1,
+                "BorderSizePixel": 0,
+                "Text": "BLOOM RNG",
+                "TextColor3": [
+                  0.961,
+                  0.973,
+                  0.988
+                ],
+                "TextSize": 25,
+                "TextXAlignment": "Left",
+                "TextYAlignment": "Center",
+                "Font": "GothamBlack",
+                "ZIndex": 4,
+                "Visible": true
+              }
+            },
+            {
+              "ClassName": "TextLabel",
+              "Name": "Percent",
+              "Properties": {
+                "AnchorPoint": {
+                  "Vector2": [
+                    1,
+                    0
+                  ]
+                },
+                "Size": {
+                  "UDim2": [
+                    [
+                      0,
+                      64
+                    ],
+                    [
+                      0,
+                      30
+                    ]
+                  ]
+                },
+                "Position": {
+                  "UDim2": [
+                    [
+                      1,
+                      -28
+                    ],
+                    [
+                      0,
+                      24
+                    ]
+                  ]
+                },
+                "BackgroundTransparency": 1,
+                "BorderSizePixel": 0,
+                "Text": "0%",
+                "TextColor3": [
+                  0.4,
+                  0.878,
+                  0.651
+                ],
+                "TextSize": 16,
+                "TextXAlignment": "Right",
+                "TextYAlignment": "Center",
+                "Font": "GothamBold",
+                "ZIndex": 4,
+                "Visible": true
+              }
+            },
+            {
+              "ClassName": "TextLabel",
+              "Name": "Subtitle",
+              "Properties": {
+                "Size": {
+                  "UDim2": [
+                    [
+                      1,
+                      -72
+                    ],
+                    [
+                      0,
+                      36
+                    ]
+                  ]
+                },
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      36
+                    ],
+                    [
+                      0,
+                      57
+                    ]
+                  ]
+                },
+                "BackgroundTransparency": 1,
+                "BorderSizePixel": 0,
+                "Text": "Preparing a fully synchronized session…",
+                "TextColor3": [
+                  0.651,
+                  0.722,
+                  0.792
+                ],
+                "TextSize": 12,
+                "TextWrapped": true,
+                "TextXAlignment": "Left",
+                "TextYAlignment": "Top",
+                "Font": "Gotham",
+                "ZIndex": 4,
+                "Visible": true
+              }
+            },
+            {
+              "ClassName": "Frame",
+              "Name": "ProgressTrack",
+              "Properties": {
+                "Size": {
+                  "UDim2": [
+                    [
+                      1,
+                      -72
+                    ],
+                    [
+                      0,
+                      10
+                    ]
+                  ]
+                },
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      36
+                    ],
+                    [
+                      0,
+                      119
+                    ]
+                  ]
+                },
+                "BackgroundColor3": [
+                  0.133,
+                  0.176,
+                  0.227
+                ],
+                "BorderSizePixel": 0,
+                "ZIndex": 3,
+                "Visible": true
+              },
+              "Children": [
+                {
+                  "ClassName": "UICorner",
+                  "Name": "UICorner",
+                  "Properties": {
+                    "CornerRadius": {
+                      "UDim": [
+                        0,
+                        5
+                      ]
+                    }
+                  }
+                },
+                {
+                  "ClassName": "Frame",
+                  "Name": "ProgressFill",
+                  "Properties": {
+                    "Size": {
+                      "UDim2": [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          1,
+                          0
+                        ]
+                      ]
+                    },
+                    "BackgroundColor3": [
+                      0.4,
+                      0.878,
+                      0.651
+                    ],
+                    "BorderSizePixel": 0,
+                    "ZIndex": 4,
+                    "Visible": true
+                  },
+                  "Children": [
+                    {
+                      "ClassName": "UICorner",
+                      "Name": "UICorner",
+                      "Properties": {
+                        "CornerRadius": {
+                          "UDim": [
+                            0,
+                            5
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ClassName": "TextLabel",
+              "Name": "Status",
+              "Properties": {
+                "Size": {
+                  "UDim2": [
+                    [
+                      1,
+                      -72
+                    ],
+                    [
+                      0,
+                      20
+                    ]
+                  ]
+                },
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      36
+                    ],
+                    [
+                      0,
+                      138
+                    ]
+                  ]
+                },
+                "BackgroundTransparency": 1,
+                "BorderSizePixel": 0,
+                "Text": "LOADING EXPERIENCE",
+                "TextColor3": [
+                  0.455,
+                  0.533,
+                  0.612
+                ],
+                "TextSize": 10,
+                "TextXAlignment": "Left",
+                "TextYAlignment": "Center",
+                "Font": "GothamBold",
+                "ZIndex": 4,
+                "Visible": true
+              }
+            },
+            {
+              "ClassName": "TextLabel",
+              "Name": "Detail",
+              "Properties": {
+                "Size": {
+                  "UDim2": [
+                    [
+                      1,
+                      -72
+                    ],
+                    [
+                      0,
+                      16
+                    ]
+                  ]
+                },
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      36
+                    ],
+                    [
+                      0,
+                      157
+                    ]
+                  ]
+                },
+                "BackgroundTransparency": 1,
+                "BorderSizePixel": 0,
+                "Text": "Waiting for Roblox replication…",
+                "TextColor3": [
+                  0.306,
+                  0.369,
+                  0.439
+                ],
+                "TextSize": 9,
+                "TextXAlignment": "Left",
+                "TextYAlignment": "Center",
+                "Font": "Gotham",
+                "ZIndex": 4,
+                "Visible": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
