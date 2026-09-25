@@ -394,6 +394,13 @@
                 "Transparency": 0.08,
                 "ApplyStrokeMode": "Border"
               }
+            },
+            {
+              "ClassName": "UIScale",
+              "Name": "TutorialCompleteScale",
+              "Properties": {
+                "Scale": 1
+              }
             }
           ]
         },
@@ -3313,6 +3320,13 @@
                             "ApplyStrokeMode": "Border"
                           },
                           "Children": []
+                        },
+                        {
+                          "ClassName": "UIScale",
+                          "Name": "SlotScale",
+                          "Properties": {
+                            "Scale": 1
+                          }
                         }
                       ]
                     },
@@ -3508,6 +3522,13 @@
                             "ApplyStrokeMode": "Border"
                           },
                           "Children": []
+                        },
+                        {
+                          "ClassName": "UIScale",
+                          "Name": "SlotScale",
+                          "Properties": {
+                            "Scale": 1
+                          }
                         }
                       ]
                     },
@@ -3703,6 +3724,13 @@
                             "ApplyStrokeMode": "Border"
                           },
                           "Children": []
+                        },
+                        {
+                          "ClassName": "UIScale",
+                          "Name": "SlotScale",
+                          "Properties": {
+                            "Scale": 1
+                          }
                         }
                       ]
                     }
