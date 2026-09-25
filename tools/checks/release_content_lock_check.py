@@ -68,12 +68,17 @@ EXPECTED_WORKSHOP_NODE_IDS={
     for branch in EXPECTED_WORKSHOP_BRANCH_LIST
     for index in range(1,EXPECTED_WORKSHOP_NODES_PER_BRANCH+1)
 }
-EXPECTED_SEASON_CARDS={"SpringResonance","SummerSwarm","AutumnFortune","CrystalSeason","TwilightSeason"}
-EXPECTED_JOURNEY=[
-    "StarterBee","PollenSpark","Delivery","Roll","Plant","Charge","BloomRoll","Hive2",
-    "WorkshopVisit","WorkshopPurchase","Synergy","BeeSlots","Trait","SunnyVisit","SolarBloom",
-    "Discover6","CrystalGate","Trial","CrystalVisit","SeasonReady",
-]
+def manifest_list(name):
+    match=re.search(rf'{name}=\{{([^}}]*)\}}',manifest)
+    if not match:
+        raise AssertionError(f"release manifest list missing: {name}")
+    return re.findall(r'"([^"]+)"',match.group(1))
+
+EXPECTED_RARITY_ORDER=manifest_list("RarityOrder")
+EXPECTED_SEASON_CARD_LIST=manifest_list("SeasonCards")
+EXPECTED_SEASON_CARDS=set(EXPECTED_SEASON_CARD_LIST)
+EXPECTED_SEASON_KEY_TRIALS=manifest_list("SeasonKeyTrials")
+EXPECTED_JOURNEY=manifest_list("Journey")
 
 actual_flowers={}
 for m in re.finditer(r'^species\("([^"]+)","[^"]+","([^"]+)"',flowers,re.M):
@@ -112,7 +117,8 @@ actual_activities=set(re.findall(r'([A-Za-z0-9_]+)=\{Life=',activities))
 cards_match=re.search(r'Cards=\{([^}]*)\}',season)
 if not cards_match:
     raise AssertionError("Season card list missing")
-actual_cards=set(re.findall(r'"([^"]+)"',cards_match.group(1)))
+actual_card_list=re.findall(r'"([^"]+)"',cards_match.group(1))
+actual_cards=set(actual_card_list)
 
 journey_match=re.search(r'local goals=\{([^}]*)\}',meta)
 if not journey_match:
@@ -135,8 +141,8 @@ if actual_branch_list!=EXPECTED_WORKSHOP_BRANCH_LIST:
 if actual_workshop_effect_ids!=EXPECTED_WORKSHOP_NODE_IDS:
     raise AssertionError(f"release Workshop node/effect set changed: missing={sorted(EXPECTED_WORKSHOP_NODE_IDS-actual_workshop_effect_ids)} extra={sorted(actual_workshop_effect_ids-EXPECTED_WORKSHOP_NODE_IDS)}")
 
-if actual_cards!=EXPECTED_SEASON_CARDS:
-    raise AssertionError(f"release Season cards changed: missing={sorted(EXPECTED_SEASON_CARDS-actual_cards)} extra={sorted(actual_cards-EXPECTED_SEASON_CARDS)}")
+if actual_card_list!=EXPECTED_SEASON_CARD_LIST:
+    raise AssertionError(f"release Season card order changed: expected={EXPECTED_SEASON_CARD_LIST} actual={actual_card_list}")
 
 if actual_journey!=EXPECTED_JOURNEY:
     raise AssertionError(f"release Journey changed: expected={EXPECTED_JOURNEY} actual={actual_journey}")
@@ -160,7 +166,13 @@ if len(actual_cards)!=5:
 if len(actual_journey)!=20:
     raise AssertionError("release must ship 20 Journey objectives")
 
-valid_rarities=set(re.findall(r'"([A-Za-z]+)"',re.search(r'Order=\{([^}]+)\}',rarity).group(1)))
+rarity_match=re.search(r'Order=\{([^}]+)\}',rarity)
+if not rarity_match:
+    raise AssertionError("RarityConfig order missing")
+actual_rarity_order=re.findall(r'"([A-Za-z]+)"',rarity_match.group(1))
+if actual_rarity_order!=EXPECTED_RARITY_ORDER:
+    raise AssertionError(f"release rarity order changed: expected={EXPECTED_RARITY_ORDER} actual={actual_rarity_order}")
+valid_rarities=set(actual_rarity_order)
 for id_,rarity_name in actual_flowers.items():
     if rarity_name not in valid_rarities:
         raise AssertionError(f"flower {id_} uses non-shipping rarity {rarity_name}")
@@ -178,6 +190,7 @@ for id_,asset_id in bee_icons.items():
     if asset_id<=0:
         raise AssertionError(f"shipping bee {id_} has no icon asset")
 
+need(manifest,'ReleaseId="BloomRNG-v1"',"release manifest id")
 need(manifest,'FlowerIconPolicy="DedicatedAssetOrSystemFlowerFallback"',"flower icon release policy")
 need(icons,'function C.GetFlowerIcon(id) local icon=C.Get("Flowers",id) return icon~="" and icon or C.Get("System","Flower") end',"flower icon fallback")
 need(icons,'Flower=117046422836136',"system flower fallback asset")
@@ -192,9 +205,9 @@ season_trials=re.search(r'TrialIds=\{([^}]*)\}',season)
 if not season_trials:
     raise AssertionError("Season TrialIds missing")
 season_trial_ids=re.findall(r'"([^"]+)"',season_trials.group(1))
-if season_trial_ids!=["MeadowCircuit","SwiftRoute","CrystalTriangle"]:
-    raise AssertionError(f"Season key trial set changed: {season_trial_ids}")
+if season_trial_ids!=EXPECTED_SEASON_KEY_TRIALS:
+    raise AssertionError(f"Season key trial set changed: expected={EXPECTED_SEASON_KEY_TRIALS} actual={season_trial_ids}")
 
 print("release content lock: PASS")
 print("v1 content: 12 flowers, 13 bees, 3 locations, 8 trials, 7 Workshop branches, 12 activities, 5 Season cards, 20 Journey objectives.")
-print("Flower/bee metadata, world/trial roles and all 42 Workshop node IDs are frozen by ReleaseContentManifest.")
+print("ReleaseContentManifest is the single v1 set contract for rarities, collectibles, world, trials, Workshop, Season cards and Journey IDs.")
