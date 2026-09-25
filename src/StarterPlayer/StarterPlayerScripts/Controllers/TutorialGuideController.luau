@@ -186,7 +186,7 @@ function S:SetWorldTarget(pos,label)
  end
  local distance=(root.Position-pos).Magnitude
  self.Beam.Enabled=distance>30
- self.UI.Guide.Text=(label or "Target").."   •   "..math.floor(distance).." м"
+ self.UI.Guide.Text=(label or "Target").."   •   "..math.floor(distance).." m"
  self.UI.Guide.Visible=true
 end
 
