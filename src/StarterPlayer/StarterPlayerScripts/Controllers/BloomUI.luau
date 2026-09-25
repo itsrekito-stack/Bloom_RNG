@@ -18,14 +18,15 @@ local L=require(RS.Config.LocationsConfig)
 local Theme=require(RS.Config.UIThemeConfig)
 local RollAudio=require(RS.Config.RollAudioConfig)
 local NumberFormatter=require(RS.Shared.NumberFormatter)
+local InventoryV2=require(script.Parent.InventoryV2Controller)
 
 local C=Theme.Colors
-local CLIENT_BUILD="ui-roulette-toggle-v1-2026-09-25"
+local CLIENT_BUILD="inventory-v2-backend-v1-2026-09-25"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0}
 
 local MENU_NAMES={
- SeedSatchel="Сумка семян",
+ SeedSatchel="Инвентарь",
  Workshop="Мастерская",
  FieldGuide="Справочник",
  Map="Карта",
@@ -37,7 +38,7 @@ local MENU_NAMES={
  Cards="Карты сезона",
 }
 local MENU_HINTS={
- SeedSatchel="Цветы, пчёлы, мастерство и экипировка",
+ SeedSatchel="Цветы, семена, пчёлы, ресурсы и keepsakes",
  Workshop="Постоянные улучшения и ветви прогрессии",
  FieldGuide="Коллекция, шансы и открытые синергии",
  Map="Сектора, открытия и переходы",
@@ -626,179 +627,8 @@ function UI:RenderMenu()
   self.Content.CanvasSize=UDim2.fromOffset(0,0)
   self.Content.ScrollingEnabled=false
   self.Content.ScrollBarThickness=0
- else
-  self.Content.Position=UDim2.new(0,9,0,60)
-  self.Content.Size=UDim2.new(1,-18,1,-68)
-  self.Content.ZIndex=51
-  self.Content.AutomaticCanvasSize=Enum.AutomaticSize.Y
-  self.Content.ScrollingEnabled=true
-  self.Content.ScrollBarThickness=name=="SeedSatchel" and 0 or 5
-  if not self.IsMobileLayout then
-   self.Panel.Size=name=="SeedSatchel" and UDim2.fromOffset(640,500) or UDim2.fromOffset(600,420)
-   self.Panel.Position=UDim2.new(.5,0,.52,0)
-  end
- end
-
- if name=="Plant" then
-  local slot=self.MenuArg
-  self:Section(self.Content,"Клумба "..slot)
-  self:Label(self.Content,"Выберите свободное семя. Уже посаженные копии автоматически вычитаются из доступного количества.",32)
-  if p.WorkshopV5.Nodes.GARDEN_3 and self.LastSeed then
-   self:Button(self.Content,"Повторить посадку • "..self.LastSeed,function() self:Send("Plant",slot,self.LastSeed) self:Close() end,Icons.GetRewardIcon("FlowerSeed",self.LastSeed))
-  end
-  local available={}
-  if ui.Inventory and type(ui.Inventory.Flowers)=="table" then
-   for _,entry in ipairs(ui.Inventory.Flowers) do
-    local flower=F.Species[entry.Id]
-    if flower and (entry.Free or 0)>0 then
-     table.insert(available,{Id=entry.Id,Flower=flower,Count=entry.Free,Owned=entry.Count})
-    end
-   end
-  else
-   for id,f in pairs(F.Species) do
-    local owned=p.FlowerCollection.OwnedSeedCopies[id] or 0
-    local planted=0
-    for _,s in ipairs(p.Garden.Slots) do if s.SpeciesId==id then planted=planted+1 end end
-    local count=math.max(0,owned-planted)
-    if count>0 then table.insert(available,{Id=id,Flower=f,Count=count,Owned=owned}) end
-   end
-  end
-  table.sort(available,function(a,b)
-   local ar=R.Rank[a.Flower.Rarity] or 1 local br=R.Rank[b.Flower.Rarity] or 1
-   if ar==br then return a.Flower.DisplayName<b.Flower.DisplayName end
-   return ar<br
-  end)
-  if #available==0 then
-   self:Label(self.Content,"Нет свободных семян. Получи семя из рулетки или выкопай уже посаженный цветок — после награды инвентарь обновляется автоматически.",52)
-  else
-   for _,entry in ipairs(available) do
-    local id=entry.Id local f=entry.Flower local count=entry.Count
-    self:Button(self.Content,f.DisplayName.."  •  свободно "..count.." / всего "..entry.Owned,function() self.LastSeed=id self:Send("Plant",slot,id) self:Close() end,Icons.GetRewardIcon("FlowerSeed",id))
-   end
-  end
-  self:Button(self.Content,"Выкопать цветок • семя сохранится",function() self:Send("Plant",slot,"") self:Close() end,Icons.Get("System","Minus"))
-
  elseif name=="SeedSatchel" then
-  local items={}
-  if ui.Inventory and type(ui.Inventory.Flowers)=="table" then
-   for _,entry in ipairs(ui.Inventory.Flowers) do
-    local f=F.Species[entry.Id]
-    if f then
-     table.insert(items,{
-      Id=entry.Id,Flower=f,Count=entry.Count or 0,Planted=entry.Planted or 0,Free=entry.Free or 0,
-      Mastery=entry.Mastery or {Level=1,XP=0,NextXP=25},Favorite=entry.Favorite==true,Protected=entry.Protected==true,
-      CanDissolve=entry.CanDissolve==true,CanUpgrade=entry.CanUpgrade==true,
-     })
-    end
-   end
-  else
-   for id,count in pairs(p.FlowerCollection.OwnedSeedCopies) do
-    local f=F.Species[id]
-    if f and count>0 then
-     local planted=0
-     for _,s in ipairs(p.Garden.Slots) do if s.SpeciesId==id then planted=planted+1 end end
-     local mastery=p.FlowerCollection.FlowerMastery[id] or {Level=1,XP=0}
-     table.insert(items,{Id=id,Flower=f,Count=count,Planted=planted,Free=math.max(0,count-planted),Mastery=mastery,Favorite=p.FlowerCollection.FavoriteFlowers[id]==true,Protected=p.FlowerCollection.LockedFlowers[id]==true,CanDissolve=math.max(0,count-planted)>0,CanUpgrade=true})
-    end
-   end
-   table.sort(items,function(a,b)
-    local ar=R.Rank[a.Flower.Rarity] or 1 local br=R.Rank[b.Flower.Rarity] or 1
-    if ar==br then return a.Flower.DisplayName<b.Flower.DisplayName end
-    return ar<br
-   end)
-  end
-
-  local template=self.Panel:FindFirstChild("SeedSatchelTemplate")
-  if not template then
-   self:Label(self.Content,"SeedSatchelTemplate missing",32)
-  else
-   local shell=template:Clone()
-   shell.Name="SeedSatchelRuntime"
-   shell.Visible=true
-   shell.Parent=self.Content
-   shell.Size=UDim2.new(1,0,0,420)
-   shell.Position=UDim2.new()
-   shell.LayoutOrder=1
-
-   local summary=shell:WaitForChild("Summary")
-   summary.Count.Text=tostring(#items).." TYPES"
-   local body=shell:WaitForChild("Body")
-   local collection=body:WaitForChild("CollectionPanel")
-   collection.CollectionHeader.Count.Text=tostring(#items)
-   local grid=collection:WaitForChild("InventoryGrid")
-   local details=body:WaitForChild("SelectedDetails")
-   local info=details:WaitForChild("SelectedInfo")
-   local actions=details:WaitForChild("QuickActions")
-   local poll=details:WaitForChild("Pollinators")
-
-   if #items==0 then
-    collection.Visible=false
-    details.Visible=false
-    self:Label(self.Content,"Нет семян. Сделай roll, чтобы заполнить инвентарь.",38)
-   else
-    local selected=self.SelectedSatchelItem
-    local active=items[1]
-    for _,entry in ipairs(items) do if entry.Id==selected then active=entry break end end
-    self.SelectedSatchelItem=active.Id
-
-    local rarityColor=R.Colors[active.Flower.Rarity] or C.Gold
-    info.IconWrap.Icon.Image=Icons.GetRewardIcon("FlowerSeed",active.Id)
-    info.ItemName.Text=active.Flower.DisplayName
-    info.Rarity.Text=string.upper(active.Flower.Rarity).." • x"..active.Count
-    info.Rarity.TextColor3=rarityColor
-    info.RarityAccent.BackgroundColor3=rarityColor
-    info.Mastery.Text="Mastery "..active.Mastery.Level.." • XP "..active.Mastery.XP.."/"..(active.Mastery.NextXP or active.Mastery.Level*25)
-    info.Owned.Text="FREE "..active.Free.." / OWNED "..active.Count
-
-    local actionsMap={
-     Favorite={Text=active.Favorite and "★ UNFAVORITE" or "★ FAVORITE",Fn=function() self:Send("Flag",active.Id,"FavoriteFlowers") end,Visible=true},
-     Protect={Text=active.Protected and "◆ UNLOCK" or "◆ PROTECT",Fn=function() self:Send("Flag",active.Id,"LockedFlowers") end,Visible=true},
-     Dissolve={Text="DISSOLVE",Fn=function() self:Send("Dissolve",active.Id,1) end,Visible=active.Free>0,Enabled=active.CanDissolve~=false},
-     Mastery={Text="MASTERY +XP",Fn=function() self:Send("FlowerUpgrade",active.Id) end,Visible=true,Enabled=active.CanUpgrade~=false},
-     Memory={Text="MEMORY",Fn=function() self:Send("Keepsake","Flower",active.Id) end,Visible=true},
-     Memory2={Text="MEMORY II",Fn=function() self:Send("Keepsake","Flower2",active.Id) end,Visible=p.WorkshopV5.Nodes.LEGACY_5==true},
-    }
-    for buttonName,data in pairs(actionsMap) do
-     local btn=actions:FindFirstChild(buttonName)
-     if btn and btn:IsA("TextButton") then
-      btn.Text=data.Text
-      btn.Visible=data.Visible
-      btn.Active=data.Enabled~=false
-      btn.Activated:Connect(function() if data.Enabled~=false then data.Fn() end end)
-     end
-    end
-
-    local tileTemplate=self.Templates and self.Templates:FindFirstChild("InventoryTileTemplate")
-    for index,entry in ipairs(items) do
-     local tile=tileTemplate and tileTemplate:Clone()
-     if tile then
-      tile.Name="Tile_"..entry.Id
-      tile.Visible=true
-      tile.Parent=grid
-      tile.LayoutOrder=index
-      tile.Size=UDim2.fromOffset(62,62)
-      local selectedNow=entry.Id==active.Id
-      tile.BackgroundColor3=selectedNow and C.BlueSoft or C.PanelRaised
-      local st=tile:FindFirstChildOfClass("UIStroke")
-      if st then st.Color=selectedNow and C.Gold or C.BorderSoft st.Thickness=selectedNow and 2 or 1.1 st.Transparency=selectedNow and .04 or .35 end
-      local icon=tile:FindFirstChild("Icon") if icon then icon.Image=Icons.GetRewardIcon("FlowerSeed",entry.Id) icon.Size=UDim2.fromOffset(34,34) icon.Position=UDim2.new(.5,-17,0,4) end
-      local countLabel=tile:FindFirstChild("Count") if countLabel then countLabel.Text="x"..entry.Count end
-      local nameLabel=tile:FindFirstChild("Name") if nameLabel then nameLabel.Text=entry.Flower.DisplayName nameLabel.TextSize=7 end
-      local flags=tile:FindFirstChild("Flags") if flags then flags.Text=(entry.Protected and "◆" or (entry.Favorite and "★" or "")) end
-      tile.Activated:Connect(function() self.SelectedSatchelItem=entry.Id self:RenderMenu() end)
-     end
-    end
-
-    local beeText={} local beeOwned=0
-    for id,count in pairs(p.Pollinators.BeeInventory) do
-     local bee=B.Get(id)
-     if bee then beeOwned=beeOwned+count table.insert(beeText,bee.DisplayName.." ×"..count) end
-    end
-    table.sort(beeText)
-    poll.List.Text=#beeText>0 and table.concat(beeText," • ") or "No pollinators yet"
-    poll.Owned.Text=tostring(beeOwned).." OWNED"
-   end
-  end
+  InventoryV2.Render(self,p,ui)
 
  elseif name=="Workshop" then
   local template=self.Panel:FindFirstChild("WorkshopTemplate")
