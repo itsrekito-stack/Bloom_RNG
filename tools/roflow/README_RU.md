@@ -1,5 +1,7 @@
 # RoFlow
 
+**Current desktop milestone: v0.2.**
+
 RoFlow — desktop-инструмент для рабочего цикла:
 
 `Prompt → ChatGPT → GitHub → Sync → Roblox Studio`
@@ -46,3 +48,13 @@ npm run build
 4. Добавить Git diff/checkpoints/commit UI.
 5. Добавить Rojo/Roblox Studio status и запуск.
 6. Добавить AI task workspace и историю выполненных изменений.
+
+
+## v0.2
+
+- Bloom UI Studio встраивается в desktop bundle из единственного исходника `tools/bloom-ui-editor`.
+- Desktop-режим использует Tauri commands вместо browser File System Access API для чтения/записи модели.
+- Safe AI SYNC перенесён в Rust: backup модели, stash других файлов, `pull --ff-only`, восстановление stash и three-way merge GUI JSON.
+- Roblox thumbnails внутри embedded editor запрашиваются через native backend.
+- Browser Bloom UI Studio сохраняет прежний Python bridge и продолжает работать отдельно.
+- Иконки Windows генерируются из `web/roflow-icon.svg` автоматически перед dev/build.

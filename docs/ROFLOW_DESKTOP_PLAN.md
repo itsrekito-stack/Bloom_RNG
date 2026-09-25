@@ -20,7 +20,7 @@ UI editing is one workspace inside RoFlow, not the whole product.
 - Project / Sync / UI Studio / Changes / Logs navigation.
 - Existing browser editor remains untouched.
 
-## Phase 1 — Embed UI Studio
+## Phase 1 — Embed UI Studio (implemented in v0.2)
 
 Bundle the existing `tools/bloom-ui-editor` frontend inside RoFlow instead of opening it as a localhost website.
 
@@ -28,7 +28,7 @@ Preserve its hierarchy, inspector, canvas, preview scenes, geometry tools and au
 
 Replace browser File System Access calls with RoFlow commands while retaining the browser version as a fallback.
 
-## Phase 2 — Port Safe AI Sync
+## Phase 2 — Port Safe AI Sync (implemented baseline in v0.2)
 
 Move the existing Python bridge semantics into Rust:
 

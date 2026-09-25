@@ -35,43 +35,21 @@
       <section id="projectPage" class="page active">
         <div class="hero">
           <div>
-            <p class="eyebrow">ROFLOW 0.1</p>
+            <p class="eyebrow">ROFLOW 0.2</p>
             <h2>Prompt → GitHub → Sync → Roblox Studio</h2>
-            <p>Native Windows shell for the workflow we built around Bloom RNG. The first milestone keeps project access and Git operations native and safe.</p>
+            <p>Native Windows workspace around the Bloom RNG development loop. Git state, safe AI sync and the authored UI editor now live in one application.</p>
           </div>
           <div class="hero-badge">TAURI 2</div>
         </div>
-
         <div class="grid">
-          <article class="card">
-            <span class="label">PROJECT</span>
-            <strong id="projectName">Not connected</strong>
-            <p id="projectPath">Choose your Bloom_RNG folder once.</p>
-          </article>
-          <article class="card">
-            <span class="label">GIT</span>
-            <strong id="branchValue">—</strong>
-            <p id="commitValue">No repository loaded.</p>
-          </article>
-          <article class="card">
-            <span class="label">WORKTREE</span>
-            <strong id="dirtyValue">—</strong>
-            <p id="changeCount">Waiting for project.</p>
-          </article>
-          <article class="card">
-            <span class="label">BLOOM UI</span>
-            <strong id="modelValue">—</strong>
-            <p id="modelStats">The native model bridge is ready.</p>
-          </article>
+          <article class="card"><span class="label">PROJECT</span><strong id="projectName">Not connected</strong><p id="projectPath">Choose your Bloom_RNG folder once.</p></article>
+          <article class="card"><span class="label">GIT</span><strong id="branchValue">—</strong><p id="commitValue">No repository loaded.</p></article>
+          <article class="card"><span class="label">WORKTREE</span><strong id="dirtyValue">—</strong><p id="changeCount">Waiting for project.</p></article>
+          <article class="card"><span class="label">BLOOM UI</span><strong id="modelValue">—</strong><p id="modelStats">Native model bridge ready.</p></article>
         </div>
-
         <article class="card next">
-          <div>
-            <span class="label">NEXT MILESTONE</span>
-            <h3>Embed Bloom UI Studio inside RoFlow</h3>
-            <p>The old browser editor stays untouched while its file/Git bridge is moved from Python into native Tauri commands.</p>
-          </div>
-          <span class="pill">SAFE MIGRATION</span>
+          <div><span class="label">DESKTOP MIGRATION</span><h3>Bloom UI Studio is now embedded</h3><p>RoFlow copies the current editor source into the desktop bundle at build time, so browser and desktop use the same editor implementation.</p></div>
+          <span class="pill">ONE SOURCE</span>
         </article>
       </section>
 
@@ -79,36 +57,23 @@
         <article class="card wide">
           <span class="label">AI SYNC</span>
           <h2>Safe Git synchronization</h2>
-          <p>RoFlow 0.1 intentionally refuses to pull over a dirty worktree. The existing Bloom UI Studio still owns the advanced stash/merge/recovery flow until it is ported to Rust.</p>
-          <button id="syncBtn" class="btn primary big">Pull latest main</button>
+          <p>RoFlow backs up a dirty UI model, isolates it, stashes unrelated work, fast-forwards Git, restores local work and three-way merges BloomUI.model.json.</p>
+          <button id="syncBtn" class="btn primary big">AI SYNC</button>
           <pre id="syncOutput">Ready.</pre>
         </article>
       </section>
 
-      <section id="uiPage" class="page">
-        <article class="card wide">
-          <span class="label">UI STUDIO</span>
-          <h2>Native bridge connected to BloomUI.model.json</h2>
-          <p>The first native commands can already read and validate the authored UI model. Full visual editor embedding is the next step, without duplicating the 100k+ line editor frontend.</p>
-          <button id="inspectModelBtn" class="btn">Inspect model</button>
-          <pre id="modelOutput">Choose a project first.</pre>
-        </article>
+      <section id="uiPage" class="page ui-page">
+        <div class="embed-head"><div><span class="label">UI STUDIO</span><strong>Bloom UI Studio · native desktop bridge</strong></div><button id="reloadStudioBtn" class="btn">Reload editor</button></div>
+        <iframe id="uiStudioFrame" title="RoFlow UI Studio"></iframe>
       </section>
 
       <section id="changesPage" class="page">
-        <article class="card wide">
-          <span class="label">LOCAL CHANGES</span>
-          <h2>Git worktree</h2>
-          <pre id="changesOutput">Choose a project first.</pre>
-        </article>
+        <article class="card wide"><span class="label">LOCAL CHANGES</span><h2>Git worktree</h2><pre id="changesOutput">Choose a project first.</pre></article>
       </section>
 
       <section id="logsPage" class="page">
-        <article class="card wide">
-          <span class="label">SESSION LOG</span>
-          <h2>RoFlow activity</h2>
-          <pre id="logOutput">RoFlow started.</pre>
-        </article>
+        <article class="card wide"><span class="label">SESSION LOG</span><h2>RoFlow activity</h2><pre id="logOutput">RoFlow started.</pre></article>
       </section>
     </main>
   </div>
