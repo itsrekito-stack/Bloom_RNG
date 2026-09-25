@@ -1,6 +1,7 @@
 local RS=game:GetService("ReplicatedStorage")
 local C=require(RS.Config.WorkshopConfig)
 local Rules=require(RS.Shared.GardenRules)
+local E=require(RS.Shared.WorkshopEffects)
 local Copy=require(RS.Shared.BloomUtil).Copy
 local S={}
 
@@ -15,7 +16,7 @@ function S:Point(player,key,amount)
  if w.ClaimedSources[key] then return false,"OWNED" end
  w.ClaimedSources[key]=true
  w.Points=w.Points+amount
- if w.Nodes.ECONOMY_4 then p.Currencies.Coins=p.Currencies.Coins+100 end
+ if w.Nodes.ECONOMY_4 then p.Currencies.Coins=p.Currencies.Coins+E.Value(p,"ECONOMY_4","MilestoneCoins",0) end
  return true
 end
 
