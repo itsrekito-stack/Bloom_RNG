@@ -14,6 +14,7 @@
         <button class="nav active" data-page="dashboard">Dashboard</button>
         <button class="nav" data-page="sync">AI Sync</button>
         <button class="nav" data-page="changes">Changes <span id="changesBadge" class="nav-badge">0</span></button>
+        <button class="nav" data-page="planner">Planner <span id="plannerBadge" class="nav-badge">0/0</span></button>
         <button class="nav" data-page="tasks">AI Tasks</button>
         <button class="nav" data-page="roblox">Roblox</button>
         <button class="nav" data-page="ui">UI Studio</button>
@@ -26,7 +27,7 @@
     <main>
       <header class="topbar">
         <div>
-          <p class="eyebrow">DAILY DEV HUB · ROFLOW v0.004</p>
+          <p class="eyebrow">DAILY DEV HUB · ROFLOW v0.005</p>
           <h1 id="pageTitle">Dashboard</h1>
         </div>
         <div class="actions">
@@ -57,6 +58,14 @@
           <article class="card"><span class="label">HEALTH</span><strong id="healthValue">—</strong><p id="healthStats">Run project health check.</p></article>
           <article class="card"><span class="label">ROJO</span><strong id="rojoValue">—</strong><p id="rojoStats">Rojo status unknown.</p></article>
         </div>
+
+        <article class="card today-preview-card">
+          <div class="section-head">
+            <div><span class="label">TODAY</span><h3 id="todayPreviewTitle">Today’s Focus</h3></div>
+            <div class="today-summary"><span id="todayPreviewCount">0/0</span><button class="link-btn" data-go="planner">Open planner</button></div>
+          </div>
+          <div id="todayPreview" class="today-preview-list"><div class="empty-state">Connect a project to load today’s tasks.</div></div>
+        </article>
 
         <div class="dashboard-columns">
           <article class="card">
@@ -102,6 +111,37 @@
         <div class="commit-bar">
           <input id="commitMessage" maxlength="180" placeholder="Commit message, e.g. feat: improve garden UI">
           <button id="commitBtn" class="btn primary">Commit Changes</button>
+        </div>
+      </section>
+
+      <section id="plannerPage" class="page">
+        <div class="page-heading">
+          <div><span class="label">BLOOM RNG RELEASE PLAN</span><h2>Today & Release Roadmap</h2></div>
+          <div class="planner-date"><span id="plannerDate">—</span></div>
+        </div>
+        <div class="planner-summary-grid">
+          <article class="card planner-summary-card">
+            <span class="label">TODAY</span>
+            <strong id="todayProgressText">0 / 0</strong>
+            <p>Current focus tasks for this development day.</p>
+            <div class="progress-track"><span id="todayProgressBar"></span></div>
+          </article>
+          <article class="card planner-summary-card">
+            <span class="label">RELEASE ROADMAP</span>
+            <strong id="releaseProgressText">0 / 0</strong>
+            <p>Everything tracked from current alpha state to public release.</p>
+            <div class="progress-track"><span id="releaseProgressBar"></span></div>
+          </article>
+        </div>
+        <div class="planner-layout">
+          <section class="planner-column">
+            <div class="planner-column-head"><span class="label">TODAY’S TASKS</span><span id="todayPercent">0%</span></div>
+            <div id="todayTaskList" class="planner-list"><div class="empty-state">Choose a project first.</div></div>
+          </section>
+          <section class="planner-column roadmap-column">
+            <div class="planner-column-head"><span class="label">ROADMAP TO RELEASE</span><span id="releasePercent">0%</span></div>
+            <div id="roadmapTaskList" class="roadmap-list"><div class="empty-state">Choose a project first.</div></div>
+          </section>
         </div>
       </section>
 

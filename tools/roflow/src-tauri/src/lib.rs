@@ -92,6 +92,26 @@ struct TaskStore {
     tasks: Vec<TaskEntry>,
 }
 
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PlannerTask {
+    id: String,
+    group: String,
+    title: String,
+    detail: String,
+    done: bool,
+}
+
+#[derive(Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PlannerStore {
+    today_date: String,
+    today: Vec<PlannerTask>,
+    roadmap: Vec<PlannerTask>,
+    today_history: HashMap<String, Vec<PlannerTask>>,
+}
+
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct GitChange {
@@ -199,6 +219,159 @@ fn backup_store_path(root: &Path) -> PathBuf {
 fn task_store_path(root: &Path) -> PathBuf {
     roflow_dir(root).join("tasks.json")
 }
+
+fn planner_store_path(root: &Path) -> PathBuf {
+    roflow_dir(root).join("planner.json")
+}
+
+fn planner_task(id: &str, group: &str, title: &str, detail: &str, done: bool) -> PlannerTask {
+    PlannerTask {
+        id: id.to_string(),
+        group: group.to_string(),
+        title: title.to_string(),
+        detail: detail.to_string(),
+        done,
+    }
+}
+
+fn default_today_tasks() -> Vec<PlannerTask> {
+    vec![
+        planner_task("today-roflow-smoke","RoFlow","Install and smoke-test RoFlow v0.005","Verify project connect, Planner, Backups, Changes, Rojo build and checkbox persistence after restart.",false),
+        planner_task("today-sync-checkpoint","RoFlow","Run AI Sync and create a clean checkpoint","Pull current main safely, review local changes and leave a recoverable checkpoint before gameplay work.",false),
+        planner_task("today-br005","Runtime","Finish BR-005 snapshot/state synchronization optimization","Reduce full state rebuilds and unnecessary RenderMenu work while preserving the initial handshake and server authority.",false),
+        planner_task("today-br007","Runtime","Make Workshop persistent while open (BR-007)","Keep the Workshop shell mounted and update node states in place without resetting pan, zoom or hover state.",false),
+        planner_task("today-br002","UI / Inventory","Resolve Inventory V2 / SeedSatchel ownership (BR-002)","Verify the current authored model and make the live menu ownership explicit without changing inventory rewards or server semantics.",false),
+        planner_task("today-br008-verify","Runtime","Re-verify roulette BR-008 on current main","Only change request correlation if a real start/stop/restart race is reproducible; do not resurrect the removed RewardReveal behavior.",false),
+        planner_task("today-playtest","QA","Playtest the core loop at 1366×768 and 1280×720","Run roll → inventory → garden → bees → hive → Workshop and note clipping, stale UI and progression blockers.",false),
+        planner_task("today-stable-main","QA","Record blockers and leave main buildable","Commit stable work, keep a checkpoint and write down anything that must move to tomorrow instead of leaving half-finished fixes.",false),
+    ]
+}
+
+fn default_roadmap_tasks() -> Vec<PlannerTask> {
+    vec![
+        planner_task("release-br001","1 · Stability","Persistence lifecycle / final-save safety (BR-001)","Confirmed in Phase 2A: serialized persistence lifecycle, bounded retries and fail-closed final release.",true),
+        planner_task("release-br004","1 · Stability","Season transaction and leave/shutdown ordering (BR-004)","Confirmed in Phase 2A: transaction outcomes and close ordering use the DataService lifecycle owner.",true),
+        planner_task("release-br003","1 · Stability","Workshop respec / planted progression safety (BR-003)","Confirmed in Phase 2A: destructive capacity collapse is blocked and bee ownership is preserved.",true),
+        planner_task("release-br009","1 · Stability","Profile schema invariants (BR-009)","Confirmed in Phase 2A: domain validation, archive preservation and malformed profile fail-safe behavior.",true),
+        planner_task("release-studio-persistence","1 · Stability","Validate persistence behavior in real Roblox Studio","Exercise join/leave/rejoin, shutdown, DataStore throttling/failure behavior and session ownership with Studio APIs.",false),
+
+        planner_task("release-br005","2 · Runtime & Performance","Revision-aware UI state flow (BR-005)","Coalesce state pushes and avoid full profile/UI snapshot rebuilds on every request and one-second tick.",false),
+        planner_task("release-br007","2 · Runtime & Performance","Persistent Workshop GUI lifecycle (BR-007)","Keep the full-screen Workshop mounted while open and patch node state without rebinding the entire tree.",false),
+        planner_task("release-br006","2 · Runtime & Performance","Scale public bee/activity replication (BR-006)","Use recipient relevance / spatial filtering and bounded update frequency instead of full global payloads.",false),
+        planner_task("release-br008","2 · Runtime & Performance","Close or fix roulette lifecycle BR-008","Reproduce on current main first. Add request/generation correlation only if the race still exists.",false),
+        planner_task("release-low-end","2 · Runtime & Performance","Profile a long session on low-end hardware","Measure server/client frame time, Lua memory, UI churn and replication after 30–60 minutes of normal play.",false),
+
+        planner_task("release-br002","3 · UI & Inventory","Resolve Inventory V2 menu ownership (BR-002)","Make SeedSatchel / Inventory V2 / FieldGuide responsibilities explicit against the actual authored UI model.",false),
+        planner_task("release-inventory-actions","3 · UI & Inventory","QA every Inventory V2 action","Verify category/search/sort/filter, Plant, Favorite, Protect, Dissolve, Mastery and Bee equip/unequip states.",false),
+        planner_task("release-inventory-plant","3 · UI & Inventory","Fix or clearly surface Garden proximity for Plant","Inventory planting currently depends on physical garden proximity; route or explain the action so it is not misleading.",false),
+        planner_task("release-hud-responsive","3 · UI & Inventory","Finish HUD/responsive pass","Verify safe areas and authored HUD layout at 1920×1080, 1366×768 and 1280×720 without overlap.",false),
+        planner_task("release-tutorial","3 · UI & Inventory","Finish intro/tutorial guidance","Ensure arrows, indicators and tutorial progression point to real world/UI targets and remain on-screen.",false),
+        planner_task("release-workshop-ui","3 · UI & Inventory","Finish Workshop interaction polish","Verify fullscreen exclusivity, pan, wheel zoom, node selection, locked/hidden nodes and readable costs.",false),
+        planner_task("release-br010","3 · UI & Inventory","Clarify world gate / shrine feedback (BR-010)","Make unlock requirements and blocked interactions understandable in the physical world.",false),
+        planner_task("release-br013","3 · UI & Inventory","Remove preview/runtime drift (BR-013)","Keep mock editor data clearly separate from runtime and remove stale/Russian player-facing preview labels.",false),
+
+        planner_task("release-core-loop","4 · Core Progression","Validate the complete progression loop","Starter bee → flower → pollination → currencies → roll → garden → Workshop → sectors/trials → season must work end-to-end.",false),
+        planner_task("release-roll-loop","4 · Core Progression","Finalize Roll / Bloom / pity loop","Confirm reward cadence, Bloom charge/use, duplicate outcomes and roulette presentation all agree with server results.",false),
+        planner_task("release-garden","4 · Core Progression","Finalize Garden progression and synergies","Verify slot capacity, planting, flower XP/levels, mutations, synergies, dismantling and ownership invariants.",false),
+        planner_task("release-bees","4 · Core Progression","Finalize Bee traits, abilities and equipment","Verify ability cooldowns/effects, rarity, equipment caps and trait presentation for all release bees.",false),
+        planner_task("release-bee-mastery","4 · Core Progression","Give Bee Mastery a clear player-facing reward","The audit found mastery accumulation but no obvious direct reward path; define and verify one before release.",false),
+        planner_task("release-hive-locations","4 · Core Progression","Finalize Hive and location progression","Players should always progress toward stronger locations with clear Hive upgrade feedback and no downgrade path.",false),
+        planner_task("release-workshop-tree","4 · Core Progression","Finalize the Workshop progression tree","Verify node prerequisites, costs, permanent nodes, respec behavior and meaningful branches.",false),
+        planner_task("release-quests-trials","4 · Core Progression","Finish quests, activities and trials","Make active world objectives useful for progression and verify rewards, cooldowns, tokens and shrine requirements.",false),
+        planner_task("release-season","4 · Core Progression","Finish Season / Legacy loop","Verify preview, confirmation, retained progression, Ancient Nectar, reset semantics and returning-player behavior.",false),
+
+        planner_task("release-economy","5 · Balance & Content","Balance currency sources and sinks","Check Honey, Coins, Petal Dust, Ancient Nectar and Workshop/mastery costs for dead currencies or runaway inflation.",false),
+        planner_task("release-pacing","5 · Balance & Content","Balance early / mid / late progression pacing","Prevent the alpha from being completed too quickly while keeping the first useful upgrades frequent.",false),
+        planner_task("release-rarities","5 · Balance & Content","Tune rarity and duplicate pacing","Validate flower/bee weights, duplicate frequency and dissolve value so RNG remains exciting without stalling progression.",false),
+        planner_task("release-content","5 · Balance & Content","Lock the release content set","Choose the flowers, bees, locations, quests, trials and Workshop branches that are actually shipping in v1.",false),
+        planner_task("release-sinks","5 · Balance & Content","Verify duplicate and endgame sinks","Make sure extra copies and accumulated currencies continue to have useful destinations after the early game.",false),
+
+        planner_task("release-br011","6 · Technical Cleanup","Remove FlowersConfig duplication (BR-011)","Use one authoritative initialization table instead of repeating derived metadata and weights.",false),
+        planner_task("release-br012","6 · Technical Cleanup","Document and unify config authority (BR-012)","Remove or document literal effect values that can drift from Workshop/config definitions.",false),
+        planner_task("release-legacy","6 · Technical Cleanup","Remove dead legacy routes and scripts","Delete only confirmed-unused Fruit/Research/old UI paths after repository search and runtime verification.",false),
+        planner_task("release-remote-security","6 · Technical Cleanup","Final remote validation/security pass","Recheck argument shape, rate limits, ownership, proximity and server-authoritative rewards for every mutation action.",false),
+
+        planner_task("release-fresh-profile","7 · QA","Fresh-profile smoke test","Complete onboarding and the early core loop from a brand-new production-shaped profile.",false),
+        planner_task("release-returning-profile","7 · QA","Returning/legacy profile migration test","Load representative old profiles and verify no silent loss of inventory, garden, Workshop or season data.",false),
+        planner_task("release-multiplayer","7 · QA","Two-plus-player multiplayer test","Verify shared world state, flowers, bees, activities, server switching assumptions and public replication.",false),
+        planner_task("release-resolutions","7 · QA","Resolution and input acceptance pass","Test desktop resolutions plus any supported touch/controller path for clipping, focus and blocked input.",false),
+        planner_task("release-session","7 · QA","Join / leave / rejoin / shutdown matrix","Exercise normal leave, reconnect, server close and interrupted progression with no duplicate grants or stale locks.",false),
+        planner_task("release-long-session","7 · QA","Long-session soak test","Play continuously long enough to expose memory growth, duplicated signals, stale popups and periodic-state issues.",false),
+        planner_task("release-bug-zero","7 · QA","Reach zero known release-blocking bugs","Every remaining blocker must have a reproduction, owner/status and verified fix or an explicit release decision.",false),
+
+        planner_task("release-clean-build","8 · Release","Build release candidate from a clean clone","Rojo build and required checks must pass from a clean repository without hidden local files.",false),
+        planner_task("release-publish-config","8 · Release","Verify Roblox publish / API / DataStore configuration","Confirm production place, API access, DataStore names, permissions and no TEST store is used by the release build.",false),
+        planner_task("release-store-page","8 · Release","Prepare game icon, thumbnails and description","Ship a coherent Roblox store page that accurately represents the release build.",false),
+        planner_task("release-private-alpha","8 · Release","Run a private release-candidate playtest","Have real players complete onboarding/core progression and collect only reproducible blockers.",false),
+        planner_task("release-rc-fixes","8 · Release","Fix release-candidate blockers and freeze features","After the RC test, stop adding systems and only fix confirmed release blockers/regressions.",false),
+        planner_task("release-final-checkpoint","8 · Release","Create final checkpoint and release commit/tag","Record the exact source state used for the public build so rollback and hotfixes are straightforward.",false),
+        planner_task("release-publish","8 · Release","Publish Bloom RNG","Build/publish the verified release candidate and perform an immediate live smoke test.",false),
+        planner_task("release-monitor","8 · Release","Monitor the first live sessions","Watch errors, persistence failures, progression blockers and economy anomalies; prepare a small hotfix only if needed.",false),
+    ]
+}
+
+fn merge_planner_tasks(existing: &[PlannerTask], defaults: Vec<PlannerTask>) -> Vec<PlannerTask> {
+    let done_by_id = existing
+        .iter()
+        .map(|task| (task.id.clone(), task.done))
+        .collect::<HashMap<_, _>>();
+    defaults
+        .into_iter()
+        .map(|mut task| {
+            if let Some(done) = done_by_id.get(&task.id) {
+                task.done = *done;
+            }
+            task
+        })
+        .collect()
+}
+
+fn validate_planner_date(date: &str) -> Result<&str, String> {
+    let bytes = date.as_bytes();
+    if bytes.len() != 10 || bytes[4] != b'-' || bytes[7] != b'-'
+        || bytes.iter().enumerate().any(|(index, byte)| index != 4 && index != 7 && !byte.is_ascii_digit())
+    {
+        return Err("Planner date must use YYYY-MM-DD".into());
+    }
+    Ok(date)
+}
+
+fn save_planner_store(root: &Path, store: &PlannerStore) -> Result<(), String> {
+    fs::create_dir_all(roflow_dir(root)).map_err(|e| e.to_string())?;
+    let mut text = serde_json::to_string_pretty(store).map_err(|e| e.to_string())?;
+    text.push('\n');
+    fs::write(planner_store_path(root), text).map_err(|e| e.to_string())
+}
+
+fn load_planner_store(root: &Path, date: &str) -> Result<PlannerStore, String> {
+    validate_planner_date(date)?;
+    let path = planner_store_path(root);
+    let mut store = fs::read_to_string(&path)
+        .ok()
+        .and_then(|text| serde_json::from_str::<PlannerStore>(&text).ok())
+        .unwrap_or_default();
+
+    store.roadmap = merge_planner_tasks(&store.roadmap, default_roadmap_tasks());
+
+    if store.today_date != date {
+        if !store.today_date.is_empty() && !store.today.is_empty() {
+            store.today_history.insert(store.today_date.clone(), store.today.clone());
+            if store.today_history.len() > 31 {
+                if let Some(oldest) = store.today_history.keys().min().cloned() {
+                    store.today_history.remove(&oldest);
+                }
+            }
+        }
+        store.today_date = date.to_string();
+        store.today = default_today_tasks();
+    } else {
+        store.today = merge_planner_tasks(&store.today, default_today_tasks());
+    }
+
+    save_planner_store(root, &store)?;
+    Ok(store)
+}
+
 
 fn load_task_store(root: &Path) -> TaskStore {
     fs::read_to_string(task_store_path(root))
@@ -950,6 +1123,36 @@ fn rojo_status_for(root: &Path, state: &AppState) -> Result<RojoStatus, String> 
 }
 
 #[tauri::command]
+fn planner_state(date: String, state: State<AppState>) -> Result<PlannerStore, String> {
+    let root = current_root(&state)?;
+    load_planner_store(&root, &date)
+}
+
+#[tauri::command]
+fn planner_set_done(task_id: String, done: bool, state: State<AppState>) -> Result<PlannerStore, String> {
+    let root = current_root(&state)?;
+    let path = planner_store_path(&root);
+    let mut store = fs::read_to_string(&path)
+        .ok()
+        .and_then(|text| serde_json::from_str::<PlannerStore>(&text).ok())
+        .ok_or("Planner has not been initialized yet")?;
+
+    let mut found = false;
+    for task in store.today.iter_mut().chain(store.roadmap.iter_mut()) {
+        if task.id == task_id {
+            task.done = done;
+            found = true;
+            break;
+        }
+    }
+    if !found {
+        return Err("Planner task was not found".into());
+    }
+    save_planner_store(&root, &store)?;
+    Ok(store)
+}
+
+#[tauri::command]
 fn git_changes(state: State<AppState>) -> Result<Vec<GitChange>, String> {
     parse_git_changes(&current_root(&state)?)
 }
@@ -1297,6 +1500,8 @@ pub fn run() {
             read_ui_model,
             write_ui_model,
             git_diff_stat,
+            planner_state,
+            planner_set_done,
             git_changes,
             git_file_diff,
             git_commit,

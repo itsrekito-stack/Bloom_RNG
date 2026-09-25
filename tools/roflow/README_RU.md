@@ -1,6 +1,6 @@
 # RoFlow
 
-**Current desktop milestone: v0.004.**
+**Current desktop milestone: v0.005.**
 
 RoFlow — desktop-инструмент для рабочего цикла:
 
@@ -93,3 +93,17 @@ RoFlow keeps local Git-backed checkpoints in a separate **Backups** window.
 - UI Studio после AI Sync обновляет модель без полной перезагрузки iframe.
 - Логи ограничены последними 300 событиями.
 - Версия приложения и номера project backups теперь документированы как независимые последовательности.
+
+
+## v0.005 — Today Planner & Release Roadmap
+
+- Добавлена вкладка **Planner**.
+- Отдельный список задач на текущий день с чекбоксами.
+- Большой roadmap Bloom RNG от текущего состояния до первого публичного релиза.
+- Roadmap основан на текущем Phase 1/Phase 2A аудите и текущей игровой архитектуре.
+- Закрытые BR-001 / BR-003 / BR-004 / BR-009 уже отмечены выполненными по Phase 2A report.
+- Прогресс Today и Release считается автоматически.
+- Пять ближайших задач показываются прямо на Dashboard.
+- Чекбоксы сохраняются в `.roflow/planner.json`.
+- При смене календарного дня предыдущий Today сохраняется в локальной истории, а новый день получает свежий focus list.
+- Planner metadata не попадает в Git и не изменяет gameplay-код.

@@ -9,7 +9,8 @@ const state={
  logs:["RoFlow started."],
  tasks:[],
  health:null,
- rojo:null
+ rojo:null,
+ planner:null
 };
 
 const escapeHtml=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[char]));
@@ -40,6 +41,63 @@ function applyStatus(status){
  $("#changesBadge").textContent=String(status.changes.length||0);
  $("#sideStatus").textContent=(status.branch||"git")+" · "+shortSha(status.head);
  $(".dot").classList.add("ready");
+}
+
+
+function localPlannerDate(){
+ const now=new Date();
+ const pad=value=>String(value).padStart(2,"0");
+ return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+}
+function plannerCounts(tasks){
+ const total=tasks?.length||0;
+ const done=(tasks||[]).filter(task=>task.done).length;
+ return {done,total,percent:total?Math.round(done/total*100):0};
+}
+function plannerTaskMarkup(task,compact=false){
+ return `<label class="planner-task ${task.done?"done":""} ${compact?"compact":""}">
+  <input type="checkbox" data-planner-task="${escapeHtml(task.id)}" ${task.done?"checked":""}>
+  <span class="planner-check"></span>
+  <span class="planner-copy"><strong>${escapeHtml(task.title)}</strong>${compact?"":`<small>${escapeHtml(task.detail||"")}</small>`}</span>
+ </label>`;
+}
+function groupedPlannerMarkup(tasks){
+ const groups=[];const byGroup=new Map();
+ for(const task of tasks||[]){if(!byGroup.has(task.group)){byGroup.set(task.group,[]);groups.push(task.group)}byGroup.get(task.group).push(task)}
+ return groups.map(group=>{
+  const list=byGroup.get(group),counts=plannerCounts(list);
+  return `<section class="planner-group"><div class="planner-group-head"><strong>${escapeHtml(group)}</strong><span>${counts.done}/${counts.total}</span></div><div class="planner-group-tasks">${list.map(task=>plannerTaskMarkup(task)).join("")}</div></section>`;
+ }).join("");
+}
+function bindPlannerCheckboxes(){
+ document.querySelectorAll("[data-planner-task]").forEach(input=>{
+  input.onchange=async()=>{
+   const id=input.dataset.plannerTask,done=input.checked;input.disabled=true;
+   try{renderPlanner(await invoke("planner_set_done",{taskId:id,done}));log((done?"Completed: ":"Reopened: ")+id)}
+   catch(error){input.checked=!done;log("Planner update failed: "+error)}
+   finally{input.disabled=false}
+  };
+ });
+}
+function renderPlanner(planner){
+ state.planner=planner;
+ const today=plannerCounts(planner.today),release=plannerCounts(planner.roadmap);
+ $("#plannerDate").textContent=planner.todayDate||localPlannerDate();
+ $("#plannerBadge").textContent=`${today.done}/${today.total}`;
+ $("#todayProgressText").textContent=`${today.done} / ${today.total}`;$("#todayPercent").textContent=today.percent+"%";$("#todayProgressBar").style.width=today.percent+"%";
+ $("#releaseProgressText").textContent=`${release.done} / ${release.total}`;$("#releasePercent").textContent=release.percent+"%";$("#releaseProgressBar").style.width=release.percent+"%";
+ $("#todayTaskList").innerHTML=groupedPlannerMarkup(planner.today)||'<div class="empty-state">No tasks for today.</div>';
+ $("#roadmapTaskList").innerHTML=groupedPlannerMarkup(planner.roadmap)||'<div class="empty-state">Roadmap is empty.</div>';
+ $("#todayPreviewTitle").textContent="Today’s Focus · "+(planner.todayDate||"");
+ $("#todayPreviewCount").textContent=`${today.done}/${today.total}`;
+ const preview=[...(planner.today||[]).filter(task=>!task.done),...(planner.today||[]).filter(task=>task.done)].slice(0,5);
+ $("#todayPreview").innerHTML=preview.length?preview.map(task=>plannerTaskMarkup(task,true)).join(""):'<div class="empty-state">Today is complete.</div>';
+ bindPlannerCheckboxes();
+}
+async function refreshPlanner(){
+ if(!state.root)return;
+ try{renderPlanner(await invoke("planner_state",{date:localPlannerDate()}))}
+ catch(error){log("Planner failed: "+error)}
 }
 
 async function refreshBackups(){
@@ -133,7 +191,7 @@ async function connectRoot(path){
  state.root=path;
  localStorage.setItem("roflowProjectRoot",path);
  applyStatus(status);
- await Promise.all([refreshBackups(),refreshTasks(),refreshRojo()]);
+ await Promise.all([refreshBackups(),refreshTasks(),refreshRojo(),refreshPlanner()]);
  log("Project connected: "+path);
  return status;
 }
@@ -143,7 +201,7 @@ async function refresh(){
  try{
   const status=await invoke("project_status");
   applyStatus(status);
-  await Promise.all([refreshBackups(),refreshTasks(),refreshRojo()]);
+  await Promise.all([refreshBackups(),refreshTasks(),refreshRojo(),refreshPlanner()]);
   log("Project status refreshed");
  }catch(error){log("Refresh failed: "+error);throw error}
 }
@@ -301,6 +359,7 @@ function navigate(page){
  $("#pageTitle").textContent=label;
  if(page==="ui")ensureUiStudio();
  if(page==="changes")loadChanges();
+ if(page==="planner")refreshPlanner();
  if(page==="tasks")refreshTasks();
  if(page==="roblox")refreshRojo();
 }
