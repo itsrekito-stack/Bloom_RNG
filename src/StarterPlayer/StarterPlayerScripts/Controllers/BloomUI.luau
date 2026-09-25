@@ -745,9 +745,19 @@ function UI:RenderMenu()
 
    local effects=require(RS.Config.WorkshopEffectsConfig)
 
-   self.SelectedNode=self.SelectedNode or "ROLL_1"
-   local selectedNode=W.Nodes[self.SelectedNode] or W.Nodes.ROLL_1
-   local selectedId=selectedNode and selectedNode.Id or "ROLL_1"
+   local function nodeRevealed(id)
+    local node=W.Nodes[id]
+    if not node then return false end
+    local backend=workshopUI and workshopUI.Nodes and workshopUI.Nodes[id]
+    if backend then return backend.Revealed==true end
+    if id=="CORE" or p.WorkshopV5.Nodes[id]==true then return true end
+    return node.Parent=="CORE" or (node.Parent and p.WorkshopV5.Nodes[node.Parent]==true) or false
+   end
+
+   self.SelectedNode=self.SelectedNode or "CORE"
+   if not nodeRevealed(self.SelectedNode) then self.SelectedNode="CORE" end
+   local selectedNode=W.Nodes[self.SelectedNode] or W.Nodes.CORE
+   local selectedId=selectedNode and selectedNode.Id or "CORE"
 
    local branchColors={
     CORE=C.White,
@@ -801,17 +811,20 @@ function UI:RenderMenu()
     local node=nodes:FindFirstChild("Node_"..id)
     local backend=workshopUI and workshopUI.Nodes and workshopUI.Nodes[id]
     local owned
+    local revealed
     local available
     if backend then
      owned=backend.Owned==true
-     available=backend.Available==true
+     revealed=backend.Revealed==true
+     available=revealed and backend.Available==true
     else
      owned=id=="CORE" or p.WorkshopV5.Nodes[id]==true
      local parentOwned=not n.Parent or n.Parent=="CORE" or p.WorkshopV5.Nodes[n.Parent]==true
-     available=not owned and parentOwned and p.Hive.Level>=(n.Hive or 0)
+     revealed=owned or id=="CORE" or parentOwned
+     available=revealed and not owned and p.Hive.Level>=(n.Hive or 0)
     end
 
-    local selected=id==selectedId
+    local selected=revealed and id==selectedId
     local branchColor=branchColors[n.Branch] or C.Blue
 
     if node and node:IsA("TextButton") then
@@ -841,17 +854,17 @@ function UI:RenderMenu()
      if label and label:IsA("TextLabel") then label.Visible=false end
      if level and level:IsA("TextLabel") then level.Visible=false end
 
-     local baseTransparency=owned and 0 or available and .06 or .40
+     local baseTransparency=not revealed and .52 or owned and 0 or available and .06 or .28
      if icon and icon:IsA("ImageLabel") then
-      icon.Image=Icons.GetWorkshopNodeIcon(id)
-      icon.ImageColor3=selected and C.Gold or owned and C.Green or available and branchColor or C.Faint
+      icon.Image=Icons.GetWorkshopNodeIcon(id,not revealed)
+      icon.ImageColor3=not revealed and C.Faint or selected and C.Gold or owned and C.Green or available and branchColor or C.Faint
       icon.ImageTransparency=baseTransparency
      end
      if selectionGlow and selectionGlow:IsA("ImageLabel") then
-      selectionGlow.Image=icon and icon:IsA("ImageLabel") and icon.Image or Icons.GetWorkshopNodeIcon(id)
+      selectionGlow.Image=icon and icon:IsA("ImageLabel") and icon.Image or Icons.GetWorkshopNodeIcon(id,not revealed)
       selectionGlow.ImageColor3=C.Gold
       selectionGlow.ImageTransparency=.52
-      selectionGlow.Visible=selected
+      selectionGlow.Visible=revealed and selected
      end
 
      local baseScale=selected and 1.12 or 1
@@ -863,19 +876,23 @@ function UI:RenderMenu()
      node.MouseEnter:Connect(function(x,y)
       if not node.Parent then return end
       TweenService:Create(nodeScale,TweenInfo.new(Theme.Motion.Fast,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
-       Scale=isSelected and 1.18 or 1.09,
+       Scale=isSelected and 1.18 or revealed and 1.09 or 1.04,
       }):Play()
       if icon and icon.Parent then
-       TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{ImageTransparency=math.max(0,baseTransparency-.12)}):Play()
+       TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{ImageTransparency=math.max(0,baseTransparency-(revealed and .12 or .05))}):Play()
       end
-      showTooltip(nodeId,n,backend,owned,available,branchColor)
-      if typeof(x)=="number" and typeof(y)=="number" then moveTooltip(x,y) else
-       local mouse=UIS:GetMouseLocation()
-       moveTooltip(mouse.X,mouse.Y)
+      if revealed then
+       showTooltip(nodeId,n,backend,owned,available,branchColor)
+       if typeof(x)=="number" and typeof(y)=="number" then moveTooltip(x,y) else
+        local mouse=UIS:GetMouseLocation()
+        moveTooltip(mouse.X,mouse.Y)
+       end
+      else
+       tooltip.Visible=false
       end
      end)
      node.MouseMoved:Connect(function(x,y)
-      if tooltip.Visible then moveTooltip(x,y) end
+      if revealed and tooltip.Visible then moveTooltip(x,y) end
      end)
      node.MouseLeave:Connect(function()
       if not node.Parent then return end
@@ -884,6 +901,7 @@ function UI:RenderMenu()
       tooltip.Visible=false
      end)
      node.Activated:Connect(function()
+      if not revealed then return end
       if nodeId=="CORE" then
        self.SelectedNode=nodeId
        self:RenderMenu()
@@ -905,9 +923,9 @@ function UI:RenderMenu()
       local onSelectedPath=selectedNode
        and n.Branch==selectedNode.Branch
        and (n.Index or 0)<=(selectedNode.Index or 0)
-      link.BackgroundColor3=onSelectedPath and C.Gold or parentOwned and branchColor or C.BorderSoft
-      link.BackgroundTransparency=onSelectedPath and .08 or parentOwned and (owned and .10 or available and .30 or .48) or .72
-      link.Size=UDim2.new(link.Size.X.Scale,link.Size.X.Offset,0,onSelectedPath and 6 or 4)
+      link.BackgroundColor3=onSelectedPath and C.Gold or revealed and parentOwned and branchColor or C.BorderSoft
+      link.BackgroundTransparency=onSelectedPath and .08 or revealed and parentOwned and (owned and .10 or available and .30 or .48) or .84
+      link.Size=UDim2.new(link.Size.X.Scale,link.Size.X.Offset,0,onSelectedPath and 6 or revealed and 4 or 2)
      end
     end
    end
