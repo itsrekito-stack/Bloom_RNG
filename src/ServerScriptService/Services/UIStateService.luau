@@ -45,6 +45,7 @@ local REASONS={
  WRONG_SECTOR="Move to the required location",
  SECTOR_LOCKED="Unlock this location first",
  TRIAL_LOCKED="Trials are still locked",
+ ADVANCED_TRIAL_LOCKED="Unlock Advanced Trials in the Workshop",
  TRIAL_RUNNING="A trial is already running",
  ACTIVITY_UNAVAILABLE="Trial route could not spawn. Try again",
  COOLDOWN="Wait for the cooldown to finish",
@@ -247,6 +248,7 @@ function S:Trials(player,profile)
   local reason=nil
   if self.X.BuildTrialService.Active[player] then reason="TRIAL_RUNNING"
   elseif not profile.Tutorial.FeatureUnlocks.Trials then reason="TRIAL_LOCKED"
+  elseif cfg.Advanced and not Effects.Feature(profile,"LEGACY_4","AdvancedTrials") then reason="ADVANCED_TRIAL_LOCKED"
   elseif not unlocked then reason="SECTOR_LOCKED"
   elseif current~=cfg.Sector then reason="WRONG_SECTOR"
   elseif not nearShrine then reason="TOO_FAR"
@@ -254,6 +256,7 @@ function S:Trials(player,profile)
   local startHint
   if reason=="TRIAL_RUNNING" then startHint="Finish the active trial first"
   elseif reason=="TRIAL_LOCKED" then startHint="Unlock Build Trials through progression"
+  elseif reason=="ADVANCED_TRIAL_LOCKED" then startHint="Unlock Advanced Trials in the Workshop"
   elseif reason=="SECTOR_LOCKED" then startHint="Unlock "..(location and location.Name or cfg.Sector).." at its world gate first"
   elseif reason=="WRONG_SECTOR" then startHint="Travel to "..(location and location.Name or cfg.Sector).." and find its Garden Trials shrine"
   elseif reason=="TOO_FAR" then startHint="Go to the Garden Trials shrine in "..(location and location.Name or cfg.Sector)
@@ -262,6 +265,7 @@ function S:Trials(player,profile)
    Id=id,
    Name=cfg.Name,
    Sector=cfg.Sector,
+   Advanced=cfg.Advanced==true,
    Completed=profile.Quests.Trials[id]==true,
    CanStart=reason==nil,
    NearShrine=nearShrine,
