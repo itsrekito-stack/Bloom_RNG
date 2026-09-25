@@ -346,26 +346,57 @@ function UI:IsWorkshopExclusive()
  return self.WorkshopFocus==true and self.Menu=="Workshop"
 end
 
+function UI:WorkshopHUDObjects()
+ return {
+  self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.RollHUD,self.Roll,self.RouletteViewport,
+  self.Guide,self.ToastRoot,self.Reveal,
+ }
+end
+
+function UI:CaptureWorkshopHUDVisibility()
+ if self.WorkshopHUDVisibility then return end
+ local snapshot={}
+ for _,gui in ipairs(self:WorkshopHUDObjects()) do
+  if gui and gui:IsA("GuiObject") then snapshot[gui]=gui.Visible end
+ end
+ self.WorkshopHUDVisibility=snapshot
+end
+
+function UI:RestoreWorkshopHUDVisibility()
+ local snapshot=self.WorkshopHUDVisibility
+ self.WorkshopHUDVisibility=nil
+ if not snapshot then return end
+ for gui,visible in pairs(snapshot) do
+  if gui and gui.Parent and gui:IsA("GuiObject") then gui.Visible=visible end
+ end
+end
+
 function UI:ApplyWorkshopFocusVisibility()
  local exclusive=self:IsWorkshopExclusive()
  if self.BoostHUD then self.BoostHUD:SetSuppressed(exclusive) end
  if not exclusive then return end
- for _,gui in ipairs({
-  self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.RollHUD,self.Roll,self.RouletteViewport,
-  self.Guide,self.ToastRoot,self.Reveal,
- }) do
+ for _,gui in ipairs(self:WorkshopHUDObjects()) do
   if gui and gui:IsA("GuiObject") then gui.Visible=false end
  end
 end
 
 function UI:SetWorkshopFocus(active)
- self.WorkshopFocus=active==true
- if self.WorkshopFocus then
+ active=active==true
+ if active==self.WorkshopFocus then
+  self:ApplyWorkshopFocusVisibility()
+  return
+ end
+ if active then
+  self:CaptureWorkshopHUDVisibility()
+  self.WorkshopFocus=true
   self.Auto=false
   self:StopRouletteAnimation()
   self.ToastUntil=nil
   self:ApplyWorkshopFocusVisibility()
  else
+  self.WorkshopFocus=false
+  self:RestoreWorkshopHUDVisibility()
+  if self.BoostHUD then self.BoostHUD:SetSuppressed(false) end
   if self.State then self:Render() end
  end
 end
