@@ -1036,7 +1036,8 @@ function UI:RenderMenu()
    for _,t in ipairs(trialsUI.Items) do
     local hint=t.StartHint or (t.ReasonText and t.ReasonText or "")
     local suffix=hint~="" and "  •  "..hint or ""
-    local button=self:Button(self.Content,(t.Completed and "✓  " or "")..t.Name.."   •   "..t.Sector..suffix,function() self:Send("Trial",t.Id) end,Icons.Get("System","Quests"))
+    local advanced=t.Advanced and "ADVANCED  •  " or ""
+    local button=self:Button(self.Content,(t.Completed and "✓  " or "")..advanced..t.Name.."   •   "..t.Sector..suffix,function() self:Send("Trial",t.Id) end,Icons.Get("System","Quests"))
     button.Active=t.CanStart==true
    end
   else
