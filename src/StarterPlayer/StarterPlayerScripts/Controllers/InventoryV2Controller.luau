@@ -10,11 +10,11 @@ local C=Theme.Colors
 local InventoryV2={}
 
 local CATEGORY_ORDER={"Flowers","Bees","Seeds","Resources","Special"}
-local CATEGORY_TITLES={Flowers="ЦВЕТЫ",Bees="ПЧЁЛЫ",Seeds="СЕМЕНА",Resources="РЕСУРСЫ",Special="ОСОБОЕ"}
+local CATEGORY_TITLES={Flowers="FLOWERS",Bees="BEES",Seeds="SEEDS",Resources="RESOURCES",Special="SPECIAL"}
 local SORT_ORDER={"Rarity","Name","Count"}
-local SORT_LABELS={Rarity="РЕДКОСТЬ  ˅",Name="ИМЯ  ˅",Count="КОЛ-ВО  ˅"}
+local SORT_LABELS={Rarity="RARITY  ˅",Name="NAME  ˅",Count="COUNT  ˅"}
 local FILTER_ORDER={"All","Favorite","Protected","Available"}
-local FILTER_LABELS={All="ВСЕ  ›",Favorite="ИЗБРАННОЕ  ›",Protected="ЗАЩИЩЁННЫЕ  ›",Available="ДОСТУПНЫЕ  ›"}
+local FILTER_LABELS={All="ALL  ›",Favorite="FAVORITES  ›",Protected="PROTECTED  ›",Available="AVAILABLE  ›"}
 
 local function countMap(t)
  local n=0
@@ -125,10 +125,10 @@ local function buildItems(profile,inventory)
 
  local currencies=profile.Currencies or {}
  local resources={
-  {Id="Coins",DisplayName="Coins",Count=currencies.Coins or 0,Description="Основная валюта для прогрессии и улучшений."},
-  {Id="Honey",DisplayName="Honey",Count=(profile.Hive and profile.Hive.Honey) or 0,Description="Мёд, который пчёлы доставляют в улей."},
-  {Id="PetalDust",DisplayName="Petal Dust",Count=currencies.PetalDust or 0,Description="Ресурс из дубликатов для мастерства и улучшений."},
-  {Id="AncientNectar",DisplayName="Ancient Nectar",Count=currencies.AncientNectar or 0,Description="Редкий сезонный ресурс для поздней прогрессии."},
+  {Id="Coins",DisplayName="Coins",Count=currencies.Coins or 0,Description="Main currency for progression and upgrades."},
+  {Id="Honey",DisplayName="Honey",Count=(profile.Hive and profile.Hive.Honey) or 0,Description="Honey delivered to the hive by your bees."},
+  {Id="PetalDust",DisplayName="Petal Dust",Count=currencies.PetalDust or 0,Description="A duplicate resource used for Mastery and upgrades."},
+  {Id="AncientNectar",DisplayName="Ancient Nectar",Count=currencies.AncientNectar or 0,Description="A rare seasonal resource for late-game progression."},
  }
  for _,entry in ipairs(resources) do
   entry.Kind="Resource"
@@ -399,15 +399,15 @@ function InventoryV2.Render(controller,profile,uiState)
   local description=details:FindFirstChild("Description")
   if description and description:IsA("TextLabel") then
    if item.Kind=="Flower" or item.Kind=="Seed" then
-    description.Text=item.DisplayName.." • "..item.Rarity..". Посади свободную копию, защищай редкие экземпляры и прокачивай мастерство за Petal Dust."
+    description.Text=item.DisplayName.." • "..item.Rarity..". Plant a free copy, protect rare items, and upgrade Mastery with Petal Dust."
    elseif item.Kind=="Bee" then
     local ability=Bees.GetAbilityDescription(item.Id)
     local passive=Bees.GetPassiveDescription(item.Id)
     description.Text=passive.."  •  "..ability
    elseif item.Kind=="Resource" then
-    description.Text=item.Description or "Ресурс прогрессии Bloom RNG."
+    description.Text=item.Description or "A Bloom RNG progression resource."
    else
-    description.Text="Сезонный keepsake. Он сохраняет выбранный предмет как часть долгосрочной прогрессии."
+    description.Text="A seasonal keepsake that preserves the selected item as part of long-term progression."
    end
   end
 
@@ -422,12 +422,12 @@ function InventoryV2.Render(controller,profile,uiState)
    local masteryTrack=stats:FindFirstChild("MasteryTrack")
    local masteryXP=stats:FindFirstChild("MasteryXP")
    if item.Kind=="Flower" or item.Kind=="Seed" then
-    if ownedLabel then ownedLabel.Text="В наличии" end
-    if ownedValue then ownedValue.Text=tostring(item.Kind=="Seed" and (item.Count+item.Planted) or item.Count).." шт." end
-    if freeLabel then freeLabel.Text="Свободно" end
-    if freeValue then freeValue.Text=tostring(item.Free).." шт." end
-    if masteryLabel then masteryLabel.Text="Мастерство" end
-    if masteryLevel then masteryLevel.Text="Ур. "..tostring(item.Mastery.Level or 1) end
+    if ownedLabel then ownedLabel.Text="Owned" end
+    if ownedValue then ownedValue.Text=tostring(item.Kind=="Seed" and (item.Count+item.Planted) or item.Count).."" end
+    if freeLabel then freeLabel.Text="Available" end
+    if freeValue then freeValue.Text=tostring(item.Free).."" end
+    if masteryLabel then masteryLabel.Text="Mastery" end
+    if masteryLevel then masteryLevel.Text="Lv. "..tostring(item.Mastery.Level or 1) end
     if masteryTrack then
      masteryTrack.Visible=true
      local fill=masteryTrack:FindFirstChild("MasteryFill")
@@ -436,16 +436,16 @@ function InventoryV2.Render(controller,profile,uiState)
     end
     if masteryXP then masteryXP.Text=tostring(item.Mastery.XP or 0).." / "..tostring(item.Mastery.NextXP or 0) end
    elseif item.Kind=="Bee" then
-    if ownedLabel then ownedLabel.Text="В наличии" end
-    if ownedValue then ownedValue.Text=tostring(item.Count).." шт." end
-    if freeLabel then freeLabel.Text="Экипировано" end
-    if freeValue then freeValue.Text=tostring(item.Equipped or 0).." шт." end
-    if masteryLabel then masteryLabel.Text="Трейты" end
+    if ownedLabel then ownedLabel.Text="Owned" end
+    if ownedValue then ownedValue.Text=tostring(item.Count).."" end
+    if freeLabel then freeLabel.Text="Equipped" end
+    if freeValue then freeValue.Text=tostring(item.Equipped or 0).."" end
+    if masteryLabel then masteryLabel.Text="Traits" end
     if masteryLevel then masteryLevel.Text=table.concat(item.Traits or {},", ") end
     if masteryTrack then masteryTrack.Visible=false end
     if masteryXP then masteryXP.Text=item.Ability~="" and item.Ability or "PASSIVE" end
    else
-    if ownedLabel then ownedLabel.Text=item.Kind=="Resource" and "Количество" or "Слот" end
+    if ownedLabel then ownedLabel.Text=item.Kind=="Resource" and "Amount" or "Slot" end
     if ownedValue then ownedValue.Text=item.Kind=="Resource" and compact(item.Count) or tostring(item.Slot or "Keepsake") end
     if freeLabel then freeLabel.Text="" end
     if freeValue then freeValue.Text="" end
@@ -465,22 +465,22 @@ function InventoryV2.Render(controller,profile,uiState)
   if item.Kind=="Flower" or item.Kind=="Seed" then
    local slot=firstFreeGardenSlot(profile)
    local canPlant=(item.Free or 0)>0 and slot~=nil
-   setButton(plant,true,canPlant and "ПОСАДИТЬ" or ((item.Free or 0)<=0 and "НЕТ СВОБОДНОЙ КОПИИ" or "НЕТ СВОБОДНОЙ КЛУМБЫ"),canPlant,function()
+   setButton(plant,true,canPlant and "PLANT" or ((item.Free or 0)<=0 and "NO FREE COPY" or "NO FREE PLOT"),canPlant,function()
     controller.LastSeed=item.Id
     controller:Send("Plant",slot,item.Id)
    end)
-   setButton(favorite,true,item.Favorite and "★  УБРАТЬ ИЗ ИЗБРАННОГО" or "★  ИЗБРАННОЕ",true,function() controller:Send("Flag",item.Id,"FavoriteFlowers") end)
-   setButton(protect,true,item.Protected and "◆  СНЯТЬ ЗАЩИТУ" or "◆  ЗАЩИТИТЬ",true,function() controller:Send("Flag",item.Id,"LockedFlowers") end)
-   setButton(dissolve,true,"РАСТВОРИТЬ ×1",item.CanDissolve==true,function() controller:Send("Dissolve",item.Id,1) end)
-   setButton(mastery,true,"МАСТЕРСТВО +"..tostring(item.Mastery.Cost or "").." DUST",item.CanUpgrade==true,function() controller:Send("FlowerUpgrade",item.Id) end)
+   setButton(favorite,true,item.Favorite and "★  REMOVE FAVORITE" or "★  FAVORITE",true,function() controller:Send("Flag",item.Id,"FavoriteFlowers") end)
+   setButton(protect,true,item.Protected and "◆  UNPROTECT" or "◆  PROTECT",true,function() controller:Send("Flag",item.Id,"LockedFlowers") end)
+   setButton(dissolve,true,"DISSOLVE ×1",item.CanDissolve==true,function() controller:Send("Dissolve",item.Id,1) end)
+   setButton(mastery,true,"MASTERY +"..tostring(item.Mastery.Cost or "").." DUST",item.CanUpgrade==true,function() controller:Send("FlowerUpgrade",item.Id) end)
   elseif item.Kind=="Bee" then
    local slots=inventory.EquippedBeeSlots or (profile.Pollinators and profile.Pollinators.EquippedBeeSlots) or {}
    local equippedSlot=findEquippedSlot(slots,item.Id)
    if equippedSlot then
-    setButton(plant,true,"СНЯТЬ ПЧЕЛУ",true,function() controller:Send("EquipBee","",equippedSlot) end)
+    setButton(plant,true,"UNEQUIP BEE",true,function() controller:Send("EquipBee","",equippedSlot) end)
    else
     local slot=firstFreeBeeSlot(slots,inventory.BeeCapacity)
-    setButton(plant,true,slot and "ЭКИПИРОВАТЬ" or "СЛОТЫ ЗАНЯТЫ",slot~=nil,function() controller:Send("EquipBee",item.Id,slot) end)
+    setButton(plant,true,slot and "EQUIP" or "SLOTS FULL",slot~=nil,function() controller:Send("EquipBee",item.Id,slot) end)
    end
    setButton(favorite,false)
    setButton(protect,false)
@@ -500,7 +500,7 @@ function InventoryV2.Render(controller,profile,uiState)
    if child:IsA("GuiButton") or child.Name=="_EmptyState" then child:Destroy() end
   end
   local visible=filteredItems(all[state.Category] or {},state.Search,state.Filter,state.Sort)
-  sectionCount.Text=tostring(#visible).." ПРЕДМЕТОВ"
+  sectionCount.Text=tostring(#visible).." ITEMS"
   local selectedId=state.Selected[state.Category]
   local active=nil
   for _,item in ipairs(visible) do if item.Id==selectedId then active=item break end end
@@ -511,7 +511,7 @@ function InventoryV2.Render(controller,profile,uiState)
    local empty=Instance.new("TextLabel")
    empty.Name="_EmptyState"
    empty.BackgroundTransparency=1
-   empty.Text="Ничего не найдено"
+   empty.Text="Nothing found"
    empty.TextColor3=C.Muted
    empty.TextSize=12
    empty.Font=Enum.Font.GothamMedium
