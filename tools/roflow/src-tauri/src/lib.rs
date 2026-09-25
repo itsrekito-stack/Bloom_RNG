@@ -636,7 +636,7 @@ fn restore_backup(version: String, state: State<AppState>) -> Result<RestoreResu
 }
 
 #[tauri::command]
-fn open_backups_window(app: AppHandle) -> Result<(), String> {
+async fn open_backups_window(app: AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("backups") {
         window.set_focus().map_err(|e| e.to_string())?;
         return Ok(());
