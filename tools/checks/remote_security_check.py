@@ -36,6 +36,9 @@ need(remote,'if not self:Accept(player) then',"global per-player remote rate lim
 need(remote,'xpcall(function() return self.X:Request(player,action,a,b,c) end,debug.traceback)',"request traceback capture")
 need(remote,'[SERVER_ERROR][',"server error diagnostic marker")
 need(remote,'message="Server error ["..requestErrorId.."] — see Output"',"client-visible error correlation id")
+need(remote,'local finalReason=ok and (reason or (result==false and "ACTION_UNAVAILABLE" or nil)) or "SERVER_ERROR"',"false nil result is not mislabeled SERVER_ERROR")
+need(activity,'if not o then return false,"STALE_ACTIVITY" end',"stale activity reason")
+need(activity,'if index~=o.Index then return false,"STALE_ACTIVITY" end',"stale activity index reason")
 
 # Server authority / progression invariants behind validated remotes.
 need(roll,'not p.Tutorial.FeatureUnlocks.Roll',"Roll progression lock")
