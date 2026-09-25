@@ -136,12 +136,17 @@ function S:Inventory(player,profile)
   local bee=Bees.Get(id)
   if bee and count>0 then
    local mastery=Bees.GetMasteryState(profile.Pollinators.BeeMastery[id])
+   local equipped=equippedCounts[id] or 0
+   local free=math.max(0,count-equipped)
    table.insert(bees,{
     Id=id,
     DisplayName=bee.DisplayName,
     Rarity=bee.Rarity,
     Count=count,
-    Equipped=equippedCounts[id] or 0,
+    Equipped=equipped,
+    Free=free,
+    CanDissolve=free>0 and count>1,
+    DissolveValue=Bloom.BeeDustPerCopy,
     Traits=bee.Traits,
     Ability=bee.Ability and bee.Ability.Name or "",
     Mastery=mastery,
