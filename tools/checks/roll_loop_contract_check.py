@@ -16,6 +16,7 @@ need(pool,'p.RollState.DiscoveryPity+1>=C.DiscoveryThreshold',"pity threshold co
 need(pool,'v.Undiscovered and (R.Rank[v.Rarity] or math.huge)<=cap',"pity only guarantees a protected-tier undiscovered result")
 need(pool,'if #new>0 then pool=new end',"pity leaves natural pool intact when protected discoveries are exhausted")
 need(pool,'if total<=0 then return {},0 end',"empty/zero-weight pool guard")
+need(pool,'temp=temp or {}',"roll pool tolerates missing temporary runtime state")
 need(roll,'os.clock()-(self.Last[player] or -100)<cd',"server roll cooldown")
 need(roll,'local target=rng:NextNumber()*total',"server-side reward selection")
 need(roll,'self.X.InventoryService:Grant(player,item.Kind,item.Id)',"server grants authoritative reward")
