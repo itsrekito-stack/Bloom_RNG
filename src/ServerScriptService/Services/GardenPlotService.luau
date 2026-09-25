@@ -10,13 +10,13 @@ function S:Build(player)
   plot={Index=i,Origin=origin,Model=m,Flowers={}} self.Plots[player]=plot
   self.X:Part(m,"Ground",origin-Vector3.new(0,1,0),Vector3.new(44,2,48),Color3.fromRGB(95,155,90),true)
   local hive=self.X:Part(m,"Hive",self:HivePosition(player),Vector3.new(5,5,5),Color3.fromRGB(240,185,50),true)
-  self.X:Prompt(hive,"Улей: получить пчелу / улучшить",function(who) if who==player then self.X.HiveService:Interact(player) else self.X.SocialService:Bless(who,player) end end)
+  self.X:Prompt(hive,"Hive: get a bee / upgrade",function(who) if who==player then self.X.HiveService:Interact(player) else self.X.SocialService:Bless(who,player) end end)
  end
  if plot.Content then plot.Content:Destroy() end plot.Flowers={} local content=Instance.new("Folder") content.Name="Flowers" content.Parent=plot.Model plot.Content=content
  for i=1,C.MaxFlowerSlots do local pos=self:Position(player,i) local unlocked=i<=p.Garden.UnlockedSlots
   local pad=self.X:Part(content,"Slot_"..i,pos,Vector3.new(5,.3,5),unlocked and Color3.fromRGB(190,145,90) or Color3.fromRGB(75,80,85),false)
   pad:SetAttribute("OwnerUserId",player.UserId) pad:SetAttribute("SlotId",i)
-  if unlocked then self.X:Prompt(pad,"Посадить / заменить",function(who) if who==player then self.X:Send(player,"PlantPicker",i) end end)
+  if unlocked then self.X:Prompt(pad,"Plant / replace",function(who) if who==player then self.X:Send(player,"PlantPicker",i) end end)
    local slot=p.Garden.Slots[i] local f=slot and F.Species[slot.SpeciesId] if f then local m=self.X.FlowerService.Build(i,f,pos+Vector3.new(0,.2,0)) m.Parent=content m:ScaleTo(1+math.min(2,(slot.Level-1)*.025)) plot.Flowers[i]=m end
   end
  end
