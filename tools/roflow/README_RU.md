@@ -1,6 +1,6 @@
 # RoFlow
 
-**Current desktop milestone: v0.2.**
+**Current desktop milestone: v0.004.**
 
 RoFlow — desktop-инструмент для рабочего цикла:
 
@@ -79,3 +79,17 @@ RoFlow keeps local Git-backed checkpoints in a separate **Backups** window.
 - A backup failure cannot block opening Bloom_RNG, UI Studio, Git status, or AI Sync.
 - Backup initialization is best-effort and failures stay isolated to the Backups UI.
 - Product versioning now follows the visible RoFlow scheme: v0.001, v0.002, v0.003...
+
+
+## v0.004 — Daily Dev Hub
+
+- Новый Dashboard для ежедневного dev-цикла.
+- DEV CYCLE: checkpoint → safe AI Sync → Health Check.
+- Git Changes с просмотром unified diff.
+- Explicit Commit с автоматическим safety checkpoint перед commit.
+- Локальная история AI/Git задач.
+- Health Check проекта.
+- Rojo Serve / Stop / Build / Open Studio прямо из RoFlow.
+- UI Studio после AI Sync обновляет модель без полной перезагрузки iframe.
+- Логи ограничены последними 300 событиями.
+- Версия приложения и номера project backups теперь документированы как независимые последовательности.

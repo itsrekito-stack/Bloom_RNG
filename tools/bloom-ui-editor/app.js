@@ -2214,3 +2214,9 @@ loadInitial().then(()=>{
  setInterval(()=>{if(state.dirty&&hasProjectConnection()&&!state.assistantSyncing&&!state.autoSaving&&!state.autoSaveTimer)scheduleAutoSave(180)},500);
 });
 })();
+
+window.addEventListener("message",event=>{
+ if(event.data?.type==="roflow-refresh-model"&&ROFLOW_NATIVE){
+  reloadModelFromServer("RoFlow sync: model refreshed").catch(error=>toast(String(error),true));
+ }
+});

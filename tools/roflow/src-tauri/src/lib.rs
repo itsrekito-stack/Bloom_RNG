@@ -2,9 +2,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::{
     collections::{BTreeSet, HashMap},
+    env,
     fs,
-    path::{Path, PathBuf},
-    process::Command,
+    path::{Component, Path, PathBuf},
+    process::{Child, Command, Stdio},
     sync::Mutex,
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -15,6 +16,7 @@ const MODEL_PATH: &str = "src/StarterGui/BloomUI.model.json";
 #[derive(Default)]
 struct AppState {
     project_root: Mutex<Option<PathBuf>>,
+    rojo_child: Mutex<Option<Child>>,
 }
 
 #[derive(Serialize)]
@@ -70,10 +72,95 @@ struct RestoreResult {
     status: ProjectStatus,
 }
 
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TaskEntry {
+    id: String,
+    created_at: u64,
+    kind: String,
+    title: String,
+    summary: String,
+    head_before: String,
+    head_after: String,
+    changed_files: Vec<String>,
+    backup_version: String,
+    result: String,
+}
+
+#[derive(Default, Serialize, Deserialize)]
+struct TaskStore {
+    tasks: Vec<TaskEntry>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GitChange {
+    status: String,
+    path: String,
+    staged: bool,
+    untracked: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct CommitResult {
+    head: String,
+    subject: String,
+    backup_version: String,
+    status: ProjectStatus,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HealthItem {
+    name: String,
+    ok: bool,
+    detail: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HealthReport {
+    passed: usize,
+    total: usize,
+    checks: Vec<HealthItem>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct RojoStatus {
+    available: bool,
+    running: bool,
+    path: String,
+    version: String,
+    project_file: bool,
+    build_file: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ActionResult {
+    success: bool,
+    output: String,
+    path: String,
+}
+
+
+#[cfg(target_os = "windows")]
+fn hide_console(command: &mut Command) {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+    command.creation_flags(CREATE_NO_WINDOW);
+}
+
+#[cfg(not(target_os = "windows"))]
+fn hide_console(_command: &mut Command) {}
+
 fn git(root: &Path, args: &[&str]) -> Result<String, String> {
-    let out = Command::new("git")
-        .args(args)
-        .current_dir(root)
+    let mut command = Command::new("git");
+    command.args(args).current_dir(root);
+    hide_console(&mut command);
+    let out = command
         .output()
         .map_err(|e| format!("Failed to start git: {e}"))?;
 
@@ -91,6 +178,7 @@ fn git_env(root: &Path, args: &[&str], envs: &[(&str, &str)]) -> Result<String, 
     for (key, value) in envs {
         command.env(key, value);
     }
+    hide_console(&mut command);
     let out = command.output().map_err(|e| format!("Failed to start git: {e}"))?;
     if !out.status.success() {
         let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
@@ -107,6 +195,92 @@ fn roflow_dir(root: &Path) -> PathBuf {
 fn backup_store_path(root: &Path) -> PathBuf {
     roflow_dir(root).join("backups.json")
 }
+
+fn task_store_path(root: &Path) -> PathBuf {
+    roflow_dir(root).join("tasks.json")
+}
+
+fn load_task_store(root: &Path) -> TaskStore {
+    fs::read_to_string(task_store_path(root))
+        .ok()
+        .and_then(|text| serde_json::from_str(&text).ok())
+        .unwrap_or_default()
+}
+
+fn save_task_store(root: &Path, store: &TaskStore) -> Result<(), String> {
+    fs::create_dir_all(roflow_dir(root)).map_err(|e| e.to_string())?;
+    let mut text = serde_json::to_string_pretty(store).map_err(|e| e.to_string())?;
+    text.push('\n');
+    fs::write(task_store_path(root), text).map_err(|e| e.to_string())
+}
+
+fn unix_now() -> Result<u64, String> {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|value| value.as_secs())
+        .map_err(|e| e.to_string())
+}
+
+fn record_task(
+    root: &Path,
+    kind: &str,
+    title: &str,
+    summary: &str,
+    head_before: &str,
+    head_after: &str,
+    changed_files: Vec<String>,
+    backup_version: &str,
+    result: &str,
+) -> Result<TaskEntry, String> {
+    let mut store = load_task_store(root);
+    let created_at = unix_now()?;
+    let entry = TaskEntry {
+        id: format!("{}-{}", created_at, store.tasks.len() + 1),
+        created_at,
+        kind: kind.to_string(),
+        title: title.to_string(),
+        summary: summary.to_string(),
+        head_before: head_before.to_string(),
+        head_after: head_after.to_string(),
+        changed_files,
+        backup_version: backup_version.to_string(),
+        result: result.to_string(),
+    };
+    store.tasks.push(entry.clone());
+    if store.tasks.len() > 200 {
+        let remove = store.tasks.len() - 200;
+        store.tasks.drain(0..remove);
+    }
+    save_task_store(root, &store)?;
+    Ok(entry)
+}
+
+fn clean_relative_path(path: &str) -> Result<&str, String> {
+    let trimmed = path.trim();
+    if trimmed.is_empty() {
+        return Err("File path is empty".into());
+    }
+    let value = Path::new(trimmed);
+    if value.is_absolute()
+        || value.components().any(|component| {
+            matches!(component, Component::ParentDir | Component::RootDir | Component::Prefix(_))
+        })
+    {
+        return Err("Unsafe file path".into());
+    }
+    Ok(trimmed)
+}
+
+fn truncate_output(value: String, max_chars: usize) -> String {
+    if value.chars().count() <= max_chars {
+        value
+    } else {
+        let mut out: String = value.chars().take(max_chars).collect();
+        out.push_str("\n\n[RoFlow truncated this output]");
+        out
+    }
+}
+
 
 fn load_backup_store(root: &Path) -> BackupStore {
     fs::read_to_string(backup_store_path(root))
@@ -276,14 +450,28 @@ fn current_root(state: &State<AppState>) -> Result<PathBuf, String> {
 }
 
 fn status_for(root: &Path) -> Result<ProjectStatus, String> {
-    let head = git(root, &["rev-parse", "HEAD"])?;
-    let branch = git(root, &["branch", "--show-current"])?;
-    let subject = git(root, &["log", "-1", "--pretty=%s"])?;
-    let porcelain = git(root, &["status", "--porcelain"])?;
-    let changes: Vec<String> = porcelain
-        .lines()
+    let meta = git(root, &["log", "-1", "--pretty=%H%x00%s"])?;
+    let (head, subject) = meta
+        .split_once('\0')
+        .map(|(head, subject)| (head.to_string(), subject.to_string()))
+        .unwrap_or_else(|| (meta.clone(), String::new()));
+
+    let porcelain = git(root, &["status", "--porcelain=v1", "--branch"])?;
+    let mut lines = porcelain.lines();
+    let branch_line = lines.next().unwrap_or("");
+    let branch = branch_line
+        .strip_prefix("## ")
+        .unwrap_or(branch_line)
+        .split("...")
+        .next()
+        .unwrap_or("")
+        .split_whitespace()
+        .next()
+        .unwrap_or("")
+        .to_string();
+    let changes: Vec<String> = lines
         .filter(|line| !line.trim().is_empty())
-        .take(50)
+        .take(100)
         .map(str::to_string)
         .collect();
 
@@ -451,9 +639,8 @@ fn set_project_root(path: String, state: State<AppState>) -> Result<ProjectStatu
         let mut guard = state.project_root.lock().map_err(|_| "Project state lock failed".to_string())?;
         *guard = Some(root.clone());
     }
-    // Backups are a convenience layer and must never block opening a valid project.
-    // Initialization is best-effort; the Backups window can surface its own errors.
-    let _ = ensure_initial_backup(&root);
+    // Connecting must stay lightweight. Backups are created only by explicit
+    // checkpoints, restores, or successful AI Sync operations.
     status_for(&root)
 }
 
@@ -559,6 +746,28 @@ fn safe_ai_sync(editor_model: Option<Value>, state: State<AppState>) -> Result<S
         &final_status.subject,
         true,
     ).ok();
+    let backup_version = backup.map(|entry| entry.version).unwrap_or_default();
+    let changed_files = git(&root, &["diff", "--name-only", &format!("{}..{}", old_head, final_status.head)])
+        .unwrap_or_default()
+        .lines()
+        .chain(final_status.changes.iter().filter_map(|line| line.get(3..)))
+        .filter(|line| !line.trim().is_empty())
+        .map(str::to_string)
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .take(80)
+        .collect::<Vec<_>>();
+    let _ = record_task(
+        &root,
+        "ai-sync",
+        "AI Sync",
+        if old_head != final_status.head { "Pulled and applied the latest repository changes." } else { "Repository was already current; local work was preserved." },
+        &old_head,
+        &final_status.head,
+        changed_files,
+        &backup_version,
+        "success",
+    );
     Ok(SyncResult {
         changed: old_head != final_status.head,
         head: final_status.head,
@@ -568,17 +777,13 @@ fn safe_ai_sync(editor_model: Option<Value>, state: State<AppState>) -> Result<S
         restored,
         model_merged,
         recovery_backup,
-        backup_version: backup.map(|entry| entry.version).unwrap_or_default(),
+        backup_version,
     })
 }
 
 #[tauri::command]
 fn list_backups(state: State<AppState>) -> Result<Vec<BackupEntry>, String> {
     let root = current_root(&state)?;
-    // Keep project access independent from backup health. If initial snapshot
-    // creation fails, return the existing list (possibly empty) instead of
-    // disconnecting the whole app.
-    let _ = ensure_initial_backup(&root);
     let mut backups = load_backup_store(&root).backups;
     backups.sort_by_key(|entry| std::cmp::Reverse(backup_number(&entry.version)));
     Ok(backups)
@@ -638,6 +843,392 @@ fn restore_backup(version: String, state: State<AppState>) -> Result<RestoreResu
         safety_version: safety.version,
         status: status_for(&root)?,
     })
+}
+
+fn parse_git_changes(root: &Path) -> Result<Vec<GitChange>, String> {
+    let porcelain = git(root, &["status", "--porcelain=v1"])?;
+    Ok(porcelain
+        .lines()
+        .filter(|line| line.len() >= 3)
+        .take(200)
+        .map(|line| {
+            let code = line.get(0..2).unwrap_or("??").to_string();
+            let raw_path = line.get(3..).unwrap_or("").trim();
+            let path = raw_path
+                .rsplit_once(" -> ")
+                .map(|(_, new_path)| new_path)
+                .unwrap_or(raw_path)
+                .trim_matches('"')
+                .to_string();
+            let first = code.chars().next().unwrap_or(' ');
+            GitChange {
+                staged: first != ' ' && first != '?',
+                untracked: code == "??",
+                status: code,
+                path,
+            }
+        })
+        .collect())
+}
+
+fn find_rojo(root: &Path) -> Option<PathBuf> {
+    let local = root.join("rojo.exe");
+    if local.is_file() {
+        return Some(local);
+    }
+
+    if let Ok(profile) = env::var("USERPROFILE") {
+        let desktop = PathBuf::from(profile).join("Desktop").join("Rojo").join("rojo.exe");
+        if desktop.is_file() {
+            return Some(desktop);
+        }
+    }
+
+    let mut command = if cfg!(target_os = "windows") {
+        let mut cmd = Command::new("where");
+        cmd.arg("rojo");
+        cmd
+    } else {
+        let mut cmd = Command::new("which");
+        cmd.arg("rojo");
+        cmd
+    };
+    hide_console(&mut command);
+    let output = command.output().ok()?;
+    if output.status.success() {
+        let first = String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .next()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())?
+            .to_string();
+        return Some(PathBuf::from(first));
+    }
+
+    None
+}
+
+fn rojo_version(path: &Path) -> String {
+    let mut command = Command::new(path);
+    command.arg("--version");
+    hide_console(&mut command);
+    command
+        .output()
+        .ok()
+        .filter(|output| output.status.success())
+        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
+        .unwrap_or_default()
+}
+
+fn rojo_running(state: &AppState) -> Result<bool, String> {
+    let mut guard = state.rojo_child.lock().map_err(|_| "Rojo state lock failed".to_string())?;
+    let exited = if let Some(child) = guard.as_mut() {
+        child.try_wait().map_err(|e| e.to_string())?.is_some()
+    } else {
+        false
+    };
+    if exited {
+        *guard = None;
+    }
+    Ok(guard.is_some())
+}
+
+fn rojo_status_for(root: &Path, state: &AppState) -> Result<RojoStatus, String> {
+    let executable = find_rojo(root);
+    let running = rojo_running(state)?;
+    Ok(RojoStatus {
+        available: executable.is_some(),
+        running,
+        version: executable.as_deref().map(rojo_version).unwrap_or_default(),
+        path: executable
+            .as_ref()
+            .map(|path| path.to_string_lossy().to_string())
+            .unwrap_or_default(),
+        project_file: root.join("default.project.json").is_file(),
+        build_file: root.join("BloomRNG.rbxl").is_file(),
+    })
+}
+
+#[tauri::command]
+fn git_changes(state: State<AppState>) -> Result<Vec<GitChange>, String> {
+    parse_git_changes(&current_root(&state)?)
+}
+
+#[tauri::command]
+fn git_file_diff(path: String, state: State<AppState>) -> Result<String, String> {
+    let root = current_root(&state)?;
+    let safe = clean_relative_path(&path)?;
+    let diff = git(
+        &root,
+        &["diff", "--no-ext-diff", "--unified=3", "HEAD", "--", safe],
+    )?;
+    if !diff.trim().is_empty() {
+        return Ok(truncate_output(diff, 220_000));
+    }
+
+    let status = git(&root, &["status", "--porcelain=v1", "--", safe])?;
+    if status.starts_with("??") {
+        let candidate = root.join(safe);
+        let metadata = fs::metadata(&candidate).map_err(|e| e.to_string())?;
+        if metadata.len() > 220_000 {
+            return Ok(format!(
+                "Untracked file is {} bytes. RoFlow does not inline files larger than 220 KB.",
+                metadata.len()
+            ));
+        }
+        return match fs::read_to_string(&candidate) {
+            Ok(text) => Ok(format!(
+                "--- /dev/null\n+++ b/{safe}\n{}",
+                text.lines()
+                    .map(|line| format!("+{line}"))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            )),
+            Err(_) => Ok("Untracked binary or non-UTF8 file. Preview is unavailable.".into()),
+        };
+    }
+
+    Ok("No textual diff for this path.".into())
+}
+
+#[tauri::command]
+fn list_tasks(state: State<AppState>) -> Result<Vec<TaskEntry>, String> {
+    let root = current_root(&state)?;
+    let mut tasks = load_task_store(&root).tasks;
+    tasks.sort_by_key(|task| std::cmp::Reverse(task.created_at));
+    tasks.truncate(80);
+    Ok(tasks)
+}
+
+#[tauri::command]
+fn git_commit(message: String, state: State<AppState>) -> Result<CommitResult, String> {
+    let root = current_root(&state)?;
+    let message = message.trim();
+    if message.len() < 3 || message.len() > 180 {
+        return Err("Commit message must contain 3-180 characters".into());
+    }
+
+    let before = status_for(&root)?;
+    if !before.dirty {
+        return Err("Working tree is clean".into());
+    }
+
+    let safety = create_backup_internal(
+        &root,
+        "Before commit",
+        message,
+        true,
+    )?;
+
+    git(&root, &["add", "-A"])?;
+    let output = git(&root, &["commit", "-m", message])?;
+    let after = status_for(&root)?;
+    let changed_files = before
+        .changes
+        .iter()
+        .filter_map(|line| line.get(3..))
+        .map(str::to_string)
+        .take(100)
+        .collect::<Vec<_>>();
+    let _ = record_task(
+        &root,
+        "commit",
+        message,
+        &truncate_output(output, 3_000),
+        &before.head,
+        &after.head,
+        changed_files,
+        &safety.version,
+        "success",
+    );
+
+    Ok(CommitResult {
+        head: after.head.clone(),
+        subject: after.subject.clone(),
+        backup_version: safety.version,
+        status: after,
+    })
+}
+
+#[tauri::command]
+fn health_check(state: State<AppState>) -> Result<HealthReport, String> {
+    let root = current_root(&state)?;
+    let mut checks = Vec::new();
+
+    let git_ok = git(&root, &["rev-parse", "--is-inside-work-tree"])
+        .map(|value| value == "true")
+        .unwrap_or(false);
+    checks.push(HealthItem {
+        name: "Git working tree".into(),
+        ok: git_ok,
+        detail: if git_ok { "Repository is accessible".into() } else { "Git working tree check failed".into() },
+    });
+
+    let model_path = root.join(MODEL_PATH);
+    let model_exists = model_path.is_file();
+    checks.push(HealthItem {
+        name: "BloomUI model".into(),
+        ok: model_exists,
+        detail: if model_exists { MODEL_PATH.into() } else { "BloomUI.model.json is missing".into() },
+    });
+
+    let model_valid = fs::read_to_string(&model_path)
+        .ok()
+        .and_then(|text| parse_json_text(&text))
+        .is_some();
+    checks.push(HealthItem {
+        name: "BloomUI JSON".into(),
+        ok: model_valid,
+        detail: if model_valid { "Model JSON is valid".into() } else { "Model JSON is invalid or unreadable".into() },
+    });
+
+    let project_path = root.join("default.project.json");
+    let project_valid = fs::read_to_string(&project_path)
+        .ok()
+        .and_then(|text| serde_json::from_str::<Value>(&text).ok())
+        .is_some();
+    checks.push(HealthItem {
+        name: "Rojo project".into(),
+        ok: project_valid,
+        detail: if project_valid { "default.project.json is valid".into() } else { "default.project.json is missing or invalid".into() },
+    });
+
+    let unmerged = git(&root, &["diff", "--name-only", "--diff-filter=U"]).unwrap_or_default();
+    checks.push(HealthItem {
+        name: "Merge conflicts".into(),
+        ok: unmerged.trim().is_empty(),
+        detail: if unmerged.trim().is_empty() { "No unresolved Git conflicts".into() } else { truncate_output(unmerged, 2_000) },
+    });
+
+    let index_lock = root.join(".git").join("index.lock");
+    checks.push(HealthItem {
+        name: "Git lock".into(),
+        ok: !index_lock.exists(),
+        detail: if index_lock.exists() { ".git/index.lock exists".into() } else { "No stale Git index lock".into() },
+    });
+
+    let src_ok = root.join("src").is_dir();
+    checks.push(HealthItem {
+        name: "Rojo source tree".into(),
+        ok: src_ok,
+        detail: if src_ok { "src/ is available".into() } else { "src/ directory is missing".into() },
+    });
+
+    let rojo = find_rojo(&root);
+    checks.push(HealthItem {
+        name: "Rojo executable".into(),
+        ok: rojo.is_some(),
+        detail: rojo
+            .map(|path| path.to_string_lossy().to_string())
+            .unwrap_or_else(|| "Rojo was not found in project, Desktop\\Rojo, or PATH".into()),
+    });
+
+    let passed = checks.iter().filter(|check| check.ok).count();
+    Ok(HealthReport {
+        passed,
+        total: checks.len(),
+        checks,
+    })
+}
+
+#[tauri::command]
+fn rojo_status(state: State<AppState>) -> Result<RojoStatus, String> {
+    let root = current_root(&state)?;
+    rojo_status_for(&root, &state)
+}
+
+#[tauri::command]
+fn rojo_start(state: State<AppState>) -> Result<RojoStatus, String> {
+    let root = current_root(&state)?;
+    if rojo_running(&state)? {
+        return rojo_status_for(&root, &state);
+    }
+    let executable = find_rojo(&root).ok_or("Rojo executable was not found")?;
+    if !root.join("default.project.json").is_file() {
+        return Err("default.project.json is missing".into());
+    }
+
+    let mut command = Command::new(&executable);
+    command
+        .arg("serve")
+        .arg("default.project.json")
+        .current_dir(&root)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    hide_console(&mut command);
+    let child = command.spawn().map_err(|e| format!("Failed to start Rojo: {e}"))?;
+    *state.rojo_child.lock().map_err(|_| "Rojo state lock failed".to_string())? = Some(child);
+    rojo_status_for(&root, &state)
+}
+
+#[tauri::command]
+fn rojo_stop(state: State<AppState>) -> Result<RojoStatus, String> {
+    let root = current_root(&state)?;
+    {
+        let mut guard = state.rojo_child.lock().map_err(|_| "Rojo state lock failed".to_string())?;
+        if let Some(child) = guard.as_mut() {
+            let _ = child.kill();
+            let _ = child.wait();
+        }
+        *guard = None;
+    }
+    rojo_status_for(&root, &state)
+}
+
+#[tauri::command]
+async fn rojo_build(state: State<'_, AppState>) -> Result<ActionResult, String> {
+    let root = current_root(&state)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let executable = find_rojo(&root).ok_or("Rojo executable was not found")?;
+        let output_path = root.join("BloomRNG.rbxl");
+        let mut command = Command::new(&executable);
+        command
+            .arg("build")
+            .arg("default.project.json")
+            .arg("-o")
+            .arg(&output_path)
+            .current_dir(&root);
+        hide_console(&mut command);
+        let output = command.output().map_err(|e| format!("Rojo build failed to start: {e}"))?;
+        let mut text = String::from_utf8_lossy(&output.stdout).to_string();
+        if !output.stderr.is_empty() {
+            if !text.is_empty() {
+                text.push('\n');
+            }
+            text.push_str(&String::from_utf8_lossy(&output.stderr));
+        }
+        Ok(ActionResult {
+            success: output.status.success(),
+            output: truncate_output(text, 40_000),
+            path: output_path.to_string_lossy().to_string(),
+        })
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+fn open_roblox_project(state: State<AppState>) -> Result<(), String> {
+    let root = current_root(&state)?;
+    let project = root.join("BloomRNG.rbxl");
+    if !project.is_file() {
+        return Err("BloomRNG.rbxl does not exist yet. Build the project first.".into());
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let mut command = Command::new("explorer");
+        command.arg(&project);
+        hide_console(&mut command);
+        command.spawn().map_err(|e| format!("Failed to open Roblox project: {e}"))?;
+        return Ok(());
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        Err("Open Studio is currently implemented for Windows only".into())
+    }
 }
 
 #[tauri::command]
@@ -706,6 +1297,16 @@ pub fn run() {
             read_ui_model,
             write_ui_model,
             git_diff_stat,
+            git_changes,
+            git_file_diff,
+            git_commit,
+            health_check,
+            list_tasks,
+            rojo_status,
+            rojo_start,
+            rojo_stop,
+            rojo_build,
+            open_roblox_project,
             safe_ai_sync,
             list_backups,
             create_backup,

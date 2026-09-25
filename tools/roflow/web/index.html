@@ -11,10 +11,12 @@
     <aside class="sidebar">
       <div class="brand"><span class="mark">R</span><div><strong>RoFlow</strong><small>Roblox development workflow</small></div></div>
       <nav>
-        <button class="nav active" data-page="project">Project</button>
+        <button class="nav active" data-page="dashboard">Dashboard</button>
         <button class="nav" data-page="sync">AI Sync</button>
+        <button class="nav" data-page="changes">Changes <span id="changesBadge" class="nav-badge">0</span></button>
+        <button class="nav" data-page="tasks">AI Tasks</button>
+        <button class="nav" data-page="roblox">Roblox</button>
         <button class="nav" data-page="ui">UI Studio</button>
-        <button class="nav" data-page="changes">Changes</button>
         <button class="nav backup-nav" id="backupsBtn">Backups <span id="backupNavVersion">—</span></button>
         <button class="nav" data-page="logs">Logs</button>
       </nav>
@@ -24,34 +26,52 @@
     <main>
       <header class="topbar">
         <div>
-          <p class="eyebrow">DESKTOP WORKSPACE</p>
-          <h1 id="pageTitle">Project</h1>
+          <p class="eyebrow">DAILY DEV HUB · ROFLOW v0.004</p>
+          <h1 id="pageTitle">Dashboard</h1>
         </div>
         <div class="actions">
           <button id="refreshBtn" class="btn">Refresh</button>
-          <button id="chooseBtn" class="btn primary">Choose Bloom_RNG</button>
+          <button id="chooseBtn" class="btn primary">Choose Project</button>
         </div>
       </header>
 
-      <section id="projectPage" class="page active">
+      <section id="dashboardPage" class="page active">
         <div class="hero">
           <div>
-            <p class="eyebrow">ROFLOW v0.002</p>
-            <h2>Prompt → GitHub → Sync → Roblox Studio</h2>
-            <p>Native Windows workspace around the Bloom RNG development loop. Git state, safe AI sync and the authored UI editor now live in one application.</p>
+            <p class="eyebrow">DEVELOPMENT CYCLE</p>
+            <h2>Prompt → Sync → Review → Build → Studio</h2>
+            <p>One workspace for the repetitive parts of Bloom RNG development. RoFlow keeps every destructive step explicit and recoverable.</p>
           </div>
-          <div class="hero-badge">TAURI 2</div>
+          <div class="hero-actions">
+            <button id="devCycleBtn" class="btn primary hero-btn">DEV CYCLE</button>
+            <button id="checkpointBtn" class="btn hero-btn">Checkpoint</button>
+            <button id="healthBtn" class="btn hero-btn">Health Check</button>
+          </div>
         </div>
-        <div class="grid">
+
+        <div class="status-grid">
           <article class="card"><span class="label">PROJECT</span><strong id="projectName">Not connected</strong><p id="projectPath">Choose your Bloom_RNG folder once.</p></article>
           <article class="card"><span class="label">GIT</span><strong id="branchValue">—</strong><p id="commitValue">No repository loaded.</p></article>
           <article class="card"><span class="label">WORKTREE</span><strong id="dirtyValue">—</strong><p id="changeCount">Waiting for project.</p></article>
-          <article class="card"><span class="label">BLOOM UI</span><strong id="modelValue">—</strong><p id="modelStats">Native model bridge ready.</p></article>
-          <article class="card"><span class="label">BACKUPS</span><strong id="backupValue">—</strong><p id="backupStats">Version history is ready.</p></article>
+          <article class="card"><span class="label">BACKUP</span><strong id="backupValue">—</strong><p id="backupStats">No checkpoint loaded.</p></article>
+          <article class="card"><span class="label">HEALTH</span><strong id="healthValue">—</strong><p id="healthStats">Run project health check.</p></article>
+          <article class="card"><span class="label">ROJO</span><strong id="rojoValue">—</strong><p id="rojoStats">Rojo status unknown.</p></article>
         </div>
-        <article class="card next">
-          <div><span class="label">DESKTOP MIGRATION</span><h3>Bloom UI Studio is now embedded</h3><p>RoFlow copies the current editor source into the desktop bundle at build time, so browser and desktop use the same editor implementation.</p></div>
-          <span class="pill">ONE SOURCE</span>
+
+        <div class="dashboard-columns">
+          <article class="card">
+            <div class="section-head"><div><span class="label">RECENT ACTIVITY</span><h3>AI & Git tasks</h3></div><button class="link-btn" data-go="tasks">View all</button></div>
+            <div id="recentTasks" class="activity-list"><div class="empty-state">No task history yet.</div></div>
+          </article>
+          <article class="card">
+            <div class="section-head"><div><span class="label">PROJECT HEALTH</span><h3>Safety checks</h3></div><span id="healthPill" class="pill muted-pill">NOT RUN</span></div>
+            <div id="healthList" class="health-list"><div class="empty-state">Run Health Check to verify Git, Rojo and authored UI files.</div></div>
+          </article>
+        </div>
+
+        <article class="card cycle-card">
+          <div><span class="label">LAST DEV CYCLE</span><h3 id="cycleTitle">Ready</h3><p id="cycleText">DEV CYCLE creates a checkpoint, performs safe AI Sync, then runs project health checks. It never commits or pushes automatically.</p></div>
+          <pre id="cycleOutput">Waiting.</pre>
         </article>
       </section>
 
@@ -59,19 +79,59 @@
         <article class="card wide">
           <span class="label">AI SYNC</span>
           <h2>Safe Git synchronization</h2>
-          <p>RoFlow backs up a dirty UI model, isolates it, stashes unrelated work, fast-forwards Git, restores local work and three-way merges BloomUI.model.json.</p>
+          <p>Preserves local UI work, fast-forwards Git, restores unrelated work, merges BloomUI.model.json and creates a checkpoint.</p>
           <button id="syncBtn" class="btn primary big">AI SYNC</button>
           <pre id="syncOutput">Ready.</pre>
         </article>
       </section>
 
+      <section id="changesPage" class="page changes-page">
+        <div class="changes-toolbar">
+          <div><span class="label">GIT REVIEW</span><h2>Local Changes</h2></div>
+          <div class="actions"><button id="changesCheckpointBtn" class="btn">Checkpoint</button><button id="reloadChangesBtn" class="btn">Reload</button></div>
+        </div>
+        <div class="changes-workspace">
+          <aside class="file-panel">
+            <div id="fileList" class="file-list"><div class="empty-state">Choose a project first.</div></div>
+          </aside>
+          <section class="diff-panel">
+            <div class="diff-head"><strong id="diffTitle">Select a changed file</strong><span id="diffMeta">—</span></div>
+            <div id="diffOutput" class="diff-output"><div class="empty-state">A unified diff will appear here.</div></div>
+          </section>
+        </div>
+        <div class="commit-bar">
+          <input id="commitMessage" maxlength="180" placeholder="Commit message, e.g. feat: improve garden UI">
+          <button id="commitBtn" class="btn primary">Commit Changes</button>
+        </div>
+      </section>
+
+      <section id="tasksPage" class="page">
+        <div class="page-heading"><div><span class="label">HISTORY</span><h2>AI & Development Tasks</h2></div><button id="reloadTasksBtn" class="btn">Refresh</button></div>
+        <div id="taskList" class="task-list"><div class="empty-state">No recorded tasks yet.</div></div>
+      </section>
+
+      <section id="robloxPage" class="page">
+        <div class="page-heading"><div><span class="label">ROJO / ROBLOX</span><h2>Runtime Tools</h2></div><button id="refreshRojoBtn" class="btn">Refresh</button></div>
+        <div class="roblox-grid">
+          <article class="card">
+            <span class="label">ROJO STATUS</span>
+            <strong id="rojoPageState">Unknown</strong>
+            <p id="rojoPageDetail">Connect a project first.</p>
+            <div class="button-row"><button id="startRojoBtn" class="btn primary">Start Serve</button><button id="stopRojoBtn" class="btn">Stop</button></div>
+          </article>
+          <article class="card">
+            <span class="label">BUILD</span>
+            <strong>BloomRNG.rbxl</strong>
+            <p>Build the current Rojo source tree, then open the generated place in Roblox Studio.</p>
+            <div class="button-row"><button id="buildBtn" class="btn primary">Build</button><button id="openStudioBtn" class="btn">Open Studio</button></div>
+          </article>
+        </div>
+        <article class="card output-card"><span class="label">OUTPUT</span><pre id="rojoOutput">Ready.</pre></article>
+      </section>
+
       <section id="uiPage" class="page ui-page">
         <div class="embed-head"><div><span class="label">UI STUDIO</span><strong>Bloom UI Studio · native desktop bridge</strong></div><button id="reloadStudioBtn" class="btn">Reload editor</button></div>
         <iframe id="uiStudioFrame" title="RoFlow UI Studio"></iframe>
-      </section>
-
-      <section id="changesPage" class="page">
-        <article class="card wide"><span class="label">LOCAL CHANGES</span><h2>Git worktree</h2><pre id="changesOutput">Choose a project first.</pre></article>
       </section>
 
       <section id="logsPage" class="page">
