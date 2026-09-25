@@ -44,6 +44,57 @@ test("roll independent players, 100 cycles, cooldown and one-time Bloom",functio
  assert(roll:Roll(a,false)) assert(profiles[a].RollState.BloomCharge==0) assert(roll:Roll(b,false)) assert(not roll:Roll(a,false))
  for i=1,100 do roll.Last[a]=-100 assert(roll:Roll(a,true)) end assert(profiles[a].RollState.TotalRolls==101 and profiles[b].RollState.TotalRolls==1 and rewards==102)
 end)
+test("active boosts aggregate bee luck and Solar Bloom",function()
+ local player={} local p=Schema.CreateDefault()
+ p.Pollinators.EquippedBeeSlots={[1]="ScholarBee",[2]="ScholarBee",[3]="ScholarBee"}
+ local stats=require(node("ServerScriptService/Services/StatsService"))
+ stats:Init({})
+ local service=require(node("ServerScriptService/Services/BoostService"))
+ local dirty=0 local messages={}
+ local x={
+  Temp={[player]={}},
+  Profile=function(_,who) if who==player then return p end end,
+  StatsService=stats,
+  PollinatorService={States={[player]={}}},
+  MarkStateDirty=function() dirty=dirty+1 end,
+  Send=function(_,pl,kind,payload) if kind=="Message" then messages[#messages+1]=payload end end,
+ }
+ service:Init(x)
+ local base=stats:Get(p).Luck
+ assert(base>1.45,"three Scholar Bees should aggregate passive + Arcane luck")
+ local before=service:Snapshot(player,p)
+ local luckBefore=nil local beeSource=false local traitSource=false
+ for _,item in ipairs(before.Items) do
+  if item.Id=="Luck" then
+   luckBefore=item
+   for _,src in ipairs(item.Sources) do
+    if src.Group=="Bees" then beeSource=true end
+    if src.Group=="Bee Trait" then traitSource=true end
+   end
+  end
+ end
+ assert(luckBefore and math.abs(luckBefore.Total-base)<1e-6 and beeSource and traitSource)
+ assert(service:ApplyActivity(player,"SolarBloom") and dirty==1 and #messages==1)
+ local boosted=service:RollLuck(player,p)
+ assert(math.abs(boosted-base*1.2)<1e-6,"Solar Bloom must multiply authoritative Roll Luck by 1.20")
+ local after=service:Snapshot(player,p)
+ local solar=false local activitySource=false
+ for _,item in ipairs(after.Items) do
+  if item.Id=="SolarBloom" then solar=item.Remaining and item.Remaining>0 and item.ValueText~="" end
+  if item.Id=="Luck" then
+   for _,src in ipairs(item.Sources) do
+    if src.Group=="Activity" and src.Name=="Solar Bloom" then activitySource=true end
+   end
+  end
+ end
+ assert(solar and activitySource)
+ x.PollinatorService.States[player]={[1]={Id="WorkerBee",ActiveUntil=os.clock()+5}}
+ local active=service:Snapshot(player,p)
+ local abilities=false
+ for _,item in ipairs(active.Items) do if item.Id=="BeeAbilities" and item.Total==1 then abilities=true end end
+ assert(abilities,"active bee ability must be visible in boost summary")
+end)
+
 test("activity owner, checkpoint reach, order, expiry, duplicate rejection",function()
  local player,other={},{} local p=Schema.CreateDefault() local within=true local events={}
  local service=require(node("ServerScriptService/Services/GardenActivityService")) local x={Profile=function(_,who) if who==player then return p end end,Temp={[player]={}},U={WithinCheckpoint=function() return within end},Emit=function(_,pl,event) events[event]=(events[event] or 0)+1 end,Send=function() end,RollService={Charge=function() end},SocialService={Contribute=function() end},PollinatorService={AddMastery=function() end},MapService={Sector=function() return "SunnyOrchard" end},GardenPlotService={HivePosition=function() return Vector3.zero end,Position=function(_,pl,i) return Vector3.new(i*7,0,0) end}}
