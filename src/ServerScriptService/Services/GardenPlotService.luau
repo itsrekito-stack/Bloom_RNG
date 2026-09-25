@@ -4,6 +4,19 @@ local S={Plots={},Used={}}
 function S:Init(x) self.X=x end
 function S:Position(player,slot) local plot=self.Plots[player] return plot and plot.Origin+G.Position(slot) end
 function S:HivePosition(player) local plot=self.Plots[player] return plot and plot.Origin+Vector3.new(0,1,19) end
+function S:HivePromptText(p)
+ if not p.StarterBeeGranted then return "Get Worker Bee" end
+ local cost=C.HiveCosts[p.Hive.Level+1]
+ return cost and ("Upgrade Hive • "..math.floor(cost).." Honey") or "Hive MAX"
+end
+function S:RefreshHivePrompt(player)
+ local p=self.X:Profile(player) local plot=self.Plots[player] if not p or not plot then return false end
+ local hive=plot.Model:FindFirstChild("Hive") local prompt=hive and hive:FindFirstChildOfClass("ProximityPrompt")
+ if not prompt then return false end
+ prompt.ActionText=self:HivePromptText(p)
+ prompt.ObjectText="Hive • Level "..p.Hive.Level
+ return true
+end
 function S:AddFlowerXP(player,i,amount)
  local p=self.X:Profile(player) if not p or type(i)~="number" or i%1~=0 or type(amount)~="number" or amount~=amount or amount<=0 then return false end
  local slot=p.Garden.Slots[i] local flower=slot and slot.SpeciesId and F.Species[slot.SpeciesId] if not flower then return false end
@@ -30,7 +43,7 @@ function S:Build(player)
   plot={Index=i,Origin=origin,Model=m,Flowers={}} self.Plots[player]=plot
   self.X:Part(m,"Ground",origin-Vector3.new(0,1,0),Vector3.new(44,2,48),Color3.fromRGB(95,155,90),true)
   local hive=self.X:Part(m,"Hive",self:HivePosition(player),Vector3.new(5,5,5),Color3.fromRGB(240,185,50),true)
-  self.X:Prompt(hive,"Hive: get a bee / upgrade",function(who) if who==player then self.X.HiveService:Interact(player) else self.X.SocialService:Bless(who,player) end end)
+  self.X:Prompt(hive,self:HivePromptText(p),function(who) if who==player then self.X.HiveService:Interact(player) else self.X.SocialService:Bless(who,player) end end)
  end
  if plot.Content then plot.Content:Destroy() end plot.Flowers={} local content=Instance.new("Folder") content.Name="Flowers" content.Parent=plot.Model plot.Content=content
  for i=1,C.MaxFlowerSlots do local pos=self:Position(player,i) local unlocked=i<=p.Garden.UnlockedSlots
@@ -41,6 +54,7 @@ function S:Build(player)
   end
  end
  self.X.GardenSynergyService:Recalculate(player)
+ self:RefreshHivePrompt(player)
 end
 function S:Plant(player,i,id)
  local p=self.X:Profile(player)
