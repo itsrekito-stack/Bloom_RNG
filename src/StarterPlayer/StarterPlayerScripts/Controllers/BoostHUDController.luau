@@ -136,22 +136,19 @@ end
 
 function S:TooltipText(item)
  local lines={}
- if item.Description and item.Description~="" then
-  table.insert(lines,tostring(item.Description))
- end
  for _,entry in ipairs(item.Sources or {}) do
   local seconds=self:SourceRemaining(entry)
   if not entry._ExpiresAt or (seconds and seconds>0) then
-   local line=tostring(entry.Group or "Source").." • "..tostring(entry.Name or "")
+   local group=tostring(entry.Group or "Source")
+   local name=tostring(entry.Name or "")
+   local line=group
+   if name~="" and name~=group then line=line.." • "..name end
    if entry.ValueText and entry.ValueText~="" then line=line.."   "..tostring(entry.ValueText) end
    if seconds then line=line.."   •   "..timedText(seconds) end
    table.insert(lines,line)
-   if entry.Description and entry.Description~="" then
-    table.insert(lines,"  "..tostring(entry.Description))
-   end
   end
  end
- if #lines==0 then table.insert(lines,"No active sources.") end
+ if #lines==0 then table.insert(lines,"Active") end
  return table.concat(lines,"\n")
 end
 
@@ -163,8 +160,7 @@ function S:PlaceTooltip(badge,item)
  local pos=badge.AbsolutePosition-rootPos
  local width=math.min(330,math.max(250,rootSize.X-24))
  local sourceCount=#(item.Sources or {})
- local descriptionRows=item.Description and item.Description~="" and 1 or 0
- local height=math.clamp(72+(sourceCount*34)+(descriptionRows*18),92,280)
+ local height=math.clamp(58+math.max(1,sourceCount)*20,78,180)
  local x=math.clamp(pos.X,12,rootSize.X-width-12)
  local y=math.clamp(pos.Y-10,12+height,rootSize.Y-12)
  self.Tooltip.Size=UDim2.fromOffset(width,height)
