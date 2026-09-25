@@ -28,7 +28,7 @@ function S:RenderObjective()
  local ui=self.UI
  local _,index,count=self:SolarBloomTarget()
  if index and count then
-  ui.ObjectiveText.Text=string.format("Solar Bloom  •  Touch sphere %d/%d",index,count)
+  ui.ObjectiveText.Text=string.format("Solar Bloom  •  Reach checkpoint %d/%d",index,count)
   ui.ObjectiveProgress.Visible=true
   ui.ObjectiveProgressFill.Size=UDim2.fromScale(math.clamp((index-1)/math.max(1,count),0,1),1)
  else
@@ -50,7 +50,7 @@ function S:Update()
   visual:SetWorldTarget(
    token,
    string.format("SOLAR BLOOM  %d/%d",index or 1,count or 3),
-   string.format("Touch the glowing sphere • %d/%d",index or 1,count or 3)
+   string.format("Step into the highlighted checkpoint • %d/%d",index or 1,count or 3)
   )
   return true
  end
@@ -72,7 +72,7 @@ function S:Update()
   visual:SetWorldTarget(
    landmark,
    "SOLAR BLOOM ACTIVITY",
-   "Interact with the highlighted activity marker, then touch all 3 glowing spheres."
+   "Interact with the highlighted activity marker, then reach all 3 checkpoints."
   )
  elseif gate then
   visual:SetWorldTarget(
