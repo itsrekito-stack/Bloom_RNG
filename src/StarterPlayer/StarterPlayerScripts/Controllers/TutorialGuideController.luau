@@ -320,7 +320,7 @@ function S:ResolveWorldTarget(step)
   if ground then return ground,"GARDEN" end
  elseif target=="TutorialToken" then
   local token=ui.Activities and ui.Activities:Target("Tutorial")
-  if token then return token,"TOUCH" end
+  if token then return token,"STEP HERE" end
  elseif target=="GardenSlot" then
   local slot=self:GardenSlot(step.Slot or 3)
   if slot then return slot,"PLANT HERE" end
