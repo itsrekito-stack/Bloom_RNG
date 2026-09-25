@@ -27635,7 +27635,7 @@
               0.055,
               0.086
             ],
-            "BackgroundTransparency": 0.06,
+            "BackgroundTransparency": 0.055,
             "BorderSizePixel": 0,
             "ZIndex": 30,
             "Visible": true,
@@ -28009,7 +28009,7 @@
               0.055,
               0.086
             ],
-            "BackgroundTransparency": 0.01,
+            "BackgroundTransparency": 0.015,
             "BorderSizePixel": 0,
             "ZIndex": 95,
             "Visible": false,
