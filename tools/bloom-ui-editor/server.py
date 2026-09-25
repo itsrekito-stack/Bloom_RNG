@@ -191,10 +191,18 @@ def _child_index(children):
 
 
 def merge_remote_changes(base, local, remote):
-    # If assistant did not change this value, keep the user's local value.
-    if base == remote:
+    container_with_children = (
+        isinstance(base, dict)
+        and isinstance(local, dict)
+        and isinstance(remote, dict)
+        and isinstance(base.get("Children"), list)
+        and isinstance(local.get("Children"), list)
+        and isinstance(remote.get("Children"), list)
+    )
+    # Containers with Children must recurse even when base==remote so required
+    # runtime children removed by a stale local editor model can be restored.
+    if base == remote and not container_with_children:
         return copy.deepcopy(local)
-    # If user did not change it, take assistant's value.
     if base == local:
         return copy.deepcopy(remote)
 
