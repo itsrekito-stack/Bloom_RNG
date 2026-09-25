@@ -54,7 +54,7 @@ function S:Migrate(player,p)
   end
  end
  t.Step=1
- print("[Tutorial] migrated to v"..T.Version.." player="..player.Name)
+ print("[Tutorial] migrated to v"..T.Version.." player="..playerName(player))
  return true
 end
 
@@ -131,7 +131,7 @@ function S:Refresh(player)
 
  if t.Step~=old then
   local completed=T.Steps[old]
-  print(string.format("[Tutorial] step %d -> %d event=%s player=%s",old,t.Step,completed and completed.Event or "migration",player.Name))
+  print(string.format("[Tutorial] step %d -> %d event=%s player=%s",old,t.Step,completed and completed.Event or "migration",playerName(player)))
   self.LastWaiting[player]=nil
  end
 
