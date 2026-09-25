@@ -59,13 +59,21 @@ function S:Push(player)
  self.X:Send(player,"Activities",list)
 end
 function S:Collect(player,id,index,phase)
- local offers=self.Offers[player] local o=offers and offers[id] local p=self.X:Profile(player) local cfg=o and A.Types[o.Kind]
- if not o or not p or not cfg or phase~="Reach" or o.Expires<workspace:GetServerTimeNow() or index~=o.Index then return false end
- if o.Sector and not p.World.UnlockedSectors[o.Sector] then return false end
+ local offers=self.Offers[player]
+ local o=offers and offers[id]
+ local p=self.X:Profile(player)
+ if not p then return false,"PROFILE_LOADING" end
+ if not o then return false,"STALE_ACTIVITY" end
+ local cfg=A.Types[o.Kind]
+ if not cfg then return false,"INVALID_ITEM" end
+ if phase~="Reach" then return false,"INVALID_ACTION" end
+ if o.Expires<workspace:GetServerTimeNow() then offers[id]=nil self:Push(player) return false,"ACTIVITY_EXPIRED" end
+ if index~=o.Index then return false,"STALE_ACTIVITY" end
+ if o.Sector and not p.World.UnlockedSectors[o.Sector] then return false,"LOCKED" end
  local checkpointRadius=cfg.CheckpointRadius or A.CheckpointRadius
- if not self.X.U.WithinCheckpoint(player,o.Nodes[o.Index],checkpointRadius,A.CheckpointVerticalTolerance) then return false end
+ if not self.X.U.WithinCheckpoint(player,o.Nodes[o.Index],checkpointRadius,A.CheckpointVerticalTolerance) then return false,"TOO_FAR" end
  if not o.Engaged then o.Engaged=true self.X:Emit(player,"ActivityEngaged",1) end
- if o.Kind=="CrossPollination" and o.Revision~=p.Garden.Revision then offers[id]=nil self:Push(player) return false end
+ if o.Kind=="CrossPollination" and o.Revision~=p.Garden.Revision then offers[id]=nil self:Push(player) return false,"ACTIVITY_CHANGED" end
  o.Index=o.Index+1 if o.Kind=="FireflyRoute" then self.X:Emit(player,"Firefly",1) end
  if o.Index>#o.Nodes then offers[id]=nil local temp=self.X.Temp[player] local kind=o.Kind
   if not temp then warn("[Activity] missing runtime temp during completion kind="..tostring(kind).." player="..tostring(player.Name)) return false,"PROFILE_LOADING" end
