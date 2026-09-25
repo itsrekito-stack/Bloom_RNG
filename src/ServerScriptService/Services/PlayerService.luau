@@ -144,9 +144,69 @@ function X:Start(data,services,names)
    if sync>=C.SyncSeconds then self:Push(player) end
   end,debug.traceback) if not ok then warn("[Bloom] Tick",err) end end end if sync>=C.SyncSeconds then sync=0 end
  end end)
- task.spawn(function() while true do task.wait(1) local frames={} for player,states in pairs(self.PollinatorService.States) do if self:Profile(player) then for slot,s in pairs(states) do table.insert(frames,{Owner=player.UserId,Index=slot,Id=s.Id,From=self.GardenPlotService:HivePosition(player),To=self.GardenPlotService:Position(player,s.Slot),Phase=s.Elapsed/C.DeliverySeconds}) end end end self:Broadcast("Bees",frames)
- local tokenFrames={} for owner,offers in pairs(self.GardenActivityService.Offers) do for id,o in pairs(offers) do table.insert(tokenFrames,{Id=id,Owner=owner.UserId,Position=o.Nodes[o.Index],Kind=o.Kind}) end end self:Broadcast("OtherTokens",tokenFrames)
- end end)
+ task.spawn(function()
+  local interval=C.PublicSyncSeconds or 1
+  local radius=C.PublicReplicationRadius or 180
+  while true do
+   task.wait(interval)
+   local beeGroups={}
+   for owner,states in pairs(self.PollinatorService.States) do
+    if self:Profile(owner) then
+     local frames={}
+     local hive=self.GardenPlotService:HivePosition(owner)
+     for slot,s in pairs(states) do
+      local target=self.GardenPlotService:Position(owner,s.Slot)
+      if hive and target then
+       table.insert(frames,{Owner=owner.UserId,Index=slot,Id=s.Id,From=hive,To=target,Phase=s.Elapsed/C.DeliverySeconds})
+      end
+     end
+     if #frames>0 then table.insert(beeGroups,{Owner=owner,Anchor=hive,Frames=frames}) end
+    end
+   end
+
+   local publicTokens={}
+   for owner,offers in pairs(self.GardenActivityService.Offers) do
+    if self:Profile(owner) then
+     for id,o in pairs(offers) do
+      local position=o.Nodes and o.Nodes[o.Index]
+      if position then table.insert(publicTokens,{Id=id,Owner=owner,OwnerId=owner.UserId,Position=position,Kind=o.Kind}) end
+     end
+    end
+   end
+
+   for _,recipient in ipairs(Players:GetPlayers()) do
+    local profile=self:Profile(recipient)
+    if profile then
+     local character=recipient.Character
+     local root=character and character:FindFirstChild("HumanoidRootPart")
+     local position=root and root.Position
+
+     local beeFrames={}
+     for _,group in ipairs(beeGroups) do
+      local own=group.Owner==recipient
+      local visible=own
+      if not visible and profile.Settings.ShowOtherPollinators and position and group.Anchor then
+       visible=(position-group.Anchor).Magnitude<=radius
+      end
+      if visible then
+       for _,frame in ipairs(group.Frames) do table.insert(beeFrames,frame) end
+      end
+     end
+     self:Send(recipient,"Bees",beeFrames)
+
+     local tokenFrames={}
+     if not profile.Settings.HideOtherPlayersTokens and position then
+      for _,token in ipairs(publicTokens) do
+       if token.Owner~=recipient and (position-token.Position).Magnitude<=radius then
+        table.insert(tokenFrames,{Id=token.Id,Owner=token.OwnerId,Position=token.Position,Kind=token.Kind})
+       end
+      end
+     end
+     self:Send(recipient,"OtherTokens",tokenFrames)
+    end
+   end
+  end
+ end)
 end
 return X
 

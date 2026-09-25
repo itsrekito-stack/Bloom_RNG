@@ -12,6 +12,7 @@ roll_source=(ROOT/'src/ServerScriptService/Services/RollService.luau').read_text
 editor_source=(ROOT/'tools/bloom-ui-editor/app.js').read_text(encoding='utf-8')
 editor_html=(ROOT/'tools/bloom-ui-editor/index.html').read_text(encoding='utf-8')
 audio=(ROOT/'src/ReplicatedStorage/Config/RollAudioConfig.luau').read_text(encoding='utf-8')
+bloom_config=(ROOT/'src/ReplicatedStorage/Config/BloomConfig.luau').read_text(encoding='utf-8')
 checks=[]
 
 def check(name,cond,detail=''): checks.append((name,bool(cond),detail))
@@ -132,6 +133,15 @@ check('client ignores duplicate revision','self.State.Revision==payload.Revision
 check('Workshop runtime cached','self.WorkshopRuntime' in source and 'firstWorkshopBuild' in source)
 check('Workshop node handlers bind once','BloomWorkshopBound' in source)
 check('Workshop pan binds only on first build','if firstWorkshopBuild then' in source and 'self:BindWorkshopPan(canvas,nodes)' in source)
+
+# BR-006: public replication is filtered before network delivery.
+check('public replication has bounded cadence','PublicSyncSeconds=1' in bloom_config)
+check('public replication has spatial radius','PublicReplicationRadius=180' in bloom_config)
+check('server filters other bees by setting','profile.Settings.ShowOtherPollinators' in player_source)
+check('server filters other tokens by setting','profile.Settings.HideOtherPlayersTokens' in player_source)
+check('server filters public data spatially','Magnitude<=radius' in player_source)
+check('public bees no longer globally broadcast','self:Broadcast("Bees",frames)' not in player_source)
+check('public tokens no longer globally broadcast','self:Broadcast("OtherTokens",tokenFrames)' not in player_source)
 
 # BR-008: request/session correlation and stale landing cleanup guard.
 check('roll request sequence exists','RollRequestSequence' in source and 'RollRequestSessions' in source)
