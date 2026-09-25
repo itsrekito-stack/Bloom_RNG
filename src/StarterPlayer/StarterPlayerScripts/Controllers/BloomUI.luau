@@ -20,7 +20,7 @@ local RollAudio=require(RS.Config.RollAudioConfig)
 local NumberFormatter=require(RS.Shared.NumberFormatter)
 
 local C=Theme.Colors
-local CLIENT_BUILD="ui-backend-v2-workshop-input-2026-09-25"
+local CLIENT_BUILD="ui-roulette-toggle-v1-2026-09-25"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0}
 
@@ -1107,8 +1107,8 @@ function UI:Render()
  local rollUnlocked=p.Tutorial.FeatureUnlocks.Roll==true
  self.RollHUD.Visible=rollUnlocked
  self.Roll.Visible=rollUnlocked
- self.RouletteViewport.Visible=rollUnlocked
- if not rollUnlocked and self.Auto then
+ self.RouletteViewport.Visible=rollUnlocked and (self.Auto or self.RouletteRunning or self.RouletteLanding)
+ if not rollUnlocked and (self.Auto or self.RouletteRunning or self.RouletteLanding) then
   self.Auto=false
   self:StopRouletteAnimation()
  end
@@ -1298,7 +1298,9 @@ end
 
 function UI:StartRouletteAnimation()
  if self.RouletteRunning or self.RouletteLanding or not self.RouletteStrip then return end
- self.RouletteRunning=true self.RouletteGeneration=self.RouletteGeneration+1
+ self.RouletteRunning=true
+ if self.RouletteViewport then self.RouletteViewport.Visible=true end
+ self.RouletteGeneration=self.RouletteGeneration+1
  local generation=self.RouletteGeneration
  task.spawn(function()
   while self.RouletteRunning and not self.RouletteLanding and generation==self.RouletteGeneration and self.Gui and self.Gui.Parent do
@@ -1310,20 +1312,24 @@ function UI:StartRouletteAnimation()
 end
 
 function UI:StopRouletteAnimation()
- self.RouletteRunning=false self.RouletteGeneration=self.RouletteGeneration+1
+ self.RouletteRunning=false
+ self.RouletteLanding=false
+ self.RouletteGeneration=self.RouletteGeneration+1
  if self.RouletteTween then self.RouletteTween:Cancel() self.RouletteTween=nil end
  if self.RouletteStrip then self.RouletteStrip.Position=UDim2.fromOffset(0,0) end
  self:RefreshRouletteSlots()
+ if self.RouletteViewport then self.RouletteViewport.Visible=false end
 end
 
 function UI:SetAutoRolling(enabled)
  if enabled and (not self.State or self.State.Profile.Tutorial.FeatureUnlocks.Roll~=true) then return end
  self.Auto=enabled==true
  if self.Auto then
-  if not self.RouletteLanding then self:StartRouletteAnimation() end
+  self:StartRouletteAnimation()
   task.defer(function() self:RollNow(true) end)
  else
-  if not self.RouletteLanding then self:StopRouletteAnimation() else self.RouletteRunning=false end
+  -- Second click is a hard visual stop: cancel the reel and hide it immediately.
+  self:StopRouletteAnimation()
  end
  if self.State then self:Render() end
 end
@@ -1354,7 +1360,19 @@ end
 
 function UI:ResolveRouletteReward(payload)
  if type(payload)~="table" or self.RouletteLanding then return end
- self.RouletteLanding=true self.RouletteRunning=false self.RouletteGeneration=self.RouletteGeneration+1
+
+ -- A server reward can arrive after the player pressed STOP.
+ -- Never resurrect the roulette in that case; just present the granted reward.
+ if not self.Auto and not self.RouletteRunning then
+  if self.RouletteViewport then self.RouletteViewport.Visible=false end
+  if self.Rewards then self.Rewards:Enqueue(payload) end
+  return
+ end
+
+ self.RouletteLanding=true
+ self.RouletteRunning=false
+ if self.RouletteViewport then self.RouletteViewport.Visible=true end
+ self.RouletteGeneration=self.RouletteGeneration+1
  if self.RouletteTween then self.RouletteTween:Cancel() self.RouletteTween=nil end
  local generation=self.RouletteGeneration
  task.spawn(function()
@@ -1375,7 +1393,11 @@ function UI:ResolveRouletteReward(payload)
   end
   self.RouletteLanding=false
   if self.Rewards then self.Rewards:Enqueue(payload) end
-  if self.Auto then self:StartRouletteAnimation() end
+  if self.Auto then
+   self:StartRouletteAnimation()
+  elseif self.RouletteViewport then
+   self.RouletteViewport.Visible=false
+  end
  end)
 end
 
@@ -1423,6 +1445,22 @@ function UI:BindStaticUI()
 
  self.RollHUD=root:WaitForChild("RollHUD")
  self.RouletteViewport=root:WaitForChild("VerticalRoulette")
+ self.RouletteViewport.Visible=false
+
+ -- Remove any pre-refactor roulette that may still exist in a stale Studio place.
+ -- The only supported reel is SafeRoot/VerticalRoulette.
+ for _,legacy in ipairs(self.RollHUD:GetDescendants()) do
+  local lower=string.lower(legacy.Name)
+  if legacy:IsA("GuiObject") and (string.find(lower,"roulette",1,true) or string.find(lower,"reel",1,true)) then
+   legacy:Destroy()
+  end
+ end
+ for _,candidate in ipairs(root:GetDescendants()) do
+  if candidate~=self.RouletteViewport and candidate.Name=="VerticalRoulette" and candidate:IsA("GuiObject") then
+   candidate:Destroy()
+  end
+ end
+
  self.RouletteClip=self.RouletteViewport:FindFirstChild("RouletteClip")
  self.RouletteStrip=self.RouletteClip and self.RouletteClip:WaitForChild("ReelStrip") or self.RouletteViewport:WaitForChild("ReelStrip")
  self.RouletteSlots={
