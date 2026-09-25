@@ -7,135 +7,150 @@
 <link rel="stylesheet" href="./app.css">
 </head>
 <body>
-<div id="app">
-  <header class="topbar">
+<div id="app" class="studio-app">
+  <header class="app-titlebar">
     <div class="brand">
-      <div class="brand-mark">B</div>
-      <div><strong>Bloom UI Studio</strong><small>Roblox ScreenGui visual editor</small></div>
+      <div class="brand-mark">✿</div>
+      <div class="brand-copy">
+        <strong>Bloom UI Studio</strong>
+        <small>ScreenGui workspace</small>
+      </div>
+    </div>
+    <div class="project-chip">
+      <span class="project-dot"></span>
+      <span id="targetReadout">src/StarterGui/BloomUI.model.json</span>
     </div>
     <div class="top-actions">
-      <button id="connectBtn" class="btn">Подключить проект</button>
-      <button id="pullBtn" class="btn">← Из Roblox</button>
-      <button id="pushBtn" class="btn primary">В ИГРУ →</button>
-      <button id="aiSyncBtn" class="btn ai-sync-btn" title="Забрать мои последние UI-изменения из GitHub и открыть их в редакторе">AI SYNC</button>
-      <span id="aiBridgeStatus" class="ai-bridge-status">AI bridge</span>
-      <span class="divider"></span>
-      <button id="importBtn" class="icon-btn" title="Импорт JSON">⇧</button>
-      <button id="exportBtn" class="icon-btn" title="Экспорт JSON">⇩</button>
+      <button id="connectBtn" class="tool-action"><span>⌂</span> Project</button>
+      <button id="pullBtn" class="icon-btn" title="Reload model from project">↙</button>
+      <button id="pushBtn" class="tool-action primary"><span>↗</span> Save</button>
+      <button id="aiSyncBtn" class="tool-action ai-sync-btn"><span>✦</span> AI SYNC</button>
+      <span id="aiBridgeStatus" class="bridge-status">bridge</span>
+      <span class="toolbar-sep"></span>
       <button id="undoBtn" class="icon-btn" title="Undo · Ctrl+Z">↶</button>
       <button id="redoBtn" class="icon-btn" title="Redo · Ctrl+Y">↷</button>
-      <button id="copyBtn" class="icon-btn" title="Копировать модель для ChatGPT">AI</button>
+      <button id="importBtn" class="icon-btn" title="Import JSON">⇧</button>
+      <button id="exportBtn" class="icon-btn" title="Export JSON">⇩</button>
+      <button id="copyBtn" class="icon-btn" title="Copy model">AI</button>
     </div>
   </header>
 
-  <section class="workspace">
-    <aside class="sidebar left">
-      <div class="panel-head">
-        <div><strong>Объекты</strong><small>Roblox instances</small></div>
-        <button id="addMenuBtn" class="mini">＋</button>
+  <section class="app-workspace">
+    <nav id="uiStateBar" class="state-rail" aria-label="UI states">
+      <div class="rail-head">
+        <span>UI</span>
+        <small>STATES</small>
       </div>
-      <div id="palette" class="palette">
-        <button data-add="Frame"><i>▣</i><span>Frame</span></button>
-        <button data-add="TextLabel"><i>T</i><span>TextLabel</span></button>
-        <button data-add="TextButton"><i>▤</i><span>TextButton</span></button>
-        <button data-add="ImageLabel"><i>◈</i><span>ImageLabel</span></button>
-        <button data-add="ImageButton"><i>◇</i><span>ImageButton</span></button>
-        <button data-add="ScrollingFrame"><i>↕</i><span>ScrollingFrame</span></button>
-        <button data-add="UICorner"><i>◜</i><span>UICorner</span></button>
-        <button data-add="UIStroke"><i>□</i><span>UIStroke</span></button>
-        <button data-add="UIListLayout"><i>☷</i><span>UIListLayout</span></button>
-        <button data-add="UIGridLayout"><i>▦</i><span>UIGridLayout</span></button>
-        <button data-add="UIPadding"><i>↔</i><span>UIPadding</span></button>
-      </div>
+      <button class="ui-state-btn" data-ui-state="gameplay" title="HUD"><b>◫</b><span>HUD</span></button>
+      <button class="ui-state-btn" data-ui-state="inventory_v2" title="Inventory"><b>▦</b><span>Inventory</span></button>
+      <button class="ui-state-btn" data-ui-state="workshop" title="Workshop"><b>⬡</b><span>Workshop</span></button>
+      <button class="ui-state-btn" data-ui-state="fieldguide" title="Field Guide"><b>◉</b><span>Guide</span></button>
+      <button class="ui-state-btn" data-ui-state="map" title="Map"><b>⌖</b><span>Map</span></button>
+      <button class="ui-state-btn" data-ui-state="trials" title="Trials"><b>◆</b><span>Trials</span></button>
+      <button class="ui-state-btn" data-ui-state="settings" title="Settings"><b>⚙</b><span>Settings</span></button>
+      <div class="rail-sep"></div>
+      <button class="ui-state-btn" data-ui-state="plant" title="Plant picker"><b>✿</b><span>Plant</span></button>
+      <button class="ui-state-btn" data-ui-state="season" title="Season"><b>↻</b><span>Season</span></button>
+      <button class="ui-state-btn" data-ui-state="replay" title="Tutorial Replay"><b>▶</b><span>Replay</span></button>
+      <button class="ui-state-btn" data-ui-state="cards" title="Season Cards"><b>▤</b><span>Cards</span></button>
+      <div class="rail-sep"></div>
+      <button class="ui-state-btn" data-ui-state="reward" title="Reward"><b>★</b><span>Reward</span></button>
+      <button class="ui-state-btn" data-ui-state="toast" title="Toast"><b>●</b><span>Toast</span></button>
+      <button class="ui-state-btn" data-ui-state="tutorial" title="Tutorial guidance"><b>➤</b><span>Tutorial</span></button>
+      <button class="ui-state-btn" data-ui-state="boosts" title="Active Boosts"><b>✦</b><span>Boosts</span></button>
+      <button class="ui-state-btn" data-ui-state="loading" title="Loading Screen"><b>◌</b><span>Loading</span></button>
+      <div class="rail-foot">Click active state again for empty desk</div>
+    </nav>
 
+    <aside class="sidebar explorer">
+      <div class="panel-head">
+        <div><strong>Explorer</strong><small>ScreenGui hierarchy</small></div>
+        <button id="addMenuBtn" class="icon-btn compact" title="Add object">＋</button>
+      </div>
+      <div class="tree-search-wrap">
+        <span>⌕</span><input id="treeSearch" type="search" placeholder="Search instances"><kbd>Ctrl F</kbd>
+      </div>
+      <div id="treeSearchMeta" class="tree-search-meta"></div>
       <div class="section-title">
-        <span>ИЕРАРХИЯ</span>
-        <div>
-          <button id="outdentBtn" class="tiny" title="Вынести из родителя · Ctrl+Alt+↑">↰</button>
-          <button id="groupBtn" class="tiny" title="Группировать · Ctrl+G">▣</button>
-          <button id="ungroupBtn" class="tiny" title="Разгруппировать · Ctrl+Shift+G">◫</button>
-          <button id="duplicateBtn" class="tiny" title="Дублировать">⧉</button>
-          <button id="deleteBtn" class="tiny danger" title="Удалить">⌫</button>
+        <span>HIERARCHY</span>
+        <div class="tree-actions">
+          <button id="outdentBtn" class="tiny" title="Outdent">↰</button>
+          <button id="groupBtn" class="tiny" title="Group">▣</button>
+          <button id="ungroupBtn" class="tiny" title="Ungroup">◫</button>
+          <button id="duplicateBtn" class="tiny" title="Duplicate">⧉</button>
+          <button id="deleteBtn" class="tiny danger" title="Delete">⌫</button>
         </div>
       </div>
-      <div class="tree-search-wrap"><span>⌕</span><input id="treeSearch" type="search" placeholder="Найти объект..."><kbd>Ctrl F</kbd></div>
-      <div id="treeSearchMeta" class="tree-search-meta"></div>
       <div id="tree" class="tree"></div>
+      <details class="object-drawer">
+        <summary><span>＋</span> Add Roblox Instance</summary>
+        <div id="palette" class="palette">
+          <button data-add="Frame"><i>▣</i><span>Frame</span></button>
+          <button data-add="TextLabel"><i>T</i><span>Text</span></button>
+          <button data-add="TextButton"><i>▤</i><span>Button</span></button>
+          <button data-add="ImageLabel"><i>◈</i><span>Image</span></button>
+          <button data-add="ImageButton"><i>◇</i><span>Image Button</span></button>
+          <button data-add="ScrollingFrame"><i>↕</i><span>Scroll</span></button>
+          <button data-add="UICorner"><i>◜</i><span>Corner</span></button>
+          <button data-add="UIStroke"><i>□</i><span>Stroke</span></button>
+          <button data-add="UIListLayout"><i>☷</i><span>List</span></button>
+          <button data-add="UIGridLayout"><i>▦</i><span>Grid</span></button>
+          <button data-add="UIPadding"><i>↔</i><span>Padding</span></button>
+        </div>
+      </details>
     </aside>
 
-    <main class="center">
-      <div class="viewbar">
+    <main class="center editor-center">
+      <div class="editor-toolbar">
+        <div class="toolbar-group state-caption">
+          <span class="caption-dot"></span>
+          <strong id="activeStateTitle">EMPTY WORKSPACE</strong>
+        </div>
+        <div class="toolbar-sep"></div>
         <select id="presetSelect">
-          <option value="1366x768">Desktop 1366×768</option>
-          <option value="1920x1080">Full HD 1920×1080</option>
-          <option value="1280x720">HD 1280×720</option>
-          <option value="1440x900">Laptop 1440×900</option>
-          <option value="390x844">Mobile 390×844</option>
+          <option value="1366x768">1366×768</option>
+          <option value="1920x1080">1920×1080</option>
+          <option value="1280x720">1280×720</option>
+          <option value="1440x900">1440×900</option>
+          <option value="390x844">390×844</option>
         </select>
-        <label>W <input id="viewportW" type="number" value="1366"></label>
-        <label>H <input id="viewportH" type="number" value="768"></label>
-        <span class="divider"></span>
-        <label>Zoom <input id="zoomRange" type="range" min="25" max="150" value="72"><b id="zoomLabel">72%</b></label>
-        <button id="fitBtn" class="tiny tool-btn" title="Вписать экран · 0">FIT</button>
-        <button id="zoom100Btn" class="tiny tool-btn" title="100%">1:1</button>
-        <button id="focusBtn" class="tiny tool-btn" title="Показать выбранный · F">◎</button>
-        <label>Snap
-          <select id="snapSelect">
-            <option>1</option><option>2</option><option>4</option><option selected>8</option><option>16</option>
-          </select>
+        <label class="numeric">W <input id="viewportW" type="number" value="1366"></label>
+        <label class="numeric">H <input id="viewportH" type="number" value="768"></label>
+        <div class="toolbar-sep"></div>
+        <button id="fitBtn" class="toolbar-btn">Fit</button>
+        <button id="zoom100Btn" class="toolbar-btn">1:1</button>
+        <label class="zoom-control"><span>Zoom</span><input id="zoomRange" type="range" min="25" max="150" value="72"><b id="zoomLabel">72%</b></label>
+        <div class="toolbar-sep"></div>
+        <label class="compact-select">Snap
+          <select id="snapSelect"><option>1</option><option>2</option><option>4</option><option selected>8</option><option>16</option></select>
         </label>
-        <label class="check"><input id="labelsToggle" type="checkbox" checked> Names</label>
-        <label class="check"><input id="gridToggle" type="checkbox" checked> Grid</label>
-        <label class="check geometry-toggle" title="Линейки, размеры, smart guides и snapping"><input id="geometryToggle" type="checkbox" checked> Geometry</label>
-        <label class="check show-hidden"><input id="hiddenToggle" type="checkbox" checked> Hidden</label>
-        <span class="divider"></span>
-        <select id="modeSelect" class="mode-select" title="Режим визуализации">
-          <option value="design">DESIGN</option>
-          <option value="preview">PREVIEW</option>
-        </select>
-        <select id="sceneSelect" class="scene-select" title="Runtime preview scene" disabled>
-          <option value="gameplay">Gameplay</option>
-          <option value="inventory_v2">Inventory V2</option>
-          <option value="workshop">Workshop</option>
-          <option value="fieldguide">Field Guide</option>
-          <option value="map">Map</option>
-          <option value="trials">Trials</option>
-          <option value="settings">Settings</option>
-          <option value="reward">Reward</option>
-          <option value="toast">Toast</option>
-        </select>
-        <label>Inset <input id="insetInput" type="number" value="36" min="0" max="120"></label>
-        <button id="bgBtn" class="btn">Фон Roblox</button>
-        <button id="bgClearBtn" class="tiny" title="Убрать фон">×</button>
-      </div>
+        <button id="focusBtn" class="toolbar-btn" title="Focus selected">◎</button>
+        <button id="bgBtn" class="toolbar-btn" title="Roblox screenshot background">▧ Background</button>
+        <button id="bgClearBtn" class="icon-btn compact" title="Clear background">×</button>
 
-      <div id="uiStateBar" class="ui-statebar">
-        <span class="ui-state-label">UI STATE</span>
-        <button class="ui-state-btn" data-ui-state="design">DESIGN</button>
-        <button class="ui-state-btn" data-ui-state="gameplay">HUD</button>
-        <span class="ui-state-sep"></span>
-        <button class="ui-state-btn" data-ui-state="inventory_v2">INVENTORY</button>
-        <button class="ui-state-btn" data-ui-state="workshop">WORKSHOP</button>
-        <button class="ui-state-btn" data-ui-state="fieldguide">GUIDE</button>
-        <button class="ui-state-btn" data-ui-state="map">MAP</button>
-        <button class="ui-state-btn" data-ui-state="trials">TRIALS</button>
-        <button class="ui-state-btn" data-ui-state="settings">SETTINGS</button>
-        <span class="ui-state-sep"></span>
-        <button class="ui-state-btn" data-ui-state="reward">REWARD</button>
-        <button class="ui-state-btn" data-ui-state="toast">TOAST</button>
-        <span class="ui-state-note">PREVIEW ONLY · Visible в JSON не меняется</span>
+        <div class="compat-controls" aria-hidden="true">
+          <select id="modeSelect"><option value="design">DESIGN</option><option value="preview">PREVIEW</option></select>
+          <select id="sceneSelect"><option value="gameplay">Gameplay</option></select>
+          <input id="insetInput" type="number" value="36">
+          <input id="labelsToggle" type="checkbox">
+          <input id="gridToggle" type="checkbox" checked>
+          <input id="geometryToggle" type="checkbox" checked>
+          <input id="hiddenToggle" type="checkbox" checked>
+        </div>
       </div>
 
       <div id="stageScroller" class="stage-scroller">
         <div id="stage" class="stage">
           <div id="device" class="device">
-            <div class="roblox-topbar"><span>Roblox safe inset preview</span></div>
+            <div class="roblox-topbar"><span>Roblox safe area</span></div>
             <div id="guiRoot" class="gui-root"></div>
             <div id="geometryLayer" class="geometry-layer"></div>
-            <div id="emptyCanvas" class="empty-canvas hidden">
-              <strong>Пустой HUD</strong>
-              <span>Создай первый Roblox GUI-объект</span>
-              <button id="createFirstFrame" class="btn primary">＋ Frame</button>
+            <div id="emptyCanvas" class="empty-canvas">
+              <div class="empty-icon">✿</div>
+              <strong>Select a UI State</strong>
+              <span>Choose a state on the left. Click it again to return to this empty workspace.</span>
+              <small>Every visible element is a real Roblox GUI object from the model.</small>
+              <button id="createFirstFrame" class="tool-action primary">＋ Frame</button>
             </div>
             <div id="selectionOverlay" class="selection-overlay hidden">
               <div class="sel-caption"></div>
@@ -148,18 +163,39 @@
       </div>
 
       <footer class="statusbar">
-        <span id="statusText">Готово</span>
+        <span id="statusText">Ready</span>
         <span id="pixelReadout">—</span>
-        <span id="targetReadout">src/StarterGui/BloomUI.model.json</span>
+        <span class="status-hint">Middle mouse: pan · Ctrl+wheel: zoom · Del: delete</span>
       </footer>
     </main>
 
-    <aside class="sidebar right">
+    <aside class="sidebar inspector-panel">
       <div class="panel-head">
-        <div><strong>Inspector</strong><small id="selectionKind">Ничего не выбрано</small></div>
+        <div><strong>Inspector</strong><small id="selectionKind">Nothing selected</small></div>
+      </div>
+      <div class="quick-layout">
+        <div class="quick-row">
+          <button id="fitParentBtn" class="mini-action">Fit parent</button>
+          <button id="freeLayoutBtn" class="mini-action">Bake layout</button>
+          <button id="childrenVisibleBtn" class="mini-action">Show children</button>
+        </div>
+        <div class="quick-row">
+          <label>Cols <input id="arrangeColumns" type="number" value="3" min="1" max="12"></label>
+          <label>Gap <input id="arrangeGap" type="number" value="8" min="0" max="64"></label>
+        </div>
+        <div class="quick-row">
+          <button id="tidyBtn" class="icon-btn compact" title="Tidy">▦</button>
+          <button id="spaceXBtn" class="icon-btn compact" title="Distribute X">↔</button>
+          <button id="spaceYBtn" class="icon-btn compact" title="Distribute Y">↕</button>
+        </div>
       </div>
       <div id="inspector" class="inspector empty">
-        <div class="empty-state">Выбери объект на canvas или в иерархии.</div>
+        <div class="empty-state">Select an object on canvas or in Explorer.</div>
+      </div>
+      <div class="inspector-dev">
+        <div id="computedBox" class="computed-box"><span>X <strong>0</strong></span><span>Y <strong>0</strong></span><span>W <strong>0</strong></span><span>H <strong>0</strong></span></div>
+        <textarea id="rawProps" hidden></textarea>
+        <button id="applyRaw" hidden>Apply</button>
       </div>
     </aside>
   </section>
@@ -170,14 +206,14 @@
 <div id="toast" class="toast"></div>
 
 <dialog id="jsonDialog">
-  <div class="dialog-head"><strong>Roblox / Rojo JSON</strong><button id="dialogClose">×</button></div>
+  <div class="dialog-head"><strong>Roblox Model JSON</strong><button id="dialogClose">×</button></div>
   <textarea id="jsonArea" spellcheck="false"></textarea>
   <div class="dialog-actions">
-    <button id="dialogCopy" class="btn">Копировать</button>
-    <button id="dialogApply" class="btn primary">Применить JSON</button>
+    <button id="dialogCopy" class="tool-action">Copy</button>
+    <button id="dialogApply" class="tool-action primary">Apply</button>
   </div>
 </dialog>
 
-<script src="./app.js?v=8"></script>
+<script src="./app.js?v=12"></script>
 </body>
 </html>
