@@ -18,6 +18,23 @@ function S:Available(p,id)
  return math.max(0,n)
 end
 
+function S:BeeSpare(p,id)
+ local n=p.Pollinators.BeeInventory[id] or 0
+ for _,equippedId in pairs(p.Pollinators.EquippedBeeSlots) do
+  if equippedId==id then n-=1 end
+ end
+ return math.max(0,n)
+end
+
+function S:BeeReleaseValue(p,id)
+ local bee=type(id)=="string" and B.Get(id) or nil
+ if not bee then return 0 end
+ local base=(C.BeeReleaseDust and C.BeeReleaseDust[bee.Rarity]) or 0
+ return base
+  *(p.Season.ActiveCard=="AutumnFortune" and 1.5 or 1)
+  *E.Value(p,"ECONOMY_3","DustYield",1)
+end
+
 function S:Grant(player,kind,id)
  local p=self.X:Profile(player)
  if not p then return nil end
@@ -68,6 +85,22 @@ function S:Dissolve(player,id,n)
   *(p.Season.ActiveCard=="AutumnFortune" and 1.5 or 1)
   *E.Value(p,"ECONOMY_3","DustYield",1)
  self.X.FlowerProgressionService:Add(player,id,n)
+ return true
+end
+
+function S:ReleaseBee(player,id,n)
+ local p=self.X:Profile(player)
+ if not p then return false,"PROFILE_LOADING" end
+ if type(id)~="string" or not B.Exists(id) then return false,"INVALID_ITEM" end
+ if type(n)~="number" or n%1~=0 or n<1 or n>10000 then return false,"INVALID_VALUE" end
+
+ local count=p.Pollinators.BeeInventory[id] or 0
+ if self:BeeSpare(p,id)<n then return false,"NO_FREE_COPY" end
+ if count-n<1 then return false,"LAST_COPY" end
+
+ p.Pollinators.BeeInventory[id]=count-n
+ p.Currencies.PetalDust+=n*self:BeeReleaseValue(p,id)
+ self.X:Emit(player,"BeeRelease",n)
  return true
 end
 
