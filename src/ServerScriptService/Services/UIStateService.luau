@@ -149,6 +149,8 @@ function S:Inventory(player,profile)
   Bees=bees,
   FlowerCapacity=self.X.StatsService:FlowerCapacity(profile),
   BeeCapacity=self.X.StatsService:BeeCapacity(profile),
+  EquippedBeeSlots=self.X.U.Copy(profile.Pollinators.EquippedBeeSlots),
+  Keepsakes=self.X.U.Copy(profile.Season.Keepsakes),
   Traits=Bees.GetTraitState(profile.Pollinators.EquippedBeeSlots),
  }
 end
