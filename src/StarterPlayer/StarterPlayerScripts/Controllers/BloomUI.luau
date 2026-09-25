@@ -1646,7 +1646,6 @@ function UI:Start()
      self:Toast(payload.Message or payload.Reason or "Action is currently unavailable")
     end
    end
-   if self.Menu and payload.Action~="Menu" and payload.Action~="Roll" and payload.Action~="Ready" then task.defer(function() self:RenderMenu() end) end
   elseif kind=="TokenCollected" then
    if self.State then
     local volume=self.State.Profile.Settings.TokenSoundVolume
