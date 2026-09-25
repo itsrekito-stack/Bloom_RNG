@@ -18,6 +18,14 @@ function S:Available(p,id)
  return math.max(0,n)
 end
 
+function S:AvailableBee(p,id)
+ local n=p.Pollinators.BeeInventory[id] or 0
+ for _,beeId in pairs(p.Pollinators.EquippedBeeSlots) do
+  if beeId==id then n-=1 end
+ end
+ return math.max(0,n)
+end
+
 function S:Grant(player,kind,id)
  local p=self.X:Profile(player)
  if not p then return nil end
@@ -68,6 +76,23 @@ function S:Dissolve(player,id,n)
   *(p.Season.ActiveCard=="AutumnFortune" and 1.5 or 1)
   *E.Value(p,"ECONOMY_3","DustYield",1)
  self.X.FlowerProgressionService:Add(player,id,n)
+ return true
+end
+
+function S:DissolveBee(player,id,n)
+ local p=self.X:Profile(player)
+ if not p then return false,"PROFILE_LOADING" end
+ if type(id)~="string" or not B.Exists(id) then return false,"INVALID_ITEM" end
+ if type(n)~="number" or n%1~=0 or n<1 or n>10000 then return false,"INVALID_VALUE" end
+
+ local inv=p.Pollinators
+ if self:AvailableBee(p,id)<n then return false,"NO_FREE_COPY" end
+ if (inv.BeeInventory[id] or 0)-n<1 then return false,"LAST_COPY" end
+
+ inv.BeeInventory[id]-=n
+ p.Currencies.PetalDust+=n*C.BeeDustPerCopy
+  *(p.Season.ActiveCard=="AutumnFortune" and 1.5 or 1)
+  *E.Value(p,"ECONOMY_3","DustYield",1)
  return true
 end
 
