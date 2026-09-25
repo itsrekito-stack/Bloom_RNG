@@ -236,14 +236,15 @@ fn planner_task(id: &str, group: &str, title: &str, detail: &str, done: bool) ->
 
 fn default_today_tasks() -> Vec<PlannerTask> {
     vec![
-        planner_task("today-roflow-smoke","RoFlow","Install and smoke-test RoFlow v0.005","Verify project connect, Planner, Backups, Changes, Rojo build and checkbox persistence after restart.",false),
-        planner_task("today-sync-checkpoint","RoFlow","Run AI Sync and create a clean checkpoint","Pull current main safely, review local changes and leave a recoverable checkpoint before gameplay work.",false),
-        planner_task("today-br005","Runtime","Finish BR-005 snapshot/state synchronization optimization","Reduce full state rebuilds and unnecessary RenderMenu work while preserving the initial handshake and server authority.",false),
-        planner_task("today-br007","Runtime","Make Workshop persistent while open (BR-007)","Keep the Workshop shell mounted and update node states in place without resetting pan, zoom or hover state.",false),
-        planner_task("today-br002","UI / Inventory","Resolve Inventory V2 / SeedSatchel ownership (BR-002)","Verify the current authored model and make the live menu ownership explicit without changing inventory rewards or server semantics.",false),
-        planner_task("today-br008-verify","Runtime","Re-verify roulette BR-008 on current main","Only change request correlation if a real start/stop/restart race is reproducible; do not resurrect the removed RewardReveal behavior.",false),
-        planner_task("today-playtest","QA","Playtest the core loop at 1366×768 and 1280×720","Run roll → inventory → garden → bees → hive → Workshop and note clipping, stale UI and progression blockers.",false),
-        planner_task("today-stable-main","QA","Record blockers and leave main buildable","Commit stable work, keep a checkpoint and write down anything that must move to tomorrow instead of leaving half-finished fixes.",false),
+        planner_task("today-br005","Runtime","Finish BR-005 snapshot/state synchronization optimization","Implemented and covered by the gameplay CI state-revision assertions.",true),
+        planner_task("today-br007","Runtime","Make Workshop persistent while open (BR-007)","Implemented: WorkshopRuntime remains mounted and patches node state in place.",true),
+        planner_task("today-br002","UI / Inventory","Resolve Inventory V2 / SeedSatchel ownership (BR-002)","Implemented: SeedSatchel explicitly routes to Inventory V2 and FieldGuide stays separate.",true),
+        planner_task("today-br008-verify","Runtime","Fix roulette request/session race (BR-008)","Implemented with RequestId, RollSession and generation guards; automated assertions are green.",true),
+        planner_task("today-br006","Runtime","Scale public bee/activity replication (BR-006)","Implemented with per-recipient visibility/radius filtering and bounded cadence.",true),
+        planner_task("today-inventory-plant","UI / Inventory","Route Inventory planting through physical garden pads","Implemented: inventory selection now hands off to the proximity-gated garden PlantPicker flow.",true),
+        planner_task("today-core-contract","QA","Add automated core-loop contract acceptance","Guard roll → inventory → garden → bees → hive/Workshop wiring in gameplay CI. This supplements but does not pretend to be a Roblox Studio playtest.",false),
+        planner_task("today-playtest","QA","Studio-only core-loop acceptance at 1366×768 and 1280×720","Runtime-only acceptance remains: roll → inventory → garden → bees → hive → Workshop, including real input/focus and visual behavior.",false),
+        planner_task("today-stable-main","QA","Record blockers and leave main buildable","Keep gameplay CI green, write explicit Studio-only blockers, and leave main without half-finished changes.",false),
     ]
 }
 
@@ -255,15 +256,15 @@ fn default_roadmap_tasks() -> Vec<PlannerTask> {
         planner_task("release-br009","1 · Stability","Profile schema invariants (BR-009)","Confirmed in Phase 2A: domain validation, archive preservation and malformed profile fail-safe behavior.",true),
         planner_task("release-studio-persistence","1 · Stability","Validate persistence behavior in real Roblox Studio","Exercise join/leave/rejoin, shutdown, DataStore throttling/failure behavior and session ownership with Studio APIs.",false),
 
-        planner_task("release-br005","2 · Runtime & Performance","Revision-aware UI state flow (BR-005)","Coalesce state pushes and avoid full profile/UI snapshot rebuilds on every request and one-second tick.",false),
-        planner_task("release-br007","2 · Runtime & Performance","Persistent Workshop GUI lifecycle (BR-007)","Keep the full-screen Workshop mounted while open and patch node state without rebinding the entire tree.",false),
-        planner_task("release-br006","2 · Runtime & Performance","Scale public bee/activity replication (BR-006)","Use recipient relevance / spatial filtering and bounded update frequency instead of full global payloads.",false),
-        planner_task("release-br008","2 · Runtime & Performance","Close or fix roulette lifecycle BR-008","Reproduce on current main first. Add request/generation correlation only if the race still exists.",false),
+        planner_task("release-br005","2 · Runtime & Performance","Revision-aware UI state flow (BR-005)","Coalesce state pushes and avoid full profile/UI snapshot rebuilds on every request and one-second tick.",true),
+        planner_task("release-br007","2 · Runtime & Performance","Persistent Workshop GUI lifecycle (BR-007)","Keep the full-screen Workshop mounted while open and patch node state without rebinding the entire tree.",true),
+        planner_task("release-br006","2 · Runtime & Performance","Scale public bee/activity replication (BR-006)","Use recipient relevance / spatial filtering and bounded update frequency instead of full global payloads.",true),
+        planner_task("release-br008","2 · Runtime & Performance","Close or fix roulette lifecycle BR-008","Reproduce on current main first. Add request/generation correlation only if the race still exists.",true),
         planner_task("release-low-end","2 · Runtime & Performance","Profile a long session on low-end hardware","Measure server/client frame time, Lua memory, UI churn and replication after 30–60 minutes of normal play.",false),
 
-        planner_task("release-br002","3 · UI & Inventory","Resolve Inventory V2 menu ownership (BR-002)","Make SeedSatchel / Inventory V2 / FieldGuide responsibilities explicit against the actual authored UI model.",false),
+        planner_task("release-br002","3 · UI & Inventory","Resolve Inventory V2 menu ownership (BR-002)","Make SeedSatchel / Inventory V2 / FieldGuide responsibilities explicit against the actual authored UI model.",true),
         planner_task("release-inventory-actions","3 · UI & Inventory","QA every Inventory V2 action","Verify category/search/sort/filter, Plant, Favorite, Protect, Dissolve, Mastery and Bee equip/unequip states.",false),
-        planner_task("release-inventory-plant","3 · UI & Inventory","Fix or clearly surface Garden proximity for Plant","Inventory planting currently depends on physical garden proximity; route or explain the action so it is not misleading.",false),
+        planner_task("release-inventory-plant","3 · UI & Inventory","Fix or clearly surface Garden proximity for Plant","Inventory planting currently depends on physical garden proximity; route or explain the action so it is not misleading.",true),
         planner_task("release-hud-responsive","3 · UI & Inventory","Finish HUD/responsive pass","Verify safe areas and authored HUD layout at 1920×1080, 1366×768 and 1280×720 without overlap.",false),
         planner_task("release-tutorial","3 · UI & Inventory","Finish intro/tutorial guidance","Ensure arrows, indicators and tutorial progression point to real world/UI targets and remain on-screen.",false),
         planner_task("release-workshop-ui","3 · UI & Inventory","Finish Workshop interaction polish","Verify fullscreen exclusivity, pan, wheel zoom, node selection, locked/hidden nodes and readable costs.",false),
@@ -319,7 +320,7 @@ fn merge_planner_tasks(existing: &[PlannerTask], defaults: Vec<PlannerTask>) -> 
         .into_iter()
         .map(|mut task| {
             if let Some(done) = done_by_id.get(&task.id) {
-                task.done = *done;
+                task.done = task.done || *done;
             }
             task
         })

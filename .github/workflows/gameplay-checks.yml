@@ -34,13 +34,16 @@ jobs:
           sudo apt-get install -y liblua5.4-0
 
       - name: Validate check scripts
-        run: python -m py_compile tools/checks/phase2a_check.py tools/checks/ui_startergui_audit.py tools/checks/ui_viewport_check.py
+        run: python -m py_compile tools/checks/phase2a_check.py tools/checks/ui_startergui_audit.py tools/checks/ui_viewport_check.py tools/checks/core_loop_contract_check.py
 
       - name: Bloom UI Studio JavaScript syntax
         run: node --check tools/bloom-ui-editor/app.js
 
       - name: Persistence and service harness
         run: python tools/checks/phase2a_check.py
+
+      - name: Core loop contract
+        run: python tools/checks/core_loop_contract_check.py
 
       - name: Authored UI and integration audit
         run: python tools/checks/ui_startergui_audit.py
