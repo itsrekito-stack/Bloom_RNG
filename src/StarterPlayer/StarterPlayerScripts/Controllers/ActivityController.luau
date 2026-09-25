@@ -327,6 +327,14 @@ function S:TargetKind(kind)
  return nil,nil,nil
 end
 
+function S:RemoveItem(id)
+ local item=self.Items[id]
+ if not item then return false end
+ destroyItem(item)
+ self.Items[id]=nil
+ return true
+end
+
 function S:Cleanup()
  self:Update({})
 end
