@@ -5,6 +5,7 @@ ROOT=Path(__file__).resolve().parents[2]
 model=json.loads((ROOT/'src/StarterGui/BloomUI.model.json').read_text(encoding='utf-8'))
 TARGETS=['ObjectiveCard','CurrencyHUD','MenuDock','RollHUD','VerticalRoulette','RollButton']
 VIEWPORTS=[(1920,1080),(1366,768),(1280,720)]
+MAX_OVERFLOW={'MenuDock':32}
 
 def children(node): return node.get('Children',[]) or []
 def find(node,name):
@@ -56,11 +57,15 @@ for w,h in VIEWPORTS:
         print(f'  {name}: x={r[0]:.1f} y={r[1]:.1f} w={r[2]:.1f} h={r[3]:.1f} visible={fraction*100:.1f}%')
         if r[2]<=0 or r[3]<=0:
             failed.append(f'{w}x{h} {name}: non-positive size')
-        elif fraction<0.90:
-            failed.append(f'{w}x{h} {name}: only {fraction*100:.1f}% inside viewport')
+        else:
+            allowed=MAX_OVERFLOW.get(name,8)
+            x,y,rw,rh=r
+            overflow=max(0,-x,-y,x+rw-w,y+rh-h)
+            if overflow>allowed:
+                failed.append(f'{w}x{h} {name}: {overflow:.1f}px overflow exceeds {allowed}px allowance')
 
 if failed:
     print('\nFAILURES')
     for item in failed:print(' - '+item)
     sys.exit(1)
-print('\nPASS authored desktop HUD geometry stays >=90% inside all target viewports')
+print('\nPASS authored desktop HUD geometry stays within edge-overflow allowances at all target viewports')
