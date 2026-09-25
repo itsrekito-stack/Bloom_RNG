@@ -14,13 +14,16 @@ function S:Offer(player,kind,position,sector,bee,priority)
  if kind=="BloomSurge" then self.X.Temp[player].Hotspot=position self.X.Temp[player].HotspotUntil=os.clock()+cfg.Life end
  self.X:Emit(player,"ActivityOffered",1) self:Push(player) return true
 end
-function S:Push(player) local list={} for _,o in pairs(self.Offers[player] or {}) do table.insert(list,{Id=o.Id,Kind=o.Kind,Position=o.Nodes[o.Index],Index=o.Index,Count=#o.Nodes,Expires=o.Expires,Hold=A.Types[o.Kind].Hold==true}) end self.X:Send(player,"Activities",list) end
+function S:Push(player)
+ local list={} for _,o in pairs(self.Offers[player] or {}) do local cfg=A.Types[o.Kind] table.insert(list,{Id=o.Id,Kind=o.Kind,Position=o.Nodes[o.Index],Index=o.Index,Count=#o.Nodes,Expires=o.Expires,Radius=(cfg and cfg.Radius) or .75}) end
+ self.X:Send(player,"Activities",list)
+end
 function S:Collect(player,id,index,phase)
- local offers=self.Offers[player] local o=offers and offers[id] local p=self.X:Profile(player) if not o or not p or o.Expires<workspace:GetServerTimeNow() or index~=o.Index then return false end
+ local offers=self.Offers[player] local o=offers and offers[id] local p=self.X:Profile(player) local cfg=o and A.Types[o.Kind]
+ if not o or not p or not cfg or phase~="Collect" or o.Expires<workspace:GetServerTimeNow() or index~=o.Index then return false end
  if o.Sector and not p.World.UnlockedSectors[o.Sector] then return false end
- if not self.X.U.Near(player,o.Nodes[o.Index],A.PickupDistance) then return false end
+ if not self.X.U.CharacterTouchesSphere(player,o.Nodes[o.Index],cfg.Radius or .75,A.TouchTolerance or .5) then return false end
  if not o.Engaged then o.Engaged=true self.X:Emit(player,"ActivityEngaged",1) end
- if A.Types[o.Kind].Hold then if phase=="Begin" then o.HoldStarted=os.clock() return true elseif phase=="Cancel" then o.HoldStarted=nil return true elseif not o.HoldStarted or os.clock()-o.HoldStarted<A.HoldSeconds then return false end end
  if o.Kind=="CrossPollination" and o.Revision~=p.Garden.Revision then offers[id]=nil self:Push(player) return false end
  o.Index=o.Index+1 if o.Kind=="FireflyRoute" then self.X:Emit(player,"Firefly",1) end
  if o.Index>#o.Nodes then offers[id]=nil local temp=self.X.Temp[player] local kind=o.Kind
@@ -36,14 +39,15 @@ function S:Collect(player,id,index,phase)
   elseif kind=="FireflyRoute" or kind=="ShadowBloom" then temp.Eclipse=true end
   self.X.RollService:Charge(player,A.Types[kind].Charge*E.Value(p,"BLOOM_2","ManualCharge",1)*(o.Sector and E.Value(p,"EXPLORATION_2","RouteCharge",1) or 1)*(p.Season.ActiveCard=="SummerSwarm" and 1.25 or 1))
   self.X:Emit(player,kind,1) self.X:Emit(player,"ActivityCompleted",1)
-  if o.Sector then self.X:Emit(player,"WorldActivity",1) end
+  local completedSector=o.Sector or self.X.MapService:Sector(player)
+  if completedSector and completedSector~="Center" then self.X:Emit(player,"WorldActivity",1) end
   self.X.SocialService:Contribute(player,2)
   for _,bee in pairs(p.Pollinators.EquippedBeeSlots) do self.X.PollinatorService:AddMastery(player,bee,1,1) end
  end self:Push(player) return true
 end
 function S:Tick(player)
- local changed=false local offers=self.Offers[player] or {} local p=self.X:Profile(player)
- for id,o in pairs(offers) do if o.HoldStarted and not self.X.U.Near(player,o.Nodes[o.Index],A.PickupDistance) then o.HoldStarted=nil end if o.Expires<workspace:GetServerTimeNow() or not player.Character or not player.Character:FindFirstChildOfClass("Humanoid") or player.Character:FindFirstChildOfClass("Humanoid").Health<=0 then offers[id]=nil changed=true end end
+ local changed=false local offers=self.Offers[player] or {}
+ for id,o in pairs(offers) do if o.Expires<workspace:GetServerTimeNow() or not player.Character or not player.Character:FindFirstChildOfClass("Humanoid") or player.Character:FindFirstChildOfClass("Humanoid").Health<=0 then offers[id]=nil changed=true end end
  if changed then self:Push(player) end
 end
 function S:CancelGarden(player) self.Offers[player]={} self:Push(player) end
