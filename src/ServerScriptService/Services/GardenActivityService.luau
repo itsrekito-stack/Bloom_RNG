@@ -28,7 +28,7 @@ function S:Collect(player,id,index,phase)
   elseif kind=="NectarBud" then p.Currencies.Coins=p.Currencies.Coins+5
    local Flowers=require(RS.Config.FlowersConfig)
    for i,slot in ipairs(p.Garden.Slots) do if slot.SpeciesId and (self.X.GardenPlotService:Position(player,i)-o.Nodes[1]).Magnitude<15 then local effect=Flowers.Species[slot.SpeciesId].PollinationEffect
-    if effect=="NeighbourBoost" then temp.NeighbourUntil=os.clock()+20 elseif effect=="SwiftWindow" then temp.SwiftUntil=os.clock()+15 elseif effect=="LuckDew" then temp.Dew=math.min(A.DewMax,(temp.Dew or 0)+1) elseif effect=="CoinPod" then p.Currencies.Coins=p.Currencies.Coins+3 elseif effect=="Astral" then temp.Eclipse=true elseif effect=="Pulse" then slot.XP=slot.XP+3 slot.TotalPollination=slot.TotalPollination+3 end
+    if effect=="NeighbourBoost" then temp.NeighbourUntil=os.clock()+20 elseif effect=="SwiftWindow" then temp.SwiftUntil=os.clock()+15 elseif effect=="LuckDew" then temp.Dew=math.min(A.DewMax,(temp.Dew or 0)+1) elseif effect=="CoinPod" then p.Currencies.Coins=p.Currencies.Coins+3 elseif effect=="Astral" then temp.Eclipse=true elseif effect=="Pulse" then self.X.GardenPlotService:AddFlowerXP(player,i,3) end
    end end if Random.new():NextNumber()<A.MutationChance then for _,slot in ipairs(p.Garden.Slots) do if slot.SpeciesId then slot.Mutation="Dewkissed" self.X:Emit(player,"Mutation",1) break end end end
   elseif kind=="CrossPollination" then temp.NeighbourUntil=os.clock()+20
   elseif kind=="Overcharge" then temp.OverchargeBee=o.Bee
@@ -38,7 +38,7 @@ function S:Collect(player,id,index,phase)
   self.X:Emit(player,kind,1) self.X:Emit(player,"ActivityCompleted",1)
   if o.Sector then self.X:Emit(player,"WorldActivity",1) end
   self.X.SocialService:Contribute(player,2)
-  for _,bee in pairs(p.Pollinators.EquippedBeeSlots) do p.Pollinators.BeeMastery[bee]=(tonumber(p.Pollinators.BeeMastery[bee]) or 0)+1 end
+  for _,bee in pairs(p.Pollinators.EquippedBeeSlots) do self.X.PollinatorService:AddMastery(player,bee,1,1) end
  end self:Push(player) return true
 end
 function S:Tick(player)
