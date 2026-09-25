@@ -201,7 +201,7 @@
                 },
                 "BackgroundTransparency": 1,
                 "BorderSizePixel": 0,
-                "Text": "ЗАГРУЗКА",
+                "Text": "LOADING",
                 "TextColor3": [
                   0.32941176470588235,
                   0.6823529411764706,
@@ -246,7 +246,7 @@
                 },
                 "BackgroundTransparency": 1,
                 "BorderSizePixel": 0,
-                "Text": "Загрузка профиля…",
+                "Text": "Loading profile…",
                 "TextColor3": [
                   0.9607843137254902,
                   0.9725490196078431,
@@ -18265,7 +18265,7 @@
                             },
                             "BackgroundTransparency": 1,
                             "BorderSizePixel": 0,
-                            "Text": "КАТЕГОРИИ",
+                            "Text": "CATEGORIES",
                             "TextColor3": [
                               0.56,
                               0.66,
@@ -18422,7 +18422,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "Цветы",
+                                "Text": "Flowers",
                                 "TextColor3": [
                                   0.945,
                                   0.972,
@@ -18627,7 +18627,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "Пчёлы",
+                                "Text": "Bees",
                                 "TextColor3": [
                                   0.945,
                                   0.972,
@@ -18832,7 +18832,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "Семена",
+                                "Text": "Seeds",
                                 "TextColor3": [
                                   0.945,
                                   0.972,
@@ -19037,7 +19037,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "Ресурсы",
+                                "Text": "Resources",
                                 "TextColor3": [
                                   0.945,
                                   0.972,
@@ -19242,7 +19242,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "Особое",
+                                "Text": "Special",
                                 "TextColor3": [
                                   0.945,
                                   0.972,
@@ -19336,7 +19336,7 @@
                             },
                             "BackgroundTransparency": 1,
                             "BorderSizePixel": 0,
-                            "Text": "Выбирай категорию,\nчтобы фильтровать коллекцию.",
+                            "Text": "Choose a category,\nto filter your collection.",
                             "TextColor3": [
                               0.34,
                               0.43,
@@ -19566,7 +19566,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "Поиск предметов...",
+                                "Text": "Search items...",
                                 "TextColor3": [
                                   0.56,
                                   0.66,
@@ -19619,7 +19619,7 @@
                             ],
                             "BackgroundTransparency": 0.02,
                             "BorderSizePixel": 0,
-                            "Text": "РЕДКОСТЬ  ˅",
+                            "Text": "RARITY  ˅",
                             "TextColor3": [
                               0.945,
                               0.972,
@@ -19700,7 +19700,7 @@
                             ],
                             "BackgroundTransparency": 0.02,
                             "BorderSizePixel": 0,
-                            "Text": "ВСЕ  ›",
+                            "Text": "ALL  ›",
                             "TextColor3": [
                               0.945,
                               0.972,
@@ -19776,7 +19776,7 @@
                             },
                             "BackgroundTransparency": 1,
                             "BorderSizePixel": 0,
-                            "Text": "ЦВЕТЫ",
+                            "Text": "FLOWERS",
                             "TextColor3": [
                               0.19,
                               0.73,
@@ -19822,7 +19822,7 @@
                             },
                             "BackgroundTransparency": 1,
                             "BorderSizePixel": 0,
-                            "Text": "12 ПРЕДМЕТОВ",
+                            "Text": "12 ITEMS",
                             "TextColor3": [
                               0.56,
                               0.66,
@@ -25402,7 +25402,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "ЛЕГЕНДАРНЫЙ",
+                                "Text": "LEGENDARY",
                                 "TextColor3": [
                                   1,
                                   0.73,
@@ -25664,7 +25664,7 @@
                             },
                             "BackgroundTransparency": 1,
                             "BorderSizePixel": 0,
-                            "Text": "Редкий цветок с высоким потенциалом. Используется для посадки и прогрессии мастерства.",
+                            "Text": "A rare flower with high potential. Used for planting and Mastery progression.",
                             "TextColor3": [
                               0.56,
                               0.66,
@@ -25778,7 +25778,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "В наличии",
+                                "Text": "Owned",
                                 "TextColor3": [
                                   0.56,
                                   0.66,
@@ -25824,7 +25824,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "12 шт.",
+                                "Text": "12",
                                 "TextColor3": [
                                   0.945,
                                   0.972,
@@ -25870,7 +25870,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "Свободно",
+                                "Text": "Available",
                                 "TextColor3": [
                                   0.56,
                                   0.66,
@@ -25916,7 +25916,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "12 шт.",
+                                "Text": "12",
                                 "TextColor3": [
                                   0.945,
                                   0.972,
@@ -25962,7 +25962,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "Мастерство",
+                                "Text": "Mastery",
                                 "TextColor3": [
                                   0.22,
                                   0.78,
@@ -26008,7 +26008,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "Ур. 3",
+                                "Text": "Lv. 3",
                                 "TextColor3": [
                                   0.945,
                                   0.972,
@@ -26217,7 +26217,7 @@
                             ],
                             "BackgroundTransparency": 0.02,
                             "BorderSizePixel": 0,
-                            "Text": "ПОСАДИТЬ",
+                            "Text": "PLANT",
                             "TextColor3": [
                               0.945,
                               0.972,
@@ -26341,7 +26341,7 @@
                             ],
                             "BackgroundTransparency": 0.02,
                             "BorderSizePixel": 0,
-                            "Text": "★  ИЗБРАННОЕ",
+                            "Text": "★  FAVORITE",
                             "TextColor3": [
                               1,
                               0.73,
@@ -26422,7 +26422,7 @@
                             ],
                             "BackgroundTransparency": 0.02,
                             "BorderSizePixel": 0,
-                            "Text": "◆  ЗАЩИТИТЬ",
+                            "Text": "◆  PROTECT",
                             "TextColor3": [
                               0.19,
                               0.73,
@@ -26503,7 +26503,7 @@
                             ],
                             "BackgroundTransparency": 0.02,
                             "BorderSizePixel": 0,
-                            "Text": "РАСТВОРИТЬ",
+                            "Text": "DISSOLVE",
                             "TextColor3": [
                               0.68,
                               0.35,
@@ -26584,7 +26584,7 @@
                             ],
                             "BackgroundTransparency": 0.02,
                             "BorderSizePixel": 0,
-                            "Text": "МАСТЕРСТВО",
+                            "Text": "MASTERY",
                             "TextColor3": [
                               0.18,
                               0.53,
@@ -26815,7 +26815,7 @@
                             },
                             "BackgroundTransparency": 1,
                             "BorderSizePixel": 0,
-                            "Text": "Цветы",
+                            "Text": "Flowers",
                             "TextColor3": [
                               0.945,
                               0.972,
@@ -27541,7 +27541,7 @@
                 },
                 "BackgroundTransparency": 1,
                 "BorderSizePixel": 0,
-                "Text": "нажмите, чтобы ускорить",
+                "Text": "click to speed up",
                 "TextColor3": [
                   0.4549019607843137,
                   0.5333333333333333,
