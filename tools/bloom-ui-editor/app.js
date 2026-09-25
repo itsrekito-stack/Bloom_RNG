@@ -44,7 +44,7 @@ function loadPrefs(){
   if(typeof p.geometry==="boolean")state.geometry=p.geometry;
   if(Number.isFinite(p.inset))state.inset=p.inset;
   if(["design","preview"].includes(p.mode))state.mode=p.mode;
-  if(["gameplay","seedbag","workshop","fieldguide","map","trials","settings","reward","toast"].includes(p.previewScene))state.previewScene=p.previewScene;
+  if(["gameplay","seedbag","inventory_v2","workshop","fieldguide","map","trials","settings","reward","toast"].includes(p.previewScene))state.previewScene=p.previewScene;
  }catch{}
 }
 function savePrefs(){
@@ -255,9 +255,10 @@ const PREVIEW_DATA={
  ]
 };
 
-const MENU_PREVIEW_SCENES=new Set(["seedbag","workshop","fieldguide","map","trials","settings"]);
+const MENU_PREVIEW_SCENES=new Set(["seedbag","inventory_v2","workshop","fieldguide","map","trials","settings"]);
 const PREVIEW_META={
  seedbag:{title:"Сумка семян",subtitle:"Цветы, пчёлы, мастерство и экипировка"},
+ inventory_v2:{title:"Инвентарь",subtitle:"Отдельный прототип нового меню"},
  workshop:{title:"Мастерская",subtitle:"Постоянные улучшения и ветви прогрессии"},
  fieldguide:{title:"Справочник",subtitle:"Коллекция, шансы и открытые синергии"},
  map:{title:"Карта",subtitle:"Сектора, открытия и переходы"},
@@ -290,9 +291,10 @@ function previewVisible(n){
  const name=n.Name||"",p=parentName(n);
  if(name==="Templates"||p==="Templates"||name==="Tooltip")return false;
  if(name==="SeedSatchelTemplate")return state.previewScene==="seedbag";
+ if(name==="InventoryPrototype")return state.previewScene==="inventory_v2";
  if(name==="WorkshopTemplate")return state.previewScene==="workshop";
  if(state.previewScene==="workshop"&&["HeaderIcon","PanelTitle","PanelSubtitle","HeaderAccent"].includes(name))return false;
- if(name==="Content"&&p==="MainPanel"&&(state.previewScene==="seedbag"||state.previewScene==="workshop"))return false;
+ if(name==="Content"&&p==="MainPanel"&&(state.previewScene==="seedbag"||state.previewScene==="inventory_v2"||state.previewScene==="workshop"))return false;
  if(["ObjectiveCard","CurrencyHUD","MenuDock","RollHUD","VerticalRoulette","RollButton"].includes(name))return true;
  if(name==="MainPanel")return MENU_PREVIEW_SCENES.has(state.previewScene);
  if(name==="RewardReveal")return state.previewScene==="reward";
@@ -330,6 +332,7 @@ function previewSize(n){
  if(n.Name==="MainPanel"&&state.previewScene==="workshop")return [[1,0],[1,0]];
  if(n.Name==="Header"&&state.previewScene==="workshop")return [[1,0],[0,0]];
  if(n.Name==="MainPanel"&&state.previewScene==="seedbag")return [[0,640],[0,500]];
+ if(n.Name==="MainPanel"&&state.previewScene==="inventory_v2")return [[0,1220],[0,660]];
  if(n.Name==="MainPanel"&&MENU_PREVIEW_SCENES.has(state.previewScene))return [[0,600],[0,420]];
  if(n.Name==="ObjectiveProgressFill")return [[.38,0],[1,0]];
  if(n.Name==="BloomFill")return [[.38,0],[1,0]];
@@ -342,7 +345,7 @@ function injectRuntimePreview(n,el,parentNode){
  const wrap=document.createElement("div");wrap.className="preview-runtime";
  const img=id=>`/api/thumbnail?id=${id}`;
 
- if(state.previewScene==="seedbag"||state.previewScene==="workshop"){ return; }else{
+ if(state.previewScene==="seedbag"||state.previewScene==="inventory_v2"||state.previewScene==="workshop"){ return; }else{
   wrap.innerHTML=`
    <div class="preview-inventory-v2">
     <div class="preview-inv-summary"><b>FLOWER COLLECTION</b><span>12 TYPES</span></div>
