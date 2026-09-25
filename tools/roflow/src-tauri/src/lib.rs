@@ -783,6 +783,18 @@ fn is_required_runtime_ui_child(value: &Value) -> bool {
                 | "ActiveBoostsHUD"
                 | "ActiveBoostTooltip"
                 | "MinimizeButton"
+                | "TutorialSpotlight"
+                | "TutorialCallout"
+                | "TutorialScreenArrow"
+                | "StateKits"
+                | "ActionHitboxTemplate"
+                | "OverlayHitboxTemplate"
+                | "SearchBoxTemplate"
+                | "EmptyStateTemplate"
+                | "HoverScale"
+                | "TutorialCompleteScale"
+                | "SlotScale"
+                | "WorkshopZoomScale"
         )
     )
 }
