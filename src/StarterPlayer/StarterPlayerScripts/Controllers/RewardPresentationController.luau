@@ -38,6 +38,10 @@ function S:Enqueue(reward)
  self.Busy=true
  task.spawn(function()
   while #self.Queue>0 do
+   while self.UI and self.UI.IsWorkshopExclusive and self.UI:IsWorkshopExclusive() do
+    if self.UI.Reveal then self.UI.Reveal.Visible=false end
+    task.wait(.05)
+   end
    local r=table.remove(self.Queue,1)
    local tier=Cfg[r.Rarity] or Cfg.Common
    local began=os.clock()
