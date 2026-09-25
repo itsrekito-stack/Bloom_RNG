@@ -1,4 +1,4 @@
-local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.BloomConfig) local Pool=require(RS.Config.RollPoolConfig) local E=require(RS.Shared.WorkshopEffects) local S={Last={}} local rng=Random.new()
+local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.BloomConfig) local Pool=require(RS.Config.RollPoolConfig) local T=require(RS.Config.TutorialConfig) local E=require(RS.Shared.WorkshopEffects) local S={Last={}} local rng=Random.new()
 function S:Init(x) self.X=x end
 function S:Charge(player,amount) local p=self.X:Profile(player) if p then p.RollState.BloomCharge=math.min(C.BloomMax,p.RollState.BloomCharge+amount) p.RollState.SpecialRollReady=p.RollState.BloomCharge>=C.BloomMax end end
 function S:Odds(player) local p=self.X:Profile(player) if not p then return {} end local t=self.X.Temp[player] return Pool.Build(p,self.X.StatsService:Get(p).Luck+(t.Dew or 0)*.1,t) end
@@ -6,7 +6,18 @@ function S:Roll(player,automatic,requestId)
  local p=self.X:Profile(player) if not p or not p.Tutorial.FeatureUnlocks.Roll then return false,"LOCKED" end
  local cd=E.Value(p,"ROLL_6","RollCooldown",E.Value(p,"ROLL_5","RollCooldown",E.Value(p,"ROLL_1","RollCooldown",C.RollCooldown))) if os.clock()-(self.Last[player] or -100)<cd then return false,"COOLDOWN" end
  local pool,total=self:Odds(player) if total<=0 then return false,"EMPTY_POOL" end
- local target=rng:NextNumber()*total local item=pool[#pool] for _,v in ipairs(pool) do target=target-v.Weight if target<=0 then item=v break end end
+ local item=nil
+ local tutorialStep=T.Steps[p.Tutorial.Step]
+ if tutorialStep and tutorialStep.Id=="FirstSeed" and (p.Tutorial.Events.SeedReward or 0)==0 then
+  for _,v in ipairs(pool) do
+   if v.Kind=="FlowerSeed" and v.Id=="Sunflower" then item=v break end
+  end
+  if not item then for _,v in ipairs(pool) do if v.Kind=="FlowerSeed" then item=v break end end end
+ end
+ if not item then
+  local target=rng:NextNumber()*total item=pool[#pool]
+  for _,v in ipairs(pool) do target=target-v.Weight if target<=0 then item=v break end end
+ end
  self.Last[player]=os.clock() local special=p.RollState.SpecialRollReady local new=self.X.InventoryService:Grant(player,item.Kind,item.Id)
  p.RollState.TotalRolls=p.RollState.TotalRolls+1 p.RollState.DiscoveryPity=new and 0 or math.min(C.DiscoveryThreshold,p.RollState.DiscoveryPity+1)
  local temp=self.X.Temp[player] temp.Dew=0
