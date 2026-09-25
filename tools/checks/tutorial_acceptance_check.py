@@ -25,23 +25,25 @@ def need(src,text,label):
 
 ids=re.findall(r'\{Id="([^"]+)"',config)
 expected=[
-    "HiveIntro","StarterBee","BeeWork","PollenSpark","FirstSeed","Plant","Inventory",
-    "Delivery","HiveUpgrade","WorkshopVisit","WorkshopPurchase","Synergy","SunnyVisit",
+    "HiveIntro","StarterBee","BeeWork","PollenSpark","Roll","FirstSeed","Plant","Inventory",
+    "InventoryExplain","Delivery","HiveUpgrade","WorkshopVisit","WorkshopPurchase","Synergy","SunnyVisit",
 ]
 assert ids==expected, f"unexpected tutorial sequence: {ids}"
-assert 'Version=3' in config
-assert len(ids)==13
+assert 'Version=4' in config
+assert len(ids)==15
 
 # Mandatory onboarding cannot depend on rare/random content.
 for forbidden in ("Trait","BloomRoll","WorldActivity","TutorialActivity","Deliveries"):
     assert f'Event="{forbidden}"' not in config, f"random/slow mandatory step returned: {forbidden}"
 need(config,'Target="TutorialToken"',"guaranteed tutorial token target")
+need(config,'Target="RouletteReward"',"first reward presentation target")
+need(config,'Target="InventoryStats"',"inventory explanation target")
 need(config,'Target="WorkshopNode",NodeId="ROLL_1"',"exact first Workshop node target")
 need(config,'Target="GardenSlot",Slot=3',"first planting slot")
 need(config,'Target="SynergySlot",Slot=2',"synergy planting slot")
 
 targets=set(re.findall(r'Target="([^"]+)"',config))
-screen={"Roll","SeedSatchel","WorkshopNode"}
+screen={"Roll","RouletteReward","SeedSatchel","InventoryStats","WorkshopNode"}
 world={"Hive","Bee","TutorialToken","GardenSlot","SynergySlot","Workshop"}
 sectors=set(re.findall(r'(SunnyOrchard|CrystalGreenhouse|TwilightGrove)=\{',locations))
 unknown=targets-screen-world-sectors
@@ -51,6 +53,8 @@ assert not unknown, f"tutorial has unmapped targets: {sorted(unknown)}"
 for token in (
     'if step.Target=="Roll" then',
     'if step.Target=="SeedSatchel" then',
+    'if step.Target=="RouletteReward" then',
+    'if step.Target=="InventoryStats" then',
     'if step.Target=="WorkshopNode" then',
     'if target=="Hive" then',
     'elseif target=="Bee" then',
@@ -76,6 +80,10 @@ need(guide,'warn(string.format("[Tutorial] target missing step=%s target=%s"', "
 need(guide,'ui.Activities:Target("Tutorial")',"tutorial token pointer")
 need(guide,'ui.Bees:Target(true)',"local bee pointer")
 need(guide,'runtime:FindFirstChild("Node_"..tostring(step.NodeId or "ROLL_1"),true)',"Workshop node pointer")
+need(guide,'runtime and runtime:FindFirstChild("StatsCard",true)',"Inventory stats pointer")
+need(guide,'function S:SetSynergyPartner(primary,partner)',"synergy partner guidance")
+need(guide,'self.SecondaryWorldHighlight.Adornee=partner',"synergy partner highlight")
+need(guide,'self.SynergyLink.Enabled=true',"synergy adjacency line")
 need(guide,'if step.Id=="Delivery" and ui.Menu=="SeedSatchel" then ui:Close() end',"Inventory handoff")
 need(guide,'if step.Id=="Synergy" and ui.Menu=="Workshop" then ui:Close() end',"Workshop handoff")
 need(pollinator_client,'function S:Target(ownerOnly)',"bee target accessor")
@@ -120,19 +128,24 @@ need(activity,'o.Expires>=workspace:GetServerTimeNow()',"expired tutorial offer 
 need(activity_client,'workspace:GetPartsInPart(part,self.TouchParams)',"client body overlap")
 assert "ProximityPrompt" not in activity_client, "activity client must not require E/ProximityPrompt"
 need(activity,'self.X.U.CharacterTouchesSphere(player,o.Nodes[o.Index],cfg.Radius or .75,A.TouchTolerance or .5)',"server body overlap")
-need(roll,'tutorialStep.Id=="FirstSeed"', "tutorial roll detection")
+need(roll,'tutorialStep.Id=="Roll" or tutorialStep.Id=="FirstSeed"', "tutorial roll detection")
 need(roll,'v.Kind=="FlowerSeed" and v.Id=="Sunflower"', "deterministic first seed")
 
 # Persistence/migration/reconnect.
-need(default,'Tutorial={Version=3,Step=1,FeatureUnlocks={},Events={}}',"new profile tutorial version")
+need(default,'Tutorial={Version=4,Step=1,FeatureUnlocks={},Events={}}',"new profile tutorial version")
 need(service,'if t.Version==T.Version then return false end',"tutorial migration guard")
-need(service,'local wasComplete=t.Events.TutorialComplete or t.Step>#T.Steps',"shortened tutorial completion migration")
+need(service,'local wasComplete=t.Skipped or t.Events.TutorialComplete or t.Step>#T.Steps',"shortened/skipped tutorial completion migration")
 need(service,'t.Events[completionKey(step)]=1',"legacy event migration")
 need(service,'p.Tutorial.Step=#T.Steps+1',"Skip follows config length")
 need(service,'p.Tutorial.Skipped=true',"Skip persistence")
 need(service,'function S:Replay(player)',"Replay endpoint")
 need(service,'self.X:Send(player,"Replay",T.Steps)',"Replay presentation only")
 need(features,'Roll={Step=5}',"Roll unlock timing")
+need(features,'FieldGuide={Step=8}',"Field Guide unlock timing")
+need(service,'elseif step.Id=="FirstSeed" and (p.Tutorial.Events.SeedReward or 0)>0 then',"first reward recovery")
+need(player,'tutorialStep and tutorialStep.Id=="InventoryExplain"',"inventory review server validation")
+need(player,'self.Temp[player].MenuName=a',"server tracks successfully opened menu")
+assert bloom.index('self:RenderMenu()', bloom.index('function UI:Open')) < bloom.index('self:Send("Menu",name)', bloom.index('function UI:Open')), "menu must render before server acknowledgement"
 
 # Completion handoff.
 need(bloom,'self.ObjectiveTitle.Text="TUTORIAL COMPLETE"',"completion title")
@@ -154,4 +167,4 @@ for path in (
     for stale in ("18/18","17/17","#T.Steps==18","#T.Steps==17"):
         assert stale not in text, f"{path} contains stale tutorial length {stale}"
 
-print("PASS tutorial acceptance: 13 deterministic server-authoritative steps, exact UI/world pointers, migration/recovery and responsive guide contracts")
+print("PASS tutorial acceptance: 15 deterministic server-authoritative steps, explicit Roll/reward and Inventory teaching, exact UI/world pointers, migration/recovery and responsive guide contracts")
