@@ -9,6 +9,12 @@ function S:Offer(player,kind,position,sector,bee,priority,tutorial)
   local nearest=nil local distance=math.huge for i,s in ipairs(p.Garden.Slots) do if s.SpeciesId then local pos=self.X.GardenPlotService:Position(player,i) local d=(pos-position).Magnitude if d<distance then distance=d nearest=pos end end end
   if not nearest then return false end nodes[1]=nearest+Vector3.new(0,3,0)
  elseif kind=="CrossPollination" then for i=1,3 do if not p.Garden.Slots[i].SpeciesId then return false end nodes[i]=self.X.GardenPlotService:Position(player,i)+Vector3.new(0,3,0) end
+ elseif kind=="SolarBloom" then
+  local routeRadius=13
+  for i=1,cfg.Steps do
+   local angle=(i-1)*math.pi*2/cfg.Steps
+   nodes[i]=position+Vector3.new(math.cos(angle)*routeRadius,3,math.sin(angle)*routeRadius)
+  end
  else for i=1,cfg.Steps do local t=(i-1)/math.max(1,cfg.Steps-1) if kind=="PollenTrail" then nodes[i]=position:Lerp(origin,t)+Vector3.new(0,2+math.sin(t*math.pi)*2,0) else nodes[i]=position+Vector3.new(math.sin(i*1.8)*7,3,math.cos(i*1.8)*7) end end end
  offers[id]={Id=id,Kind=kind,Nodes=nodes,Index=1,Expires=workspace:GetServerTimeNow()+cfg.Life,Sector=sector,Bee=bee,Revision=p.Garden.Revision,Tutorial=tutorial==true}
  if kind=="BloomSurge" then self.X.Temp[player].Hotspot=position self.X.Temp[player].HotspotUntil=os.clock()+cfg.Life end
@@ -34,14 +40,30 @@ function S:HasSectorOffer(player,sector)
  return false
 end
 function S:Push(player)
- local list={} for _,o in pairs(self.Offers[player] or {}) do local cfg=A.Types[o.Kind] table.insert(list,{Id=o.Id,Kind=o.Kind,Position=o.Nodes[o.Index],Index=o.Index,Count=#o.Nodes,Expires=o.Expires,Radius=(cfg and cfg.Radius) or .75,Sector=o.Sector,Tutorial=o.Tutorial==true}) end
+ local list={}
+ for _,o in pairs(self.Offers[player] or {}) do
+  local cfg=A.Types[o.Kind]
+  table.insert(list,{
+   Id=o.Id,
+   Kind=o.Kind,
+   Position=o.Nodes[o.Index],
+   Index=o.Index,
+   Count=#o.Nodes,
+   Expires=o.Expires,
+   CheckpointRadius=(cfg and cfg.CheckpointRadius) or A.CheckpointRadius,
+   VerticalTolerance=A.CheckpointVerticalTolerance,
+   Sector=o.Sector,
+   Tutorial=o.Tutorial==true,
+  })
+ end
  self.X:Send(player,"Activities",list)
 end
 function S:Collect(player,id,index,phase)
  local offers=self.Offers[player] local o=offers and offers[id] local p=self.X:Profile(player) local cfg=o and A.Types[o.Kind]
- if not o or not p or not cfg or phase~="Collect" or o.Expires<workspace:GetServerTimeNow() or index~=o.Index then return false end
+ if not o or not p or not cfg or phase~="Reach" or o.Expires<workspace:GetServerTimeNow() or index~=o.Index then return false end
  if o.Sector and not p.World.UnlockedSectors[o.Sector] then return false end
- if not self.X.U.CharacterTouchesSphere(player,o.Nodes[o.Index],cfg.Radius or .75,A.TouchTolerance or .5) then return false end
+ local checkpointRadius=cfg.CheckpointRadius or A.CheckpointRadius
+ if not self.X.U.WithinCheckpoint(player,o.Nodes[o.Index],checkpointRadius,A.CheckpointVerticalTolerance) then return false end
  if not o.Engaged then o.Engaged=true self.X:Emit(player,"ActivityEngaged",1) end
  if o.Kind=="CrossPollination" and o.Revision~=p.Garden.Revision then offers[id]=nil self:Push(player) return false end
  o.Index=o.Index+1 if o.Kind=="FireflyRoute" then self.X:Emit(player,"Firefly",1) end
