@@ -14,3 +14,7 @@ Thumbs.db
 
 # Historical Studio place backup - source lives in Rojo files
 reference/*.rbxl
+
+# RoFlow local metadata / recovery
+.roflow/
+.recovery/

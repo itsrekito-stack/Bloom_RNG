@@ -58,3 +58,16 @@ npm run build
 - Roblox thumbnails внутри embedded editor запрашиваются через native backend.
 - Browser Bloom UI Studio сохраняет прежний Python bridge и продолжает работать отдельно.
 - Иконки Windows генерируются из `web/roflow-icon.svg` автоматически перед dev/build.
+
+
+## Versioned Backups
+
+RoFlow keeps local Git-backed checkpoints in a separate **Backups** window.
+
+- Versions are sequential: `v0.001`, `v0.002`, `v0.003`...
+- The first snapshot is created when a project is connected.
+- Every successful AI Sync creates the next automatic version.
+- Manual checkpoints can be created with a short change note.
+- Each version shows its source HEAD, snapshot SHA, commit subjects and changed files.
+- Restore creates a new safety version first, then applies the selected snapshot to the worktree without moving the current branch backwards.
+- Metadata is stored under `.roflow/` and is ignored by Git.

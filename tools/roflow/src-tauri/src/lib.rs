@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::{
     collections::{BTreeSet, HashMap},
@@ -8,7 +8,7 @@ use std::{
     sync::Mutex,
     time::{SystemTime, UNIX_EPOCH},
 };
-use tauri::State;
+use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindowBuilder};
 
 const MODEL_PATH: &str = "src/StarterGui/BloomUI.model.json";
 
@@ -40,6 +40,34 @@ struct SyncResult {
     restored: bool,
     model_merged: bool,
     recovery_backup: String,
+    backup_version: String,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct BackupEntry {
+    version: String,
+    snapshot_sha: String,
+    source_head: String,
+    created_at: u64,
+    title: String,
+    summary: String,
+    changes: Vec<String>,
+    commits: Vec<String>,
+    automatic: bool,
+}
+
+#[derive(Default, Serialize, Deserialize)]
+struct BackupStore {
+    backups: Vec<BackupEntry>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct RestoreResult {
+    restored_version: String,
+    safety_version: String,
+    status: ProjectStatus,
 }
 
 fn git(root: &Path, args: &[&str]) -> Result<String, String> {
@@ -55,6 +83,173 @@ fn git(root: &Path, args: &[&str]) -> Result<String, String> {
         return Err(if !stderr.is_empty() { stderr } else { stdout });
     }
     Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
+fn git_env(root: &Path, args: &[&str], envs: &[(&str, &str)]) -> Result<String, String> {
+    let mut command = Command::new("git");
+    command.args(args).current_dir(root);
+    for (key, value) in envs {
+        command.env(key, value);
+    }
+    let out = command.output().map_err(|e| format!("Failed to start git: {e}"))?;
+    if !out.status.success() {
+        let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
+        let stdout = String::from_utf8_lossy(&out.stdout).trim().to_string();
+        return Err(if !stderr.is_empty() { stderr } else { stdout });
+    }
+    Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
+fn roflow_dir(root: &Path) -> PathBuf {
+    root.join(".roflow")
+}
+
+fn backup_store_path(root: &Path) -> PathBuf {
+    roflow_dir(root).join("backups.json")
+}
+
+fn load_backup_store(root: &Path) -> BackupStore {
+    fs::read_to_string(backup_store_path(root))
+        .ok()
+        .and_then(|text| serde_json::from_str(&text).ok())
+        .unwrap_or_default()
+}
+
+fn save_backup_store(root: &Path, store: &BackupStore) -> Result<(), String> {
+    fs::create_dir_all(roflow_dir(root)).map_err(|e| e.to_string())?;
+    let mut text = serde_json::to_string_pretty(store).map_err(|e| e.to_string())?;
+    text.push('\n');
+    fs::write(backup_store_path(root), text).map_err(|e| e.to_string())
+}
+
+fn backup_number(version: &str) -> u32 {
+    version
+        .strip_prefix("v0.")
+        .and_then(|value| value.parse::<u32>().ok())
+        .unwrap_or(0)
+}
+
+fn next_backup_version(root: &Path, store: &BackupStore) -> Result<String, String> {
+    let mut max_number = store.backups.iter().map(|b| backup_number(&b.version)).max().unwrap_or(0);
+    let refs = git(root, &["for-each-ref", "refs/roflow/backups/", "--format=%(refname:short)"])?;
+    for line in refs.lines() {
+        let label = line.rsplit('/').next().unwrap_or(line);
+        max_number = max_number.max(backup_number(label));
+    }
+    Ok(format!("v0.{:03}", max_number + 1))
+}
+
+fn create_backup_internal(
+    root: &Path,
+    title: &str,
+    summary: &str,
+    automatic: bool,
+) -> Result<BackupEntry, String> {
+    let mut store = load_backup_store(root);
+    let version = next_backup_version(root, &store)?;
+    let source_head = git(root, &["rev-parse", "HEAD"])?;
+    let subject = git(root, &["log", "-1", "--pretty=%s"]).unwrap_or_default();
+
+    let git_dir = git(root, &["rev-parse", "--git-dir"])?;
+    let git_dir_path = {
+        let path = PathBuf::from(&git_dir);
+        if path.is_absolute() { path } else { root.join(path) }
+    };
+    let temp_index = git_dir_path.join("roflow-backup.index");
+    let _ = fs::remove_file(&temp_index);
+    let temp_index_string = temp_index.to_string_lossy().to_string();
+    let index_env = [("GIT_INDEX_FILE", temp_index_string.as_str())];
+
+    let snapshot_result = (|| -> Result<String, String> {
+        git_env(root, &["read-tree", "HEAD"], &index_env)?;
+        git_env(root, &["add", "-A"], &index_env)?;
+        // Never put RoFlow metadata or recovery scratch files into snapshots.
+        let _ = git_env(
+            root,
+            &["rm", "-r", "--cached", "--ignore-unmatch", ".roflow", ".recovery"],
+            &index_env,
+        );
+        let tree = git_env(root, &["write-tree"], &index_env)?;
+
+        let identity = [
+            ("GIT_INDEX_FILE", temp_index_string.as_str()),
+            ("GIT_AUTHOR_NAME", "RoFlow"),
+            ("GIT_AUTHOR_EMAIL", "roflow@local"),
+            ("GIT_COMMITTER_NAME", "RoFlow"),
+            ("GIT_COMMITTER_EMAIL", "roflow@local"),
+        ];
+        git_env(
+            root,
+            &[
+                "commit-tree",
+                &tree,
+                "-p",
+                &source_head,
+                "-m",
+                &format!("RoFlow backup {version}"),
+            ],
+            &identity,
+        )
+    })();
+    let _ = fs::remove_file(&temp_index);
+    let snapshot_sha = snapshot_result?;
+
+    git(
+        root,
+        &[
+            "update-ref",
+            &format!("refs/roflow/backups/{version}"),
+            &snapshot_sha,
+        ],
+    )?;
+
+    let previous = store.backups.last();
+    let diff_base = previous.map(|b| b.snapshot_sha.as_str()).unwrap_or(source_head.as_str());
+    let changes = git(root, &["diff", "--name-status", diff_base, &snapshot_sha])
+        .unwrap_or_default()
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .take(120)
+        .map(str::to_string)
+        .collect::<Vec<_>>();
+
+    let commits = previous
+        .filter(|p| p.source_head != source_head)
+        .and_then(|p| git(root, &["log", "--format=%s", &format!("{}..{}", p.source_head, source_head)]).ok())
+        .unwrap_or_else(|| if store.backups.is_empty() { subject.clone() } else { String::new() })
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .take(30)
+        .map(str::to_string)
+        .collect::<Vec<_>>();
+
+    let created_at = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_secs();
+
+    let entry = BackupEntry {
+        version,
+        snapshot_sha,
+        source_head,
+        created_at,
+        title: title.trim().to_string(),
+        summary: summary.trim().to_string(),
+        changes,
+        commits,
+        automatic,
+    };
+    store.backups.push(entry.clone());
+    save_backup_store(root, &store)?;
+    Ok(entry)
+}
+
+fn ensure_initial_backup(root: &Path) -> Result<(), String> {
+    if load_backup_store(root).backups.is_empty() {
+        let subject = git(root, &["log", "-1", "--pretty=%s"]).unwrap_or_else(|_| "Initial project state".into());
+        create_backup_internal(root, "Initial snapshot", &subject, true)?;
+    }
+    Ok(())
 }
 
 fn validate_project_root(path: &str) -> Result<PathBuf, String> {
@@ -256,6 +451,7 @@ fn set_project_root(path: String, state: State<AppState>) -> Result<ProjectStatu
         let mut guard = state.project_root.lock().map_err(|_| "Project state lock failed".to_string())?;
         *guard = Some(root.clone());
     }
+    ensure_initial_backup(&root)?;
     status_for(&root)
 }
 
@@ -355,6 +551,12 @@ fn safe_ai_sync(editor_model: Option<Value>, state: State<AppState>) -> Result<S
     }
 
     let final_status = status_for(&root)?;
+    let backup = create_backup_internal(
+        &root,
+        "AI Sync",
+        &final_status.subject,
+        true,
+    ).ok();
     Ok(SyncResult {
         changed: old_head != final_status.head,
         head: final_status.head,
@@ -364,7 +566,94 @@ fn safe_ai_sync(editor_model: Option<Value>, state: State<AppState>) -> Result<S
         restored,
         model_merged,
         recovery_backup,
+        backup_version: backup.map(|entry| entry.version).unwrap_or_default(),
     })
+}
+
+#[tauri::command]
+fn list_backups(state: State<AppState>) -> Result<Vec<BackupEntry>, String> {
+    let root = current_root(&state)?;
+    ensure_initial_backup(&root)?;
+    let mut backups = load_backup_store(&root).backups;
+    backups.sort_by_key(|entry| std::cmp::Reverse(backup_number(&entry.version)));
+    Ok(backups)
+}
+
+#[tauri::command]
+fn create_backup(
+    title: Option<String>,
+    summary: Option<String>,
+    state: State<AppState>,
+) -> Result<BackupEntry, String> {
+    let root = current_root(&state)?;
+    create_backup_internal(
+        &root,
+        title.as_deref().unwrap_or("Manual checkpoint"),
+        summary.as_deref().unwrap_or("Created manually in RoFlow"),
+        false,
+    )
+}
+
+#[tauri::command]
+fn restore_backup(version: String, state: State<AppState>) -> Result<RestoreResult, String> {
+    let root = current_root(&state)?;
+    let store = load_backup_store(&root);
+    let target = store
+        .backups
+        .iter()
+        .find(|entry| entry.version == version)
+        .cloned()
+        .ok_or_else(|| format!("Backup {version} was not found"))?;
+
+    let safety = create_backup_internal(
+        &root,
+        "Safety snapshot",
+        &format!("Automatic backup before restoring {}", target.version),
+        true,
+    )?;
+
+    git(
+        &root,
+        &[
+            "restore",
+            "--source",
+            &target.snapshot_sha,
+            "--staged",
+            "--worktree",
+            "--",
+            ".",
+        ],
+    )?;
+    // Exact restore for normal files while explicitly preserving RoFlow metadata
+    // and recovery material.
+    let _ = git(&root, &["clean", "-fd", "-e", ".roflow/", "-e", ".recovery/"]);
+
+    Ok(RestoreResult {
+        restored_version: target.version,
+        safety_version: safety.version,
+        status: status_for(&root)?,
+    })
+}
+
+#[tauri::command]
+fn open_backups_window(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("backups") {
+        window.set_focus().map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+
+    WebviewWindowBuilder::new(
+        &app,
+        "backups",
+        WebviewUrl::App("backups.html".into()),
+    )
+    .title("RoFlow · Backups")
+    .inner_size(960.0, 720.0)
+    .min_inner_size(760.0, 560.0)
+    .center()
+    .build()
+    .map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 #[tauri::command]
@@ -413,6 +702,10 @@ pub fn run() {
             write_ui_model,
             git_diff_stat,
             safe_ai_sync,
+            list_backups,
+            create_backup,
+            restore_backup,
+            open_backups_window,
             roblox_thumbnail_url
         ])
         .run(tauri::generate_context!())
