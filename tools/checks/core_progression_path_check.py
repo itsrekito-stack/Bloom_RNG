@@ -42,7 +42,8 @@ if events[:len(required_prefix)] != required_prefix:
     raise AssertionError(f"tutorial opening path changed: {events[:len(required_prefix)]}")
 need(features,'Roll={Step=6}',"Roll unlock follows reachable opening tutorial")
 need(pollinator,'self.X:EmitOnce(player,"Work")',"starter pollination advances Work")
-need(pollinator,'if not p.Tutorial.Events.PollenSpark then self.X.GardenActivityService:Offer(player,"PollenSpark"', "first delivery creates Pollen Spark route")
+need(pollinator,'if not profile.Tutorial.Events.PollenSpark then', "first delivery guards Pollen Spark route")
+need(pollinator,'self.X.GardenActivityService:Offer(player,"PollenSpark",self.X.GardenPlotService:Position(player,state.Slot))', "first delivery creates Pollen Spark route")
 need(pollinator,'self.X:Emit(player,"Delivery",1)',"delivery advances tutorial")
 
 # First Workshop purchase must be economically reachable from the Hive 2 path.
