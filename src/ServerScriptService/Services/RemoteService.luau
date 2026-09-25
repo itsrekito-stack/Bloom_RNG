@@ -5,6 +5,13 @@ local function finite(v) return type(v)=="number" and v==v and math.abs(v)~=math
 local function integer(v,min,max) return finite(v) and v%1==0 and v>=min and v<=max end
 local function short(v,max,allowEmpty) return type(v)=="string" and #v<=max and (allowEmpty or #v>0) end
 local function scalar(v) local t=type(v) return v==nil or t=="string" or t=="number" or t=="boolean" end
+local function errorId(player)
+ S.ErrorSerial=(S.ErrorSerial or 0)+1
+ return tostring(player and player.UserId or 0).."-"..tostring(S.ErrorSerial)
+end
+local function argText(v)
+ return typeof(v)..":"..tostring(v)
+end
 function S:Validate(action,a,b,c)
  if NO_ARGS[action] then return a==nil and b==nil and c==nil,a==nil and b==nil and c==nil and nil or"INVALID_VALUE" end
  if not scalar(a) or not scalar(b) or not scalar(c) then return false,"INVALID_VALUE" end
@@ -58,10 +65,11 @@ function S:Start()
   self.StateRequests[player]=now
   if not self.X:Profile(player) then return nil,"PROFILE_LOADING" end
   if type(knownRevision)=="number" and knownRevision==self.X:StateRevision(player) then return nil,"NOT_MODIFIED",knownRevision end
-  local ok,state=pcall(function() return self.X:Snapshot(player) end)
+  local ok,state=xpcall(function() return self.X:Snapshot(player) end,debug.traceback)
   if not ok then
-   warn("[Bloom] StateRequest error",player.Name,state)
-   return nil,"SERVER_ERROR"
+   local id=errorId(player)
+   warn("[Bloom][SERVER_ERROR]["..id.."] StateRequest player="..tostring(player.Name).."\n"..tostring(state))
+   return nil,"SERVER_ERROR["..id.."]"
   end
   if not state then return nil,"PROFILE_LOADING" end
   return state,nil
@@ -84,11 +92,23 @@ function S:Start()
    return
   end
   local ok,result,reason=xpcall(function() return self.X:Request(player,action,a,b,c) end,debug.traceback)
-  if not ok then warn("[Bloom] Request error",action,result) end
+  local requestErrorId=nil
+  if not ok then
+   requestErrorId=errorId(player)
+   warn("[Bloom][SERVER_ERROR]["..requestErrorId.."] player="..tostring(player.Name).." userId="..tostring(player.UserId).." action="..tostring(action).." a="..argText(a).." b="..argText(b).." c="..argText(c).."\n"..tostring(result))
+  end
   local success=ok and result~=false
   local finalReason=ok and reason or "SERVER_ERROR"
   if success and self.X:ActionMutatesState(action) then self.X:MarkStateDirty(player) end
-  self.X:Send(player,"Ack",{Action=action,RequestId=rollRequestId,OK=success,Reason=finalReason,Message=success and nil or self.X.UIStateService:ReasonText(finalReason)})
+  local message
+  if success then
+   message=nil
+  elseif requestErrorId then
+   message="Server error ["..requestErrorId.."] — see Output"
+  else
+   message=self.X.UIStateService:ReasonText(finalReason)
+  end
+  self.X:Send(player,"Ack",{Action=action,RequestId=rollRequestId,OK=success,Reason=finalReason,Message=message})
   if success then self.X:Push(player) end
  end)
 end
