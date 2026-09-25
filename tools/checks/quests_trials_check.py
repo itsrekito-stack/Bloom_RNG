@@ -70,15 +70,23 @@ need(service,'self.X.GardenActivityService:Offer(player,"PollenTrail",pos,cfg.Se
 
 # Activity collection remains server-authoritative and bounded.
 need(activity_cfg,"MaxVisible=2","bounded activity count")
-need(activity_cfg,"TouchTolerance=.5","touch overlap tolerance")
-need(activity_cfg,"Radius=.75","default activity sphere radius")
+need(activity_cfg,"CheckpointVerticalTolerance=5","checkpoint vertical tolerance")
+need(activity_cfg,"CheckpointRadius=4.5","default activity checkpoint radius")
 need(activity,'if count>=A.MaxVisible and not priority then return false end',"activity visibility cap")
 need(activity,'if o.Sector and not p.World.UnlockedSectors[o.Sector] then return false end',"activity sector validation")
-need(activity,'phase~="Collect"',"collect-only activity phase")
-need(activity,'self.X.U.CharacterTouchesSphere(player,o.Nodes[o.Index],cfg.Radius or .75,A.TouchTolerance or .5)',"activity body-overlap validation")
-need(util,'function U.CharacterTouchesSphere(player,pos,radius,tolerance)',"character/sphere overlap helper")
-need(activity_client,'workspace:GetPartsInPart(part,self.TouchParams)',"client body-overlap detection")
-need(activity_client,'self.UI:Send("Activity",id,item.Index,"Collect")',"touch collection request")
+need(activity,'phase~="Reach"',"checkpoint-only activity phase")
+need(activity,'self.X.U.WithinCheckpoint(player,o.Nodes[o.Index],checkpointRadius,A.CheckpointVerticalTolerance)',"activity checkpoint distance validation")
+need(util,'function U.WithinCheckpoint(player,pos,radius,verticalTolerance)',"checkpoint proximity helper")
+need(activity_client,'local horizontal=Vector2.new(delta.X,delta.Z).Magnitude',"client checkpoint distance detection")
+need(activity_client,'self.UI:Send("Activity",id,item.Index,"Reach")',"checkpoint reach request")
+assert "PartType.Ball" not in activity_client, "legacy activity spheres returned"
+assert "GetPartsInPart" not in activity_client, "legacy touch-overlap client returned"
+assert "CharacterTouchesSphere" not in activity+util, "legacy touch-sphere server helper returned"
+assert "Touch sphere" not in journey_guide, "legacy Solar Bloom sphere wording returned"
+need(activity_client,'part.Shape=Enum.PartType.Cylinder',"ground checkpoint geometry")
+need(activity_client,'part.CanTouch=false',"checkpoint is not a touch part")
+need(activity_client,'STEP INTO CHECKPOINT',"checkpoint instruction")
+need(activity,'elseif kind=="SolarBloom" then',"Solar Bloom has explicit route geometry")
 if "ProximityPrompt" in activity_client:
     raise AssertionError("activity client returned to E/ProximityPrompt interaction")
 need(activity,'o.Expires<workspace:GetServerTimeNow()',"activity expiry")
@@ -96,11 +104,11 @@ need(activity,'self.X:Emit(player,kind,1)',"activity emits its concrete kind on 
 need(activity_client,'function S:TargetKind(kind)',"client can target a specific activity kind")
 need(activity_client,'Count=o.Count or 1',"client keeps route length")
 need(journey_guide,'(p.Quests.JourneyStep or 1)==15',"Solar Bloom Journey step binding")
-need(journey_guide,'activities:TargetKind("SolarBloom")',"Solar Bloom active-sphere targeting")
+need(journey_guide,'activities:TargetKind("SolarBloom")',"Solar Bloom active-checkpoint targeting")
 need(journey_guide,'world:FindFirstChild("SunnyOrchardGate")',"Sunny Orchard route target")
 need(journey_guide,'world:FindFirstChild("SunnyOrchard_1")',"specific Solar Bloom landmark target")
-need(journey_guide,'"Interact with the highlighted activity marker, then touch all 3 glowing spheres."', "Solar Bloom activation explanation")
-need(journey_guide,'string.format("Solar Bloom  •  Touch sphere %d/%d",index,count)',"Solar Bloom objective progress")
+need(journey_guide,'"Interact with the highlighted activity marker, then reach all 3 checkpoints."', "Solar Bloom activation explanation")
+need(journey_guide,'string.format("Solar Bloom  •  Reach checkpoint %d/%d",index,count)',"Solar Bloom objective progress")
 need(ui,'self.JourneyGuideController=require(script.Parent.JourneyGuideController)',"Journey guide wiring")
 need(ui,'self.JourneyGuideController:Init(self,self.GuideController)',"Journey guide uses shared visual pointer layer")
 
