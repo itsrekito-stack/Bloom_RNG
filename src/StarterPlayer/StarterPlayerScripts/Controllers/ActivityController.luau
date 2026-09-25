@@ -46,9 +46,15 @@ function S:Update(list)
      if nearest then local highlight=Instance.new("Highlight") highlight.Adornee=nearest highlight.FillColor=part.Color highlight.FillTransparency=self.UI.State and self.UI.State.Profile.Settings.ReducedEffects and .85 or .6 highlight.Parent=part end
     end
    end
-   item={Part=part,Index=o.Index,Expires=o.Expires,Touching=false,Sector=o.Sector,Tutorial=o.Tutorial==true} self.Items[o.Id]=item
+   item={Part=part,Index=o.Index,Count=o.Count or 1,Kind=o.Kind,Expires=o.Expires,Touching=false,Sector=o.Sector,Tutorial=o.Tutorial==true} self.Items[o.Id]=item
   else
    item.Part.Position=o.Position
+   item.Index=o.Index
+   item.Count=o.Count or item.Count or 1
+   item.Kind=o.Kind or item.Kind
+   item.Expires=o.Expires
+   item.Sector=o.Sector
+   item.Tutorial=o.Tutorial==true
   end
  end
  for id,item in pairs(self.Items) do if not keep[id] then item.Part:Destroy() self.Items[id]=nil end end
@@ -73,6 +79,14 @@ function S:Target(mode)
   if mode=="Sector" and item.Sector then return item.Part end
   if mode==nil then return item.Part end
  end
+end
+function S:TargetKind(kind)
+ for _,item in pairs(self.Items) do
+  if item.Kind==kind and item.Part and item.Part.Parent then
+   return item.Part,item.Index or 1,item.Count or 1
+  end
+ end
+ return nil,nil,nil
 end
 function S:Cleanup() self:Update({}) end
 return S
