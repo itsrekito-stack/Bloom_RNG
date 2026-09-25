@@ -201,16 +201,27 @@ end
 
 local function setButton(button,visible,text,enabled,callback)
  if not button or not button:IsA("TextButton") then return end
+ local oldHitbox=button:FindFirstChild("_InventoryV2ActionHitbox")
+ if oldHitbox then oldHitbox:Destroy() end
  button.Visible=visible==true
  button.Text=text or button.Text
- button.Active=enabled~=false
+ button.Active=false
  button.AutoButtonColor=false
  button.TextTransparency=enabled==false and .45 or 0
  button.BackgroundTransparency=enabled==false and .24 or .02
- if visible and callback then
-  button.Activated:Connect(function()
-   if button.Active then callback() end
-  end)
+ if visible and enabled~=false and callback then
+  local hitbox=Instance.new("TextButton")
+  hitbox.Name="_InventoryV2ActionHitbox"
+  hitbox.BackgroundTransparency=1
+  hitbox.BorderSizePixel=0
+  hitbox.Text=""
+  hitbox.AutoButtonColor=false
+  hitbox.Active=true
+  hitbox.Size=UDim2.fromScale(1,1)
+  hitbox.Position=UDim2.fromScale(0,0)
+  hitbox.ZIndex=button.ZIndex+5
+  hitbox.Parent=button
+  hitbox.Activated:Connect(callback)
  end
 end
 
