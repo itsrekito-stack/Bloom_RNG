@@ -1,4 +1,4 @@
-test("default profile",function() local p=Schema.CreateDefault() assert(Schema.Prepare(p)) assert(p.SchemaVersion==5 and p.Inventory==nil and p.Currencies.Coins==0 and p.Tutorial.Version==3 and p.Tutorial.Step==1) end)
+test("default profile",function() local p=Schema.CreateDefault() assert(Schema.Prepare(p)) assert(p.SchemaVersion==5 and p.Inventory==nil and p.Currencies.Coins==0 and p.Tutorial.Version==4 and p.Tutorial.Step==1) end)
 test("legacy mapping, dust, planted ownership",function()
  local p={Inventory={Apple=2,UnknownFruit=3},Currencies={FruitDust=12,Coins=9,AncientSeeds=77},DiscoveredFruits={Apple=true},Garden={UnlockedSlots=3,Slots={{SpeciesId="Tulip",Level=2}}},FruitMastery={Apple={Level=999}}}
  assert(Schema.Prepare(p)) assert(p.FlowerCollection.OwnedSeedCopies.Daisy==3) assert(p.FlowerCollection.OwnedSeedCopies.Tulip==1) assert(p.Currencies.PetalDust==27) assert(p.Currencies.AncientNectar==0) assert(p.LegacyArchive.AncientSeeds==77) assert(p.FlowerCollection.FlowerMastery.Daisy.Level==100)
@@ -76,7 +76,7 @@ test("tutorial v3 gates future events and completes ordered flow",function()
   HiveService={Interact=function() end},
  }
  service:Init(x)
- local T=require(rs.Config.TutorialConfig) assert(#T.Steps==13 and T.Version==3)
+ local T=require(rs.Config.TutorialConfig) assert(#T.Steps==15 and T.Version==4)
  p.Tutorial.Events.Delivery=99
  assert(not service:RecordEvent(player,"Delivery"))
  service:Refresh(player) assert(p.Tutorial.Step==1)
@@ -87,7 +87,7 @@ test("tutorial v3 gates future events and completes ordered flow",function()
   service:Refresh(player)
   assert(p.Tutorial.Step==i+1)
  end
- assert(p.Tutorial.Step==14 and completed==1 and sparks>0)
+ assert(p.Tutorial.Step==16 and completed==1 and sparks>0)
  assert(p.Hive.Honey>=40)
  assert(p.WorkshopV5.Points>=1 and p.Currencies.Coins>=30)
  assert((p.FlowerCollection.OwnedSeedCopies.Tulip or 0)>=1)
@@ -110,10 +110,10 @@ test("tutorial v2 profile beyond shortened flow migrates complete",function()
  local s=require(node("ServerScriptService/Services/TutorialService"))
  s:Init({Profile=function() return p end,MarkStateDirty=function() end,EmitOnce=function(_,pl,event) p.Tutorial.Events[event]=1 end,U={Near=function() return false end},GardenActivityService={EnsureTutorialSpark=function() end},GardenPlotService={HivePosition=function() return Vector3.zero end,RefreshHivePrompt=function() end},InventoryService={Available=function() return 1 end},HiveService={Interact=function() end}})
  s:Refresh(player)
- assert(p.Tutorial.Version==3 and p.Tutorial.Step==14 and p.Tutorial.Events.TutorialComplete==1)
+ assert(p.Tutorial.Version==4 and p.Tutorial.Step==16 and p.Tutorial.Events.TutorialComplete==1)
 end)
 test("tutorial SunnyVisit recovers if EmitOnce was consumed early",function()
- local player={} local p=Schema.CreateDefault() p.Tutorial.Step=13 p.Tutorial.Events.SunnyVisit=1
+ local player={} local p=Schema.CreateDefault() p.Tutorial.Step=15 p.Tutorial.Events.SunnyVisit=1
  local service=require(node("ServerScriptService/Services/TutorialService"))
  local x={
   Profile=function() return p end,
@@ -133,14 +133,37 @@ test("tutorial SunnyVisit recovers if EmitOnce was consumed early",function()
  }
  service:Init(x)
  assert(service:Tick(player))
- assert(p.Tutorial.Step==14 and p.Tutorial.Events.TutorialStep_SunnyVisit==1)
+ assert(p.Tutorial.Step==16 and p.Tutorial.Events.TutorialStep_SunnyVisit==1)
+end)
+test("tutorial v3 skipped profile stays complete after v4 migration",function()
+ local player={} local p=Schema.CreateDefault() p.Tutorial.Version=3 p.Tutorial.Step=14 p.Tutorial.Skipped=true p.Tutorial.Events={}
+ local s=require(node("ServerScriptService/Services/TutorialService"))
+ s:Init({Profile=function() return p end,MarkStateDirty=function() end,EmitOnce=function() end})
+ s:Refresh(player)
+ assert(p.Tutorial.Version==4 and p.Tutorial.Step==16 and p.Tutorial.Skipped and p.Tutorial.Events.TutorialComplete==1)
+end)
+test("tutorial first seed presentation recovers from already confirmed reward",function()
+ local player={} local p=Schema.CreateDefault() p.Tutorial.Step=6 p.Tutorial.Events.SeedReward=1
+ local s=require(node("ServerScriptService/Services/TutorialService"))
+ s:Init({
+  Profile=function() return p end,
+  MarkStateDirty=function() end,
+  EmitOnce=function() end,
+  U={Near=function() return false end},
+  GardenActivityService={EnsureTutorialSpark=function() end},
+  GardenPlotService={HivePosition=function() return Vector3.zero end,RefreshHivePrompt=function() end},
+  InventoryService={Available=function() return 1 end},
+  MapService={Sector=function() return "Center" end},
+ })
+ assert(s:Tick(player))
+ assert(p.Tutorial.Step==7 and p.Tutorial.Events.TutorialStep_FirstSeed==1)
 end)
 test("tutorial skip does not grant economy assists",function()
  local player={} local p=Schema.CreateDefault() p.StarterBeeGranted=true
  local s=require(node("ServerScriptService/Services/TutorialService"))
  s:Init({Profile=function() return p end,HiveService={Interact=function() error("starter bee should already exist") end}})
  s:Skip(player)
- assert(p.Tutorial.Step==14 and p.Tutorial.Skipped and p.Hive.Honey==0 and p.Currencies.Coins==0 and p.WorkshopV5.Points==0)
+ assert(p.Tutorial.Step==16 and p.Tutorial.Skipped and p.Hive.Honey==0 and p.Currencies.Coins==0 and p.WorkshopV5.Points==0)
 end)
 test("tutorial Pollen Spark offer is tagged, deduped and respawns after expiry",function()
  local player={Character={FindFirstChildOfClass=function() return {Health=100} end}} local p=Schema.CreateDefault()
