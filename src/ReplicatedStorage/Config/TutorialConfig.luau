@@ -2,7 +2,7 @@ local Steps={
  {Id="HiveIntro",Event="HiveApproach",Text="Welcome to Bloom RNG. This is your Hive.",Helper="Walk to the highlighted Hive.",Target="Hive"},
  {Id="StarterBee",Event="StarterBee",Text="Claim your first Bee.",Helper="Use the Hive interaction to claim your Worker Bee.",Target="Hive"},
  {Id="BeeWork",Event="Work",Text="Your Bee automatically pollinates flowers.",Helper="Watch the highlighted Bee reach a flower.",Target="Bee"},
- {Id="PollenSpark",Event="PollenSpark",Text="Touch the glowing Pollen Spark.",Helper="Walk into the highlighted sphere. No key press is needed.",Target="TutorialToken"},
+ {Id="PollenSpark",Event="PollenSpark",Text="Reach the glowing Pollen Spark checkpoint.",Helper="Step onto the highlighted checkpoint. No key press is needed.",Target="TutorialToken"},
  {Id="Roll",Event="Roll",Text="Start rolling for Flowers and Bees.",Helper="Click the highlighted Roll button.",Target="Roll"},
  {Id="FirstSeed",Event="SeedReward",Text="You found a Flower Seed.",Helper="Seeds can be planted in your Garden.",Target="RouletteReward"},
  {Id="Plant",Event="Plant",Text="Plant your Flower.",Helper="Go to the highlighted empty bed and plant the seed.",Target="GardenSlot",Slot=3},
