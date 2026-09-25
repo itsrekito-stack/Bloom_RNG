@@ -98,7 +98,7 @@ function S:Start()
    warn("[Bloom][SERVER_ERROR]["..requestErrorId.."] player="..tostring(player.Name).." userId="..tostring(player.UserId).." action="..tostring(action).." a="..argText(a).." b="..argText(b).." c="..argText(c).."\n"..tostring(result))
   end
   local success=ok and result~=false
-  local finalReason=ok and reason or "SERVER_ERROR"
+  local finalReason=ok and (reason or (result==false and "ACTION_UNAVAILABLE" or nil)) or "SERVER_ERROR"
   if success and self.X:ActionMutatesState(action) then self.X:MarkStateDirty(player) end
   local message
   if success then
