@@ -18,6 +18,11 @@ DataConfig.MaxRetries =
 3
 DataConfig.RetryBaseSeconds =
 1
+-- Operation retries reuse one immutable candidate and id. No unbounded recovery.
+DataConfig.PersistenceAttempts = 6
+DataConfig.RetryMaxSeconds = 8
+DataConfig.OperationWaitSeconds = 20
+DataConfig.ShutdownBudgetSeconds = 25
 function DataConfig.GetStoreName(): string
 if RunService:IsStudio() then
 return DataConfig.StudioStoreName
@@ -25,3 +30,4 @@ end
 return DataConfig.ProductionStoreName
 end
 return DataConfig
+

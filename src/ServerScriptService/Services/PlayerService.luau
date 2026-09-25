@@ -1,6 +1,6 @@
 local RS=game:GetService("ReplicatedStorage") local Players=game:GetService("Players") local U=require(RS.Shared.BloomUtil) local C=require(RS.Config.BloomConfig) local T=require(RS.Config.TutorialConfig) local L=require(RS.Config.LocationsConfig)
-local X={Temp={},Busy={},Revisions={},Connections={},ClientReadyConnections={},U=U}
-function X:Profile(player) if self.Busy[player] then return nil end return self.DataService:GetProfile(player) end
+local X={Temp={},Revisions={},Connections={},ClientReadyConnections={},U=U}
+function X:Profile(player) return self.DataService:GetProfile(player) end
 function X:Send(player,kind,payload) if player.Parent==Players then self.RemoteService.Event:FireClient(player,kind,payload) end end
 function X:Broadcast(kind,payload) for _,p in ipairs(Players:GetPlayers()) do self:Send(p,kind,payload) end end
 function X:Emit(player,event,n)
@@ -107,7 +107,7 @@ end
 function X:Remove(player)
  self.AnalyticsService:Flush(player)
  for _,name in ipairs(self.ServiceNames) do local s=self[name] if s.Remove then s:Remove(player) end end
- if self.Connections[player] then self.Connections[player]:Disconnect() self.Connections[player]=nil end if self.ClientReadyConnections[player] then self.ClientReadyConnections[player]:Disconnect() self.ClientReadyConnections[player]=nil end self.Temp[player]=nil self.Busy[player]=nil self.Revisions[player]=nil
+ if self.Connections[player] then self.Connections[player]:Disconnect() self.Connections[player]=nil end if self.ClientReadyConnections[player] then self.ClientReadyConnections[player]:Disconnect() self.ClientReadyConnections[player]=nil end self.Temp[player]=nil self.Revisions[player]=nil
 end
 function X:Start(data,services,names)
  self.DataService=data self.ServiceNames=names for _,name in ipairs(names) do self[name]=services[name] end
@@ -131,3 +131,4 @@ function X:Start(data,services,names)
  end end)
 end
 return X
+

@@ -1,871 +1,306 @@
---!strict
-local Players =
-game:GetService("Players")
-local DataStoreService =
-game:GetService("DataStoreService")
-local HttpService =
-game:GetService("HttpService")
-local ReplicatedStorage =
-game:GetService("ReplicatedStorage")
-local ServerScriptService =
-game:GetService("ServerScriptService")
-local SharedFolder =
-ReplicatedStorage:WaitForChild(
-"Shared"
-)
-local DataFolder =
-ServerScriptService:WaitForChild(
-"Data"
-)
-local TableUtil =
-require(
-SharedFolder:WaitForChild(
-"TableUtil"
-)
-)
-local DataConfig =
-require(
-DataFolder:WaitForChild(
-"DataConfig"
-)
-)
-local ProfileSchema =
-require(
-DataFolder:WaitForChild(
-"ProfileSchema"
-)
-)
-local DataService = {}
-local profileStore = nil
-local recordsByUserId: {
-[number]: any
-} = {}
-local saveLocks: {
-[number]: boolean
-} = {}
-local profileLoadedEvent =
-Instance.new("BindableEvent")
-local randomGenerator =
-Random.new()
-local started = false
-local shuttingDown =
-false
-local serverSessionToken =
-HttpService:GenerateGUID(
-false
-)
-local serverId =
-game.JobId
-if serverId == "" then
-serverId =
-"studio-"
-.. HttpService:GenerateGUID(
-false
-)
+-- One persistence owner per user. A timed-out caller never starts a second writer.
+local Players = game:GetService("Players")
+local DataStoreService = game:GetService("DataStoreService")
+local HttpService = game:GetService("HttpService")
+local RS = game:GetService("ReplicatedStorage")
+local Data = game:GetService("ServerScriptService"):WaitForChild("Data")
+local Copy = require(RS.Shared.TableUtil).DeepCopy
+local Config = require(Data.DataConfig)
+local Schema = require(Data.ProfileSchema)
+local Service = {}
+local recordsByUserId = {}
+local loaded = Instance.new("BindableEvent")
+local store, started, shuttingDown, shutdownDeadline
+local serverId = game.JobId ~= "" and game.JobId or "studio-" .. HttpService:GenerateGUID(false)
+
+local function outcome(code, operation, pending)
+ return {Code=code, Committed=code=="SUCCESS", Pending=pending==true,
+  OperationId=operation and operation.Id, Attempts=operation and operation.Attempts or 0}
 end
-local function getKey(
-userId: number
-): string
-return DataConfig.KeyPrefix
-.. tostring(userId)
+local function log(record, operation, code)
+ warn(string.format("[DataService] operation=%s user=%s state=%s attempt=%d result=%s",
+  operation and operation.Kind or "Lifecycle", tostring(record.Player.UserId), record.State,
+  operation and operation.Attempts or 0, code))
 end
-local function getRetryDelay(
-attempt: number
-): number
-return DataConfig.RetryBaseSeconds
-* (
-2 ^ (attempt - 1)
-)
+local function setState(record, state)
+ record.State=state
+ record.Player:SetAttribute("BloomProfileState",state)
+ record.Player:SetAttribute("BloomProfileLoaded",state=="Active" or state=="Saving")
 end
-local function makeSession(
-now: number
-)
-return {
-ServerId =
-serverId,
-Token =
-serverSessionToken,
-ExpiresAt =
-now
-+ DataConfig.SessionLeaseSeconds,
-}
+local function kick(record, message)
+ if record.Player.Parent==Players then record.Player:Kick(message) end
 end
-local function normalizeStoredRecord(
-stored
-)
-if type(stored)
-== "table"
-and type(stored.Data)
-== "table"
-then
-return stored
+local function key(record) return Config.KeyPrefix..tostring(record.Player.UserId) end
+local function session(record)
+ return {ServerId=serverId,Token=record.Token,ExpiresAt=os.time()+Config.SessionLeaseSeconds}
 end
-if type(stored)
-== "table"
-then
-return {
-RecordVersion = 1,
-Revision = 0,
-UpdatedAt = 0,
-Session = nil,
-Data =
-TableUtil.DeepCopy(
-stored
-),
-}
-end
-return {
-RecordVersion = 1,
-Revision = 0,
-UpdatedAt = 0,
-Session = nil,
-Data = nil,
-}
-end
-function DataService:Init()
-local storeName =
-DataConfig.GetStoreName()
-profileStore =
-DataStoreService:GetDataStore(
-storeName
-)
-print(
-"[DataService] Store:",
-storeName
-)
-print(
-"[DataService] Server session:",
-serverId
-)
-print(
-"[DataService] Init complete"
-)
-end
-function DataService:Start()
-if started then
-return
-end
-started =
-true
-assert(
-profileStore ~= nil,
-"DataService was not initialized"
-)
-Players.PlayerAdded:Connect(
-function(player)
-task.spawn(
-function()
-self:LoadProfile(
-player
-)
-end
-)
-end
-)
-Players.PlayerRemoving:Connect(
-function(player)
-self:ReleaseProfile(
-player
-)
-end
-)
-for _, player in ipairs(
-Players:GetPlayers()
-) do
-task.spawn(
-function()
-self:LoadProfile(
-player
-)
-end
-)
-end
-task.spawn(
-function()
-self:AutosaveLoop()
-end
-)
-game:BindToClose(
-function()
-self:Shutdown()
-end
-)
-print(
-"[DataService] Started"
-)
-end
-function DataService:LoadProfile(
-player: Player
-)
-local userId =
-player.UserId
-if recordsByUserId[
-userId
-] then
-return
-end
-player:SetAttribute("BloomProfileState","Loading")
-player:SetAttribute("BloomProfileLoaded",false)
-player:SetAttribute("BloomProfileError",nil)
-print("[DataService] Loading profile:",player.Name,userId)
-local record = {
-Player =
-player,
-State =
-"Loading",
-Data =
-nil,
-Cancelled =
-false,
-LastSaveAt =
-0,
-}
-recordsByUserId[
-userId
-] = record
-task.delay(8,function()
- if recordsByUserId[userId]==record and record.State=="Loading" and player.Parent==Players then
-  warn("[DataService] Profile load still pending after 8s:",player.Name,userId)
+local function normalize(value)
+ if value==nil then return {Revision=0} end
+ if type(value)~="table" then return nil end
+ if value.Data~=nil then
+  if type(value.Data)~="table" then return nil end
+  return value
  end
-end)
-local key =
-getKey(
-userId
-)
-local finalError:
-string? = nil
-for attempt = 1,
-DataConfig.MaxRetries
-do
-local callbackFailure:
-string? = nil
-local success,
-resultOrError =
-pcall(
-function()
-return profileStore:UpdateAsync(
-key,
-function(
-currentValue
-)
-local now =
-os.time()
-local stored =
-normalizeStoredRecord(
-currentValue
-)
-local session =
-stored.Session
-if type(session)
-== "table"
-then
-local token =
-session.Token
-local expiresAt =
-session.ExpiresAt
-if typeof(token)
-== "string"
-and token
-~= serverSessionToken
-and typeof(
-expiresAt
-) == "number"
-and expiresAt
-> now
-then
-callbackFailure =
-"SESSION_LOCKED"
-return nil
-end
-end
-local profile
-if type(stored.Data)
-== "table"
-then
-profile =
-TableUtil.DeepCopy(
-stored.Data
-)
-else
-profile =
-ProfileSchema.CreateDefault()
-end
-local prepared,
-prepareError =
-ProfileSchema.Prepare(
-profile
-)
-if not prepared then
-callbackFailure =
-"INVALID_PROFILE: "
-.. tostring(
-prepareError
-)
-return nil
-end
-local oldRevision =
-stored.Revision
-if typeof(oldRevision)
-~= "number"
-then
-oldRevision =
-0
-end
-return {
-RecordVersion =
-1,
-Revision =
-math.floor(
-oldRevision
-) + 1,
-UpdatedAt =
-now,
-Session =
-makeSession(
-now
-),
-Data =
-profile,
-}
-end
-)
-end
-)
-if success then
-local storedRecord =
-resultOrError
-if type(storedRecord)
-== "table"
-and type(
-storedRecord.Session
-) == "table"
-and storedRecord.Session.Token
-== serverSessionToken
-and type(
-storedRecord.Data
-) == "table"
-then
-record.Data =
-storedRecord.Data
-record.State =
-"Active"
-record.LastSaveAt =
-os.time()
-player:SetAttribute("BloomProfileState","Active")
-player:SetAttribute("BloomProfileLoaded",true)
-print(
-"[DataService] Profile loaded:",
-player.Name
-)
-if record.Cancelled
-or player.Parent
-~= Players
-then
-self:ReleaseProfile(
-player
-)
-return
-end
-profileLoadedEvent:Fire(
-player
-)
-return
-end
-finalError =
-callbackFailure
-or "LOAD_CANCELLED"
-if finalError
-== "SESSION_LOCKED"
-then
-break
-end
-if string.find(
-finalError,
-"INVALID_PROFILE",
-1,
-true
-) then
-break
-end
-else
-finalError =
-tostring(
-resultOrError
-)
-end
-if attempt
-< DataConfig.MaxRetries
-then
-task.wait(
-getRetryDelay(
-attempt
-)
-)
-end
-end
-recordsByUserId[
-userId
-] = nil
-player:SetAttribute("BloomProfileState","Failed")
-player:SetAttribute("BloomProfileLoaded",false)
-player:SetAttribute("BloomProfileError",tostring(finalError or "UNKNOWN"))
-warn(
-"[DataService] Failed to load profile:",
-player.Name,
-finalError
-)
-if player.Parent
-== Players
-then
-if finalError
-== "SESSION_LOCKED"
-then
-player:Kick(
-"Your profile is already active on another server. Please try again shortly."
-)
-else
-player:Kick(
-"Your data could not be loaded safely. Please rejoin."
-)
-end
-end
-end
-function DataService:SaveProfile(
-player: Player,
-releaseSession: boolean
-): boolean
-local userId =
-player.UserId
-local record =
-recordsByUserId[
-userId
-]
-if not record then
-return false
-end
-if record.State ~= "Active"
-and record.State ~= "Closing"
-then
-return false
-end
-if saveLocks[
-userId
-] then
-if not releaseSession then
-return false
-end
-local deadline =
-os.clock() + 10
-while saveLocks[
-userId
-]
-and os.clock()
-< deadline
-do
-task.wait(
-0.05
-)
-end
-if saveLocks[
-userId
-] then
-warn(
-"[DataService] Save lock timeout:",
-player.Name
-)
-return false
-end
-end
-saveLocks[
-userId
-] = true
-local snapshot =
-TableUtil.DeepCopy(
-record.Data
-)
-local valid,
-validationError =
-ProfileSchema.Prepare(
-snapshot
-)
-if not valid then
-saveLocks[
-userId
-] = nil
-warn(
-"[DataService] Refusing to save invalid profile:",
-player.Name,
-validationError
-)
-return false
-end
-local key =
-getKey(
-userId
-)
-local lostOwnership =
-false
-local finalError:
-string? = nil
-for attempt = 1,
-DataConfig.MaxRetries
-do
-local success,
-resultOrError =
-pcall(
-function()
-return profileStore:UpdateAsync(
-key,
-function(
-currentValue
-)
-local stored =
-normalizeStoredRecord(
-currentValue
-)
-local session =
-stored.Session
-if type(session)
-~= "table"
-or session.Token
-~= serverSessionToken
-then
-lostOwnership =
-true
-return nil
-end
-local now =
-os.time()
-local revision =
-stored.Revision
-if typeof(revision)
-~= "number"
-then
-revision =
-0
-end
-return {
-RecordVersion =
-1,
-Revision =
-math.floor(
-revision
-) + 1,
-UpdatedAt =
-now,
-Session =
-if releaseSession
-then nil
-else makeSession(
-now
-),
-Data =
-snapshot,
-}
-end
-)
-end
-)
-if success then
-if lostOwnership then
-finalError =
-"SESSION_OWNERSHIP_LOST"
-break
-end
-if type(
-resultOrError
-) == "table"
-then
-record.LastSaveAt =
-os.time()
-saveLocks[
-userId
-] = nil
-print(
-"[DataService] Saved:",
-player.Name,
-releaseSession
-and "(released)"
-or ""
-)
-return true
-end
-finalError =
-"SAVE_CANCELLED"
-else
-finalError =
-tostring(
-resultOrError
-)
-end
-if attempt
-< DataConfig.MaxRetries
-and not lostOwnership
-then
-task.wait(
-getRetryDelay(
-attempt
-)
-)
-end
-end
-saveLocks[
-userId
-] = nil
-if lostOwnership then
-record.State =
-"Lost"
-warn(
-"[DataService] Session ownership lost:",
-player.Name
-)
-if player.Parent
-== Players
-then
-player:Kick(
-"Your data session changed unexpectedly. Please rejoin."
-)
-end
-else
-warn(
-"[DataService] Save failed:",
-player.Name,
-finalError
-)
-end
-return false
-end
-function DataService:ReleaseProfile(
-player: Player
-)
-local userId =
-player.UserId
-local record =
-recordsByUserId[
-userId
-]
-if not record then
-return
-end
-if record.State=="Transaction" then
- local deadline=os.clock()+20
- while record.State=="Transaction" and os.clock()<deadline do task.wait(.05) end
- if record.State=="Transaction" then return end
- self:ReleaseProfile(player) return
-end
-if record.State
-== "Closing"
-then
-local deadline =
-os.clock() + 12
-while recordsByUserId[
-userId
-] == record
-and os.clock()
-< deadline
-do
-task.wait(
-0.05
-)
-end
-return
-end
-if record.State
-== "Loading"
-then
-record.Cancelled =
-true
-local deadline =
-os.clock() + 12
-while recordsByUserId[
-userId
-] == record
-and record.State
-== "Loading"
-and os.clock()
-< deadline
-do
-task.wait(
-0.05
-)
-end
-local updatedRecord =
-recordsByUserId[
-userId
-]
-if updatedRecord
-and updatedRecord.State
-== "Active"
-then
-self:ReleaseProfile(
-player
-)
-end
-return
-end
-if record.State
-== "Lost"
-then
-recordsByUserId[
-userId
-] = nil
-return
-end
-record.State =
-"Closing"
-local saved =
-self:SaveProfile(
-player,
-true
-)
-if not saved then
-warn(
-"[DataService] Final save failed:",
-player.Name
-)
-end
-recordsByUserId[
-userId
-] = nil
-saveLocks[
-userId
-] = nil
-print(
-"[DataService] Profile released:",
-player.Name
-)
-end
-function DataService:AutosaveLoop()
-while started
-and not shuttingDown
-do
-local waitTime =
-randomGenerator:NextNumber(
-DataConfig.AutosaveMinSeconds,
-DataConfig.AutosaveMaxSeconds
-)
-task.wait(
-waitTime
-)
-if shuttingDown then
-break
-end
-for _, record in pairs(
-recordsByUserId
-) do
-if record.State
-~= "Active"
-then
-continue
-end
-local player =
-record.Player
-if not player then
-continue
-end
-task.spawn(
-function()
-self:SaveProfile(
-player,
-false
-)
-end
-)
-end
-end
-end
-function DataService:Shutdown()
-if shuttingDown then
-return
-end
-shuttingDown =
-true
-print(
-"[DataService] Server shutting down..."
-)
-local remaining =
-0
-for _, record in pairs(
-recordsByUserId
-) do
-local player =
-record.Player
-if player then
-remaining += 1
-task.spawn(
-function()
-self:ReleaseProfile(
-player
-)
-remaining -= 1
-end
-)
-end
-end
-local deadline =
-os.clock() + 25
-while remaining > 0
-and os.clock()
-< deadline
-do
-task.wait(
-0.1
-)
-end
-print(
-"[DataService] Shutdown finished"
-)
-end
-function DataService:GetProfile(
-player: Player
-)
-local record =
-recordsByUserId[
-player.UserId
-]
-if not record then
-return nil
-end
-if record.State
-~= "Active"
-then
-return nil
-end
-return record.Data
-end
-function DataService:IsLoaded(
-player: Player
-): boolean
-local record =
-recordsByUserId[
-player.UserId
-]
-return record ~= nil
-and record.State
-== "Active"
-end
-function DataService:GetProfileLoadedSignal():
-RBXScriptSignal
-return profileLoadedEvent.Event
-end
-function DataService:CommitProfile(player, candidate, transactionId)
- local userId=player.UserId local record=recordsByUserId[userId]
- if not record or record.State~="Active" or saveLocks[userId] then return false end
- local snapshot=TableUtil.DeepCopy(candidate) local valid=ProfileSchema.Prepare(snapshot) if not valid then return false end
- snapshot.LastTransactionId=transactionId saveLocks[userId]=true record.State="Transaction"
- for attempt=1,DataConfig.MaxRetries do
-  local ok,result=pcall(function() return profileStore:UpdateAsync(getKey(userId),function(value)
-   local stored=normalizeStoredRecord(value)
-   if type(stored.Session)~="table" or stored.Session.Token~=serverSessionToken then return nil end
-   if stored.Data and stored.Data.LastTransactionId==transactionId then return stored end
-   return {RecordVersion=1,Revision=(stored.Revision or 0)+1,UpdatedAt=os.time(),Session=makeSession(os.time()),Data=snapshot}
-  end) end)
-  if ok and type(result)=="table" and result.Data and result.Data.LastTransactionId==transactionId then
-   record.Data=TableUtil.DeepCopy(result.Data) record.State="Active" record.LastSaveAt=os.time() saveLocks[userId]=nil return true
+ -- An envelope missing Data must never become a new default profile.
+ if value.RecordVersion~=nil or value.Session~=nil then return nil end
+ return {Revision=0,Data=value}
+end
+local function owns(record, stored)
+ local s=stored.Session
+ return type(s)=="table" and s.Token==record.Token and type(s.ExpiresAt)=="number" and s.ExpiresAt>os.time()
+end
+local function prepare(value)
+ local ok, copy, valid, reason=pcall(function()
+  local candidate=Copy(value)
+  local yes, why=Schema.Prepare(candidate)
+  return candidate,yes,why
+ end)
+ if not ok or not valid then return nil,reason or "INVALID_PROFILE" end
+ return copy
+end
+
+-- UpdateAsync errors are conservatively UNKNOWN: an acknowledgement may be lost
+-- after the write. Retries use the SAME id and immutable snapshot. The marker is
+-- checked inside UpdateAsync, never with a cached GetAsync read.
+local function attempt(record, operation)
+ local observed, confirmed
+ local ok, result=pcall(function()
+  return store:UpdateAsync(key(record),function(value)
+   observed=nil confirmed=nil -- callback may be replayed by UpdateAsync
+   local current=normalize(value)
+   if not current then observed="INVALID_PROFILE" return nil end
+   if current.LastOperationId==operation.Id then
+    if operation.Kind~="Release" and not owns(record,current) then
+     observed="OWNERSHIP_LOST" return nil
+    end
+    observed="SUCCESS" confirmed=current
+    return nil -- confirmation must not overwrite a newer owner's envelope
+   end
+   local snapshot=operation.Snapshot
+   if operation.Kind=="Load" then
+    local s=current.Session
+    if type(s)=="table" and s.Token~=record.Token and type(s.ExpiresAt)=="number" and s.ExpiresAt>os.time() then
+     observed="OWNERSHIP_LOST" return nil
+    end
+    snapshot=prepare(current.Data or Schema.CreateDefault())
+    if not snapshot then observed="INVALID_PROFILE" return nil end
+   elseif not owns(record,current) then
+    observed="OWNERSHIP_LOST" return nil
+   end
+   local revision=current.Revision or 0
+   if type(revision)~="number" or revision~=revision or math.abs(revision)==math.huge or revision<0 then
+    observed="INVALID_PROFILE" return nil
+   end
+   return {RecordVersion=1,Revision=math.floor(revision)+1,UpdatedAt=os.time(),
+    Session=operation.Kind~="Release" and session(record) or nil,
+    LastOperationId=operation.Id,Data=snapshot}
+  end)
+ end)
+ if not ok then return "UNKNOWN_OUTCOME" end
+ if observed then return observed,confirmed end
+ if type(result)=="table" and result.LastOperationId==operation.Id then return "SUCCESS",result end
+ return "RETRYABLE_FAILURE"
+end
+
+local beginOperation, requestRelease
+local function runOperation(record, operation)
+ local code, stored="RETRYABLE_FAILURE",nil
+ for i=1,Config.PersistenceAttempts do
+  if shuttingDown and os.clock()>=shutdownDeadline then code="TIMEOUT" break end
+  operation.Attempts=i
+  code,stored=attempt(record,operation)
+  if code=="SUCCESS" or code=="OWNERSHIP_LOST" or code=="INVALID_PROFILE" then break end
+  if code=="UNKNOWN_OUTCOME" then operation.Uncertain=true end
+  setState(record,"RetryPending")
+  log(record,operation,code)
+  if i<Config.PersistenceAttempts then
+   local delay=math.min(Config.RetryBaseSeconds*2^(i-1),Config.RetryMaxSeconds)
+   if shuttingDown then delay=math.min(delay,math.max(0,shutdownDeadline-os.clock())) end
+   task.wait(delay)
   end
-  if attempt<DataConfig.MaxRetries then task.wait(getRetryDelay(attempt)) end
  end
- -- Unknown durable outcome: never overwrite the store with the pre-turn snapshot.
- record.State="Lost" saveLocks[userId]=nil player:Kick("Season save could not be confirmed. Please rejoin safely.") return false
+ if code~="SUCCESS" and code~="OWNERSHIP_LOST" and operation.Uncertain then code="UNKNOWN_OUTCOME" end
+ if code=="SUCCESS" then
+  if operation.Kind=="Load" or operation.Kind=="Transaction" then record.Data=Copy(stored.Data) end
+  record.LastSaveAt=os.time()
+  record.LeaseExpires=stored.Session and stored.Session.ExpiresAt or 0
+  if operation.Kind=="Release" then
+   setState(record,"Released")
+   -- The only removal of an acquired record is a confirmed final commit.
+   if recordsByUserId[record.Player.UserId]==record then recordsByUserId[record.Player.UserId]=nil end
+  else
+   setState(record,record.CloseRequested and "Closing" or "Active")
+  end
+ else
+  setState(record,code=="OWNERSHIP_LOST" and "Lost" or code=="UNKNOWN_OUTCOME" and "UnknownOutcome" or "RecoveryFailed")
+  record.Player:SetAttribute("BloomProfileError",code)
+  log(record,operation,code)
+  kick(record,"Your data session could not be confirmed safely. Please rejoin shortly.")
+ end
+ operation.Result=outcome(code,operation)
+ if code~="SUCCESS" then record.FailureResult=operation.Result end
+ operation.Done=true
+ record.Operation=nil
+ record.LastOperation=operation -- retains the candidate on unknown/failure, never writes old memory
+ if code=="SUCCESS" and operation.Kind~="Release" then
+  if record.CloseRequested or shuttingDown or record.Player.Parent~=Players then
+   requestRelease(record)
+  elseif operation.Kind=="Load" then
+   loaded:Fire(record.Player)
+  end
+ end
 end
-return DataService
+beginOperation=function(record, kind, snapshot, transactionId)
+ local operation={Kind=kind,Id=HttpService:GenerateGUID(false),Snapshot=snapshot,Attempts=0}
+ if transactionId then operation.Snapshot.LastTransactionId=transactionId end
+ record.Operation=operation
+ setState(record,kind=="Load" and "Loading" or kind=="Transaction" and "Transaction" or kind=="Release" and "Closing" or "Saving")
+ task.spawn(function()
+  local ok=pcall(runOperation,record,operation)
+  if not ok then
+   -- Internal failure after a possible write is just as unsafe as a lost response.
+   setState(record,"UnknownOutcome")
+   operation.Result=outcome("UNKNOWN_OUTCOME",operation)
+   record.FailureResult=operation.Result
+   operation.Done=true record.Operation=nil record.LastOperation=operation
+   log(record,operation,"UNKNOWN_OUTCOME_INTERNAL")
+   kick(record,"Your data session could not be confirmed safely. Please rejoin shortly.")
+  end
+ end)
+ return operation
+end
+requestRelease=function(record)
+ record.CloseRequested=true
+ if record.Operation then return end -- its completion owns the final-save handoff
+ if record.State=="Released" or record.State=="Lost" or record.State=="UnknownOutcome" or record.State=="RecoveryFailed" then return end
+ setState(record,"Closing")
+ local snapshot=prepare(record.Data)
+ if not snapshot then
+  setState(record,"RecoveryFailed")
+  record.LastOperation={Kind="Release",Attempts=0,Result=outcome("INVALID_PROFILE")}
+  record.FailureResult=record.LastOperation.Result
+  log(record,record.LastOperation,"INVALID_PROFILE")
+  return
+ end
+ beginOperation(record,"Release",snapshot)
+end
+local function awaitOperation(record, operation)
+ local deadline=os.clock()+Config.OperationWaitSeconds
+ while not operation.Done and os.clock()<deadline and (not shuttingDown or os.clock()<shutdownDeadline) do task.wait(.05) end
+ if operation.Done then return operation.Result end
+ log(record,operation,"TIMEOUT_IN_FLIGHT")
+ return outcome("TIMEOUT",operation,true)
+end
+function Service:Init()
+ store=DataStoreService:GetDataStore(Config.GetStoreName())
+ print("[DataService] Store:",Config.GetStoreName())
+end
+function Service:LoadProfile(player)
+ local existing=recordsByUserId[player.UserId]
+ if existing then
+  if existing.Player~=player then player:Kick("Your previous session is still closing. Please try another server shortly.") end
+  return outcome("RETRYABLE_FAILURE",existing.Operation,existing.Operation~=nil)
+ end
+ if shuttingDown then return outcome("TIMEOUT") end
+ local record={Player=player,State="Loading",Token=HttpService:GenerateGUID(false),LastSaveAt=0}
+ recordsByUserId[player.UserId]=record
+ player:SetAttribute("BloomProfileError",nil)
+ local result=awaitOperation(record,beginOperation(record,"Load"))
+ if result.Pending then
+  record.CloseRequested=true
+  kick(record,"Profile load is still pending. Please rejoin shortly.")
+ end
+ return result
+end
+function Service:GetProfile(player)
+ local record=recordsByUserId[player.UserId]
+ if not record or record.Player~=player or record.CloseRequested then return nil end
+ if record.State~="Active" and record.State~="Saving" then return nil end
+ if os.time()>=(record.LeaseExpires or 0) then
+  record.CloseRequested=true
+  if not record.Operation then setState(record,"Lost");record.FailureResult=outcome("OWNERSHIP_LOST") end
+  log(record,record.Operation,"LEASE_EXPIRED")
+  kick(record,"Your data session lease expired. Please rejoin shortly.")
+  return nil
+ end
+ return record.Data
+end
+function Service:IsLoaded(player) return self:GetProfile(player)~=nil end
+function Service:GetProfileLoadedSignal() return loaded.Event end
+function Service:GetPersistenceStatus(player)
+ local r=recordsByUserId[player.UserId]
+ if not r or r.Player~=player then return {State="Released"} end
+ return {State=r.State,Closing=r.CloseRequested==true,Operation=r.Operation and r.Operation.Kind,
+  Result=r.FailureResult and r.FailureResult.Code or (r.LastOperation and r.LastOperation.Result and r.LastOperation.Result.Code)}
+end
+function Service:SaveProfile(player, releaseSession)
+ if releaseSession then return self:ReleaseProfile(player) end
+ local record=recordsByUserId[player.UserId]
+ if not record or record.Player~=player or record.CloseRequested or record.State~="Active" or record.Operation then return outcome("RETRYABLE_FAILURE") end
+ local snapshot=prepare(record.Data)
+ if not snapshot then
+  record.CloseRequested=true setState(record,"RecoveryFailed")
+  record.FailureResult=outcome("INVALID_PROFILE")
+  log(record,nil,"INVALID_PROFILE") kick(record,"Your profile needs recovery. Please rejoin safely.")
+  return outcome("INVALID_PROFILE")
+ end
+ return awaitOperation(record,beginOperation(record,"Save",snapshot))
+end
+function Service:CommitProfile(player, candidate, transactionId)
+ local record=recordsByUserId[player.UserId]
+ if not record or record.Player~=player or record.CloseRequested or record.State~="Active" or record.Operation then return outcome("RETRYABLE_FAILURE") end
+ if type(transactionId)~="string" or transactionId=="" then return outcome("INVALID_PROFILE") end
+ local snapshot=prepare(candidate)
+ if not snapshot then return outcome("INVALID_PROFILE") end
+ local operation=beginOperation(record,"Transaction",snapshot,transactionId)
+ local result=awaitOperation(record,operation)
+ if result.Pending then
+  -- Caller cannot safely resume gameplay even if the worker commits later.
+  record.CloseRequested=true
+  kick(record,"Season save is still pending. Please rejoin shortly.")
+ end
+ return result
+end
+function Service:ReleaseProfile(player)
+ local record=recordsByUserId[player.UserId]
+ if not record or record.Player~=player then return outcome("NO_PROFILE") end
+ requestRelease(record)
+ local deadline=os.clock()+Config.OperationWaitSeconds
+ while record.Operation and os.clock()<deadline and (not shuttingDown or os.clock()<shutdownDeadline) do task.wait(.05) end
+ if record.State=="Released" then return outcome("SUCCESS",record.LastOperation) end
+ if record.Operation then return outcome("TIMEOUT",record.Operation,true) end
+ return record.FailureResult or outcome("OWNERSHIP_LOST")
+end
+function Service:AutosaveLoop()
+ while not shuttingDown do
+  task.wait(Random.new():NextNumber(Config.AutosaveMinSeconds,Config.AutosaveMaxSeconds))
+  if shuttingDown then break end
+  for _,record in pairs(recordsByUserId) do
+   if record.State=="Active" and not record.CloseRequested then task.spawn(function() self:SaveProfile(record.Player,false) end) end
+  end
+ end
+end
+function Service:Shutdown()
+ if shuttingDown then return end
+ shuttingDown=true shutdownDeadline=os.clock()+Config.ShutdownBudgetSeconds
+ for _,record in pairs(recordsByUserId) do requestRelease(record) end
+ while os.clock()<shutdownDeadline do
+  local pending=false
+  for _,record in pairs(recordsByUserId) do if record.Operation then pending=true break end end
+  if not pending then break end
+  task.wait(.05)
+ end
+ for _,record in pairs(recordsByUserId) do
+  log(record,record.Operation or record.LastOperation,record.Operation and "SHUTDOWN_TIMEOUT_IN_FLIGHT" or "SHUTDOWN_UNRESOLVED")
+ end
+end
+function Service:Start()
+ if started then return end
+ assert(store,"DataService was not initialized") started=true
+ Players.PlayerAdded:Connect(function(player) task.spawn(function() self:LoadProfile(player) end) end)
+ Players.PlayerRemoving:Connect(function(player) self:ReleaseProfile(player) end)
+ for _,player in ipairs(Players:GetPlayers()) do task.spawn(function() self:LoadProfile(player) end) end
+ task.spawn(function() self:AutosaveLoop() end)
+ game:BindToClose(function() self:Shutdown() end)
+end
+return Service

@@ -10,6 +10,10 @@ local Rarity=require(RS.Config.RarityConfig)
 local S={}
 
 local REASONS={
+ PERSISTENCE_BUSY="A save is already running. Please try again shortly",
+ PERSISTENCE_UNCONFIRMED="The save could not be confirmed. Please rejoin safely",
+ RESPEC_GARDEN_OCCUPIED="Respec would remove occupied flower beds. Keep these capacity upgrades",
+ GARDEN_PROGRESS_PROTECTED="This flower has progression. Replacing it would lose that progress",
  PROFILE_LOADING="Profile is still loading",
  SERVER_ERROR="Server error",
  RATE_LIMITED="Too many requests, try again",
@@ -273,3 +277,4 @@ function S:Snapshot(player)
 end
 
 return S
+
