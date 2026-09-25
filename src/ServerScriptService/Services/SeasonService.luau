@@ -1,5 +1,20 @@
-local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.SeasonConfig) local Plan=require(RS.Shared.SeasonPlan) local Http=game:GetService("HttpService") local S={Pending={}}
+local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.SeasonConfig) local Bloom=require(RS.Config.BloomConfig) local Plan=require(RS.Shared.SeasonPlan) local Http=game:GetService("HttpService") local S={Pending={}}
 function S:Init(x) self.X=x end
+function S:LegacyComplete(p)
+ if not p or not p.WorkshopV5 then return false end
+ for i=1,6 do if not p.WorkshopV5.Nodes["LEGACY_"..i] then return false end end
+ return true
+end
+function S:DistillNectar(player)
+ local p=self.X:Profile(player)
+ if not p then return false,"PROFILE_LOADING" end
+ if not self:LegacyComplete(p) then return false,"LEGACY_REQUIRED" end
+ local cost=Bloom.NectarDistillCost
+ if p.Currencies.AncientNectar<cost then return false,"NECTAR_REQUIRED" end
+ p.Currencies.AncientNectar-=cost
+ p.Currencies.PetalDust+=Bloom.NectarDistillDust
+ return true
+end
 function S:Eligible(p) local completed=0 for _,id in ipairs(C.TrialIds) do if p.Quests.Trials[id] then completed=completed+1 end end return p.Hive.Level>=C.Hive and p.World.UnlockedSectors.SunnyOrchard and p.World.UnlockedSectors.CrystalGreenhouse and p.World.UnlockedSectors.TwilightGrove and completed>=C.Trials and self.X.U.Count(p.FlowerCollection.DiscoveredFlowers)>=C.Flowers and self.X.U.Count(p.Pollinators.DiscoveredBees)>=C.Bees end
 function S:Preview(player)
  local p=self.X:Profile(player) if not p then return end if not self:Eligible(p) then self.X:Send(player,"Message",string.format("Season: Hive %d, all sectors, %d key trials, %d flowers, %d bees",C.Hive,C.Trials,C.Flowers,C.Bees)) return end
