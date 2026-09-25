@@ -14,12 +14,61 @@ for f in S.rglob('*.luau'):
  if f.stem=='FlowersConfig':
   txt=re.sub(r':(?:string|Color3|number|boolean)\??','',txt);txt=txt.replace(':{string}','')
  if f.stem=='BeesConfig':
-  # Test actual bee registry data; API helpers are defined below, avoiding Luau-only annotations.
+  # Test actual bee registry/passive/trait data while avoiding Luau-only annotations below.
   txt=txt[:txt.index('local totalWeight=0')]+'''function C.Get(id) return C.Bees[id] end
 function C.Exists(id) return C.Bees[id]~=nil end
-function C.GetTraitCounts(equipped) local out={} for _,id in pairs(equipped) do for _,tag in ipairs(C.Bees[id].Traits) do out[tag]=(out[tag] or 0)+1 end end return out end
-function C.GetTraitBonuses() return {LuckMultiplier=1,PollinatorYieldMultiplier=1},{} end
-function C.GetPassiveBonuses() return {LuckMultiplier=1,PollinatorYieldMultiplier=1} end
+local MULT_DEFAULT={PollinatorPowerMultiplier=1,PollinatorTravelSpeedMultiplier=1,PollinatorYieldMultiplier=1,FlowerGrowthMultiplier=1,LuckMultiplier=1,CoinMultiplier=1,ClonePowerMultiplier=1,AbilityCooldownMultiplier=1,AbilityDurationMultiplier=1,HiveHoneyMultiplier=1,BeeMasteryXPMultiplier=1,CriticalMultiplier=1}
+local ADD_DEFAULT={SplashChance=0,SplashPercent=0,CriticalChance=0,DualPollinationChance=0,DualPollinationPercent=0}
+local function isAdd(k) return ADD_DEFAULT[k]~=nil end
+function C.GetTraitCounts(equipped)
+ local out={_total=0}
+ if type(equipped)=="table" then
+  for _,id in pairs(equipped) do
+   local bee=type(id)=="string" and C.Get(id) or nil
+   if bee then
+    out._total=out._total+1
+    for _,tag in ipairs(bee.Traits or {}) do out[tag]=(out[tag] or 0)+1 end
+   end
+  end
+ end
+ return out
+end
+function C.GetTraitBonuses(equipped)
+ local counts=C.GetTraitCounts(equipped)
+ local bonus={}
+ for k,v in pairs(MULT_DEFAULT) do bonus[k]=v end
+ for k,v in pairs(ADD_DEFAULT) do bonus[k]=v end
+ local active={}
+ for traitId,data in pairs(C.Traits) do
+  local count=counts[traitId] or 0
+  local best=nil
+  local nextThreshold=nil
+  for _,bp in ipairs(data.Breakpoints or {}) do
+   if count>=bp.Count then best=bp elseif not nextThreshold then nextThreshold=bp.Count end
+  end
+  if best then
+   active[#active+1]={Id=traitId,Name=data.Name,Short=data.Short,Color=data.Color,Description=data.Description,Count=count,Threshold=best.Count,NextThreshold=nextThreshold,Bonus=best.Bonus}
+   for stat,val in pairs(best.Bonus or {}) do
+    if isAdd(stat) then bonus[stat]=(bonus[stat] or 0)+(tonumber(val) or 0)
+    else bonus[stat]=(bonus[stat] or 1)*(tonumber(val) or 1) end
+   end
+  end
+ end
+ return bonus,active
+end
+function C.GetPassiveBonuses(equipped)
+ local out={}
+ for k,v in pairs(MULT_DEFAULT) do out[k]=v end
+ if type(equipped)=="table" then
+  for _,id in pairs(equipped) do
+   local bee=type(id)=="string" and C.Get(id) or nil
+   if bee and type(bee.Passive)=="table" then
+    for stat,m in pairs(bee.Passive) do out[stat]=(out[stat] or 1)*(tonumber(m) or 1) end
+   end
+  end
+ end
+ return out
+end
 return C'''
  modules[key]=txt
 base='''local nativeRequire=require
