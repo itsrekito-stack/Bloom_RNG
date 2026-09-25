@@ -108,7 +108,7 @@ need(journey_guide,'activities:TargetKind("SolarBloom")',"Solar Bloom active-che
 need(journey_guide,'world:FindFirstChild("SunnyOrchardGate")',"Sunny Orchard route target")
 need(journey_guide,'world:FindFirstChild("SunnyOrchard_1")',"specific Solar Bloom landmark target")
 need(journey_guide,'"Interact with the highlighted activity marker, then reach all 3 checkpoints."', "Solar Bloom activation explanation")
-need(journey_guide,'string.format("Solar Bloom  •  Reach checkpoint %d/%d",index,count)',"Solar Bloom objective progress")
+need(journey_guide,'string.format("Solar Bloom  •  Checkpoint %d/%d  •  Reward: +20%% Roll Luck for 60s",index,count)',"Solar Bloom objective progress and reward")
 need(ui,'self.JourneyGuideController=require(script.Parent.JourneyGuideController)',"Journey guide wiring")
 need(ui,'self.JourneyGuideController:Init(self,self.GuideController)',"Journey guide uses shared visual pointer layer")
 
