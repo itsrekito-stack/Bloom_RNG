@@ -1,4 +1,4 @@
-local RS=game:GetService("ReplicatedStorage") local A=require(RS.Config.ActivityConfig) local C=require(RS.Config.BloomConfig) local G=require(RS.Config.GardenSynergyConfig) local Http=game:GetService("HttpService") local S={Offers={}}
+local RS=game:GetService("ReplicatedStorage") local A=require(RS.Config.ActivityConfig) local C=require(RS.Config.BloomConfig) local G=require(RS.Config.GardenSynergyConfig) local E=require(RS.Shared.WorkshopEffects) local Http=game:GetService("HttpService") local S={Offers={}}
 function S:Init(x) self.X=x end
 function S:Offer(player,kind,position,sector,bee)
  local p=self.X:Profile(player) local cfg=A.Types[kind] if not p or not cfg then return false end
@@ -35,9 +35,9 @@ function S:Collect(player,id,index,phase)
   if not nearest then return false end nodes[1]=nearest+Vector3.new(0,3,0)
  elseif kind=="CrossPollination" then temp.NeighbourUntil=os.clock()+20
   elseif kind=="Overcharge" then temp.OverchargeBee=o.Bee
-  elseif kind=="CrystalResonance" then temp.Crystal=true temp.NeighbourUntil=os.clock()+30+(p.WorkshopV5.Nodes.EXPLORATION_3 and 20 or 0) if p.Season.ActiveCard=="CrystalSeason" then temp.TemporaryMutationUntil=os.clock()+60 end
+  elseif kind=="CrystalResonance" then temp.Crystal=true temp.NeighbourUntil=os.clock()+30+E.Value(p,"EXPLORATION_3","CrystalSeconds",0) if p.Season.ActiveCard=="CrystalSeason" then temp.TemporaryMutationUntil=os.clock()+60 end
   elseif kind=="FireflyRoute" or kind=="ShadowBloom" then temp.Eclipse=true end
-  self.X.RollService:Charge(player,A.Types[kind].Charge*(p.WorkshopV5.Nodes.BLOOM_2 and 1.2 or 1)*(o.Sector and p.WorkshopV5.Nodes.EXPLORATION_2 and 1.2 or 1)*(p.Season.ActiveCard=="SummerSwarm" and 1.25 or 1))
+  self.X.RollService:Charge(player,A.Types[kind].Charge*E.Value(p,"BLOOM_2","ManualCharge",1)*(o.Sector and E.Value(p,"EXPLORATION_2","RouteCharge",1) or 1)*(p.Season.ActiveCard=="SummerSwarm" and 1.25 or 1))
   self.X:Emit(player,kind,1) self.X:Emit(player,"ActivityCompleted",1)
   if o.Sector then self.X:Emit(player,"WorldActivity",1) end
   self.X.SocialService:Contribute(player,2)
