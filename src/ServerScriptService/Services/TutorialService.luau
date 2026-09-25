@@ -11,6 +11,10 @@ local function currentStep(profile)
  return T.Steps[profile.Tutorial.Step]
 end
 
+local function playerName(player)
+ return tostring(player and (playerName(player) or player.UserId) or "?")
+end
+
 local function completionKey(step)
  return "TutorialStep_"..step.Id
 end
