@@ -136,9 +136,14 @@ need(activity,'function S:EnsureTutorialSpark(player)',"tutorial activity factor
 need(activity,'Tutorial=tutorial==true',"tutorial activity ownership")
 need(activity,'function S:HasTutorialOffer(player,kind)',"tutorial activity dedupe")
 need(activity,'o.Expires>=workspace:GetServerTimeNow()',"expired tutorial offer rejection")
-need(activity_client,'workspace:GetPartsInPart(part,self.TouchParams)',"client body overlap")
+need(activity_client,'local horizontal=Vector2.new(delta.X,delta.Z).Magnitude',"client checkpoint distance")
 assert "ProximityPrompt" not in activity_client, "activity client must not require E/ProximityPrompt"
-need(activity,'self.X.U.CharacterTouchesSphere(player,o.Nodes[o.Index],cfg.Radius or .75,A.TouchTolerance or .5)',"server body overlap")
+assert "PartType.Ball" not in activity_client, "tutorial activity sphere visual returned"
+assert "GetPartsInPart" not in activity_client, "tutorial touch-overlap client returned"
+assert "CharacterTouchesSphere" not in activity, "tutorial touch-sphere server validation returned"
+need(activity_client,'STEP INTO CHECKPOINT',"tutorial checkpoint instruction")
+need(activity_client,'self.UI:Send("Activity",id,item.Index,"Reach")',"tutorial checkpoint reach request")
+need(activity,'self.X.U.WithinCheckpoint(player,o.Nodes[o.Index],checkpointRadius,A.CheckpointVerticalTolerance)',"server checkpoint distance")
 need(roll,'tutorialStep.Id=="Roll" or tutorialStep.Id=="FirstSeed"', "tutorial roll detection")
 need(roll,'v.Kind=="FlowerSeed" and v.Id=="Sunflower"', "deterministic first seed")
 
