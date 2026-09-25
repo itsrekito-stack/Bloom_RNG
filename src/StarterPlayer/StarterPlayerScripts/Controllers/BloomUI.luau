@@ -28,6 +28,19 @@ local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
 local MENU_RENDERERS={SeedSatchel="InventoryV2"}
+local MENU_REFRESH_ACTIONS={
+ Setting="Settings",
+ DissolveFilter="Settings",
+ EquipBee="SeedSatchel",
+ Dissolve="SeedSatchel",
+ DissolveBee="SeedSatchel",
+ FlowerUpgrade="SeedSatchel",
+ Flag="SeedSatchel",
+ WorkshopBuy="Workshop",
+ Respec="Workshop",
+ Trial="Trials",
+}
+
 local MENU_NAMES={
  SeedSatchel="Inventory",
  Workshop="Workshop",
@@ -549,6 +562,43 @@ function UI:BindWorkshopPan(canvas,nodes)
  end))
 end
 
+local function relativeGuiPath(instance,root)
+ local parts={}
+ local current=instance
+ while current and current~=root do
+  table.insert(parts,1,current.Name)
+  current=current.Parent
+ end
+ return table.concat(parts,"/")
+end
+
+function UI:CapturePanelInteractionState()
+ local state={Scroll={}}
+ local function capture(instance)
+  if instance:IsA("ScrollingFrame") then
+   local key=instance==self.Content and "__CONTENT__" or relativeGuiPath(instance,self.Content)
+   state.Scroll[key]=instance.CanvasPosition
+  end
+ end
+ capture(self.Content)
+ for _,instance in ipairs(self.Content:GetDescendants()) do capture(instance) end
+ return state
+end
+
+function UI:RestorePanelInteractionState(state)
+ if not state or not self.Content or not self.Content.Parent then return end
+ local lookup={__CONTENT__=self.Content}
+ for _,instance in ipairs(self.Content:GetDescendants()) do
+  if instance:IsA("ScrollingFrame") then
+   lookup[relativeGuiPath(instance,self.Content)]=instance
+  end
+ end
+ for key,position in pairs(state.Scroll or {}) do
+  local frame=lookup[key]
+  if frame and frame:IsA("ScrollingFrame") then frame.CanvasPosition=position end
+ end
+end
+
 function UI:ClearPanel()
  self:DisconnectWorkshopPan()
  self.WorkshopRuntime=nil
@@ -574,6 +624,7 @@ function UI:Close()
  if self.Menu=="Season" then self:Send("SeasonCancel") end
  self.Menu=nil
  self.MenuRenderer=nil
+ self.MenuRefreshRequested=false
  self:SetPanelVisible(false)
  if wasWorkshop then self:SetWorkshopFocus(false) end
  self:Send("Menu",false)
@@ -587,6 +638,7 @@ function UI:Open(name,arg)
  self.Menu=name
  self.MenuRenderer=MENU_RENDERERS[name] or name
  self.MenuArg=arg
+ self.MenuRefreshRequested=false
  self:SetPanelVisible(true)
  if name=="Workshop" then self:SetWorkshopFocus(true) end
  self:RenderMenu()
@@ -594,8 +646,9 @@ function UI:Open(name,arg)
  self:ApplyWorkshopFocusVisibility()
 end
 
-function UI:RenderMenu()
+function UI:RenderMenu(preserveInteraction)
  if not self.Menu or not self.State then return end
+ local interactionState=preserveInteraction and self:CapturePanelInteractionState() or nil
  local p=self.State.Profile
  local ui=self.State.UI or {}
  local name=self.Menu
@@ -661,7 +714,7 @@ function UI:RenderMenu()
   self.Content.ScrollBarThickness=4
  end
 
- if not workshop then self.Content.CanvasPosition=Vector2.new() end
+ if not workshop and not preserveInteraction then self.Content.CanvasPosition=Vector2.new() end
 
  if workshop then
   -- Workshop is intentionally chrome-free: only the close button floats above the map.
@@ -1109,6 +1162,11 @@ function UI:RenderMenu()
  elseif name=="Cards" then
   self:Section(self.Content,"Card Selection")
   for _,id in ipairs(self.State.Cards) do self:Button(self.Content,id,function() self:Send("Card",id) self:Close() end,Icons.Get("System","Confirm")) end
+ end
+ if interactionState then
+  task.defer(function()
+   if self.Menu==name and self.Content and self.Content.Parent then self:RestorePanelInteractionState(interactionState) end
+  end)
  end
 end
 
@@ -1808,7 +1866,10 @@ function UI:ApplyState(payload,source)
   end)
  end
 
- if self.Menu and not self.WorkshopPanDragging then self:RenderMenu() end
+ if self.Menu and not self.WorkshopPanDragging and self.MenuRefreshRequested then
+  self.MenuRefreshRequested=false
+  self:RenderMenu(true)
+ end
  if firstState then print("[BloomUI] State applied:",source or "Event") end
  return true
 end
@@ -1864,6 +1925,10 @@ function UI:Start()
      self.NextRoll=math.max(self.NextRoll,os.clock()+.2)
      if self.State then self:Render() end
     end
+   end
+   if relevant and payload.OK then
+    local refreshMenu=MENU_REFRESH_ACTIONS[payload.Action]
+    if refreshMenu and self.Menu==refreshMenu then self.MenuRefreshRequested=true end
    end
    if relevant and not payload.OK then
     if payload.Action=="Roll" and self.Auto and rollSession==(self.RollSession or 0) then self:SetAutoRolling(false) end
