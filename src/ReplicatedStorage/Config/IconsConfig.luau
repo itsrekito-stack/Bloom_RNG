@@ -87,6 +87,6 @@ C.Ids.Currencies.PetalDust=C.Ids.Currencies.FruitDust C.Ids.Currencies.AncientNe
 C.Ids.Menus.SeedSatchel=C.Ids.Menus.Inventory C.Ids.Menus.FieldGuide=C.Ids.System.Flower C.Ids.Menus.Map=0 C.Ids.Menus.Trials=C.Ids.System.Quests
 C.Ids.Traits.Swift=0
 function C.Get(group,id) local t=C.Ids[group] local value=t and t[id] if type(value)~="number" or value<=0 then return "" end return group=="Fruits" and asset(value) or thumb(value) end
-function C.GetFlowerIcon(id) return C.Get("Flowers",id) end
+function C.GetFlowerIcon(id) local icon=C.Get("Flowers",id) return icon~="" and icon or C.Get("System","Flower") end
 function C.GetRewardIcon(kind,id) if kind=="Bee" then return C.Get("Bees",id) end local icon=C.Get("Flowers",id) return icon~="" and icon or C.Get("System","Flower") end
 return C
