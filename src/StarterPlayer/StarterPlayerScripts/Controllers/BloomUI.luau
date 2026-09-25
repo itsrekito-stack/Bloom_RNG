@@ -263,12 +263,20 @@ local LEGACY_ROULETTE_NAMES={
  TutorialRollButton=true,AutoRollButton=true,RollGui=true,RollGUI=true,RollUI=true,RollFrame=true,RollPanel=true,RollContainer=true,
 }
 
+local function hasLegacyReelToken(lower)
+ return lower=="reel"
+  or string.sub(lower,1,4)=="reel"
+  or string.sub(lower,-4)=="reel"
+  or string.find(lower,"_reel",1,true)~=nil
+  or string.find(lower,"reel_",1,true)~=nil
+end
+
 local function looksLikeLegacyRoulette(instance)
  local name=instance.Name
  if LEGACY_ROULETTE_NAMES[name] then return true end
  local lower=string.lower(name)
  return string.find(lower,"roulette",1,true)~=nil
-  or string.find(lower,"reel",1,true)~=nil
+  or hasLegacyReelToken(lower)
   or string.find(lower,"oldroll",1,true)~=nil
 end
 
