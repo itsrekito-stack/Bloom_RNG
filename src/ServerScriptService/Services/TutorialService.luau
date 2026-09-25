@@ -167,6 +167,11 @@ function S:Tick(player)
   return true
  elseif step.Id=="PollenSpark" then
   self.X.GardenActivityService:EnsureTutorialSpark(player)
+ elseif step.Id=="SunnyVisit" then
+  if self.X.MapService:Sector(player)=="SunnyOrchard" then
+   self.X:Emit(player,"SunnyVisit",1)
+   return true
+  end
  end
  return false
 end
