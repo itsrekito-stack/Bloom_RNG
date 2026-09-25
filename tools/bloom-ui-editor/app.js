@@ -324,6 +324,7 @@ function previewImage(n,parentNode){
  if(!isPreview())return null;
  const name=n.Name||"",p=parentNode?.Name||parentName(n);
  if(name==="RewardIcon"&&state.previewScene==="reward")return "rbxthumb://type=Asset&id=117046422836136&w=420&h=420";
+ if(name==="HeaderIcon"&&state.previewScene==="inventory_v2")return "rbxthumb://type=Asset&id=102678620554602&w=420&h=420";
  if(name==="Icon"&&PREVIEW_DATA.roulette[p])return PREVIEW_DATA.roulette[p].image;
  return null;
 }
