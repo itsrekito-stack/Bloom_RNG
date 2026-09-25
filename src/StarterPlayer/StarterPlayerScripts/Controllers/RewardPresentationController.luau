@@ -25,7 +25,7 @@ function S:ShowCard(r)
  if r.IsNew then meta=meta.."   •   NEW" end
  ui.RewardMeta.Text=meta
  ui.RewardMeta.TextColor3=rarityColor
- ui.RewardHint.Text=r.Ceremony and "" or "нажмите, чтобы ускорить показ"
+ ui.RewardHint.Text=r.Ceremony and "" or "click to speed up"
  ui.RewardIcon.Image=r.Ceremony and Icons.Get("System",r.Ceremony=="Hive" and "Hive" or "Flower") or Icons.GetRewardIcon(r.Kind,r.Id)
  ui.RewardIcon.Rotation=0
  ui.RevealScale.Scale=.9
