@@ -14,6 +14,7 @@ activity_cfg=read("src/ReplicatedStorage/Config/ActivityConfig.luau")
 service=read("src/ServerScriptService/Services/BuildTrialService.luau")
 activity=read("src/ServerScriptService/Services/GardenActivityService.luau")
 activity_client=read("src/StarterPlayer/StarterPlayerScripts/Controllers/ActivityController.luau")
+journey_guide=read("src/StarterPlayer/StarterPlayerScripts/Controllers/JourneyGuideController.luau")
 util=read("src/ReplicatedStorage/Shared/BloomUtil.luau")
 player=read("src/ServerScriptService/Services/PlayerService.luau")
 meta=read("src/ServerScriptService/Services/MetaProgressionService.luau")
@@ -88,6 +89,20 @@ need(activity,'if completedSector and completedSector~="Center" then self.X:Emit
 # Journey/collection objectives contribute useful rewards.
 need(meta,'p.Currencies.Coins=p.Currencies.Coins+10',"Journey coin reward")
 need(meta,'self.X.WorkshopService:Point(player,"Collection_"..threshold,2)',"collection Workshop point rewards")
+
+# Journey 15 must explain and point to Solar Bloom instead of showing a label-only objective.
+need(meta,'"SunnyVisit","SolarBloom","Discover6"',"Solar Bloom Journey ordering")
+need(activity,'self.X:Emit(player,kind,1)',"activity emits its concrete kind on completion")
+need(activity_client,'function S:TargetKind(kind)',"client can target a specific activity kind")
+need(activity_client,'Count=o.Count or 1',"client keeps route length")
+need(journey_guide,'(p.Quests.JourneyStep or 1)==15',"Solar Bloom Journey step binding")
+need(journey_guide,'activities:TargetKind("SolarBloom")',"Solar Bloom active-sphere targeting")
+need(journey_guide,'world:FindFirstChild("SunnyOrchardGate")',"Sunny Orchard route target")
+need(journey_guide,'world:FindFirstChild("SunnyOrchard_1")',"specific Solar Bloom landmark target")
+need(journey_guide,'"Interact with the highlighted activity marker, then touch all 3 glowing spheres."', "Solar Bloom activation explanation")
+need(journey_guide,'string.format("Solar Bloom  •  Touch sphere %d/%d",index,count)',"Solar Bloom objective progress")
+need(ui,'self.JourneyGuideController=require(script.Parent.JourneyGuideController)',"Journey guide wiring")
+need(ui,'self.JourneyGuideController:Init(self,self.GuideController)',"Journey guide uses shared visual pointer layer")
 
 # UI mirrors server gating and explicitly labels the advanced set.
 need(state,'ADVANCED_TRIAL_LOCKED="Unlock Advanced Trials in the Workshop"',"advanced lock reason")
