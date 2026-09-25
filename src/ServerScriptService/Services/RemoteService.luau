@@ -83,7 +83,7 @@ function S:Start()
    if action=="Ready" then self.X:Send(player,"Ack",{Action="Ready",OK=false,Reason="PROFILE_LOADING"}) end
    return
   end
-  local ok,result,reason=pcall(function() return self.X:Request(player,action,a,b,c) end)
+  local ok,result,reason=xpcall(function() return self.X:Request(player,action,a,b,c) end,debug.traceback)
   if not ok then warn("[Bloom] Request error",action,result) end
   local success=ok and result~=false
   local finalReason=ok and reason or "SERVER_ERROR"
