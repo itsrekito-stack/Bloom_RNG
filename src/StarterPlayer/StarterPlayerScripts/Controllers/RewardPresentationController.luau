@@ -45,21 +45,6 @@ function S:Enqueue(reward)
    self:ShowCard(r)
 
    local reduced=self.UI.State.Profile.Settings.ReducedEffects
-   if not r.Ceremony and not reduced then
-    local finalImage=Icons.GetRewardIcon(r.Kind,r.Id)
-    self.UI.RewardTitle.Text="ROLLING…"
-    self.UI.RewardMeta.Text="Определяем награду"
-    self.UI.RewardMeta.TextColor3=Theme.Colors.Muted
-    self.UI.RewardIcon.Image=Icons.Get("Actions","Roll")
-    local spin=TweenService:Create(self.UI.RewardIcon,TweenInfo.new(.28,Enum.EasingStyle.Linear),{Rotation=360})
-    spin:Play()
-    task.wait(.28)
-    spin:Cancel()
-    spin:Destroy()
-    self.UI.RewardIcon.Rotation=0
-    self:ShowCard(r)
-    self.UI.RewardIcon.Image=finalImage
-   end
 
    local cam=workspace.CurrentCamera
    local originalFOV=cam and cam.FieldOfView
