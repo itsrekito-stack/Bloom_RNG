@@ -12,6 +12,7 @@ use std::{
 use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindowBuilder};
 
 const MODEL_PATH: &str = "src/StarterGui/BloomUI.model.json";
+const PLANNER_DEFAULTS_PATH: &str = "tools/roflow/planner-defaults.json";
 
 #[derive(Default)]
 struct AppState {
@@ -109,6 +110,17 @@ struct PlannerStore {
     today: Vec<PlannerTask>,
     roadmap: Vec<PlannerTask>,
     today_history: HashMap<String, Vec<PlannerTask>>,
+}
+
+#[derive(Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PlannerDefaults {
+    #[serde(default)]
+    schema_version: u32,
+    #[serde(default)]
+    today: Vec<PlannerTask>,
+    #[serde(default)]
+    roadmap: Vec<PlannerTask>,
 }
 
 
@@ -337,6 +349,22 @@ fn default_roadmap_tasks() -> Vec<PlannerTask> {
     ]
 }
 
+fn project_planner_defaults(root: &Path) -> PlannerDefaults {
+    let path = root.join(PLANNER_DEFAULTS_PATH);
+    if let Ok(text) = fs::read_to_string(path) {
+        if let Ok(defaults) = serde_json::from_str::<PlannerDefaults>(&text) {
+            if defaults.schema_version == 1 && (!defaults.today.is_empty() || !defaults.roadmap.is_empty()) {
+                return defaults;
+            }
+        }
+    }
+    PlannerDefaults {
+        schema_version: 1,
+        today: default_today_tasks(),
+        roadmap: default_roadmap_tasks(),
+    }
+}
+
 fn merge_planner_tasks(existing: &[PlannerTask], defaults: Vec<PlannerTask>) -> Vec<PlannerTask> {
     let done_by_id = existing
         .iter()
@@ -378,7 +406,8 @@ fn load_planner_store(root: &Path, date: &str) -> Result<PlannerStore, String> {
         .and_then(|text| serde_json::from_str::<PlannerStore>(&text).ok())
         .unwrap_or_default();
 
-    store.roadmap = merge_planner_tasks(&store.roadmap, default_roadmap_tasks());
+    let defaults = project_planner_defaults(root);
+    store.roadmap = merge_planner_tasks(&store.roadmap, defaults.roadmap);
 
     if store.today_date != date {
         if !store.today_date.is_empty() && !store.today.is_empty() {
@@ -390,9 +419,9 @@ fn load_planner_store(root: &Path, date: &str) -> Result<PlannerStore, String> {
             }
         }
         store.today_date = date.to_string();
-        store.today = default_today_tasks();
+        store.today = defaults.today;
     } else {
-        store.today = merge_planner_tasks(&store.today, default_today_tasks());
+        store.today = merge_planner_tasks(&store.today, defaults.today);
     }
 
     save_planner_store(root, &store)?;
