@@ -70,10 +70,11 @@ if max(sector_hives.values()) > season_hive:
 need(roll_pool,'p.World.UnlockedSectors[sector] or sector=="SunnyOrchard"',"Sunny flower pool is available for early progression")
 
 # CrystalTriangle requires slot 6 at Hive 4; base capacity must reach it.
-need(garden_rules,'3+math.max(0,p.Hive.Level-1)',"base flower capacity grows with Hive level")
+need(garden_rules,'C.StartingSlots+math.max(0,p.Hive.Level-1)',"base flower capacity grows with Hive level")
 need(trials,'CrystalTriangle={Id="CrystalTriangle",Name="Crystal Triangle",Sector="CrystalGreenhouse"', "CrystalTriangle sector")
 need(read("src/ReplicatedStorage/Config/GardenSynergyConfig.luau"),'Slots={1,2,6}',"CrystalTriangle pattern slots")
-if 3+(sector_hives["CrystalGreenhouse"]-1) < 6:
+starting_slots=int(number(bloom,"StartingSlots"))
+if starting_slots+(sector_hives["CrystalGreenhouse"]-1) < 6:
     raise AssertionError("Crystal Greenhouse unlock does not provide enough base flower slots for CrystalTriangle")
 
 # All key Season trials need deterministic event sources.
