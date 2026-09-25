@@ -38,7 +38,7 @@ need(default,'Slots={{SpeciesId="Daisy",Level=1,XP=0,Mutation="",TotalPollinatio
 need(hive,'self.X.InventoryService:Grant(player,"Bee","WorkerBee")',"Hive grants starter Worker Bee")
 need(hive,'p.Pollinators.EquippedBeeSlots[1]="WorkerBee"',"starter Worker Bee is equipped")
 
-tutorial_ids=re.findall(r'Id="([^"]+)"',tutorial)
+tutorial_ids=re.findall(r'\{Id="([^"]+)"',tutorial)
 expected_tutorial=[
     "HiveIntro","StarterBee","BeeWork","PollenSpark","FirstSeed","Plant","Inventory",
     "Delivery","HiveUpgrade","WorkshopVisit","WorkshopPurchase","Synergy","SunnyVisit",
