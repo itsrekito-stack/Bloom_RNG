@@ -820,7 +820,15 @@ fn merge_children(base: &[Value], local: &[Value], remote: &[Value]) -> Vec<Valu
 }
 
 fn merge_value(base: &Value, local: &Value, remote: &Value) -> Value {
-    if base == remote {
+    let container_with_children = match (base.as_object(), local.as_object(), remote.as_object()) {
+        (Some(b), Some(l), Some(r)) => {
+            b.get("Children").and_then(Value::as_array).is_some()
+                && l.get("Children").and_then(Value::as_array).is_some()
+                && r.get("Children").and_then(Value::as_array).is_some()
+        }
+        _ => false,
+    };
+    if base == remote && !container_with_children {
         return local.clone();
     }
     if base == local {
