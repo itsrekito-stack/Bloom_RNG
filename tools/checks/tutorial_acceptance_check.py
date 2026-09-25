@@ -8,6 +8,8 @@ service=(ROOT/'src/ServerScriptService/Services/TutorialService.luau').read_text
 default=(ROOT/'src/ServerScriptService/Data/DefaultProfile.luau').read_text()
 locations=(ROOT/'src/ReplicatedStorage/Config/LocationsConfig.luau').read_text()
 bloom=(ROOT/'src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau').read_text()
+activity=(ROOT/'src/ServerScriptService/Services/GardenActivityService.luau').read_text()
+activity_client=(ROOT/'src/StarterPlayer/StarterPlayerScripts/Controllers/ActivityController.luau').read_text()
 
 targets=set(re.findall(r'Target="([^"]+)"',config))
 screen={'Roll','SeedSatchel'}
@@ -47,6 +49,12 @@ for root_w,root_h in ((1366,768),(1280,720)):
     for target in ((-30,-20,54,54),(root_w-20,root_h-10,75,75),(root_w*.5,root_h-70,75,75)):
         x,y,w,h=place(root_w,root_h,*target)
         assert x>=7.99 and y>=7.99 and x+w<=root_w-7.99 and y+h<=root_h-7.99, (root_w,root_h,target,(x,y,w,h))
+
+assert 'Event="WorldActivity",Text="Complete an activity in the sector",Target="Token"' in config, "sector activity tutorial step missing"
+assert 'local completedSector=o.Sector or self.X.MapService:Sector(player)' in activity, "activity completion must derive physical sector"
+assert 'if completedSector and completedSector~="Center" then self.X:Emit(player,"WorldActivity",1) end' in activity, "sector activity must advance tutorial"
+assert 'workspace:GetPartsInPart(part,self.TouchParams)' in activity_client, "activity tutorial target must be touch-collected"
+assert "ProximityPrompt" not in activity_client, "activity tutorial must not require E/ProximityPrompt"
 
 assert 'p.Tutorial.Step=#T.Steps+1' in service, "Skip must follow TutorialConfig length"
 assert 'p.Tutorial.Skipped=true' in service
