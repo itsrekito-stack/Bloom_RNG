@@ -26,7 +26,7 @@ need(garden,"slot.TotalPollination=math.max(0,tonumber(slot.TotalPollination) or
 need(garden,"self.X.FlowerProgressionService:Add(player,slot.SpeciesId,amount)","slot work advances collection mastery")
 need(garden,"Rules.HasProgress(old)","progressed flowers cannot be silently replaced")
 need(garden,'self.X.InventoryService:Available(p,id)<1',"plant ownership/free-copy validation")
-need(poll,"self.X.GardenPlotService:AddFlowerXP(player,state.Slot,1)","bee delivery uses central flower progression")
+need(poll,"self.X.GardenPlotService:AddFlowerXP(player,state.Slot,workAmount)","bee delivery uses central flower progression")
 need(poll,"function S:AddMastery(player,id,baseAmount,abilityMultiplier)","single Bee Mastery grant path")
 need(activity,'self.X.GardenPlotService:AddFlowerXP(player,i,3)',"Pulse uses normal flower leveling")
 need(activity,'self.X.PollinatorService:AddMastery(player,bee,1,1)',"activity Bee Mastery uses normal cap/multipliers")
