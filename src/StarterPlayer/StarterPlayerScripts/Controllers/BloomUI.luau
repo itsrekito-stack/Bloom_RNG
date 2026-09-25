@@ -1632,69 +1632,113 @@ function UI:BindStaticUI()
  self:PurgeLegacyRouletteGui()
 end
 
+local REQUIRED_AUTHORED_UI={
+ "ObjectiveCard","CurrencyHUD","MenuDock","RollHUD","VerticalRoulette","TutorialGuideBanner",
+ "Toast","ModalShade","MainPanel","RewardReveal","ActiveBoostsHUD","ActiveBoostTooltip",
+}
+
+local function validateBloomGui(gui)
+ if not gui or not gui:IsA("ScreenGui") then return false,{"BloomUI"} end
+ local root=gui:FindFirstChild("SafeRoot")
+ if not root or not root:IsA("GuiObject") then return false,{"SafeRoot"} end
+ local missing={}
+ for _,name in ipairs(REQUIRED_AUTHORED_UI) do
+  if not root:FindFirstChild(name) then table.insert(missing,name) end
+ end
+ return #missing==0,missing
+end
+
+local function missingText(missing)
+ return #missing>0 and table.concat(missing,", ") or "unknown authored nodes"
+end
+
 function UI:ResolveBloomGui()
  local playerGui=self.Player:WaitForChild("PlayerGui")
 
  local function collect()
   local found={}
   for _,child in ipairs(playerGui:GetChildren()) do
-   if child.Name=="BloomUI" and child:IsA("ScreenGui") then
-    table.insert(found,child)
-   end
+   if child.Name=="BloomUI" and child:IsA("ScreenGui") then table.insert(found,child) end
   end
   return found
  end
 
- local function keepSingle(preferred)
+ local function destroyExcept(preferred)
   for _,gui in ipairs(collect()) do
    if gui~=preferred then
-    warn("[BloomUI] Removing duplicate PlayerGui/BloomUI:",gui:GetFullName())
+    warn("[BloomUI] Removing duplicate/stale PlayerGui/BloomUI:",gui:GetFullName())
     gui:Destroy()
    end
   end
   return preferred
  end
 
- -- Prefer Roblox's normal StarterGui -> PlayerGui clone. This preserves the
- -- exact authored StarterGui tree and avoids creating a second HUD in Studio.
- local existingList=collect()
- if #existingList>0 then
-  local existing=existingList[#existingList]
-  print("[BloomUI] Using existing PlayerGui/BloomUI; copies:",#existingList)
-  return keepSingle(existing)
+ local function chooseValid()
+  local found=collect()
+  local best=nil
+  for i=#found,1,-1 do
+   local candidate=found[i]
+   local valid,missing=validateBloomGui(candidate)
+   if valid and not best then
+    best=candidate
+   elseif not valid then
+    warn("[BloomUI] Rejecting stale PlayerGui/BloomUI; missing authored nodes:",missingText(missing))
+   end
+  end
+  if best then
+   print("[BloomUI] Using schema-valid PlayerGui/BloomUI; copies:",#found)
+   return destroyExcept(best)
+  end
+  return nil
  end
 
- -- Give Roblox a short window to perform its normal clone before falling back.
- local deadline=os.clock()+1.5
- repeat
+ local existing=chooseValid()
+ if existing then return existing end
+
+ local template=StarterGui:FindFirstChild("BloomUI")
+ local deadline=os.clock()+3
+ while os.clock()<deadline do
+  existing=chooseValid()
+  if existing then return existing end
+  template=StarterGui:FindFirstChild("BloomUI")
+  local templateValid=template and select(1,validateBloomGui(template))
+  if templateValid then break end
   task.wait(.05)
-  existingList=collect()
-  if #existingList>0 then
-   local existing=existingList[#existingList]
-   print("[BloomUI] PlayerGui/BloomUI appeared after wait; copies:",#existingList)
-   return keepSingle(existing)
-  end
- until os.clock()>=deadline
-
- -- Rojo live-sync can add BloomUI to StarterGui after the player spawned. In
- -- that one case Roblox will not back-fill PlayerGui, so clone exactly once.
- local template=StarterGui:FindFirstChild("BloomUI") or StarterGui:WaitForChild("BloomUI",8)
- if template and template:IsA("ScreenGui") then
-  -- Re-check immediately before cloning in case the engine won the race.
-  existingList=collect()
-  if #existingList>0 then
-   local existing=existingList[#existingList]
-   return keepSingle(existing)
-  end
-  local clone=template:Clone()
-  clone.Name="BloomUI"
-  clone:SetAttribute("BloomRuntimeClone",true)
-  clone.Parent=playerGui
-  print("[BloomUI] Created one fallback PlayerGui/BloomUI from StarterGui")
-  return keepSingle(clone)
  end
 
- error("[BloomUI] BloomUI is missing from both PlayerGui and StarterGui")
+ template=StarterGui:FindFirstChild("BloomUI")
+ if not template then
+  error("[BloomUI] Current authored BloomUI is missing from StarterGui; AI SYNC did not provide the UI model")
+ end
+
+ local templateValid,templateMissing=validateBloomGui(template)
+ if not templateValid then
+  error("[BloomUI] StarterGui/BloomUI is stale or incomplete; missing authored nodes: "..missingText(templateMissing)..". Stop Play, run AI SYNC, then start Play again.")
+ end
+
+ for _,stale in ipairs(collect()) do
+  local valid=select(1,validateBloomGui(stale))
+  if not valid then
+   warn("[BloomUI] Replacing stale runtime HUD from current StarterGui template:",stale:GetFullName())
+   stale:Destroy()
+  end
+ end
+
+ existing=chooseValid()
+ if existing then return existing end
+
+ local clone=template:Clone()
+ clone.Name="BloomUI"
+ clone:SetAttribute("BloomRuntimeClone",true)
+ clone:SetAttribute("BloomAuthoredSchema","boost-hud-v1")
+ clone.Parent=playerGui
+ local cloneValid,cloneMissing=validateBloomGui(clone)
+ if not cloneValid then
+  clone:Destroy()
+  error("[BloomUI] Failed to clone current authored HUD; missing nodes after clone: "..missingText(cloneMissing))
+ end
+ print("[BloomUI] Created schema-valid PlayerGui/BloomUI from current StarterGui")
+ return destroyExcept(clone)
 end
 
 function UI:GuardBloomGui()
