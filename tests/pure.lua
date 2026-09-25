@@ -112,6 +112,29 @@ test("tutorial v2 profile beyond shortened flow migrates complete",function()
  s:Refresh(player)
  assert(p.Tutorial.Version==3 and p.Tutorial.Step==14 and p.Tutorial.Events.TutorialComplete==1)
 end)
+test("tutorial SunnyVisit recovers if EmitOnce was consumed early",function()
+ local player={} local p=Schema.CreateDefault() p.Tutorial.Step=13 p.Tutorial.Events.SunnyVisit=1
+ local service=require(node("ServerScriptService/Services/TutorialService"))
+ local x={
+  Profile=function() return p end,
+  MarkStateDirty=function() end,
+  EmitOnce=function() end,
+  Emit=function(_,pl,event)
+   p.Tutorial.Events[event]=(p.Tutorial.Events[event] or 0)+1
+   service:RecordEvent(pl,event)
+   service:Refresh(pl)
+  end,
+  U={Near=function() return false end},
+  GardenActivityService={EnsureTutorialSpark=function() end},
+  GardenPlotService={HivePosition=function() return Vector3.zero end,RefreshHivePrompt=function() end},
+  InventoryService={Available=function() return 1 end},
+  HiveService={Interact=function() end},
+  MapService={Sector=function() return "SunnyOrchard" end},
+ }
+ service:Init(x)
+ assert(service:Tick(player))
+ assert(p.Tutorial.Step==14 and p.Tutorial.Events.TutorialStep_SunnyVisit==1)
+end)
 test("tutorial skip does not grant economy assists",function()
  local player={} local p=Schema.CreateDefault() p.StarterBeeGranted=true
  local s=require(node("ServerScriptService/Services/TutorialService"))
