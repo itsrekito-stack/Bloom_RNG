@@ -40,8 +40,8 @@ need(hive,'p.Pollinators.EquippedBeeSlots[1]="WorkerBee"',"starter Worker Bee is
 
 tutorial_ids=re.findall(r'\{Id="([^"]+)"',tutorial)
 expected_tutorial=[
-    "HiveIntro","StarterBee","BeeWork","PollenSpark","FirstSeed","Plant","Inventory",
-    "Delivery","HiveUpgrade","WorkshopVisit","WorkshopPurchase","Synergy","SunnyVisit",
+    "HiveIntro","StarterBee","BeeWork","PollenSpark","Roll","FirstSeed","Plant","Inventory",
+    "InventoryExplain","Delivery","HiveUpgrade","WorkshopVisit","WorkshopPurchase","Synergy","SunnyVisit",
 ]
 if tutorial_ids != expected_tutorial:
     raise AssertionError(f"tutorial deterministic path changed: {tutorial_ids}")
@@ -51,7 +51,7 @@ need(pollinator,'self.X:Emit(player,"Delivery",1)',"delivery has authoritative e
 need(tutorial_service,'self.X.GardenActivityService:EnsureTutorialSpark(player)',"tutorial guarantees Pollen Spark")
 need(garden_activity,'function S:EnsureTutorialSpark(player)',"tutorial spark factory exists")
 need(garden_activity,'Tutorial=tutorial==true',"tutorial activity is tagged")
-need(roll_service,'tutorialStep.Id=="FirstSeed"', "first tutorial roll is special-cased")
+need(roll_service,'tutorialStep.Id=="Roll" or tutorialStep.Id=="FirstSeed"', "first tutorial roll is special-cased")
 need(roll_service,'v.Kind=="FlowerSeed" and v.Id=="Sunflower"', "first tutorial roll guarantees Sunflower")
 need(tutorial_service,'p.Hive.Honey=need',"tutorial delivery covers Hive upgrade cost")
 need(tutorial_service,'p.WorkshopV5.Points=math.max(p.WorkshopV5.Points,node.Cost or 0)',"tutorial guarantees Workshop point")
