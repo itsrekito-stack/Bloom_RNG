@@ -59,7 +59,8 @@ deliveries=(hive2_cost+honey_per-1)//honey_per
 coins_before_hive2=deliveries*coins_per
 if coins_before_hive2 < 30:
     raise AssertionError(f"Hive 2 path only yields {coins_before_hive2} Coins before a 30-Coin first Workshop node")
-need(workshop,'Cost=1,Coins=i*30',"first Workshop branch node cost contract")
+need(workshop,'Cost=1',"Workshop point cost contract")
+need(workshop,'Coins=i*30',"Workshop coin cost contract")
 
 # Sector thresholds must be reachable before the Season gate.
 sector_hives={name:int(level) for name,level in re.findall(r'(SunnyOrchard|CrystalGreenhouse|TwilightGrove)=\{[^}]*Hive=(\d+)',locations)}
