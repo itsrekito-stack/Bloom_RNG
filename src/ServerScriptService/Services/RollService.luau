@@ -8,7 +8,7 @@ function S:Roll(player,automatic,requestId)
  local pool,total=self:Odds(player) if total<=0 then return false,"EMPTY_POOL" end
  local item=nil
  local tutorialStep=T.Steps[p.Tutorial.Step]
- if tutorialStep and tutorialStep.Id=="FirstSeed" and (p.Tutorial.Events.SeedReward or 0)==0 then
+ if tutorialStep and (tutorialStep.Id=="Roll" or tutorialStep.Id=="FirstSeed") and (p.Tutorial.Events.SeedReward or 0)==0 then
   for _,v in ipairs(pool) do
    if v.Kind=="FlowerSeed" and v.Id=="Sunflower" then item=v break end
   end
