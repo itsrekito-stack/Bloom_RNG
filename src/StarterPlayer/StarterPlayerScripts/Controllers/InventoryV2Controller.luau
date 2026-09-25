@@ -404,7 +404,7 @@ function InventoryV2.Render(controller,profile,uiState)
     local ability=Bees.GetAbilityDescription(item.Id)
     local passive=Bees.GetPassiveDescription(item.Id)
     local traits=#(item.Traits or {})>0 and table.concat(item.Traits,", ") or "None"
-    description.Text="Traits: "..traits.."  •  "..passive.."  •  "..ability.."  •  Mastery: "..tostring(item.Mastery.BonusText or "No mastery bonus yet")
+     description.Text="Traits: "..traits.."  •  "..passive.."  •  "..ability.."  •  Mastery: "..tostring(item.Mastery.BonusText or "No mastery bonus yet").."  •  Spare duplicates can be released for Petal Dust."
    elseif item.Kind=="Resource" then
     description.Text=item.Description or "A Bloom RNG progression resource."
    else
@@ -439,8 +439,8 @@ function InventoryV2.Render(controller,profile,uiState)
    elseif item.Kind=="Bee" then
     if ownedLabel then ownedLabel.Text="Owned" end
     if ownedValue then ownedValue.Text=tostring(item.Count).."" end
-    if freeLabel then freeLabel.Text="Equipped" end
-    if freeValue then freeValue.Text=tostring(item.Equipped or 0).."" end
+     if freeLabel then freeLabel.Text="Spare" end
+     if freeValue then freeValue.Text=tostring(item.Spare or 0).."" end
     if masteryLabel then masteryLabel.Text="Bee Mastery" end
     if masteryLevel then masteryLevel.Text="Lv. "..tostring(item.Mastery.Level or 1).." / "..tostring(item.Mastery.Cap or 10) end
     if masteryTrack then
@@ -492,7 +492,15 @@ function InventoryV2.Render(controller,profile,uiState)
    end
    setButton(favorite,false)
    setButton(protect,false)
-   setButton(dissolve,false)
+    local releaseText
+    if item.CanRelease then
+     releaseText="RELEASE DUPLICATE  •  +"..compact(item.ReleaseDust or 0).." DUST"
+    elseif (item.Spare or 0)>0 then
+     releaseText="KEEP LAST BEE"
+    else
+     releaseText="NO SPARE DUPLICATE"
+    end
+    setButton(dissolve,true,releaseText,item.CanRelease==true,function() controller:Send("ReleaseBee",item.Id,1) end)
    setButton(mastery,false)
   else
    setButton(plant,false)
