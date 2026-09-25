@@ -27675,7 +27675,7 @@
                   "UDim2": [
                     [
                       1,
-                      -16
+                      -46
                     ],
                     [
                       0,
@@ -27965,6 +27965,89 @@
                       }
                     }
                   ]
+                }
+              ]
+            },
+            {
+              "ClassName": "TextButton",
+              "Name": "MinimizeButton",
+              "Properties": {
+                "Size": {
+                  "UDim2": [
+                    [
+                      0,
+                      24
+                    ],
+                    [
+                      0,
+                      22
+                    ]
+                  ]
+                },
+                "Position": {
+                  "UDim2": [
+                    [
+                      1,
+                      -7
+                    ],
+                    [
+                      0,
+                      3
+                    ]
+                  ]
+                },
+                "AnchorPoint": {
+                  "Vector2": [
+                    1,
+                    0
+                  ]
+                },
+                "BackgroundColor3": [
+                  0.047,
+                  0.086,
+                  0.133
+                ],
+                "BackgroundTransparency": 0.02,
+                "BorderSizePixel": 0,
+                "Text": "−",
+                "TextColor3": [
+                  0.72,
+                  0.82,
+                  0.92
+                ],
+                "TextSize": 16,
+                "TextXAlignment": "Center",
+                "TextYAlignment": "Center",
+                "Font": "GothamBold",
+                "AutoButtonColor": false,
+                "ZIndex": 32,
+                "Visible": true
+              },
+              "Children": [
+                {
+                  "ClassName": "UICorner",
+                  "Name": "UICorner",
+                  "Properties": {
+                    "CornerRadius": {
+                      "UDim": [
+                        0,
+                        7
+                      ]
+                    }
+                  }
+                },
+                {
+                  "ClassName": "UIStroke",
+                  "Name": "UIStroke",
+                  "Properties": {
+                    "Color": [
+                      0.165,
+                      0.337,
+                      0.518
+                    ],
+                    "Thickness": 1,
+                    "Transparency": 0.18
+                  }
                 }
               ]
             }
