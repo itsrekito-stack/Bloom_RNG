@@ -1812,7 +1812,17 @@ function UI:Start()
   elseif kind=="Trials" then self:Open("Trials",payload)
   elseif kind=="RareFeed" then if self.State and self.State.Profile.Settings.RareFeed then self:Toast(payload.Player.." • "..payload.Name) end
   elseif kind=="Ceremony" then
-   if self.State then self.Rewards:Enqueue({Kind="Ceremony",Ceremony=payload.Kind,DisplayName=payload.Text,Rarity=payload.Kind=="Season" and "Mythic" or "Epic",Chance=1}) end
+   if self.State then
+    self.Rewards:Enqueue({
+     Kind=payload.RewardKind or "Ceremony",
+     Id=payload.RewardId,
+     Ceremony=payload.Kind,
+     DisplayName=payload.Text,
+     Rarity=payload.Rarity or (payload.Kind=="Season" and "Mythic" or "Epic"),
+     IsNew=payload.IsNew==true,
+     Chance=1,
+    })
+   end
    self:Toast(payload.Text)
    if payload.Kind=="Season" then self:Close() end
   elseif kind=="SeasonPreview" then self.SeasonSecond=false self:Open("Season",payload)
