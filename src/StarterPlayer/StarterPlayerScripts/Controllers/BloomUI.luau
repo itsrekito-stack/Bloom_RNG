@@ -1042,7 +1042,10 @@ function UI:RenderMenu()
    end
   else
    for id,t in pairs(Trials) do
-    self:Button(self.Content,(p.Quests.Trials[id] and "✓  " or "")..t.Name.."   •   "..t.Sector,function() self:Send("Trial",id) end,Icons.Get("System","Quests"))
+    local advancedLocked=t.Advanced and not p.WorkshopV5.Nodes.LEGACY_4
+    local prefix=t.Advanced and "ADVANCED  •  " or ""
+    local button=self:Button(self.Content,(p.Quests.Trials[id] and "✓  " or "")..prefix..t.Name.."   •   "..t.Sector,function() self:Send("Trial",id) end,Icons.Get("System","Quests"))
+    button.Active=not advancedLocked
    end
   end
 
