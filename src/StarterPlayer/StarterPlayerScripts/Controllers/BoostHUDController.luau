@@ -175,10 +175,8 @@ end
 function S:BindBadge(badge,item)
  local stroke=badge:FindFirstChildOfClass("UIStroke")
  local scale=badge:FindFirstChild("HoverScale")
- if not scale then
-  scale=Instance.new("UIScale")
-  scale.Name="HoverScale"
-  scale.Parent=badge
+ if not scale or not scale:IsA("UIScale") then
+  error("[BoostHUD] Authored BoostTemplate/HoverScale is missing")
  end
  local timed=item.Remaining~=nil
  if stroke then stroke.Color=timed and C.Gold or C.Border end
