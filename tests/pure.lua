@@ -1,4 +1,4 @@
-test("default profile",function() local p=Schema.CreateDefault() assert(Schema.Prepare(p)) assert(p.SchemaVersion==5 and p.Inventory==nil and p.Currencies.Coins==0) end)
+test("default profile",function() local p=Schema.CreateDefault() assert(Schema.Prepare(p)) assert(p.SchemaVersion==5 and p.Inventory==nil and p.Currencies.Coins==0 and p.Tutorial.Version==3 and p.Tutorial.Step==1) end)
 test("legacy mapping, dust, planted ownership",function()
  local p={Inventory={Apple=2,UnknownFruit=3},Currencies={FruitDust=12,Coins=9,AncientSeeds=77},DiscoveredFruits={Apple=true},Garden={UnlockedSlots=3,Slots={{SpeciesId="Tulip",Level=2}}},FruitMastery={Apple={Level=999}}}
  assert(Schema.Prepare(p)) assert(p.FlowerCollection.OwnedSeedCopies.Daisy==3) assert(p.FlowerCollection.OwnedSeedCopies.Tulip==1) assert(p.Currencies.PetalDust==27) assert(p.Currencies.AncientNectar==0) assert(p.LegacyArchive.AncientSeeds==77) assert(p.FlowerCollection.FlowerMastery.Daisy.Level==100)
@@ -62,19 +62,87 @@ test("Workshop purchase prerequisites, balance, idempotence",function()
  local s=require(node("ServerScriptService/Services/WorkshopService")) s:Init({Profile=function() return p end,GardenPlotService={RefreshCapacity=function() end},TutorialService={Refresh=function() end},Emit=function() end})
  assert(not s:Buy({},"ROLL_2")) assert(s:Buy({},"ROLL_1")) assert(not s:Buy({},"ROLL_1")) assert(p.WorkshopV5.Points==4 and p.Currencies.Coins==970) assert(not s:Buy({},"LEGACY_1"))
 end)
-test("tutorial has 17 steps, reconnect progress, unlocks",function()
- local p=Schema.CreateDefault() local completed=0 local service=require(node("ServerScriptService/Services/TutorialService"))
- service:Init({Profile=function() return p end,EmitOnce=function(_,pl,event) if event=="TutorialComplete" then completed=completed+1 p.Tutorial.Events.TutorialComplete=1 end end})
- local T=require(rs.Config.TutorialConfig) assert(#T.Steps==17)
- for i=1,17 do local e=T.Steps[i].Event if e=="Deliveries" then p.Tutorial.Events.Delivery=3 else p.Tutorial.Events[e]=1 end service:Refresh({}) assert(p.Tutorial.Step>=i+1) end
- assert(p.Tutorial.Step==18 and completed==1)
- local copy=U.Copy(p) assert(Schema.Prepare(copy)) assert(copy.Tutorial.Step==18 and copy.Tutorial.FeatureUnlocks.Roll and copy.Tutorial.FeatureUnlocks.Trials)
-end)
-test("shortened tutorial releases profiles stuck on old step 18",function()
- local p=Schema.CreateDefault() p.Tutorial.Step=18 local completed=0
+test("tutorial v3 gates future events and completes ordered flow",function()
+ local player={} local p=Schema.CreateDefault() local completed=0 local sparks=0
  local service=require(node("ServerScriptService/Services/TutorialService"))
- service:Init({Profile=function() return p end,EmitOnce=function(_,pl,event) if event=="TutorialComplete" then completed=completed+1 p.Tutorial.Events.TutorialComplete=1 end end})
- service:Refresh({}) assert(p.Tutorial.Step==18 and completed==1)
+ local x={
+  Profile=function() return p end,
+  MarkStateDirty=function() end,
+  EmitOnce=function(_,pl,event) if not p.Tutorial.Events[event] then p.Tutorial.Events[event]=1 if event=="TutorialComplete" then completed=completed+1 end end end,
+  U={Near=function() return false end},
+  GardenActivityService={EnsureTutorialSpark=function() sparks=sparks+1 end},
+  GardenPlotService={HivePosition=function() return Vector3.zero end,RefreshHivePrompt=function() end},
+  InventoryService={Available=function() return 0 end},
+  HiveService={Interact=function() end},
+ }
+ service:Init(x)
+ local T=require(rs.Config.TutorialConfig) assert(#T.Steps==13 and T.Version==3)
+ p.Tutorial.Events.Delivery=99
+ assert(not service:RecordEvent(player,"Delivery"))
+ service:Refresh(player) assert(p.Tutorial.Step==1)
+ for i,step in ipairs(T.Steps) do
+  assert(p.Tutorial.Step==i)
+  p.Tutorial.Events[step.Event]=(p.Tutorial.Events[step.Event] or 0)+1
+  assert(service:RecordEvent(player,step.Event))
+  service:Refresh(player)
+  assert(p.Tutorial.Step==i+1)
+ end
+ assert(p.Tutorial.Step==14 and completed==1 and sparks>0)
+ assert(p.Hive.Honey>=40)
+ assert(p.WorkshopV5.Points>=1 and p.Currencies.Coins>=30)
+ assert((p.FlowerCollection.OwnedSeedCopies.Tulip or 0)>=1)
+end)
+test("tutorial reconnect preserves current-step completion",function()
+ local player={} local p=Schema.CreateDefault()
+ local function make()
+  local s=require(node("ServerScriptService/Services/TutorialService"))
+  s:Init({Profile=function() return p end,MarkStateDirty=function() end,EmitOnce=function(_,pl,event) p.Tutorial.Events[event]=1 end,U={Near=function() return false end},GardenActivityService={EnsureTutorialSpark=function() end},GardenPlotService={HivePosition=function() return Vector3.zero end,RefreshHivePrompt=function() end},InventoryService={Available=function() return 1 end},HiveService={Interact=function() end}})
+  return s
+ end
+ local s=make()
+ for i=1,5 do local step=require(rs.Config.TutorialConfig).Steps[p.Tutorial.Step] p.Tutorial.Events[step.Event]=(p.Tutorial.Events[step.Event] or 0)+1 assert(s:RecordEvent(player,step.Event)) s:Refresh(player) end
+ assert(p.Tutorial.Step==6)
+ local copy=U.Copy(p) p=copy
+ local resumed=make() resumed:Refresh(player) assert(p.Tutorial.Step==6)
+end)
+test("tutorial v2 profile beyond shortened flow migrates complete",function()
+ local player={} local p=Schema.CreateDefault() p.Tutorial.Version=2 p.Tutorial.Step=14 p.Tutorial.Events={} local completed=0
+ local s=require(node("ServerScriptService/Services/TutorialService"))
+ s:Init({Profile=function() return p end,MarkStateDirty=function() end,EmitOnce=function(_,pl,event) p.Tutorial.Events[event]=1 if event=="TutorialComplete" then completed=completed+1 end end,U={Near=function() return false end},GardenActivityService={EnsureTutorialSpark=function() end},GardenPlotService={HivePosition=function() return Vector3.zero end,RefreshHivePrompt=function() end},InventoryService={Available=function() return 1 end},HiveService={Interact=function() end}})
+ s:Refresh(player)
+ assert(p.Tutorial.Version==3 and p.Tutorial.Step==14 and completed==1)
+end)
+test("tutorial skip does not grant economy assists",function()
+ local player={} local p=Schema.CreateDefault() p.StarterBeeGranted=true
+ local s=require(node("ServerScriptService/Services/TutorialService"))
+ s:Init({Profile=function() return p end,HiveService={Interact=function() error("starter bee should already exist") end}})
+ s:Skip(player)
+ assert(p.Tutorial.Step==14 and p.Tutorial.Skipped and p.Hive.Honey==0 and p.Currencies.Coins==0 and p.WorkshopV5.Points==0)
+end)
+test("tutorial Pollen Spark offer is tagged, deduped and respawns after expiry",function()
+ local player={Character={FindFirstChildOfClass=function() return {Health=100} end}} local p=Schema.CreateDefault()
+ local service=require(node("ServerScriptService/Services/GardenActivityService"))
+ local x={Profile=function() return p end,Temp={[player]={}},U={CharacterTouchesSphere=function() return false end},Emit=function() end,Send=function() end,GardenPlotService={HivePosition=function() return Vector3.zero end,Position=function(_,pl,i) return Vector3.new(i*7,0,0) end}}
+ service:Init(x)
+ assert(service:EnsureTutorialSpark(player))
+ local count=0 local first
+ for _,o in pairs(service.Offers[player]) do count=count+1 first=o end
+ assert(count==1 and first.Tutorial and first.Kind=="PollenSpark")
+ assert(not service:EnsureTutorialSpark(player))
+ first.Expires=-1
+ service:Tick(player)
+ assert(service:EnsureTutorialSpark(player))
+ count=0 for _,o in pairs(service.Offers[player]) do count=count+1 assert(o.Tutorial) end
+ assert(count==1)
+end)
+test("first tutorial roll guarantees a Flower Seed",function()
+ local player={} local p=Schema.CreateDefault() p.Tutorial.Step=5 p.Tutorial.FeatureUnlocks.Roll=true local temp={[player]={}} local reward
+ local inv=require(node("ServerScriptService/Services/InventoryService")) local roll=require(node("ServerScriptService/Services/RollService"))
+ local x={Temp=temp,Profile=function() return p end,StatsService={Get=function() return {Luck=1} end},Send=function(_,pl,kind,r) if kind=="Reward" then reward=r end end,Broadcast=function() end,Emit=function() end,FlowerProgressionService={Add=function() end}}
+ x.InventoryService=inv inv:Init(x) roll:Init(x)
+ assert(roll:Roll(player,false))
+ assert(reward and reward.Kind=="FlowerSeed" and reward.Id=="Sunflower")
+ assert((p.FlowerCollection.OwnedSeedCopies.Sunflower or 0)==1)
 end)
 test("one-time point source and preservation of Nectar",function()
  local p=Schema.CreateDefault() local s=require(node("ServerScriptService/Services/WorkshopService")) s:Init({Profile=function() return p end}) s:Point({},"same",2) s:Point({},"same",2) assert(p.WorkshopV5.Points==2 and p.Currencies.AncientNectar==0)
