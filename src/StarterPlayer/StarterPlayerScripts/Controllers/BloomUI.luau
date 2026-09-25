@@ -252,7 +252,98 @@ function UI:Send(action,a,b,c)
  self.Request:FireServer(action,a,b,c)
 end
 
+local LEGACY_ROULETTE_NAMES={
+ Roulette=true,RouletteGui=true,RouletteGUI=true,RouletteFrame=true,RoulettePanel=true,RouletteContainer=true,
+ Reel=true,ReelFrame=true,SpinFrame=true,SpinGui=true,OldRoulette=true,OldRollUI=true,
+ TutorialRollButton=true,AutoRollButton=true,RollGui=true,RollGUI=true,RollUI=true,RollFrame=true,RollPanel=true,RollContainer=true,
+}
+
+local function looksLikeLegacyRoulette(instance)
+ local name=instance.Name
+ if LEGACY_ROULETTE_NAMES[name] then return true end
+ local lower=string.lower(name)
+ return string.find(lower,"roulette",1,true)~=nil
+  or string.find(lower,"reel",1,true)~=nil
+  or string.find(lower,"oldroll",1,true)~=nil
+end
+
+function UI:PurgeLegacyRouletteGui()
+ local playerGui=self.Player:FindFirstChild("PlayerGui")
+ if not playerGui then return end
+
+ -- Delete any retired roll/roulette ScreenGui left in an old Studio place.
+ for _,gui in ipairs(playerGui:GetChildren()) do
+  if gui:IsA("ScreenGui") and gui~=self.Gui then
+   local legacy=looksLikeLegacyRoulette(gui)
+   if not legacy then
+    for _,item in ipairs(gui:GetDescendants()) do
+     if looksLikeLegacyRoulette(item) then legacy=true break end
+    end
+   end
+   if legacy then
+    warn("[BloomUI] Removing legacy roulette ScreenGui:",gui:GetFullName())
+    gui:Destroy()
+   end
+  end
+ end
+
+ -- Inside authoritative BloomUI only SafeRoot/VerticalRoulette is allowed.
+ local canonical=self.SafeRoot and self.SafeRoot:FindFirstChild("VerticalRoulette")
+ if self.Gui and canonical then
+  local trash={}
+  for _,item in ipairs(self.Gui:GetDescendants()) do
+   if item~=canonical and not item:IsDescendantOf(canonical) and looksLikeLegacyRoulette(item) then
+    -- Keep the current Roll button/HUD; only retired roulette/reel structures are removed.
+    if item~=self.Roll and item~=self.RollHUD and item.Name~="RollButton" and item.Name~="RollHUD" then
+     table.insert(trash,item)
+    end
+   end
+  end
+  table.sort(trash,function(a,b)
+   local function depth(x)
+    local d=0
+    while x and x~=self.Gui do d+=1 x=x.Parent end
+    return d
+   end
+   return depth(a)<depth(b)
+  end)
+  for _,item in ipairs(trash) do
+   if item.Parent then
+    warn("[BloomUI] Removing legacy roulette object:",item:GetFullName())
+    item:Destroy()
+   end
+  end
+ end
+end
+
+function UI:IsWorkshopExclusive()
+ return self.WorkshopFocus==true and self.Menu=="Workshop"
+end
+
+function UI:ApplyWorkshopFocusVisibility()
+ if not self:IsWorkshopExclusive() then return end
+ for _,gui in ipairs({
+  self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.RollHUD,self.Roll,self.RouletteViewport,
+  self.Guide,self.ToastRoot,self.Reveal,
+ }) do
+  if gui and gui:IsA("GuiObject") then gui.Visible=false end
+ end
+end
+
+function UI:SetWorkshopFocus(active)
+ self.WorkshopFocus=active==true
+ if self.WorkshopFocus then
+  self.Auto=false
+  self:StopRouletteAnimation()
+  self.ToastUntil=nil
+  self:ApplyWorkshopFocusVisibility()
+ else
+  if self.State then self:Render() end
+ end
+end
+
 function UI:Toast(text)
+ if self:IsWorkshopExclusive() then return end
  self.ToastLabel.Text=tostring(text or "")
  self.ToastRoot.Visible=true
  self.ToastUntil=os.clock()+4
@@ -462,21 +553,26 @@ end
 function UI:Close()
  self:DisconnectWorkshopPan()
  self.ReplayIndex=nil
+ local wasWorkshop=self.Menu=="Workshop"
  if self.Menu=="Season" then self:Send("SeasonCancel") end
  self.Menu=nil
  self:SetPanelVisible(false)
+ if wasWorkshop then self:SetWorkshopFocus(false) end
  self:Send("Menu",false)
 end
 
 function UI:Open(name,arg)
+ if self:IsWorkshopExclusive() and name~="Workshop" then return end
  if self.Menu==name and arg==nil then self:Close() return end
  if not self.State then return end
  if name~="Settings" and name~="Plant" and name~="Season" and name~="Cards" and name~="Replay" and not self.State.Profile.Tutorial.FeatureUnlocks[name] then return end
  self.Menu=name
  self.MenuArg=arg
  self:SetPanelVisible(true)
+ if name=="Workshop" then self:SetWorkshopFocus(true) end
  if name~="Plant" and name~="Season" and name~="Cards" and name~="Replay" then self:Send("Menu",name) end
  self:RenderMenu()
+ self:ApplyWorkshopFocusVisibility()
 end
 
 function UI:RenderMenu()
@@ -1138,8 +1234,9 @@ function UI:Render()
  self.MeterArea.Visible=rollUnlocked and (p.Tutorial.Step>=10 or p.Tutorial.Skipped)
 
  for name,b in pairs(self.DockButtons) do b.Visible=name=="Settings" or p.Tutorial.FeatureUnlocks[name]==true end
- self.GuideController:Update()
+ if not self:IsWorkshopExclusive() then self.GuideController:Update() end
  self.GardenPresentation:Update()
+ self:ApplyWorkshopFocusVisibility()
 end
 
 function UI:RollNow(automatic)
@@ -1525,6 +1622,7 @@ function UI:BindStaticUI()
 
  self:BuildRouletteVisualPool()
  self:RefreshRouletteSlots()
+ self:PurgeLegacyRouletteGui()
 end
 
 function UI:ResolveBloomGui()
@@ -1595,17 +1693,28 @@ end
 function UI:GuardBloomGui()
  local playerGui=self.Player:WaitForChild("PlayerGui")
  self.Gui:SetAttribute("BloomAuthoritative",true)
- local function removeDuplicate(child)
-  if child~=self.Gui and child:IsA("ScreenGui") and child.Name=="BloomUI" then
+ local function clean(child)
+  if child==self.Gui or not child:IsA("ScreenGui") then return end
+  if child.Name=="BloomUI" then
    warn("[BloomUI] Destroying late duplicate HUD:",child:GetFullName())
+   child:Destroy()
+   return
+  end
+  local legacy=looksLikeLegacyRoulette(child)
+  if not legacy then
+   for _,item in ipairs(child:GetDescendants()) do
+    if looksLikeLegacyRoulette(item) then legacy=true break end
+   end
+  end
+  if legacy then
+   warn("[BloomUI] Destroying late legacy roulette GUI:",child:GetFullName())
    child:Destroy()
   end
  end
- for _,child in ipairs(playerGui:GetChildren()) do removeDuplicate(child) end
+ for _,child in ipairs(playerGui:GetChildren()) do clean(child) end
  self.GuiGuardConnection=playerGui.ChildAdded:Connect(function(child)
-  if child.Name~="BloomUI" or not child:IsA("ScreenGui") then return end
   task.defer(function()
-   if child.Parent==playerGui and self.Gui and self.Gui.Parent==playerGui then removeDuplicate(child) end
+   if child.Parent==playerGui and self.Gui and self.Gui.Parent==playerGui then clean(child) end
   end)
  end)
 end
