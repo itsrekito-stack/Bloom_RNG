@@ -159,6 +159,7 @@ function S:Inventory(player,profile)
   return (aa and aa.SortOrder or 999)<(bb and bb.SortOrder or 999)
  end)
 
+ local nectarUnlocked=self.X.SeasonService:LegacyComplete(profile)
  return {
   Flowers=flowers,
   Bees=bees,
@@ -168,8 +169,8 @@ function S:Inventory(player,profile)
   Keepsakes=self.X.U.Copy(profile.Season.Keepsakes),
   Traits=Bees.GetTraitState(profile.Pollinators.EquippedBeeSlots),
   NectarDistill={
-   Unlocked=self.X.SeasonService:LegacyComplete(profile),
-   CanDistill=self.X.SeasonService:LegacyComplete(profile) and profile.Currencies.AncientNectar>=Bloom.NectarDistillCost,
+   Unlocked=nectarUnlocked,
+   CanDistill=nectarUnlocked and profile.Currencies.AncientNectar>=Bloom.NectarDistillCost,
    Cost=Bloom.NectarDistillCost,
    Dust=Bloom.NectarDistillDust,
   },
