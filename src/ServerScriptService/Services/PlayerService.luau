@@ -16,6 +16,7 @@ function X:Emit(player,event,n)
  p.Tutorial.Events[event]=(p.Tutorial.Events[event] or 0)+amount
  self.Revisions[player]=(self.Revisions[player] or 0)+1
  self:MarkStateDirty(player)
+ self.TutorialService:RecordEvent(player,event)
 
  -- Tutorial progression is core state and must commit before optional telemetry/trial hooks.
  local tutorialOK,tutorialErr=xpcall(function() self.TutorialService:Refresh(player) end,debug.traceback)
