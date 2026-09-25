@@ -1,6 +1,6 @@
 local RS=game:GetService("ReplicatedStorage") local A=require(RS.Config.ActivityConfig) local C=require(RS.Config.BloomConfig) local G=require(RS.Config.GardenSynergyConfig) local E=require(RS.Shared.WorkshopEffects) local Http=game:GetService("HttpService") local S={Offers={}}
 function S:Init(x) self.X=x end
-function S:Offer(player,kind,position,sector,bee,priority)
+function S:Offer(player,kind,position,sector,bee,priority,tutorial)
  local p=self.X:Profile(player) local cfg=A.Types[kind] if not p or not cfg then return false end
  local offers=self.Offers[player] or {} self.Offers[player]=offers local count=0 for _ in pairs(offers) do count=count+1 end if count>=A.MaxVisible and not priority then return false end
  if kind=="Overcharge" and not bee then return false end
@@ -10,9 +10,22 @@ function S:Offer(player,kind,position,sector,bee,priority)
   if not nearest then return false end nodes[1]=nearest+Vector3.new(0,3,0)
  elseif kind=="CrossPollination" then for i=1,3 do if not p.Garden.Slots[i].SpeciesId then return false end nodes[i]=self.X.GardenPlotService:Position(player,i)+Vector3.new(0,3,0) end
  else for i=1,cfg.Steps do local t=(i-1)/math.max(1,cfg.Steps-1) if kind=="PollenTrail" then nodes[i]=position:Lerp(origin,t)+Vector3.new(0,2+math.sin(t*math.pi)*2,0) else nodes[i]=position+Vector3.new(math.sin(i*1.8)*7,3,math.cos(i*1.8)*7) end end end
- offers[id]={Id=id,Kind=kind,Nodes=nodes,Index=1,Expires=workspace:GetServerTimeNow()+cfg.Life,Sector=sector,Bee=bee,Revision=p.Garden.Revision}
+ offers[id]={Id=id,Kind=kind,Nodes=nodes,Index=1,Expires=workspace:GetServerTimeNow()+cfg.Life,Sector=sector,Bee=bee,Revision=p.Garden.Revision,Tutorial=tutorial==true}
  if kind=="BloomSurge" then self.X.Temp[player].Hotspot=position self.X.Temp[player].HotspotUntil=os.clock()+cfg.Life end
- self.X:Emit(player,"ActivityOffered",1) self:Push(player) return true
+ self.X:Emit(player,"ActivityOffered",1) self:Push(player) return true,id
+end
+function S:HasTutorialOffer(player,kind)
+ for _,o in pairs(self.Offers[player] or {}) do
+  if o.Tutorial and (not kind or o.Kind==kind) and o.Expires>=workspace:GetServerTimeNow() then return true end
+ end
+ return false
+end
+function S:EnsureTutorialSpark(player)
+ local p=self.X:Profile(player)
+ if not p or self:HasTutorialOffer(player,"PollenSpark") then return false end
+ local pos=self.X.GardenPlotService:Position(player,2) or self.X.GardenPlotService:HivePosition(player)
+ if not pos then return false end
+ return self:Offer(player,"PollenSpark",pos+Vector3.new(0,3,0),nil,nil,true,true)
 end
 function S:HasSectorOffer(player,sector)
  for _,o in pairs(self.Offers[player] or {}) do
@@ -21,7 +34,7 @@ function S:HasSectorOffer(player,sector)
  return false
 end
 function S:Push(player)
- local list={} for _,o in pairs(self.Offers[player] or {}) do local cfg=A.Types[o.Kind] table.insert(list,{Id=o.Id,Kind=o.Kind,Position=o.Nodes[o.Index],Index=o.Index,Count=#o.Nodes,Expires=o.Expires,Radius=(cfg and cfg.Radius) or .75,Sector=o.Sector}) end
+ local list={} for _,o in pairs(self.Offers[player] or {}) do local cfg=A.Types[o.Kind] table.insert(list,{Id=o.Id,Kind=o.Kind,Position=o.Nodes[o.Index],Index=o.Index,Count=#o.Nodes,Expires=o.Expires,Radius=(cfg and cfg.Radius) or .75,Sector=o.Sector,Tutorial=o.Tutorial==true}) end
  self.X:Send(player,"Activities",list)
 end
 function S:Collect(player,id,index,phase)
