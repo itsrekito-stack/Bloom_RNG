@@ -93,6 +93,8 @@ for role in ['Next','Current','Previous']:
     if n: check(role+' valid size',valid_udim2(role))
 check('no authored Buffer',one('Buffer')[1] is None and one('_RuntimeBuffer')[1] is None)
 check('runtime buffer cloned locally','function UI:EnsureRouletteRuntimeBuffer' in source and 'source:Clone()' in source and '_RuntimeBuffer' in source)
+check('legacy reel matcher uses token boundaries','function hasLegacyReelToken(lower)' in source and 'string.find(lower,"reel",1,true)' not in source)
+check('inventory FreeLabel survives roulette cleanup','FreeLabel' in json.dumps(model) and 'or hasLegacyReelToken(lower)' in source)
 check('42px roulette step','StepPixels=42' in audio and 'Position=UDim2.fromOffset(0,RollAudio.StepPixels)' in source)
 marker=one('CurrentMarker')[1]
 check('current slot clearly marked',marker is not None and {'LeftPointer','RightPointer','CurrentLabel'}.issubset({c.get('Name') for c in marker.get('Children',[])}))
