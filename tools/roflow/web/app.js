@@ -234,6 +234,34 @@ async function refreshRojo(){
  try{applyRojo(await invoke("rojo_status"))}catch(error){log("Rojo status failed: "+error)}
 }
 
+function checkpointLabel(line){
+ const match=String(line||"").match(/CHECKPOINT_(\d+)m/);
+ return match?match[1]+" min":"—";
+}
+function renderRuntimeProbe(report){
+ const milestones=report?.milestones||[],evidence=report?.evidence||[];
+ $("#runtimeMilestones").textContent=milestones.length?milestones.length+"/7 · "+milestones.join(", "):"0/7";
+ $("#runtimeEvidence").textContent=evidence.length?"Evidence: "+evidence.join(", "):"No onboarding/multiplayer evidence yet.";
+ $("#runtimeServerCheckpoint").textContent=checkpointLabel(report?.latestServerCheckpoint);
+ $("#runtimeClientCheckpoint").textContent=checkpointLabel(report?.latestClientCheckpoint);
+ const join=!!report?.latestPersistenceJoin,leave=!!report?.latestPersistenceLeave;
+ $("#runtimePersistence").textContent=join&&leave?"JOIN + LEAVE":join?"JOIN only":leave?"LEAVE only":"—";
+ const path=report?.path||"";
+ $("#runtimeProbeMeta").textContent=path?("Latest Studio log · "+path.split(/[\\/]/).pop()):"No Roblox Studio log found.";
+ const lines=report?.lines||[];
+ $("#runtimeProbeOutput").textContent=lines.length?lines.slice(-80).join("\n"):"No RuntimeProbe/PersistenceProbe lines in the latest Studio log.";
+}
+async function refreshRuntimeProbe(silent=false){
+ try{
+  const report=await invoke("runtime_probe_report");
+  renderRuntimeProbe(report);
+ }catch(error){
+  if(!silent)log("Runtime probe read failed: "+error);
+  $("#runtimeProbeMeta").textContent=String(error);
+  $("#runtimeProbeOutput").textContent="Start a Roblox Studio Play session after AI SYNC to collect probe output.";
+ }
+}
+
 async function connectRoot(path){
  const status=await invoke("set_project_root",{path});
  state.root=path;
@@ -475,11 +503,12 @@ function navigate(page){
  if(page==="changes")loadChanges();
  if(page==="planner")refreshPlanner();
  if(page==="tasks")refreshTasks();
- if(page==="roblox")refreshRojo();
+ if(page==="roblox"){refreshRojo();refreshRuntimeProbe(true)}
 }
 
 document.querySelectorAll(".nav[data-page]").forEach(button=>button.onclick=()=>navigate(button.dataset.page));
 setInterval(()=>{if(state.root&&!document.hidden)maybeAutoUpdate()},60000);
+setInterval(()=>{if(state.currentPage==="roblox"&&!document.hidden)refreshRuntimeProbe(true)},5000);
 document.querySelectorAll("[data-go]").forEach(button=>button.onclick=()=>navigate(button.dataset.go));
 $("#chooseBtn").onclick=chooseProject;
 $("#refreshBtn").onclick=async()=>{await refresh().catch(()=>{});await maybeAutoUpdate(true)};
@@ -495,6 +524,7 @@ $("#commitBtn").onclick=commitChanges;
 $("#commitMessage").addEventListener("keydown",event=>{if(event.key==="Enter")commitChanges()});
 $("#reloadTasksBtn").onclick=refreshTasks;
 $("#refreshRojoBtn").onclick=refreshRojo;
+$("#refreshRuntimeProbeBtn").onclick=()=>refreshRuntimeProbe(false);
 $("#startRojoBtn").onclick=startRojo;
 $("#stopRojoBtn").onclick=stopRojo;
 $("#buildBtn").onclick=buildProject;
