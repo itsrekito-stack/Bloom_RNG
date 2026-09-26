@@ -39474,11 +39474,11 @@
               "UDim2": [
                 [
                   0,
-                  430
+                  168
                 ],
                 [
                   0,
-                  72
+                  82
                 ]
               ]
             },
@@ -39486,7 +39486,7 @@
               "UDim2": [
                 [
                   0,
-                  14
+                  12
                 ],
                 [
                   1,
@@ -39505,7 +39505,7 @@
               0.055,
               0.086
             ],
-            "BackgroundTransparency": 0.055,
+            "BackgroundTransparency": 0.035,
             "BorderSizePixel": 0,
             "ZIndex": 30,
             "Visible": true,
@@ -39519,7 +39519,7 @@
                 "CornerRadius": {
                   "UDim": [
                     0,
-                    12
+                    10
                   ]
                 }
               }
@@ -39533,8 +39533,8 @@
                   0.26,
                   0.39
                 ],
-                "Thickness": 1.5,
-                "Transparency": 0.16
+                "Thickness": 1.25,
+                "Transparency": 0.18
               }
             },
             {
@@ -39545,11 +39545,11 @@
                   "UDim2": [
                     [
                       1,
-                      -46
+                      -48
                     ],
                     [
                       0,
-                      17
+                      18
                     ]
                   ]
                 },
@@ -39557,7 +39557,7 @@
                   "UDim2": [
                     [
                       0,
-                      8
+                      10
                     ],
                     [
                       0,
@@ -39573,7 +39573,7 @@
                   0.694,
                   1
                 ],
-                "TextSize": 10,
+                "TextSize": 11,
                 "TextXAlignment": "Left",
                 "TextYAlignment": "Center",
                 "Font": "GothamBold",
@@ -39588,11 +39588,11 @@
                   "UDim2": [
                     [
                       1,
-                      -16
+                      -20
                     ],
                     [
                       0,
-                      40
+                      46
                     ]
                   ]
                 },
@@ -39600,11 +39600,11 @@
                   "UDim2": [
                     [
                       0,
-                      8
+                      10
                     ],
                     [
                       0,
-                      23
+                      26
                     ]
                   ]
                 },
@@ -39616,7 +39616,7 @@
                   0.51,
                   0.58
                 ],
-                "TextSize": 11,
+                "TextSize": 10,
                 "TextXAlignment": "Left",
                 "TextYAlignment": "Center",
                 "Font": "Gotham",
@@ -39636,7 +39636,7 @@
                     ],
                     [
                       0,
-                      48
+                      54
                     ]
                   ]
                 },
@@ -39648,7 +39648,7 @@
                     ],
                     [
                       0,
-                      20
+                      24
                     ]
                   ]
                 },
@@ -39691,7 +39691,8 @@
                       ]
                     },
                     "SortOrder": "LayoutOrder",
-                    "VerticalAlignment": "Center"
+                    "VerticalAlignment": "Center",
+                    "HorizontalAlignment": "Left"
                   }
                 },
                 {
@@ -39702,11 +39703,11 @@
                       "UDim2": [
                         [
                           0,
-                          48
+                          52
                         ],
                         [
                           0,
-                          48
+                          52
                         ]
                       ]
                     },
@@ -39715,7 +39716,7 @@
                       0.086,
                       0.133
                     ],
-                    "BackgroundTransparency": 0.02,
+                    "BackgroundTransparency": 0.01,
                     "BorderSizePixel": 0,
                     "Image": "",
                     "AutoButtonColor": false,
@@ -39731,7 +39732,7 @@
                         "CornerRadius": {
                           "UDim": [
                             0,
-                            9
+                            10
                           ]
                         }
                       }
@@ -39745,8 +39746,8 @@
                           0.337,
                           0.518
                         ],
-                        "Thickness": 1.5,
-                        "Transparency": 0.1
+                        "Thickness": 1.35,
+                        "Transparency": 0.12
                       }
                     },
                     {
@@ -39757,11 +39758,11 @@
                           "UDim2": [
                             [
                               0,
-                              26
+                              30
                             ],
                             [
                               0,
-                              26
+                              30
                             ]
                           ]
                         },
@@ -39773,7 +39774,7 @@
                             ],
                             [
                               0,
-                              5
+                              4
                             ]
                           ]
                         },
@@ -39797,20 +39798,20 @@
                         "Size": {
                           "UDim2": [
                             [
-                              1,
-                              -4
+                              0,
+                              42
                             ],
                             [
                               0,
-                              14
+                              16
                             ]
                           ]
                         },
                         "Position": {
                           "UDim2": [
                             [
-                              0,
-                              2
+                              0.5,
+                              0
                             ],
                             [
                               1,
@@ -39818,7 +39819,7 @@
                             ]
                           ]
                         },
-                        "BackgroundTransparency": 1,
+                        "BackgroundTransparency": 0.08,
                         "BorderSizePixel": 0,
                         "Text": "+0%",
                         "TextColor3": [
@@ -39826,13 +39827,53 @@
                           0.972,
                           0.988
                         ],
-                        "TextSize": 11,
+                        "TextSize": 10,
                         "TextScaled": false,
                         "TextXAlignment": "Center",
                         "TextYAlignment": "Center",
                         "Font": "GothamBold",
-                        "ZIndex": 32
-                      }
+                        "ZIndex": 32,
+                        "AnchorPoint": {
+                          "Vector2": [
+                            0.5,
+                            0
+                          ]
+                        },
+                        "BackgroundColor3": [
+                          0.024,
+                          0.051,
+                          0.082
+                        ]
+                      },
+                      "Children": [
+                        {
+                          "ClassName": "UICorner",
+                          "Name": "ValueCorner",
+                          "Properties": {
+                            "CornerRadius": {
+                              "UDim": [
+                                0,
+                                6
+                              ]
+                            }
+                          },
+                          "Children": []
+                        },
+                        {
+                          "ClassName": "UIStroke",
+                          "Name": "ValueStroke",
+                          "Properties": {
+                            "Color": [
+                              0.11,
+                              0.31,
+                              0.48
+                            ],
+                            "Thickness": 1,
+                            "Transparency": 0.35
+                          },
+                          "Children": []
+                        }
+                      ]
                     },
                     {
                       "ClassName": "UIScale",
@@ -39853,11 +39894,11 @@
                   "UDim2": [
                     [
                       0,
-                      24
+                      22
                     ],
                     [
                       0,
-                      22
+                      20
                     ]
                   ]
                 },
@@ -39869,7 +39910,7 @@
                     ],
                     [
                       0,
-                      3
+                      4
                     ]
                   ]
                 },
@@ -39892,7 +39933,7 @@
                   0.82,
                   0.92
                 ],
-                "TextSize": 16,
+                "TextSize": 14,
                 "TextXAlignment": "Center",
                 "TextYAlignment": "Center",
                 "Font": "GothamBold",
