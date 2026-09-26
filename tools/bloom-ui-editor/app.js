@@ -30,6 +30,21 @@ function roflowTauri(){
 }
 const ROFLOW_NATIVE=window.__ROFLOW_EMBEDDED__===true&&!!roflowTauri()?.core?.invoke;
 const nativeThumbnailCache=new Map();
+function nativeThumbnail(assetId){
+ let pending=nativeThumbnailCache.get(String(assetId));
+ if(!pending){
+  pending=roflowInvoke("roblox_thumbnail_url",{assetId:String(assetId)}).catch(()=> "");
+  nativeThumbnailCache.set(String(assetId),pending);
+ }
+ return pending;
+}
+function hydrateStudioIcons(){
+ document.querySelectorAll("img[data-asset-id]").forEach(img=>{
+  const id=img.dataset.assetId;if(!id)return;
+  if(ROFLOW_NATIVE)nativeThumbnail(id).then(url=>{if(url)img.src=url});
+  else img.src="/api/thumbnail?id="+encodeURIComponent(id);
+ });
+}
 function roflowInvoke(command,args={}){const t=roflowTauri();if(!t?.core?.invoke)throw new Error("RoFlow native bridge unavailable");return t.core.invoke(command,args)}
 function roflowDialog(){return roflowTauri()?.dialog||null}
 function hasProjectConnection(){return ROFLOW_NATIVE?state.nativeProjectReady:!!state.projectHandle}
@@ -272,7 +287,7 @@ function imageUrl(src){
   s.match(/[?&]id=(\d+)/i)||
   s.match(/^(\d{6,})$/);
  if(!m)return /^https?:\/\//i.test(s)?s:"";
- return `/api/thumbnail?id=${encodeURIComponent(m[1])}`;
+ return ROFLOW_NATIVE?`roflow-asset:${m[1]}`:`/api/thumbnail?id=${encodeURIComponent(m[1])}`;
 }
 
 
@@ -949,12 +964,7 @@ function renderGuiNode(n,parentEl,parentNode){
    const setSource=()=>{
     if(ROFLOW_NATIVE&&resolved.startsWith("roflow-asset:")){
      const assetId=resolved.slice("roflow-asset:".length);
-     let pending=nativeThumbnailCache.get(assetId);
-     if(!pending){
-      pending=roflowInvoke("roblox_thumbnail_url",{assetId}).catch(()=> "");
-      nativeThumbnailCache.set(assetId,pending);
-     }
-     pending.then(url=>{if(url)img.src=url});
+     nativeThumbnail(assetId).then(url=>{if(url)img.src=url});
      return;
     }
     const sep=resolved.includes("?")?"&":"?";
@@ -2295,6 +2305,7 @@ window.addEventListener("keydown",e=>{
 
 loadPrefs();
 syncToolbarFromState();
+hydrateStudioIcons();
 loadInitial().then(()=>{
  requestAnimationFrame(()=>fitViewport());
  assistantStatus();
