@@ -24,7 +24,7 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="tutorial-roll-recovery-2026-09-26"
+local CLIENT_BUILD="workshop-currency-center-2026-09-26"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
@@ -386,6 +386,47 @@ function UI:ClampWorkshopCanvasPosition(canvas,position)
  return Vector2.new(math.clamp(position.X,0,maxX),math.clamp(position.Y,0,maxY))
 end
 
+local function workshopStructure(shell)
+ if not shell or not shell:IsA("GuiObject") then return nil end
+ local body=shell:FindFirstChild("WorkshopBody")
+ local treePanel=body and body:FindFirstChild("TreePanel")
+ local canvas=treePanel and treePanel:FindFirstChild("TreeCanvas")
+ local panMap=canvas and canvas:FindFirstChild("PanMap")
+ local tooltip=body and body:FindFirstChild("NodeTooltip")
+ local currencyBar=body and body:FindFirstChild("WorkshopCurrencyBar")
+ if not body or not treePanel or not canvas or not panMap or not tooltip or not currencyBar then return nil end
+ return {
+  Body=body,
+  TreePanel=treePanel,
+  Canvas=canvas,
+  PanMap=panMap,
+  Tooltip=tooltip,
+  CurrencyBar=currencyBar,
+ }
+end
+
+function UI:CenterWorkshopCanvas(canvas,panMap,zoom)
+ if not canvas or not canvas.Parent or not panMap or not panMap.Parent then return false end
+ local core=panMap:FindFirstChild("Node_CORE")
+ if not core or not core:IsA("GuiObject") then return false end
+ local mapWidth=panMap.Size.X.Scale*canvas.CanvasSize.X.Offset+panMap.Size.X.Offset
+ local mapHeight=panMap.Size.Y.Scale*canvas.CanvasSize.Y.Offset+panMap.Size.Y.Offset
+ if mapWidth<=0 then mapWidth=2200 end
+ if mapHeight<=0 then mapHeight=1700 end
+ local nodeWidth=core.Size.X.Scale*mapWidth+core.Size.X.Offset
+ local nodeHeight=core.Size.Y.Scale*mapHeight+core.Size.Y.Offset
+ local center=Vector2.new(
+  core.Position.X.Scale*mapWidth+core.Position.X.Offset+nodeWidth*.5,
+  core.Position.Y.Scale*mapHeight+core.Position.Y.Offset+nodeHeight*.5
+ )*(tonumber(zoom) or 1)
+ local viewport=canvas.AbsoluteSize
+ if viewport.X<1 or viewport.Y<1 then return false end
+ local target=self:ClampWorkshopCanvasPosition(canvas,center-viewport*.5)
+ canvas.CanvasPosition=target
+ self.WorkshopCanvasPosition=target
+ return true
+end
+
 function UI:BindWorkshopPan(canvas,nodes)
  self:DisconnectWorkshopPan()
  if not canvas:IsA("ScrollingFrame") then return end
@@ -426,6 +467,17 @@ function UI:BindWorkshopPan(canvas,nodes)
   )
  end
  applyZoom(zoom)
+ if self.WorkshopCanvasPosition then
+  local saved=self:ClampWorkshopCanvasPosition(canvas,self.WorkshopCanvasPosition)
+  canvas.CanvasPosition=saved
+  self.WorkshopCanvasPosition=saved
+ else
+  if not self:CenterWorkshopCanvas(canvas,nodes,zoom) then
+   task.defer(function()
+    if self.Menu=="Workshop" and canvas.Parent then self:CenterWorkshopCanvas(canvas,nodes,zoom) end
+   end)
+  end
+ end
 
  local connections={}
  self.WorkshopPanConnections=connections
@@ -611,7 +663,11 @@ function UI:Close()
  self:DisconnectWorkshopPan()
  self.ReplayIndex=nil
  local wasWorkshop=self.Menu=="Workshop"
- if wasWorkshop then self.WorkshopRuntime=nil end
+ if wasWorkshop then
+  self.WorkshopRuntime=nil
+  self.WorkshopCanvasPosition=nil
+  self.WorkshopZoom=nil
+ end
  if self.Menu=="Season" then self:Send("SeasonCancel") end
  self.Menu=nil
  self.MenuRenderer=nil
@@ -754,47 +810,75 @@ function UI:RenderMenu(preserveInteraction)
 
  elseif renderer=="Workshop" then
   local shell=self.WorkshopRuntime
-  local firstWorkshopBuild=not shell or shell.Parent~=self.Content
+  local structure=workshopStructure(shell)
+  local firstWorkshopBuild=not structure or shell.Parent~=self.Content
   local template=self.Panel:FindFirstChild("WorkshopTemplate")
-  if firstWorkshopBuild and not template then
-   self:Label(self.Content,"WorkshopTemplate missing",32)
-  else
-   if firstWorkshopBuild then
-    shell=template:Clone()
-    shell.Name="WorkshopRuntime"
-    shell.Visible=true
-    shell.Parent=self.Content
-    shell.Size=UDim2.fromScale(1,1)
-    shell.Position=UDim2.new()
-    shell.LayoutOrder=1
-    self.WorkshopRuntime=shell
-    self.WorkshopZoomLabel=nil
-   end
+  local templateStructure=workshopStructure(template)
+  if not templateStructure then
+   error("[BloomUI] Authored WorkshopTemplate is stale or incomplete. AI SYNC must provide NodeTooltip, WorkshopCurrencyBar and the tree structure.")
+  end
+
+  if firstWorkshopBuild then
+   if shell and shell.Parent then shell:Destroy() end
+   shell=template:Clone()
+   shell.Name="WorkshopRuntime"
+   shell.Visible=true
+   shell.Parent=self.Content
+   shell.Size=UDim2.fromScale(1,1)
+   shell.Position=UDim2.new()
+   shell.LayoutOrder=1
+   self.WorkshopRuntime=shell
+   self.WorkshopZoomLabel=nil
+   structure=workshopStructure(shell)
+   if not structure then error("[BloomUI] WorkshopRuntime clone failed authored structure validation") end
+  end
 
    local workshopUI=ui.Workshop
-   local body=shell:WaitForChild("WorkshopBody")
-   local treePanel=body:WaitForChild("TreePanel")
-   local canvas=treePanel:WaitForChild("TreeCanvas")
-   local panMap=canvas:FindFirstChild("PanMap")
-   if panMap and panMap:IsA("GuiObject") then
-    -- Editor-only positioning never affects the runtime map.
-    panMap.Position=UDim2.fromOffset(0,0)
-   end
+   local body=structure.Body
+   local treePanel=structure.TreePanel
+   local canvas=structure.Canvas
+   local panMap=structure.PanMap
+   panMap.Position=UDim2.fromOffset(0,0)
 
    local nodes=canvas:FindFirstChild("Nodes") or panMap
    local links=canvas:FindFirstChild("Connections") or panMap
    if not nodes or not links then error("[BloomUI] Workshop tree containers missing") end
 
-   local tooltip=body:WaitForChild("NodeTooltip")
+   local tooltip=structure.Tooltip
    if firstWorkshopBuild then tooltip.Visible=false end
    tooltip.Active=false
-   local tooltipTitle=tooltip:WaitForChild("Title")
-   local tooltipBranch=tooltip:WaitForChild("Branch")
-   local tooltipEffect=tooltip:WaitForChild("Effect")
-   local tooltipCost=tooltip:WaitForChild("Cost")
-   local tooltipHint=tooltip:WaitForChild("Hint")
-   local tooltipAccent=tooltip:WaitForChild("Accent")
+   local tooltipTitle=tooltip:FindFirstChild("Title")
+   local tooltipBranch=tooltip:FindFirstChild("Branch")
+   local tooltipEffect=tooltip:FindFirstChild("Effect")
+   local tooltipCost=tooltip:FindFirstChild("Cost")
+   local tooltipHint=tooltip:FindFirstChild("Hint")
+   local tooltipAccent=tooltip:FindFirstChild("Accent")
+   if not tooltipTitle or not tooltipBranch or not tooltipEffect or not tooltipCost or not tooltipHint or not tooltipAccent then
+    error("[BloomUI] Workshop NodeTooltip authored fields are incomplete")
+   end
    local tooltipStroke=tooltip:FindFirstChildOfClass("UIStroke")
+
+   local currencyBar=structure.CurrencyBar
+   local function setWorkshopCurrency(name,value,image)
+    local pill=currencyBar:FindFirstChild(name)
+    local valueLabel=pill and pill:FindFirstChild("Value")
+    local icon=pill and pill:FindFirstChild("Icon")
+    if not pill or not valueLabel or not valueLabel:IsA("TextLabel") or not icon or not icon:IsA("ImageLabel") then
+     error("[BloomUI] Workshop currency pill incomplete: "..tostring(name))
+    end
+    valueLabel.Text=compact(value)
+    icon.Image=image or ""
+   end
+   local pointIcon=Icons.Get("Menus","Workshop")
+   if pointIcon=="" then pointIcon=Icons.Get("System","Upgrade") end
+   local coinIcon=Icons.GetCurrencyIcon("Coins")
+   local dustIcon=Icons.GetCurrencyIcon("PetalDust")
+   local nectarIcon=Icons.GetCurrencyIcon("AncientNectar")
+   if nectarIcon=="" then nectarIcon=Icons.Get("System","Flower") end
+   setWorkshopCurrency("WorkshopPoints",p.WorkshopV5.Points,pointIcon)
+   setWorkshopCurrency("Coins",p.Currencies.Coins,coinIcon)
+   setWorkshopCurrency("PetalDust",p.Currencies.PetalDust,dustIcon)
+   setWorkshopCurrency("AncientNectar",p.Currencies.AncientNectar,nectarIcon)
 
    local effects=require(RS.Config.WorkshopEffectsConfig)
 
@@ -1613,6 +1697,10 @@ local REQUIRED_AUTHORED_UI={
  "Toast","ModalShade","MainPanel","RewardReveal","ActiveBoostsHUD","ActiveBoostTooltip","WorldUIPrototypes",
 }
 local RETIRED_MENU_GUI={"Dock_FieldGuide","Dock_Map","FieldGuideKit","MapKit"}
+local REQUIRED_WORKSHOP_UI={
+ "WorkshopTemplate","WorkshopBody","TreePanel","TreeCanvas","PanMap","NodeTooltip","WorkshopCurrencyBar",
+ "Title","Branch","Effect","Cost","Hint","Accent",
+}
 
 local function validateBloomGui(gui)
  if not gui or not gui:IsA("ScreenGui") then return false,{"BloomUI"} end
@@ -1624,6 +1712,9 @@ local function validateBloomGui(gui)
  end
  for _,name in ipairs(RETIRED_MENU_GUI) do
   if root:FindFirstChild(name,true) then table.insert(missing,"retired:"..name) end
+ end
+ for _,name in ipairs(REQUIRED_WORKSHOP_UI) do
+  if not root:FindFirstChild(name,true) then table.insert(missing,"workshop:"..name) end
  end
  return #missing==0,missing
 end
