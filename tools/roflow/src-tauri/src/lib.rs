@@ -184,6 +184,9 @@ struct RuntimeProbeReport {
     latest_client_checkpoint: String,
     latest_persistence_join: String,
     latest_persistence_leave: String,
+    persistence_verdict: String,
+    checkpoint_minutes: Vec<u32>,
+    logs_scanned: usize,
     lines: Vec<String>,
 }
 
@@ -1322,11 +1325,11 @@ fn roblox_logs_dir() -> Result<PathBuf, String> {
     }
 }
 
-fn latest_studio_log() -> Result<(PathBuf, u64), String> {
+fn recent_studio_logs(limit: usize) -> Result<Vec<(PathBuf, u64)>, String> {
     let dir = roblox_logs_dir()?;
-    let mut latest: Option<(PathBuf, SystemTime)> = None;
     let entries = fs::read_dir(&dir)
         .map_err(|e| format!("Roblox log directory is unavailable ({}): {e}", dir.display()))?;
+    let mut logs = Vec::new();
     for entry in entries.flatten() {
         let path = entry.path();
         if !path.is_file() { continue; }
@@ -1334,13 +1337,16 @@ fn latest_studio_log() -> Result<(PathBuf, u64), String> {
         let lower = name.to_ascii_lowercase();
         if !lower.contains("robloxstudio") || !lower.ends_with(".log") { continue; }
         let modified = entry.metadata().and_then(|meta| meta.modified()).unwrap_or(UNIX_EPOCH);
-        if latest.as_ref().map(|(_, time)| modified > *time).unwrap_or(true) {
-            latest = Some((path, modified));
-        }
+        let seconds = modified.duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
+        logs.push((path, seconds));
     }
-    let (path, modified) = latest.ok_or_else(|| "No Roblox Studio log found yet".to_string())?;
-    let seconds = modified.duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
-    Ok((path, seconds))
+    logs.sort_by_key(|(_, modified)| *modified);
+    if logs.len()>limit {
+        let drop_count=logs.len()-limit;
+        logs.drain(0..drop_count);
+    }
+    if logs.is_empty() { return Err("No Roblox Studio log found yet".into()); }
+    Ok(logs)
 }
 
 fn read_file_tail(path: &Path, max_bytes: u64) -> Result<String, String> {
@@ -1366,45 +1372,88 @@ fn tagged_value(line: &str, key: &str) -> Option<String> {
     (!value.is_empty()).then(|| value.to_string())
 }
 
+fn checkpoint_minute(line: &str) -> Option<u32> {
+    let marker="CHECKPOINT_";
+    let start=line.find(marker)?+marker.len();
+    let rest=&line[start..];
+    let end=rest.find('m')?;
+    rest[..end].parse::<u32>().ok()
+}
+
+
 #[tauri::command]
 fn runtime_probe_report() -> Result<RuntimeProbeReport, String> {
-    let (path, modified_at) = latest_studio_log()?;
-    let text = read_file_tail(&path, 2_000_000)?;
+    let logs = recent_studio_logs(8)?;
+    let latest = logs.last().cloned().ok_or_else(|| "No Roblox Studio log found yet".to_string())?;
     let mut milestones = BTreeSet::new();
     let mut evidence = BTreeSet::new();
+    let mut server_checkpoints = BTreeSet::new();
+    let mut client_checkpoints = BTreeSet::new();
     let mut latest_server_checkpoint = String::new();
     let mut latest_client_checkpoint = String::new();
     let mut latest_persistence_join = String::new();
     let mut latest_persistence_leave = String::new();
+    let mut persistence_verdict = "NO_PAIR".to_string();
+    let mut pending_leave_digest: Option<String> = None;
     let mut lines = Vec::new();
 
-    for raw in text.lines() {
-        if !(raw.contains("[RuntimeProbe]") || raw.contains("[PersistenceProbe]")) { continue; }
-        let line = raw.trim().to_string();
-        if line.contains("[RuntimeProbe][Server] MILESTONE") {
-            if let Some(name) = tagged_value(&line, "name") { milestones.insert(name); }
+    for (path, _) in &logs {
+        let text = read_file_tail(path, 1_000_000)?;
+        for raw in text.lines() {
+            if !(raw.contains("[RuntimeProbe]") || raw.contains("[PersistenceProbe]")) { continue; }
+            let line = raw.trim().to_string();
+
+            if line.contains("[RuntimeProbe][Server] MILESTONE") {
+                if let Some(name) = tagged_value(&line, "name") { milestones.insert(name); }
+            }
+            if line.contains("[RuntimeProbe][Server] EVIDENCE") && !line.contains("EVIDENCE_SUMMARY") {
+                if let Some(name) = tagged_value(&line, "name") { evidence.insert(name); }
+            }
+            if line.contains("[RuntimeProbe][Server] CHECKPOINT_") {
+                if let Some(minute) = checkpoint_minute(&line) { server_checkpoints.insert(minute); }
+                latest_server_checkpoint = line.clone();
+            }
+            if line.contains("[RuntimeProbe][Client] CHECKPOINT_") {
+                if let Some(minute) = checkpoint_minute(&line) { client_checkpoints.insert(minute); }
+                latest_client_checkpoint = line.clone();
+            }
+            if line.contains("[PersistenceProbe] LEAVE") {
+                latest_persistence_leave = line.clone();
+                pending_leave_digest = tagged_value(&line, "digest");
+                persistence_verdict = "WAITING_REJOIN".into();
+            }
+            if line.contains("[PersistenceProbe] JOIN") {
+                latest_persistence_join = line.clone();
+                if let Some(previous) = pending_leave_digest.take() {
+                    if let Some(current) = tagged_value(&line, "digest") {
+                        persistence_verdict = if current == previous { "MATCH" } else { "MISMATCH" }.into();
+                    }
+                }
+            }
+
+            lines.push(line);
+            if lines.len() > 200 { lines.remove(0); }
         }
-        if line.contains("[RuntimeProbe][Server] EVIDENCE") && !line.contains("EVIDENCE_SUMMARY") {
-            if let Some(name) = tagged_value(&line, "name") { evidence.insert(name); }
-        }
-        if line.contains("[RuntimeProbe][Server] CHECKPOINT_") { latest_server_checkpoint = line.clone(); }
-        if line.contains("[RuntimeProbe][Client] CHECKPOINT_") { latest_client_checkpoint = line.clone(); }
-        if line.contains("[PersistenceProbe] JOIN") { latest_persistence_join = line.clone(); }
-        if line.contains("[PersistenceProbe] LEAVE") { latest_persistence_leave = line.clone(); }
-        lines.push(line);
-        if lines.len() > 160 { lines.remove(0); }
     }
+
+    let checkpoint_minutes = server_checkpoints
+        .intersection(&client_checkpoints)
+        .copied()
+        .collect::<Vec<_>>();
 
     Ok(RuntimeProbeReport {
         available: !lines.is_empty(),
-        path: path.to_string_lossy().to_string(),
-        modified_at,
+        path: latest.0.to_string_lossy().to_string(),
+        modified_at: latest.1,
         milestones: milestones.into_iter().collect(),
         evidence: evidence.into_iter().collect(),
         latest_server_checkpoint,
         latest_client_checkpoint,
         latest_persistence_join,
         latest_persistence_leave,
+        persistence_verdict,
+        checkpoint_minutes,
+        logs_scanned: logs.len(),
         lines,
     })
 }
