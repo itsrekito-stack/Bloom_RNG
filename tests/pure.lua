@@ -193,7 +193,7 @@ test("tutorial SunnyVisit recovers if EmitOnce was consumed early",function()
   MapService={Sector=function() return "SunnyOrchard" end},
  }
  service:Init(x)
- assert(service:Tick(player))
+ service:Refresh(player)
  assert(p.Tutorial.Step==16 and p.Tutorial.Events.TutorialStep_SunnyVisit==1)
 end)
 test("tutorial v3 skipped profile stays complete after v4 migration",function()
@@ -216,15 +216,53 @@ test("tutorial first seed presentation recovers from already confirmed reward",f
   InventoryService={Available=function() return 1 end},
   MapService={Sector=function() return "Center" end},
  })
- assert(s:Tick(player))
+ s:Refresh(player)
  assert(p.Tutorial.Step==7 and p.Tutorial.Events.TutorialStep_FirstSeed==1)
 end)
 test("tutorial skip does not grant economy assists",function()
- local player={} local p=Schema.CreateDefault() p.StarterBeeGranted=true
+ local player={} local p=Schema.CreateDefault() p.StarterBeeGranted=true p.Pollinators.BeeInventory.WorkerBee=1
  local s=require(node("ServerScriptService/Services/TutorialService"))
  s:Init({Profile=function() return p end,HiveService={Interact=function() error("starter bee should already exist") end}})
  s:Skip(player)
  assert(p.Tutorial.Step==16 and p.Tutorial.Skipped and p.Hive.Honey==0 and p.Currencies.Coins==0 and p.WorkshopV5.Points==0)
+end)
+
+test("tutorial starter bee stale event recovers from real inventory ownership",function()
+ local player={} local p=Schema.CreateDefault()
+ p.Tutorial.Step=2
+ p.Tutorial.Events.StarterBee=1
+ p.StarterBeeGranted=true
+ p.Pollinators.BeeInventory.WorkerBee=1
+ local service=require(node("ServerScriptService/Services/TutorialService"))
+ local refreshed=0
+ service:Init({
+  Profile=function() return p end,
+  MarkStateDirty=function() end,
+  GardenPlotService={RefreshHivePrompt=function() refreshed=refreshed+1 end},
+  GardenActivityService={EnsureTutorialSpark=function() end},
+  InventoryService={Available=function() return 1 end},
+ })
+ service:Refresh(player)
+ assert(p.Tutorial.Step==3 and p.Tutorial.Events.TutorialStep_StarterBee==1)
+ assert(p.StarterBeeGranted==true)
+end)
+
+test("tutorial starter bee flag is repaired when inventory is missing",function()
+ local player={} local p=Schema.CreateDefault()
+ p.Tutorial.Step=2
+ p.StarterBeeGranted=true
+ p.Pollinators.BeeInventory={}
+ local service=require(node("ServerScriptService/Services/TutorialService"))
+ local refreshed=0
+ service:Init({
+  Profile=function() return p end,
+  MarkStateDirty=function() end,
+  GardenPlotService={RefreshHivePrompt=function() refreshed=refreshed+1 end},
+  GardenActivityService={EnsureTutorialSpark=function() end},
+  InventoryService={Available=function() return 1 end},
+ })
+ service:Refresh(player)
+ assert(p.Tutorial.Step==2 and p.StarterBeeGranted==false and refreshed==1)
 end)
 test("tutorial Pollen Spark offer is tagged, deduped and respawns after expiry",function()
  local player={Character={FindFirstChildOfClass=function() return {Health=100} end}} local p=Schema.CreateDefault()
