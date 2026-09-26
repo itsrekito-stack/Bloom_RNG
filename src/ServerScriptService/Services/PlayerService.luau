@@ -1,5 +1,6 @@
 local RS=game:GetService("ReplicatedStorage") local Players=game:GetService("Players") local U=require(RS.Shared.BloomUtil) local C=require(RS.Config.BloomConfig) local T=require(RS.Config.TutorialConfig) local L=require(RS.Config.LocationsConfig) local DefaultSettings=require(game:GetService("ServerScriptService").Data.DefaultProfile).Settings
 local X={Temp={},Revisions={},StateRevisions={},LastPushedStateRevision={},Connections={},ClientReadyConnections={},U=U}
+local VALID_KEYBINDS={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do VALID_KEYBINDS[item.Name]=true end
 local STATE_NEUTRAL={Ready=true,Menu=true,Replay=true,SeasonCancel=true,SaveSettings=true}
 function X:StateRevision(player) return self.StateRevisions[player] or 0 end
 function X:MarkStateDirty(player)
@@ -91,7 +92,7 @@ function X:ResetStudioTutorial(player)
 end
 
 local function validKeybind(value)
- return type(value)=="string" and #value>0 and #value<=16 and value~="Unknown" and value~="Escape" and Enum.KeyCode[value]~=nil
+ return type(value)=="string" and #value>0 and #value<=16 and value~="Unknown" and value~="Escape" and VALID_KEYBINDS[value]==true
 end
 function X:Request(player,action,a,b,c)
  local p=self:Profile(player) if not p then return false,"PROFILE_LOADING" end
