@@ -1,9 +1,38 @@
-local RS=game:GetService("ReplicatedStorage") local F=require(RS.Config.FlowersConfig) local G=require(RS.Config.GardenSynergyConfig) local C=require(RS.Config.BloomConfig) local T=require(RS.Config.TutorialConfig)
+local RS=game:GetService("ReplicatedStorage")
+local F=require(RS.Config.FlowersConfig)
+local G=require(RS.Config.GardenSynergyConfig)
+local C=require(RS.Config.BloomConfig)
+local T=require(RS.Config.TutorialConfig)
 local Rules=require(RS.Shared.GardenRules)
+
 local S={Plots={},Used={}}
-function S:Init(x) self.X=x end
-function S:Position(player,slot) local plot=self.Plots[player] return plot and plot.Origin+G.Position(slot) end
-function S:HivePosition(player) local plot=self.Plots[player] return plot and plot.Origin+Vector3.new(0,1,19) end
+local FLOWER_SCALE_CAP=.55
+
+local function horizontalCylinder(part,material)
+ part.Shape=Enum.PartType.Cylinder
+ part.CFrame=CFrame.new(part.Position)*CFrame.Angles(0,0,math.rad(90))
+ if material then part.Material=material end
+end
+
+local function flowerVisualScale(level,growth)
+ local scalePerLevel=tonumber(growth.ScalePerLevel) or .025
+ return 1+math.min(FLOWER_SCALE_CAP,math.max(0,(level-1)*scalePerLevel))
+end
+
+function S:Init(x)
+ self.X=x
+end
+
+function S:Position(player,slot)
+ local plot=self.Plots[player]
+ return plot and plot.Origin+G.Position(slot)
+end
+
+function S:HivePosition(player)
+ local plot=self.Plots[player]
+ return plot and plot.Origin+G.Layout.HiveOffset
+end
+
 function S:HivePromptText(p)
  local inventory=p and p.Pollinators and p.Pollinators.BeeInventory
  local ownsStarter=type(inventory)=="table" and (tonumber(inventory.WorkerBee) or 0)>0
@@ -11,71 +40,154 @@ function S:HivePromptText(p)
  local cost=C.HiveCosts[p.Hive.Level+1]
  return cost and ("Upgrade Hive • "..math.floor(cost).." Honey") or "Hive MAX"
 end
+
 function S:RefreshHivePrompt(player)
- local p=self.X:Profile(player) local plot=self.Plots[player] if not p or not plot then return false end
- local hive=plot.Model:FindFirstChild("Hive") local prompt=hive and hive:FindFirstChildOfClass("ProximityPrompt")
+ local p=self.X:Profile(player)
+ local plot=self.Plots[player]
+ if not p or not plot then return false end
+ local hive=plot.Model:FindFirstChild("Hive")
+ local prompt=hive and hive:FindFirstChildOfClass("ProximityPrompt")
  if not prompt then return false end
  prompt.ActionText=self:HivePromptText(p)
  prompt.ObjectText="Hive • Level "..p.Hive.Level
  return true
 end
+
 function S:AddFlowerXP(player,i,amount)
- local p=self.X:Profile(player) if not p or type(i)~="number" or i%1~=0 or type(amount)~="number" or amount~=amount or amount<=0 then return false end
- local slot=p.Garden.Slots[i] local flower=slot and slot.SpeciesId and F.Species[slot.SpeciesId] if not flower then return false end
+ local p=self.X:Profile(player)
+ if not p or type(i)~="number" or i%1~=0 or type(amount)~="number" or amount~=amount or amount<=0 then return false end
+ local slot=p.Garden.Slots[i]
+ local flower=slot and slot.SpeciesId and F.Species[slot.SpeciesId]
+ if not flower then return false end
  local growth=flower.GrowthProfile or {XPPerLevel=C.FlowerLevelXP,MaxLevel=C.MasteryCap,ScalePerLevel=.025}
- local xpPerLevel=math.max(1,tonumber(growth.XPPerLevel) or C.FlowerLevelXP) local maxLevel=math.max(1,math.floor(tonumber(growth.MaxLevel) or C.MasteryCap))
- local level=math.clamp(math.floor(tonumber(slot.Level) or 1),1,maxLevel) local xp=math.max(0,tonumber(slot.XP) or 0)+amount
- while level<maxLevel do local need=level*xpPerLevel if xp<need then break end xp-=need level+=1 end
+ local xpPerLevel=math.max(1,tonumber(growth.XPPerLevel) or C.FlowerLevelXP)
+ local maxLevel=math.max(1,math.floor(tonumber(growth.MaxLevel) or C.MasteryCap))
+ local level=math.clamp(math.floor(tonumber(slot.Level) or 1),1,maxLevel)
+ local xp=math.max(0,tonumber(slot.XP) or 0)+amount
+ while level<maxLevel do
+  local need=level*xpPerLevel
+  if xp<need then break end
+  xp-=need
+  level+=1
+ end
  if level>=maxLevel then xp=math.min(xp,level*xpPerLevel) end
- slot.Level=level slot.XP=xp slot.TotalPollination=math.max(0,tonumber(slot.TotalPollination) or 0)+amount
+ slot.Level=level
+ slot.XP=xp
+ slot.TotalPollination=math.max(0,tonumber(slot.TotalPollination) or 0)+amount
  self.X.FlowerProgressionService:Add(player,slot.SpeciesId,amount)
- local plot=self.Plots[player] local model=plot and plot.Flowers[i]
+
+ local plot=self.Plots[player]
+ local model=plot and plot.Flowers[i]
  if model then
-  local scalePerLevel=tonumber(growth.ScalePerLevel) or .025 model:ScaleTo(1+math.min(2,(level-1)*scalePerLevel))
-  local levelText=model:FindFirstChild("LevelText",true) local fill=model:FindFirstChild("ProgressFill",true)
+  model:ScaleTo(flowerVisualScale(level,growth))
+  local levelText=model:FindFirstChild("LevelText",true)
+  local fill=model:FindFirstChild("ProgressFill",true)
   if levelText then levelText.Text=flower.DisplayName.." • LV."..level end
   if fill then fill.Size=UDim2.fromScale(level>=maxLevel and 1 or math.clamp(xp/math.max(1,level*xpPerLevel),0,1),1) end
  end
  return true
 end
-function S:Build(player)
- local p=self.X:Profile(player) if not p then return end local plot=self.Plots[player]
- if not plot then local i=1 while self.Used[i] do i=i+1 end self.Used[i]=true local a=(i-1)%12*math.pi*2/12 local r=105+math.floor((i-1)/12)*60 local origin=self.X.Origin+Vector3.new(math.cos(a)*r,0,math.sin(a)*r)
-  local m=Instance.new("Model") m.Name="Garden_"..player.UserId m:SetAttribute("OwnerUserId",player.UserId) m.Parent=self.X.World
-  plot={Index=i,Origin=origin,Model=m,Flowers={}} self.Plots[player]=plot
-  local base=self.X:Part(m,"Ground",origin-Vector3.new(0,.5,0),Vector3.new(1,50,50),Color3.fromRGB(83,137,78),true)
-  base.Shape=Enum.PartType.Cylinder
-  base.CFrame=CFrame.new(base.Position)*CFrame.Angles(0,0,math.rad(90))
-  base.Material=Enum.Material.Grass
 
-  local bed=self.X:Part(m,"GardenBed",origin+Vector3.new(0,.02,-2),Vector3.new(.04,36,31),Color3.fromRGB(116,88,61),false)
-  bed.Shape=Enum.PartType.Cylinder
-  bed.CFrame=CFrame.new(bed.Position)*CFrame.Angles(0,0,math.rad(90))
-  bed.Material=Enum.Material.Ground
-  bed.CanQuery=false
+function S:Build(player)
+ local p=self.X:Profile(player)
+ if not p then return end
+ local plot=self.Plots[player]
+
+ if not plot then
+  local i=1
+  while self.Used[i] do i+=1 end
+  self.Used[i]=true
+
+  local a=(i-1)%12*math.pi*2/12
+  local r=105+math.floor((i-1)/12)*60
+  local origin=self.X.Origin+Vector3.new(math.cos(a)*r,0,math.sin(a)*r)
+
+  local m=Instance.new("Model")
+  m.Name="Garden_"..player.UserId
+  m:SetAttribute("OwnerUserId",player.UserId)
+  m.Parent=self.X.World
+
+  plot={Index=i,Origin=origin,Model=m,Flowers={}}
+  self.Plots[player]=plot
+
+  local ground=self.X:Part(m,"Ground",origin-Vector3.new(0,.5,0),Vector3.new(1,50,50),Color3.fromRGB(85,145,80),true)
+  horizontalCylinder(ground,Enum.Material.Grass)
+
+  local border=self.X:Part(m,"Border",origin+Vector3.new(0,.025,0),Vector3.new(.05,40,40),Color3.fromRGB(190,154,111),false)
+  horizontalCylinder(border,Enum.Material.Sandstone)
+  border.CanQuery=false
+
+  local soil=self.X:Part(m,"Soil",origin+Vector3.new(0,.045,0),Vector3.new(.05,38,38),Color3.fromRGB(105,76,52),false)
+  horizontalCylinder(soil,Enum.Material.Ground)
+  soil.CanQuery=false
 
   local hivePosition=self:HivePosition(player)
-  local hive=self.X:Part(m,"Hive",hivePosition+Vector3.new(0,1.25,0),Vector3.new(4.5,5.2,5.2),Color3.fromRGB(224,169,56),true)
-  hive.Shape=Enum.PartType.Cylinder
-  hive.CFrame=CFrame.new(hive.Position)*CFrame.Angles(0,0,math.rad(90))
-  hive.Material=Enum.Material.WoodPlanks
+  local hiveBasePosition=origin+Vector3.new(G.Layout.HiveOffset.X,.06,G.Layout.HiveOffset.Z)
+  local hiveBase=self.X:Part(m,"HiveBase",hiveBasePosition,Vector3.new(.12,7,7),Color3.fromRGB(118,112,102),false)
+  horizontalCylinder(hiveBase,Enum.Material.Slate)
+  hiveBase.CanQuery=false
 
-  self.X:Prompt(hive,self:HivePromptText(p),function(who) if who==player then self.X.HiveService:Interact(player) else self.X.SocialService:Bless(who,player) end end)
+  local hive=self.X:Part(m,"Hive",hivePosition,Vector3.new(5.5,6,6),Color3.fromRGB(224,169,56),true)
+  horizontalCylinder(hive,Enum.Material.WoodPlanks)
+
+  local entrance=self.X:Part(m,"HiveEntrance",hivePosition+Vector3.new(0,-.35,-3),Vector3.new(1.35,1.35,1.35),Color3.fromRGB(61,47,37),false)
+  entrance.Shape=Enum.PartType.Ball
+  entrance.Material=Enum.Material.SmoothPlastic
+  entrance.CanQuery=false
+
+  self.X:Prompt(hive,self:HivePromptText(p),function(who)
+   if who==player then
+    self.X.HiveService:Interact(player)
+   else
+    self.X.SocialService:Bless(who,player)
+   end
+  end)
  end
- if plot.Content then plot.Content:Destroy() end plot.Flowers={} local content=Instance.new("Folder") content.Name="Flowers" content.Parent=plot.Model plot.Content=content
- for i=1,C.MaxFlowerSlots do local pos=self:Position(player,i) local unlocked=i<=p.Garden.UnlockedSlots
-  local pad=self.X:Part(content,"Slot_"..i,pos+Vector3.new(0,.025,0),Vector3.new(.05,5,5),unlocked and Color3.fromRGB(146,108,68) or Color3.fromRGB(72,78,83),false)
-  pad.Shape=Enum.PartType.Cylinder
-  pad.CFrame=CFrame.new(pad.Position)*CFrame.Angles(0,0,math.rad(90))
-  pad.Material=unlocked and Enum.Material.Ground or Enum.Material.Slate
-  pad:SetAttribute("OwnerUserId",player.UserId) pad:SetAttribute("SlotId",i)
-  if unlocked then self.X:Prompt(pad,"Plant / replace",function(who) if who==player then self.X:Send(player,"PlantPicker",i) end end)
-   local slot=p.Garden.Slots[i] local f=slot and F.Species[slot.SpeciesId] if f then local growth=f.GrowthProfile or {} local scalePerLevel=tonumber(growth.ScalePerLevel) or .025 local m=self.X.FlowerService.Build(i,f,pos+Vector3.new(0,.2,0)) m.Parent=content m:ScaleTo(1+math.min(2,((slot.Level or 1)-1)*scalePerLevel)) plot.Flowers[i]=m end
+
+ if plot.Content then plot.Content:Destroy() end
+ plot.Flowers={}
+ local content=Instance.new("Folder")
+ content.Name="Flowers"
+ content.Parent=plot.Model
+ plot.Content=content
+
+ for i=1,C.MaxFlowerSlots do
+  local pos=self:Position(player,i)
+  local unlocked=i<=p.Garden.UnlockedSlots
+  local pad=self.X:Part(
+   content,
+   "Slot_"..i,
+   pos-Vector3.new(0,.015,0),
+   Vector3.new(.03,5,5),
+   unlocked and Color3.fromRGB(140,101,65) or Color3.fromRGB(72,70,68),
+   false
+  )
+  horizontalCylinder(pad,unlocked and Enum.Material.Ground or Enum.Material.Slate)
+  pad.CanQuery=unlocked
+  pad:SetAttribute("OwnerUserId",player.UserId)
+  pad:SetAttribute("SlotId",i)
+
+  if unlocked then
+   self.X:Prompt(pad,"Plant / replace",function(who)
+    if who==player then self.X:Send(player,"PlantPicker",i) end
+   end)
+
+   local slot=p.Garden.Slots[i]
+   local f=slot and F.Species[slot.SpeciesId]
+   if f then
+    local growth=f.GrowthProfile or {}
+    local flower=self.X.FlowerService.Build(i,f,pos)
+    flower.Parent=content
+    flower:ScaleTo(flowerVisualScale(slot.Level or 1,growth))
+    plot.Flowers[i]=flower
+   end
   end
  end
+
  self.X.GardenSynergyService:Recalculate(player)
  self:RefreshHivePrompt(player)
 end
+
 function S:Plant(player,i,id)
  local p=self.X:Profile(player)
  if not p then return false,"PROFILE_LOADING" end
@@ -90,6 +202,7 @@ function S:Plant(player,i,id)
  if old.SpeciesId==id then return true end
  if Rules.HasProgress(old) then return false,"GARDEN_PROGRESS_PROTECTED" end
  if id~="" and self.X.InventoryService:Available(p,id)<1 then return false,"NO_FREE_COPY" end
+
  local slot={}
  if id~="" then
   slot={SpeciesId=id,Level=1,XP=0,TotalPollination=0,Mutation=""}
@@ -99,6 +212,7 @@ function S:Plant(player,i,id)
    self.X.Temp[player].SeedMutation=nil
   end
  end
+
  p.Garden.Slots[i]=slot
  p.Garden.Revision+=1
  self.X.GardenActivityService:CancelGarden(player)
@@ -106,12 +220,24 @@ function S:Plant(player,i,id)
  if id~="" then self.X:Emit(player,"Plant",1) end
  return true
 end
+
 function S:RefreshCapacity(player)
- local p=self.X:Profile(player) if not p then return false,"PROFILE_LOADING" end
+ local p=self.X:Profile(player)
+ if not p then return false,"PROFILE_LOADING" end
  local capacity=Rules.FlowerCapacity(p)
  if Rules.HasOverflow(p.Garden.Slots,capacity) then return false,"RESPEC_GARDEN_OCCUPIED" end
- p.Garden.UnlockedSlots=capacity self:Build(player) return true
+ p.Garden.UnlockedSlots=capacity
+ self:Build(player)
+ return true
 end
-function S:Remove(player) local plot=self.Plots[player] if plot then self.Used[plot.Index]=nil plot.Model:Destroy() self.Plots[player]=nil end end
-return S
 
+function S:Remove(player)
+ local plot=self.Plots[player]
+ if plot then
+  self.Used[plot.Index]=nil
+  plot.Model:Destroy()
+  self.Plots[player]=nil
+ end
+end
+
+return S
