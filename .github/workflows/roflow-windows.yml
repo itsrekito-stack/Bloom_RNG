@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - "tools/roflow/**"
+      - "tools/bloom-ui-editor/**"
       - ".github/workflows/roflow-windows.yml"
 
 concurrency:
