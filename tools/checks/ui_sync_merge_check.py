@@ -15,26 +15,59 @@ spec.loader.exec_module(module)
 
 required={"ActiveBoostsHUD","ActiveBoostTooltip"}
 required_nested={"MinimizeButton"}
+workshop_required={
+    "WorkshopTemplate","WorkshopBody","TreePanel","TreeCanvas","PanMap",
+    "NodeTooltip","WorkshopCurrencyBar","WorkshopPoints","PetalDust","AncientNectar",
+}
 
-def node(name):
-    return {"ClassName":"Frame","Name":name,"Properties":{"Visible":True},"Children":[]}
+def node(name,children=None,**props):
+    properties={"Visible":True}
+    properties.update(props)
+    return {"ClassName":"Frame","Name":name,"Properties":properties,"Children":children or []}
 
+# Existing HUD protection: stale editor deletions of runtime-critical authored UI are restored.
 base={"ClassName":"Frame","Name":"SafeRoot","Children":[node("ActiveBoostsHUD"),node("OptionalLocalPanel")]}
 local={"ClassName":"Frame","Name":"SafeRoot","Children":[]}
 remote={"ClassName":"Frame","Name":"SafeRoot","Children":[node("ActiveBoostsHUD"),node("OptionalLocalPanel")]}
-
 merged=module.merge_remote_changes(base,local,remote)
 names={x.get("Name") for x in merged["Children"]}
 assert "ActiveBoostsHUD" in names, "required runtime child was lost by Python AI-sync merge"
 assert "OptionalLocalPanel" not in names, "ordinary local deletion should still be preserved"
 
-base_hud={"ClassName":"Frame","Name":"ActiveBoostsHUD","Children":[node("MinimizeButton")]}
-local_hud={"ClassName":"Frame","Name":"ActiveBoostsHUD","Children":[]}
-remote_hud={"ClassName":"Frame","Name":"ActiveBoostsHUD","Children":[node("MinimizeButton")]}
+base_hud=node("ActiveBoostsHUD",[node("MinimizeButton")])
+local_hud=node("ActiveBoostsHUD",[])
+remote_hud=node("ActiveBoostsHUD",[node("MinimizeButton")])
 merged_hud=module.merge_remote_changes(base_hud,local_hud,remote_hud)
 nested_names={x.get("Name") for x in merged_hud["Children"]}
 assert "MinimizeButton" in nested_names, "required nested minimize control was lost by Python AI-sync merge"
 
+# Regression for the Studio failure seen after Workshop V2 landed: local UI Studio state
+# may still contain WorkshopBody without the newly required tooltip/currency overlay.
+base_workshop=node("WorkshopBody",[
+    node("TreePanel"),
+    node("NodeTooltip",[node("Branch"),node("Effect"),node("Cost")]),
+    node("WorkshopCurrencyBar",[node("WorkshopPoints"),node("PetalDust"),node("AncientNectar")]),
+])
+local_workshop=node("WorkshopBody",[node("TreePanel")])
+remote_workshop=node("WorkshopBody",[
+    node("TreePanel"),
+    node("NodeTooltip",[node("Branch"),node("Effect"),node("Cost")],Active=False,Selectable=False,LayoutOrder=2),
+    node("WorkshopCurrencyBar",[node("WorkshopPoints"),node("PetalDust"),node("AncientNectar")]),
+])
+merged_workshop=module.merge_remote_changes(base_workshop,local_workshop,remote_workshop)
+merged_workshop_names={x.get("Name") for x in merged_workshop["Children"]}
+assert "NodeTooltip" in merged_workshop_names, "stale local Workshop deletion swallowed NodeTooltip"
+assert "WorkshopCurrencyBar" in merged_workshop_names, "stale local Workshop deletion swallowed currency bar"
+tooltip=next(x for x in merged_workshop["Children"] if x.get("Name")=="NodeTooltip")
+tooltip_names={x.get("Name") for x in tooltip.get("Children",[])}
+assert {"Branch","Effect","Cost"}<=tooltip_names, "restored Workshop tooltip lost authored fields"
+
+def walk(node):
+    yield node
+    for child in node.get("Children",[]) or []:
+        yield from walk(child)
+
+all_nodes={n.get("Name"):n for n in walk(MODEL)}
 safe=next(x for x in MODEL["Children"] if x.get("Name")=="SafeRoot")
 model_names={x.get("Name") for x in safe.get("Children",[])}
 assert required<=model_names, f"remote authored model missing required boost nodes: {sorted(required-model_names)}"
@@ -42,9 +75,18 @@ boost_root=next(x for x in safe.get("Children",[]) if x.get("Name")=="ActiveBoos
 boost_child_names={x.get("Name") for x in boost_root.get("Children",[])}
 assert required_nested<=boost_child_names, f"remote authored boost HUD missing controls: {sorted(required_nested-boost_child_names)}"
 
+missing_workshop=sorted(name for name in workshop_required if name not in all_nodes)
+assert not missing_workshop, f"remote authored Workshop missing sync-critical nodes: {missing_workshop}"
+model_tooltip=all_nodes["NodeTooltip"]
+assert model_tooltip.get("Properties",{}).get("Active") is False
+assert model_tooltip.get("Properties",{}).get("Selectable") is False
+model_tooltip_children={x.get("Name") for x in model_tooltip.get("Children",[])}
+assert {"Title","Branch","Effect","Cost","Hint","Accent"}<=model_tooltip_children
+
 assert "fn is_required_runtime_ui_child(value: &Value) -> bool" in RUST
-assert '"ActiveBoostsHUD"' in RUST and '"ActiveBoostTooltip"' in RUST and '"MinimizeButton"' in RUST
+for name in sorted(required|required_nested|workshop_required):
+    assert f'"{name}"' in RUST, f"RoFlow merge protection missing {name}"
 assert "if is_required_runtime_ui_child(r) || b != r" in RUST
 
 print("UI sync merge contract: PASS")
-print("Required runtime BloomUI children survive stale local editor merges in both Bloom UI Studio and RoFlow.")
+print("Required BloomUI and Workshop authored nodes survive stale local editor merges in Python bridge and RoFlow.")
