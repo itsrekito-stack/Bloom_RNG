@@ -18,7 +18,7 @@ function lastGoodModelKey(){return state?.targetPath===LOADING_TARGET?"BloomUISt
 const UI_STATE_TITLES={
  gameplay:"HUD",inventory_v2:"Inventory",workshop:"Workshop",fieldguide:"Field Guide",map:"Map",trials:"Trials",
  settings:"Settings",plant:"Plant Picker",season:"Season",replay:"Tutorial Replay",cards:"Cards",
- reward:"Reward",toast:"Toast",tutorial:"Tutorial Guidance",boosts:"Active Boosts",loading:"Loading Screen"
+ reward:"Reward",toast:"Toast",tutorial:"Tutorial Guidance",boosts:"Active Boosts",world_ui:"World UI",loading:"Loading Screen"
 };
 
 function roflowTauri(){
@@ -326,7 +326,7 @@ function stateFocusName(scene){
   fieldguide:"FieldGuideKit",map:"MapKit",trials:"TrialsKit",settings:"SettingsKit",
   plant:"PlantKit",season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit",
   reward:"RewardReveal",toast:"Toast",tutorial:"TutorialGuideBanner",boosts:"ActiveBoostsHUD",
-  loading:"Background"
+  world_ui:"WorldUIPrototypes",loading:"Background"
  }[scene]||null;
 }
 function selectStateRoot(scene){
@@ -341,6 +341,9 @@ async function activateUiState(scene){
   state.activeUiState=null;
   state.mode="preview";
   state.previewScene="empty";
+  state.selectedId=null;
+  state.selectedIds=new Set();
+  state.selectionAnchorId=null;
   syncToolbarFromState();renderAll();savePrefs();
   toast("Empty workspace");
   return;
@@ -391,6 +394,7 @@ function previewVisible(n){
  if(name==="RewardReveal")return scene==="reward";
  if(name==="Toast")return scene==="toast";
  if(name==="ActiveBoostsHUD"||name==="ActiveBoostTooltip")return scene==="boosts";
+ if(name==="WorldUIPrototypes")return scene==="world_ui";
  if(["TutorialGuideBanner","TutorialSpotlight","TutorialCallout","TutorialScreenArrow"].includes(name))return scene==="tutorial";
  return null;
 }
@@ -1005,6 +1009,11 @@ els.guiRoot.addEventListener("pointerdown",ev=>{if(ev.target===els.guiRoot)selec
 
 function renderTree(){
  els.tree.innerHTML="";if(!state.root)return;
+ if(!state.activeUiState){
+  els.tree.innerHTML='<div class="tree-empty"><strong>No UI State open</strong><span>Choose a state from the left rail to edit its Roblox instances.</span></div>';
+  $("#treeSearchMeta").textContent="";
+  return;
+ }
  const q=state.treeQuery.trim().toLowerCase();
  const matched=new Set(),ancestors=new Set();
  if(q){
