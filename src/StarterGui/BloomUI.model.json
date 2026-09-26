@@ -17442,7 +17442,10 @@
                         "BorderSizePixel": 0,
                         "ZIndex": 80,
                         "Visible": false,
-                        "ClipsDescendants": false
+                        "ClipsDescendants": false,
+                        "Active": false,
+                        "Selectable": false,
+                        "LayoutOrder": 2
                       },
                       "Children": [
                         {
