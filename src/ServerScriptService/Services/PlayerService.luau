@@ -224,7 +224,10 @@ function X:Remove(player)
 end
 function X:Start(data,services,names)
  self.DataService=data self.ServiceNames=names for _,name in ipairs(names) do self[name]=services[name] end
- local center=workspace:FindFirstChild("Garden") local marker=center and center:FindFirstChild("GardenCenter") self.Origin=(marker and marker.Position or Vector3.zero)+Vector3.new(0,5,0)
+ for _,name in ipairs({"ReferenceScenery","BrickCenter"}) do local stale=workspace:FindFirstChild(name) if stale then stale:Destroy() end end
+ local garden=workspace:FindFirstChild("Garden")
+ if garden then for _,name in ipairs({"LocationDecorTemplates","LocationTemplates"}) do local stale=garden:FindFirstChild(name) if stale then stale:Destroy() end end end
+ local center=garden local marker=center and center:FindFirstChild("GardenCenter") self.Origin=(marker and marker.Position or Vector3.zero)+Vector3.new(0,5,0)
  local world=Instance.new("Folder") world.Name="BloomWorld" world.Parent=workspace self.World=world
  local authoredHub=workspace:FindFirstChild("FruitOrchardHub")
  if not authoredHub then warn("[Bloom][WORLD] Authored FruitOrchardHub is missing; run AI SYNC before Play") end
