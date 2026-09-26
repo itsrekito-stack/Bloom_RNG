@@ -43,8 +43,12 @@ function C.Position(i)
  return Vector3.new(math.cos(angle)*radius,layout.SlotY,math.sin(angle)*radius)
 end
 
+function C.LogicalPosition(i)
+ return Vector3.new(((i-1)%5-2)*7,0,(math.floor((i-1)/5)-1)*7)
+end
+
 function C.Adjacent(a,b,range)
- local x,y=C.Position(a),C.Position(b)
+ local x,y=C.LogicalPosition(a),C.LogicalPosition(b)
  return a~=b and (x-y).Magnitude<=7.1*(range or 1)
 end
 
