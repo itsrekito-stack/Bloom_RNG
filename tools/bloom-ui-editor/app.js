@@ -18,7 +18,7 @@ const LOADING_TARGET="src/ReplicatedFirst/BloomLoadingTemplate.model.json";
 function lastGoodModelKey(){return state?.targetPath===LOADING_TARGET?"BloomUIStudioLastGoodModelLoading":"BloomUIStudioLastGoodModel"}
 const UI_STATE_TITLES={
  gameplay:"HUD",inventory_v2:"Inventory",workshop:"Workshop",trials:"Quests",
- settings:"Settings",plant:"Plant Picker",season:"Season",replay:"Tutorial Replay",cards:"Cards",
+ settings:"Settings",season:"Season",replay:"Tutorial Replay",cards:"Cards",
  reward:"Reward",toast:"Toast",tutorial:"Tutorial Guidance",boosts:"Active Boosts",world_ui:"World UI",loading:"Loading Screen"
 };
 
@@ -346,13 +346,12 @@ const MOCK_PREVIEW_DATA={
  }
 };
 
-const MENU_PREVIEW_SCENES=new Set(["inventory_v2","workshop","trials","settings","plant","season","replay","cards"]);
+const MENU_PREVIEW_SCENES=new Set(["inventory_v2","workshop","trials","settings","season","replay","cards"]);
 const PREVIEW_META={
  inventory_v2:{title:"Inventory",subtitle:"Flowers, seeds, bees, resources, and keepsakes"},
  workshop:{title:"Workshop",subtitle:"Permanent upgrades and progression branches"},
  trials:{title:"Quests",subtitle:"Tasks, progress & rewards"},
  settings:{title:"Settings",subtitle:"Game & UI preferences"},
- plant:{title:"Plant",subtitle:"Choose an available flower for this garden slot"},
  season:{title:"Season",subtitle:"Reset progression for permanent Legacy growth"},
  replay:{title:"Tutorial Replay",subtitle:"Review every tutorial step"},
  cards:{title:"Season Cards",subtitle:"Choose the next seasonal modifier"}
@@ -391,7 +390,7 @@ function stateFocusName(scene){
  return {
   gameplay:"SafeRoot",inventory_v2:"InventoryPrototype",workshop:"WorkshopTemplate",
   trials:"QuestsPrototype",settings:"SettingsKit",
-  plant:"PlantKit",season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit",
+  season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit",
   reward:"RewardReveal",toast:"Toast",tutorial:"TutorialGuideBanner",boosts:"ActiveBoostsHUD",
   world_ui:"WorldUIPrototypes",loading:"Background"
  }[scene]||null;
@@ -402,7 +401,7 @@ const FRAGMENT_ROOT_BASES=[
 ];
 const DELETABLE_MENU_BASES=[
  "InventoryPrototype","WorkshopTemplate","QuestsPrototype","SettingsKit",
- "PlantKit","SeasonKit","ReplayKit","CardsKit"
+ "SeasonKit","ReplayKit","CardsKit"
 ];
 function nameMatchesBase(name,base){
  const value=String(name||"");
@@ -494,7 +493,7 @@ function previewVisible(n){
  if(name==="StateKits")return MENU_PREVIEW_SCENES.has(scene)&&scene!=="inventory_v2"&&scene!=="workshop"&&scene!=="trials";
  if(p==="StateKits"){
   const wanted={
-   settings:"SettingsKit",plant:"PlantKit",season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit"
+   settings:"SettingsKit",season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit"
   }[scene];
   return name===wanted;
  }
