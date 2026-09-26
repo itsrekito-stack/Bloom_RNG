@@ -309,7 +309,7 @@ fn sha256_hex(bytes: &[u8]) -> String {
 }
 
 fn ps_literal(path: &Path) -> String {
-    path.to_string_lossy().replace(''', "''")
+    path.to_string_lossy().replace('\'', "''")
 }
 
 fn roflow_dir(root: &Path) -> PathBuf {
