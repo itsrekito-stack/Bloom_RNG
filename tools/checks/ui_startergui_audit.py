@@ -139,7 +139,7 @@ check('boost HUD never infinite-waits authored roots','WaitForChild("ActiveBoost
 check('boost HUD missing hierarchy fails fast','[BoostHUD] Authored boost HUD is missing from canonical BloomUI' in boost_hud_source and '[BoostHUD] Authored boost HUD hierarchy is incomplete' in boost_hud_source)
 
 # BR-002: feature id and renderer are explicit and editor has one live inventory preview.
-check('SeedSatchel explicitly routes to InventoryV2','MENU_RENDERERS={SeedSatchel="InventoryV2"}' in source)
+check('SeedSatchel explicitly routes to InventoryV2','SeedSatchel="InventoryV2"' in source and 'Settings="SettingsV2"' in source)
 check('Inventory v2 backend linked','InventoryV2Controller' in source and 'InventoryV2.Render(self,p,ui)' in source)
 check('dynamic menus use authored state kits','self.StateKits=self.Panel:FindFirstChild("StateKits")' in source and 'function UI:MenuTemplate(name)' in source and 'self:MenuTemplate("ButtonTemplate")' in source)
 check('state kits are authored in ScreenGui',one('StateKits')[1] is not None and all(one(name+'Kit')[1] is not None for name in ['FieldGuide','Map','Trials','Settings','Plant','Season','Replay','Cards']))
