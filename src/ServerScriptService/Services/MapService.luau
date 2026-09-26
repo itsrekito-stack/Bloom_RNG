@@ -53,7 +53,7 @@ function S:Build()
   self.X.Origin+Vector3.new(0,1,0)
  )
  centerFlower.Name="ServerBloom"
- centerFlower:ScaleTo(3)
+ centerFlower:ScaleTo(1.5)
  centerFlower.Parent=self.X.World
 
  for id,s in pairs(L.Sectors) do
