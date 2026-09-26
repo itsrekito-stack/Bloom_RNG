@@ -183,10 +183,12 @@ function S.ApplyEffects(ui,profile)
   end
  end
  local compact=settings.CompactHUD==true
+ local userScale=math.clamp(tonumber(settings.UIScale) or 1,.8,1.15)
+ local hudScale=userScale*(compact and .88 or 1)
  for _,rootName in ipairs({"CurrencyHUD","MenuDock","RollHUD","RollButton"}) do
   local root=ui.SafeRoot and ui.SafeRoot:FindFirstChild(rootName)
   local scale=root and root:FindFirstChild("UserScale")
-  if scale and scale:IsA("UIScale") then scale.Scale=compact and .88 or 1 end
+  if scale and scale:IsA("UIScale") then scale.Scale=hudScale end
  end
  if ui.PanelScale and ui.Menu~="Workshop" then
   ui.PanelScale.Scale=ui:GetMenuScale()
