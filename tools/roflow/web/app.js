@@ -5,6 +5,8 @@ const state={
  status:null,
  root:localStorage.getItem("roflowProjectRoot")||"",
  studioLoaded:false,
+ currentPage:"dashboard",
+ studioUnloadTimer:null,
  selectedFile:"",
  logs:["RoFlow started."],
  tasks:[],
@@ -25,7 +27,7 @@ const fmtTime=seconds=>seconds?new Date(seconds*1000).toLocaleString():"—";
 function log(message){
  const time=new Date().toLocaleTimeString();
  state.logs.push(`[${time}] ${message}`);
- if(state.logs.length>300)state.logs.splice(0,state.logs.length-300);
+ if(state.logs.length>120)state.logs.splice(0,state.logs.length-120);
  const out=$("#logOutput");
  if(out){out.textContent=state.logs.join("\n");out.scrollTop=out.scrollHeight}
 }
@@ -238,7 +240,10 @@ async function connectRoot(path){
  localStorage.setItem("roflowProjectRoot",path);
  applyStatus(status);
  await Promise.all([refreshBackups(),refreshTasks(),refreshRojo(),refreshPlanner()]);
- if(state.studioLoaded)await ensureUiStudio(true);
+ if(state.studioLoaded){
+  if(state.currentPage==="ui")await ensureUiStudio(true);
+  else unloadUiStudio("project changed while inactive");
+ }
  log("Project connected: "+path);
  setTimeout(()=>maybeAutoUpdate(),350);
  return status;
@@ -275,8 +280,8 @@ async function runSync(){
   const data=await invoke("safe_ai_sync",{editorModel:null});
   out.textContent=(data.changed?"Updated to ":"Already current at ")+shortSha(data.head)+"\n"+data.subject+(data.modelMerged?"\nBloomUI.model.json merged safely":"")+(data.stashed&&data.restored?"\nOther local changes restored":"")+(data.backupVersion?"\nCheckpoint: "+data.backupVersion:"");
   await refresh();
-  if(state.studioLoaded)await ensureUiStudio(true);
-  else notifyStudioModelChanged();
+  if(state.currentPage==="ui")await ensureUiStudio(true);
+  else if(state.studioLoaded)unloadUiStudio("AI Sync while inactive");
   log("Safe AI Sync completed");
   return data;
  }catch(error){
@@ -317,9 +322,53 @@ async function runDevCycle(){
  }finally{button.disabled=false}
 }
 
+const studioSuspendWaiters=new Map();
+
+function postStudio(message){
+ if(!state.studioLoaded)return false;
+ const frame=$("#uiStudioFrame");
+ try{frame.contentWindow?.postMessage(message,"*");return true}catch{return false}
+}
+function resumeUiStudio(){
+ clearTimeout(state.studioUnloadTimer);
+ state.studioUnloadTimer=null;
+ postStudio({type:"roflow-resume"});
+}
+function unloadUiStudio(reason="inactive"){
+ clearTimeout(state.studioUnloadTimer);
+ state.studioUnloadTimer=null;
+ if(!state.studioLoaded)return;
+ const frame=$("#uiStudioFrame");
+ frame.removeAttribute("srcdoc");
+ frame.src="about:blank";
+ state.studioLoaded=false;
+ log("UI Studio unloaded from memory · "+reason);
+}
+async function suspendUiStudio({allowUnload=true,reason="inactive"}={}){
+ if(!state.studioLoaded)return true;
+ clearTimeout(state.studioUnloadTimer);
+ state.studioUnloadTimer=null;
+ const requestId="suspend-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);
+ const saved=await new Promise(resolve=>{
+  const timer=setTimeout(()=>{studioSuspendWaiters.delete(requestId);resolve(false)},3500);
+  studioSuspendWaiters.set(requestId,ok=>{clearTimeout(timer);resolve(ok)});
+  if(!postStudio({type:"roflow-suspend",requestId,reason,flush:true})){
+   clearTimeout(timer);studioSuspendWaiters.delete(requestId);resolve(false);
+  }
+ });
+ if(saved&&allowUnload&&state.currentPage!=="ui"){
+  state.studioUnloadTimer=setTimeout(()=>{
+   if(state.currentPage!=="ui"&&state.studioLoaded)unloadUiStudio("inactive timeout");
+  },12000);
+ }
+ return saved;
+}
+
 async function ensureUiStudio(force=false){
  const frame=$("#uiStudioFrame");
- if(!force&&state.studioLoaded)return;
+ clearTimeout(state.studioUnloadTimer);
+ state.studioUnloadTimer=null;
+ if(!force&&state.studioLoaded){resumeUiStudio();return}
  if(state.root){
   try{
    const documentHtml=await invoke("ui_studio_document");
@@ -413,6 +462,9 @@ async function buildProject(){
 }
 
 function navigate(page){
+ const previous=state.currentPage;
+ state.currentPage=page;
+ if(previous==="ui"&&page!=="ui")suspendUiStudio({allowUnload:true,reason:"page change"}).catch(()=>{});
  document.body.classList.toggle("ui-studio-focus",page==="ui");
  document.querySelectorAll(".nav[data-page]").forEach(button=>button.classList.toggle("active",button.dataset.page===page));
  document.querySelectorAll(".page").forEach(section=>section.classList.remove("active"));
@@ -427,7 +479,7 @@ function navigate(page){
 }
 
 document.querySelectorAll(".nav[data-page]").forEach(button=>button.onclick=()=>navigate(button.dataset.page));
-setInterval(()=>{if(state.root)maybeAutoUpdate()},60000);
+setInterval(()=>{if(state.root&&!document.hidden)maybeAutoUpdate()},60000);
 document.querySelectorAll("[data-go]").forEach(button=>button.onclick=()=>navigate(button.dataset.go));
 $("#chooseBtn").onclick=chooseProject;
 $("#refreshBtn").onclick=async()=>{await refresh().catch(()=>{});await maybeAutoUpdate(true)};
@@ -449,6 +501,11 @@ $("#buildBtn").onclick=buildProject;
 $("#openStudioBtn").onclick=async()=>{try{await invoke("open_roblox_project");log("Opened BloomRNG.rbxl")}catch(error){$("#rojoOutput").textContent=String(error);log("Open Studio failed: "+error)}};
 
 window.addEventListener("message",async event=>{
+ if(event.data?.type==="roflow-suspend-ready"){
+  const waiter=studioSuspendWaiters.get(event.data.requestId);
+  if(waiter){studioSuspendWaiters.delete(event.data.requestId);waiter(event.data.ok===true)}
+  return;
+ }
  if(event.data?.type==="roflow-project-changed"){
   state.root=event.data.path||state.root;
   if(state.root)localStorage.setItem("roflowProjectRoot",state.root);
@@ -456,6 +513,15 @@ window.addEventListener("message",async event=>{
  }else if(event.data?.type==="roflow-sync-complete"){
   await refresh().catch(()=>{});
   log("UI Studio completed AI Sync");
+ }
+});
+
+document.addEventListener("visibilitychange",()=>{
+ if(document.hidden){
+  if(state.currentPage==="ui")suspendUiStudio({allowUnload:false,reason:"window hidden"}).catch(()=>{});
+ }else{
+  if(state.currentPage==="ui")resumeUiStudio();
+  if(state.root)maybeAutoUpdate().catch(()=>{});
  }
 });
 
