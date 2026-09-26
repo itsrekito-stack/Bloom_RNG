@@ -3,6 +3,9 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 server=(ROOT/"src/ServerScriptService/RuntimeAcceptanceProbe.server.luau").read_text(encoding="utf-8")
 client=(ROOT/"src/StarterPlayer/StarterPlayerScripts/RuntimeAcceptanceProbe.client.luau").read_text(encoding="utf-8")
+roflow_rust=(ROOT/"tools/roflow/src-tauri/src/lib.rs").read_text(encoding="utf-8")
+roflow_html=(ROOT/"tools/roflow/web/index.html").read_text(encoding="utf-8")
+roflow_app=(ROOT/"tools/roflow/web/app.js").read_text(encoding="utf-8")
 
 def need(src,text,label):
     if text not in src:
@@ -46,3 +49,14 @@ need(client,'otherPlayerCount()',"client multiplayer presence")
 need(client,'folderCount("LocalBees")',"client bee presentation evidence")
 need(client,'folderCount("LocalBloomCheckpoints")',"client activity presentation evidence")
 print("PASS onboarding and multiplayer evidence markers are present")
+
+need(roflow_rust,'fn runtime_probe_report()',"RoFlow Studio log parser")
+need(roflow_rust,'latest_studio_log()',"latest Roblox Studio log discovery")
+need(roflow_rust,'[RuntimeProbe]',"runtime probe log filtering")
+need(roflow_rust,'[PersistenceProbe]',"persistence probe log filtering")
+need(roflow_rust,'runtime_probe_report,',"Tauri runtime probe command registration")
+need(roflow_html,'id="runtimeProbeOutput"',"RoFlow Studio QA output")
+need(roflow_html,'id="runtimeMilestones"',"RoFlow milestone summary")
+need(roflow_app,'async function refreshRuntimeProbe(silent=false)',"RoFlow runtime probe refresh")
+need(roflow_app,'state.currentPage==="roblox"&&!document.hidden',"QA polling only while visible")
+print("PASS RoFlow Studio QA reads probe evidence without adding a permanent background poll")
