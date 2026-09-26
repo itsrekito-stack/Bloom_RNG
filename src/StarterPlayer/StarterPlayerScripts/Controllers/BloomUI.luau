@@ -1905,10 +1905,15 @@ function UI:Start()
     end
    end
    if relevant and payload.OK then
-    local refreshMenu=MENU_REFRESH_ACTIONS[payload.Action]
-    if refreshMenu and self.Menu==refreshMenu then self.MenuRefreshRequested=true end
+    if payload.Action=="Plant" and self.InventoryPlantSlot and self.MenuRenderer=="InventoryV2" then
+     self:Close()
+    else
+     local refreshMenu=MENU_REFRESH_ACTIONS[payload.Action]
+     if refreshMenu and self.Menu==refreshMenu then self.MenuRefreshRequested=true end
+    end
    end
    if relevant and not payload.OK then
+    if payload.Action=="Plant" then self.PendingPlantFlowerId=nil end
     if payload.Action=="Roll" and self.Auto and rollSession==(self.RollSession or 0) then self:SetAutoRolling(false) end
     local silentActivity=payload.Action=="Activity" and (
      payload.Reason=="STALE_ACTIVITY"
