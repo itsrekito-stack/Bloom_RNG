@@ -1082,3 +1082,7 @@ html.roflow-native .prop-row>label{font-size:9px}
 html.roflow-native .prop-row input,
 html.roflow-native .prop-row select,
 html.roflow-native .prop-row textarea{border-radius:5px;background:#070e15;border-color:#1a2d3e;padding:3px 5px}
+
+
+/* Canvas gesture ownership: WebView page zoom is disabled; UI Studio owns pan/pinch. */
+.stage-scroller{touch-action:none;overscroll-behavior:contain}
