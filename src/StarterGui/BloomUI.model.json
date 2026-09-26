@@ -445,6 +445,14 @@
           },
           "Children": [
             {
+              "ClassName": "UIScale",
+              "Name": "UserScale",
+              "Properties": {
+                "Scale": 1
+              },
+              "Children": []
+            },
+            {
               "ClassName": "Frame",
               "Name": "Coins",
               "Properties": {
@@ -1547,6 +1555,14 @@
             }
           },
           "Children": [
+            {
+              "ClassName": "UIScale",
+              "Name": "UserScale",
+              "Properties": {
+                "Scale": 1
+              },
+              "Children": []
+            },
             {
               "ClassName": "TextButton",
               "Name": "Dock_SeedSatchel",
@@ -2741,6 +2757,14 @@
             }
           },
           "Children": [
+            {
+              "ClassName": "UIScale",
+              "Name": "UserScale",
+              "Properties": {
+                "Scale": 1
+              },
+              "Children": []
+            },
             {
               "ClassName": "Frame",
               "Name": "MeterArea",
@@ -4186,6 +4210,14 @@
             "BackgroundTransparency": 1
           },
           "Children": [
+            {
+              "ClassName": "UIScale",
+              "Name": "UserScale",
+              "Properties": {
+                "Scale": 1
+              },
+              "Children": []
+            },
             {
               "ClassName": "ImageLabel",
               "Name": "Icon",
