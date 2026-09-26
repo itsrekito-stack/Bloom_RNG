@@ -21,15 +21,16 @@ local BloomConfig=require(RS.Config.BloomConfig)
 local NumberFormatter=require(RS.Shared.NumberFormatter)
 local WorkshopEffects=require(RS.Shared.WorkshopEffects)
 local InventoryV2=require(script.Parent.InventoryV2Controller)
+local QuestsV2=require(script.Parent.QuestsController)
 local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="settings-v2-runtime-2026-09-26"
+local CLIENT_BUILD="quests-v2-runtime-2026-09-26"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
-local MENU_RENDERERS={SeedSatchel="InventoryV2",Settings="SettingsV2"}
+local MENU_RENDERERS={SeedSatchel="InventoryV2",Trials="QuestsV2",Settings="SettingsV2"}
 local MENU_REFRESH_ACTIONS={
  Setting="Settings",
  ResetSettings="Settings",
@@ -49,7 +50,7 @@ local MENU_NAMES={
  Workshop="Workshop",
  FieldGuide="Field Guide",
  Map="Map",
- Trials="Trials",
+ Trials="Quests",
  Settings="Settings",
  Plant="Planting",
  Season="Season Turn",
@@ -61,7 +62,7 @@ local MENU_HINTS={
  Workshop="Permanent upgrades and progression branches",
  FieldGuide="Collection, odds, and discovered synergies",
  Map="Sectors, discoveries, and travel",
- Trials="Short build trials",
+ Trials="Tasks, progress & rewards",
  Settings="Game & UI preferences",
  Plant="Choose a seed for an empty flower bed",
  Season="Review the changes before confirming",
@@ -78,6 +79,14 @@ local SETTINGS_NAMES={
 local JOURNEY={
  "Get your first bee","Collect a Pollen Spark","Honey delivery","Make a roll","Plant a flower","Fill the Bloom Meter","Make a Bloom Roll","Reach Hive Level 2","Visit the Workshop","Buy a Workshop node","Create a synergy","Unlock the second bee slot","Activate a Bee Trait","Visit Sunny Orchard","Complete Solar Bloom","Discover 6 flowers","Unlock Crystal Gate","Complete a trial","Visit Crystal Greenhouse","Prepare a Season Turn",
 }
+
+function UI:JourneyCount()
+ return #JOURNEY
+end
+
+function UI:JourneyText(step)
+ return JOURNEY[tonumber(step) or 1] or "Keep growing your garden"
+end
 
 local function hover(button,base,over)
  button.AutoButtonColor=false
@@ -694,6 +703,8 @@ function UI:RenderMenu(preserveInteraction)
    self.Panel.Size=UDim2.fromOffset(math.min(1220,math.max(700,safeW-24)),math.min(660,math.max(500,safeH-24)))
   elseif renderer=="SettingsV2" then
    self.Panel.Size=UDim2.fromOffset(math.min(920,math.max(720,safeW-64)),math.min(570,math.max(500,safeH-72)))
+  elseif renderer=="QuestsV2" then
+   self.Panel.Size=UDim2.fromOffset(math.min(980,math.max(760,safeW-48)),math.min(560,math.max(500,safeH-64)))
   else
    self.Panel.Size=UDim2.fromOffset(600,420)
   end
@@ -739,6 +750,13 @@ function UI:RenderMenu(preserveInteraction)
   self.Content.ScrollingEnabled=false
   self.Content.ScrollBarThickness=0
   SettingsV2.Render(self,p,ui)
+
+ elseif renderer=="QuestsV2" then
+  self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
+  self.Content.CanvasSize=UDim2.fromOffset(0,0)
+  self.Content.ScrollingEnabled=false
+  self.Content.ScrollBarThickness=0
+  QuestsV2.Render(self,p,ui)
 
  elseif renderer=="Workshop" then
   local shell=self.WorkshopRuntime
@@ -1178,7 +1196,7 @@ function UI:Render()
   self.ObjectiveProgress.Visible=true
  else
   self.ObjectiveTitle.Text="JOURNEY  •  STEP "..tostring(p.Quests.JourneyStep or 1)
-  self.ObjectiveText.Text=JOURNEY[p.Quests.JourneyStep] or "Keep growing your garden"
+  self.ObjectiveText.Text=self:JourneyText(p.Quests.JourneyStep)
   self.ObjectiveProgress.Visible=false
   if self.JourneyGuideController then self.JourneyGuideController:RenderObjective() end
  end
@@ -1920,7 +1938,9 @@ function UI:Start()
    self.NextRoll=os.clock()+payload.Cooldown
    self:ResolveRouletteReward(payload)
   elseif kind=="PlantPicker" then self:Open("Plant",payload)
-  elseif kind=="Activities" then self.Activities:Update(payload)
+  elseif kind=="Activities" then
+   self.Activities:Update(payload)
+   if self.MenuRenderer=="QuestsV2" then self:RenderMenu(true) end
   elseif kind=="OtherTokens" then self.Activities:Others(payload)
   elseif kind=="Bees" then self.Bees:Update(payload)
   elseif kind=="Message" then self:Toast(payload)
