@@ -19,6 +19,12 @@ local function completionKey(step)
  return "TutorialStep_"..step.Id
 end
 
+local function starterBeeOwned(profile)
+ local pollinators=profile and profile.Pollinators
+ local inventory=pollinators and pollinators.BeeInventory
+ return type(inventory)=="table" and (tonumber(inventory.WorkerBee) or 0)>0
+end
+
 function S:Init(x)
  self.X=x
 end
@@ -26,7 +32,7 @@ end
 function S:LegacyStepComplete(p,step)
  local events=p.Tutorial.Events
  if step.Id=="HiveIntro" then return p.StarterBeeGranted or (events.StarterBee or 0)>0 or (events.Wake or 0)>0 end
- if step.Id=="StarterBee" then return p.StarterBeeGranted or (events.StarterBee or 0)>0 end
+ if step.Id=="StarterBee" then return starterBeeOwned(p) end
  if step.Id=="HiveUpgrade" then return p.Hive.Level>=2 or (events.HiveUpgrade or 0)>0 end
  if step.Id=="WorkshopPurchase" then return next(p.WorkshopV5.Nodes)~=nil or (events.WorkshopPurchase or 0)>0 end
  if step.Id=="InventoryExplain" then return (events.InventoryReviewed or 0)>0 or (events.SatchelOpen or 0)>0 end
@@ -123,6 +129,29 @@ function S:Refresh(player)
  local t=p.Tutorial
  self:Migrate(player,p)
 
+ if p.StarterBeeGranted and not starterBeeOwned(p) then
+  p.StarterBeeGranted=false
+  self.X.GardenPlotService:RefreshHivePrompt(player)
+  self.X:MarkStateDirty(player)
+ elseif starterBeeOwned(p) and not p.StarterBeeGranted then
+  p.StarterBeeGranted=true
+  self.X.GardenPlotService:RefreshHivePrompt(player)
+  self.X:MarkStateDirty(player)
+ end
+
+ -- Profiles created by older tutorial builds may contain the gameplay event
+ -- but not the v4 per-step completion marker. Reconcile only the current
+ -- step so a valid event cannot leave the tutorial permanently stuck.
+ local current=T.Steps[t.Step]
+ if current and not t.Events[completionKey(current)] then
+  local recorded=(t.Events[current.Event] or 0)>0
+  if current.Id=="StarterBee" then recorded=recorded and starterBeeOwned(p) end
+  if recorded then
+   t.Events[completionKey(current)]=1
+   self.X:MarkStateDirty(player)
+  end
+ end
+
  local old=t.Step
  while T.Steps[t.Step] and t.Events[completionKey(T.Steps[t.Step])] do
   t.Step+=1
@@ -163,8 +192,17 @@ function S:Tick(player)
    self.X:EmitOnce(player,"HiveApproach")
    return true
   end
- elseif step.Id=="StarterBee" and p.StarterBeeGranted then
-  self.X:EmitOnce(player,"StarterBee")
+ elseif step.Id=="StarterBee" and starterBeeOwned(p) then
+  if not p.StarterBeeGranted then
+   p.StarterBeeGranted=true
+   self.X.GardenPlotService:RefreshHivePrompt(player)
+   self.X:MarkStateDirty(player)
+  end
+  if not p.Tutorial.Events.StarterBee then self.X:Emit(player,"StarterBee",1)
+  else
+   self:RecordEvent(player,"StarterBee")
+   self:Refresh(player)
+  end
   return true
  elseif step.Id=="PollenSpark" then
   self.X.GardenActivityService:EnsureTutorialSpark(player)
