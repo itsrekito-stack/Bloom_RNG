@@ -172,6 +172,8 @@ function UI:Label(parent,text,height)
  label.Text=text or ""
  label.Size=UDim2.new(1,0,0,height or 30)
  label.ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1
+ self.MenuLayoutOrder=(self.MenuLayoutOrder or 0)+1
+ label.LayoutOrder=self.MenuLayoutOrder
  return label
 end
 
@@ -184,6 +186,8 @@ function UI:Section(parent,text)
  label.Parent=parent
  label.Text=string.upper(text or "")
  label.ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1
+ self.MenuLayoutOrder=(self.MenuLayoutOrder or 0)+1
+ label.LayoutOrder=self.MenuLayoutOrder
  return label
 end
 
@@ -196,6 +200,8 @@ function UI:Button(parent,text,fn,icon)
  button.Parent=parent
  button.Text=text or ""
  button.ZIndex=(parent and parent:IsA("GuiObject")) and parent.ZIndex+1 or 1
+ self.MenuLayoutOrder=(self.MenuLayoutOrder or 0)+1
+ button.LayoutOrder=self.MenuLayoutOrder
  local img=button:FindFirstChild("Icon")
  local padding=button:FindFirstChild("Padding") or button:FindFirstChildOfClass("UIPadding")
  if img and img:IsA("ImageLabel") then
@@ -624,6 +630,7 @@ function UI:RenderMenu(preserveInteraction)
  local ui=self.State.UI or {}
  local name=self.Menu
  local renderer=self.MenuRenderer or MENU_RENDERERS[name] or name
+ self.MenuLayoutOrder=0
  local workshop=renderer=="Workshop"
  local reuseWorkshop=workshop and self.WorkshopRuntime and self.WorkshopRuntime.Parent==self.Content
  if not reuseWorkshop then self:ClearPanel() end
