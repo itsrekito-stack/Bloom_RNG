@@ -14,6 +14,7 @@ remote_source=(ROOT/'src/ServerScriptService/Services/RemoteService.luau').read_
 roll_source=(ROOT/'src/ServerScriptService/Services/RollService.luau').read_text(encoding='utf-8')
 editor_source=(ROOT/'tools/bloom-ui-editor/app.js').read_text(encoding='utf-8')
 editor_html=(ROOT/'tools/bloom-ui-editor/index.html').read_text(encoding='utf-8')
+editor_css=(ROOT/'tools/bloom-ui-editor/app.css').read_text(encoding='utf-8')
 audio=(ROOT/'src/ReplicatedStorage/Config/RollAudioConfig.luau').read_text(encoding='utf-8')
 bloom_config=(ROOT/'src/ReplicatedStorage/Config/BloomConfig.luau').read_text(encoding='utf-8')
 checks=[]
