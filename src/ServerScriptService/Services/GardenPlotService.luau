@@ -81,9 +81,8 @@ function S:Build(player)
    ring.CanQuery=false
   end
 
-  local entrance=self.X:Part(m,"HiveEntrance",hivePosition+Vector3.new(0,-.15,-2.72),Vector3.new(1.9,1.9,.25),Color3.fromRGB(63,49,42),false)
-  entrance.Shape=Enum.PartType.Cylinder
-  entrance.CFrame=CFrame.new(entrance.Position)*CFrame.Angles(math.rad(90),0,0)
+  local entrance=self.X:Part(m,"HiveEntrance",hivePosition+Vector3.new(0,-.15,-2.72),Vector3.new(1.9,1.9,.35),Color3.fromRGB(63,49,42),false)
+  entrance.Shape=Enum.PartType.Ball
   entrance.Material=Enum.Material.SmoothPlastic
   entrance.CanQuery=false
 
