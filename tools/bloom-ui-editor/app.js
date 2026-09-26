@@ -17,7 +17,7 @@ const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 const LOADING_TARGET="src/ReplicatedFirst/BloomLoadingTemplate.model.json";
 function lastGoodModelKey(){return state?.targetPath===LOADING_TARGET?"BloomUIStudioLastGoodModelLoading":"BloomUIStudioLastGoodModel"}
 const UI_STATE_TITLES={
- gameplay:"HUD",inventory_v2:"Inventory",workshop:"Workshop",fieldguide:"Field Guide",map:"Map",trials:"Trials",
+ gameplay:"HUD",inventory_v2:"Inventory",workshop:"Workshop",fieldguide:"Field Guide",map:"Map",trials:"Quests",
  settings:"Settings",plant:"Plant Picker",season:"Season",replay:"Tutorial Replay",cards:"Cards",
  reward:"Reward",toast:"Toast",tutorial:"Tutorial Guidance",boosts:"Active Boosts",world_ui:"World UI",loading:"Loading Screen"
 };
@@ -352,7 +352,7 @@ const PREVIEW_META={
  workshop:{title:"Workshop",subtitle:"Permanent upgrades and progression branches"},
  fieldguide:{title:"Field Guide",subtitle:"Collection, odds, and discovered synergies"},
  map:{title:"Map",subtitle:"Sectors, discoveries, and travel"},
- trials:{title:"Trials",subtitle:"Short build trials started at sector shrines"},
+ trials:{title:"Quests",subtitle:"Tasks, progress & rewards"},
  settings:{title:"Settings",subtitle:"Game & UI preferences"},
  plant:{title:"Plant",subtitle:"Choose an available flower for this garden slot"},
  season:{title:"Season",subtitle:"Reset progression for permanent Legacy growth"},
@@ -392,7 +392,7 @@ async function switchUiModel(path,key){
 function stateFocusName(scene){
  return {
   gameplay:"SafeRoot",inventory_v2:"InventoryPrototype",workshop:"WorkshopTemplate",
-  fieldguide:"FieldGuideKit",map:"MapKit",trials:"TrialsKit",settings:"SettingsKit",
+  fieldguide:"FieldGuideKit",map:"MapKit",trials:"QuestsPrototype",settings:"SettingsKit",
   plant:"PlantKit",season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit",
   reward:"RewardReveal",toast:"Toast",tutorial:"TutorialGuideBanner",boosts:"ActiveBoostsHUD",
   world_ui:"WorldUIPrototypes",loading:"Background"
@@ -403,7 +403,7 @@ const FRAGMENT_ROOT_BASES=[
  "PrimaryAction","IconButton","TabButton","CurrencyPill","StatusBadge","ProgressBar","Tooltip","ModalHeader"
 ];
 const DELETABLE_MENU_BASES=[
- "InventoryPrototype","WorkshopTemplate","FieldGuideKit","MapKit","TrialsKit","SettingsKit",
+ "InventoryPrototype","WorkshopTemplate","QuestsPrototype","FieldGuideKit","MapKit","SettingsKit",
  "PlantKit","SeasonKit","ReplayKit","CardsKit"
 ];
 function nameMatchesBase(name,base){
@@ -492,10 +492,11 @@ function previewVisible(n){
  if(name==="SeedSatchelTemplate")return false;
  if(name==="InventoryPrototype")return scene==="inventory_v2";
  if(name==="WorkshopTemplate")return scene==="workshop";
- if(name==="StateKits")return MENU_PREVIEW_SCENES.has(scene)&&scene!=="inventory_v2"&&scene!=="workshop";
+ if(name==="QuestsPrototype")return scene==="trials";
+ if(name==="StateKits")return MENU_PREVIEW_SCENES.has(scene)&&scene!=="inventory_v2"&&scene!=="workshop"&&scene!=="trials";
  if(p==="StateKits"){
   const wanted={
-   fieldguide:"FieldGuideKit",map:"MapKit",trials:"TrialsKit",settings:"SettingsKit",
+   fieldguide:"FieldGuideKit",map:"MapKit",settings:"SettingsKit",
    plant:"PlantKit",season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit"
   }[scene];
   return name===wanted;
