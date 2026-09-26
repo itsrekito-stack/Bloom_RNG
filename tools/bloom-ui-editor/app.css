@@ -835,10 +835,23 @@ button{cursor:pointer}
 .toolbar-sep{width:1px;height:20px;background:#203040;margin:0 3px;flex:none}
 
 .app-workspace{
- min-width:0;min-height:0;display:grid;
+ position:relative;min-width:0;min-height:0;display:grid;
  grid-template-columns:var(--state-rail-w) var(--explorer-w) minmax(360px,1fr) var(--inspector-w);
  background:#080d13;
 }
+.panel-resizer{
+ position:absolute;top:0;bottom:0;width:7px;z-index:450;cursor:col-resize;background:transparent;
+ transition:background .12s ease
+}
+.panel-resizer::after{
+ content:"";position:absolute;top:0;bottom:0;left:3px;width:1px;background:transparent
+}
+.panel-resizer:hover,.panel-resizer.dragging{background:rgba(83,173,255,.08)}
+.panel-resizer:hover::after,.panel-resizer.dragging::after{background:#3d789f;box-shadow:0 0 8px rgba(83,173,255,.26)}
+.explorer-resizer{left:calc(var(--state-rail-w) + var(--explorer-w) - 3px)}
+.inspector-resizer{right:calc(var(--inspector-w) - 3px)}
+body.panel-resizing{cursor:col-resize!important}
+body.panel-resizing *{cursor:col-resize!important;user-select:none!important}
 .state-rail{
  min-height:0;display:flex;flex-direction:column;align-items:stretch;gap:3px;padding:8px 6px;
  background:#090f16;border-right:1px solid #192635;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin
