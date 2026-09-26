@@ -13,7 +13,6 @@ local B=require(RS.Config.BeesConfig)
 local W=require(RS.Config.WorkshopConfig)
 local T=require(RS.Config.TutorialConfig)
 local R=require(RS.Config.RarityConfig)
-local L=require(RS.Config.LocationsConfig)
 local Theme=require(RS.Config.UIThemeConfig)
 local RollAudio=require(RS.Config.RollAudioConfig)
 local BloomConfig=require(RS.Config.BloomConfig)
@@ -25,7 +24,7 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="quests-v2-runtime-2026-09-26"
+local CLIENT_BUILD="tutorial-roll-recovery-2026-09-26"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
@@ -47,8 +46,6 @@ local MENU_REFRESH_ACTIONS={
 local MENU_NAMES={
  SeedSatchel="Inventory",
  Workshop="Workshop",
- FieldGuide="Field Guide",
- Map="Map",
  Trials="Quests",
  Settings="Settings",
  Plant="Planting",
@@ -59,8 +56,6 @@ local MENU_NAMES={
 local MENU_HINTS={
  SeedSatchel="Flowers, seeds, bees, resources, and keepsakes",
  Workshop="Permanent upgrades and progression branches",
- FieldGuide="Collection, odds, and discovered synergies",
- Map="Sectors, discoveries, and travel",
  Trials="Tasks, progress & rewards",
  Settings="Game & UI preferences",
  Plant="Choose a seed for an empty flower bed",
@@ -1065,36 +1060,6 @@ function UI:RenderMenu(preserveInteraction)
    self:Button(self.Content,"Cancel",function() self:Close() end,Icons.Get("System","Close"))
   end
 
- elseif name=="FieldGuide" then
-  self:Section(self.Content,"Collection and real odds")
-  self:Label(self.Content,"Odds include your current modifiers and the guaranteed new discovery.",48)
-  for _,item in ipairs(self.State.Odds) do
-   self:Label(self.Content,item.DisplayName.."   •   "..item.Rarity..string.format("   •   %.6f%%",item.Chance*100)..(item.Undiscovered and "   •   UNDISCOVERED" or "   •   discovered"),38)
-  end
-  self:Section(self.Content,"Synergies")
-  self:Label(self.Content,"Pairs: Daisy + Tulip; Sunflower + Clover.",36)
-  if p.WorkshopV5.Nodes.GARDEN_5 then self:Label(self.Content,"Crystal triangle: 1, 2, 6; Meadow line: 1, 2, 3; opposite: 1, 15.",48) end
-  for id in pairs(p.GardenSynergies.Discovered) do self:Label(self.Content,id.."   •   mastery "..(p.GardenSynergies.Mastery[id] or 0),34) end
-
- elseif name=="Map" then
-  self:Section(self.Content,"Bloom RNG World")
-  local mapUI=ui.Map
-  local pulse=mapUI and mapUI.Pulse or self.State.Pulse
-  if p.WorkshopV5.Nodes.EXPLORATION_1 and pulse then self:Label(self.Content,"Biome Pulse  •  "..pulse.Sector,36) end
-  for _,id in ipairs(L.Order) do
-   local sector=mapUI and mapUI.Sectors and mapUI.Sectors[id]
-   local unlocked=sector and sector.Unlocked or p.World.UnlockedSectors[id]
-   local current=sector and sector.Current
-   local hint=sector and sector.UnlockHint or (unlocked and "Unlocked" or "Reach Hive "..L.Sectors[id].Hive)
-   local marker=current and "  •  YOU ARE HERE" or ""
-   self:Label(self.Content,L.Sectors[id].Name.."   •   "..hint..marker,44)
-  end
-  self:Section(self.Content,"Landmarks")
-  local any=false
-  for id in pairs(p.World.LandmarkDiscoveries) do any=true self:Label(self.Content,"✓  "..id,32) end
-  if not any then self:Label(self.Content,"Nothing discovered yet.",32) end
-  self:Button(self.Content,"View Build Trials  •  start them at sector shrines",function() self:Open("Trials") end,Icons.Get("System","Quests"))
-
  elseif name=="Season" then
   local preview=self.MenuArg
   self:Section(self.Content,"What Will Be Kept")
@@ -1185,7 +1150,8 @@ function UI:Render()
  self.CurrencyRows.AncientNectar.Value.Text=compact(p.Currencies.AncientNectar)
  self.CurrencyRows.AncientNectar.Root.Visible=(p.Season.Count or 0)>0 or (p.Currencies.AncientNectar or 0)>0
 
- local rollUnlocked=p.Tutorial.FeatureUnlocks.Roll==true
+ local rollStep=T.IndexById.Roll or math.huge
+ local rollUnlocked=p.Tutorial.FeatureUnlocks.Roll==true or p.Tutorial.Skipped==true or (tonumber(p.Tutorial.Step) or 1)>=rollStep
  self.RollHUD.Visible=rollUnlocked
  self.Roll.Visible=rollUnlocked
  self.RouletteViewport.Visible=rollUnlocked and (self.Auto or self.RouletteRunning or self.RouletteLanding)
@@ -1540,13 +1506,12 @@ function UI:BindStaticUI()
  self.DockLayout=self.Dock:FindFirstChildOfClass("UIListLayout")
  self.DockButtons={}
  self.DockTooltips={}
- for _,name in ipairs({"SeedSatchel","Workshop","FieldGuide","Map","Trials","Settings"}) do
+ for _,name in ipairs({"SeedSatchel","Workshop","Trials","Settings"}) do
   local button=self.Dock:WaitForChild("Dock_"..name)
   local tip=button:WaitForChild("Tooltip")
   tip.Text=MENU_NAMES[name] or name
   local icon=button:FindFirstChild("Icon")
   local image=Icons.Get("Menus",name)
-  if image=="" and name=="Map" then image=Icons.Get("System","Garden") end
   if icon and icon:IsA("ImageLabel") then icon.Image=image end
   button.MouseEnter:Connect(function() tip.Visible=true TweenService:Create(button,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelHover}):Play() end)
   button.MouseLeave:Connect(function() tip.Visible=false TweenService:Create(button,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.Panel}):Play() end)
