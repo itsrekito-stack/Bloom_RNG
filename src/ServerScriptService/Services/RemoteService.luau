@@ -1,5 +1,5 @@
 local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.BloomConfig) local S={Buckets={},StateRequests={}}
-local NO_ARGS={Ready=true,Respec=true,Skip=true,Replay=true,StudioTutorialReset=true,SeasonCancel=true,DistillNectar=true}
+local NO_ARGS={Ready=true,Respec=true,Skip=true,Replay=true,StudioTutorialReset=true,SeasonCancel=true,DistillNectar=true,SaveSettings=true,ResetSettings=true}
 local ACTIVITY_PHASE={Reach=true}
 local function finite(v) return type(v)=="number" and v==v and math.abs(v)~=math.huge end
 local function integer(v,min,max) return finite(v) and v%1==0 and v>=min and v<=max end
@@ -39,7 +39,7 @@ function S:Validate(action,a,b,c)
   local menuOK=a==false or short(a,32,false)
   return menuOK and b==nil and c==nil,(menuOK and b==nil and c==nil) and nil or"INVALID_VALUE"
  elseif action=="Setting" then
-  local valueOK=type(b)=="boolean" or finite(b)
+  local valueOK=type(b)=="boolean" or finite(b) or short(b,16,false)
   return short(a,32,false) and valueOK and c==nil,(short(a,32,false) and valueOK and c==nil) and nil or"INVALID_VALUE"
  end
  return false,"INVALID_ACTION"
