@@ -15,6 +15,7 @@ roll_source=(ROOT/'src/ServerScriptService/Services/RollService.luau').read_text
 editor_source=(ROOT/'tools/bloom-ui-editor/app.js').read_text(encoding='utf-8')
 editor_html=(ROOT/'tools/bloom-ui-editor/index.html').read_text(encoding='utf-8')
 editor_css=(ROOT/'tools/bloom-ui-editor/app.css').read_text(encoding='utf-8')
+roflow_ui_sync=(ROOT/'tools/roflow/scripts/sync-ui-studio.mjs').read_text(encoding='utf-8')
 audio=(ROOT/'src/ReplicatedStorage/Config/RollAudioConfig.luau').read_text(encoding='utf-8')
 bloom_config=(ROOT/'src/ReplicatedStorage/Config/BloomConfig.luau').read_text(encoding='utf-8')
 checks=[]
@@ -144,7 +145,9 @@ check('world UI prototypes authored in ScreenGui',one('WorldUIPrototypes')[1] is
 check('UI Studio empty desk hides Explorer tree','if(!state.activeUiState){' in editor_source and 'No UI State open' in editor_source)
 check('UI Studio Explorer is scoped to active state','function activeStateTreeIds()' in editor_source and 'const stateIds=activeStateTreeIds();' in editor_source and 'if(!stateIds.has(n.__id))return;' in editor_source)
 check('UI Studio desktop panels are resizable','explorerResizer' in editor_html and 'inspectorResizer' in editor_html and 'state.panelResize={side}' in editor_source and 'applyPanelWidths()' in editor_source and '.panel-resizer' in editor_css)
-check('UI Studio state rail uses Bloom icons','/api/thumbnail?id=' in editor_html and '<img src="/api/thumbnail?id=' in editor_html and '.ui-state-btn b img' in editor_css)
+check('UI Studio state rail uses Bloom icons','data-asset-id=' in editor_html and '.ui-state-btn b img' in editor_css and 'hydrateStudioIcons()' in editor_source)
+check('RoFlow native UI Studio injection is version agnostic','appScript=/<script src=' in roflow_ui_sync and '__ROFLOW_EMBEDDED__=true' in roflow_ui_sync and 'app.js?v=8' not in roflow_ui_sync)
+check('UI Studio thumbnails use native bridge','roflow-asset:' in editor_source and 'nativeThumbnail(assetId)' in editor_source and 'roblox_thumbnail_url' in editor_source)
 check('Inventory v2 rerender follows renderer','controller.MenuRenderer=="InventoryV2"' in inventory_v2_source)
 check('Inventory v2 binds authoritative inventory','uiState.Inventory' in inventory_v2_source and 'controller:Send("Dissolve"' in inventory_v2_source and 'controller:Send("EquipBee"' in inventory_v2_source)
 check('Inventory v2 does not bypass physical Plant flow','controller:Send("Plant"' not in inventory_v2_source and 'PLANT AT GARDEN' in inventory_v2_source)
