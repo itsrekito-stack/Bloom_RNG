@@ -17792,7 +17792,10 @@
                         "BorderSizePixel": 0,
                         "ZIndex": 110,
                         "Visible": true,
-                        "ClipsDescendants": false
+                        "ClipsDescendants": false,
+                        "Active": false,
+                        "Selectable": false,
+                        "LayoutOrder": 1
                       },
                       "Children": [
                         {
@@ -17994,7 +17997,7 @@
                         },
                         {
                           "ClassName": "Frame",
-                          "Name": "Coins",
+                          "Name": "WorkshopCoins",
                           "Properties": {
                             "Size": {
                               "UDim2": [
@@ -18191,7 +18194,7 @@
                         },
                         {
                           "ClassName": "Frame",
-                          "Name": "PetalDust",
+                          "Name": "WorkshopPetalDust",
                           "Properties": {
                             "Size": {
                               "UDim2": [
@@ -18388,7 +18391,7 @@
                         },
                         {
                           "ClassName": "Frame",
-                          "Name": "AncientNectar",
+                          "Name": "WorkshopAncientNectar",
                           "Properties": {
                             "Size": {
                               "UDim2": [
