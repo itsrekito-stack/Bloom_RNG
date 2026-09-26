@@ -1632,6 +1632,7 @@ function UI:BindStaticUI()
  self.ContentLayout=self.Content:FindFirstChildOfClass("UIListLayout")
  self.Templates=self.Panel:FindFirstChild("Templates")
  self.StateKits=self.Panel:FindFirstChild("StateKits")
+ if not self.StateKits then error("[BloomUI] MainPanel/StateKits missing from authored UI") end
 
  self.Reveal=root:WaitForChild("RewardReveal")
  self.RewardStroke=self.Reveal:FindFirstChildOfClass("UIStroke")
@@ -1650,6 +1651,7 @@ end
 
 local REQUIRED_AUTHORED_UI={
  "ObjectiveCard","CurrencyHUD","MenuDock","RollHUD","VerticalRoulette","TutorialGuideBanner",
+ "TutorialSpotlight","TutorialCallout","TutorialScreenArrow",
  "Toast","ModalShade","MainPanel","RewardReveal","ActiveBoostsHUD","ActiveBoostTooltip",
 }
 
