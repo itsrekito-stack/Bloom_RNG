@@ -167,6 +167,20 @@
             <div class="button-row"><button id="buildBtn" class="btn primary">Build</button><button id="openStudioBtn" class="btn">Open Studio</button></div>
           </article>
         </div>
+        <article class="card runtime-qa-card">
+          <div class="section-head">
+            <div><span class="label">STUDIO QA</span><h3>Runtime acceptance</h3></div>
+            <button id="refreshRuntimeProbeBtn" class="btn">Read Studio Log</button>
+          </div>
+          <div class="runtime-qa-grid">
+            <div><span class="label">MILESTONES</span><strong id="runtimeMilestones">—</strong><small id="runtimeEvidence">No probe data yet.</small></div>
+            <div><span class="label">SERVER</span><strong id="runtimeServerCheckpoint">—</strong><small>Latest checkpoint</small></div>
+            <div><span class="label">CLIENT</span><strong id="runtimeClientCheckpoint">—</strong><small>Latest checkpoint</small></div>
+            <div><span class="label">PERSISTENCE</span><strong id="runtimePersistence">—</strong><small>JOIN / LEAVE digest evidence</small></div>
+          </div>
+          <div id="runtimeProbeMeta" class="runtime-qa-meta">Start Play in Roblox Studio to collect RuntimeProbe evidence.</div>
+          <pre id="runtimeProbeOutput" class="runtime-qa-output">Waiting for Roblox Studio probe output.</pre>
+        </article>
         <article class="card output-card"><span class="label">OUTPUT</span><pre id="rojoOutput">Ready.</pre></article>
       </section>
 
