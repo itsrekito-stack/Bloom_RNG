@@ -37,7 +37,7 @@ function hasProjectConnection(){return ROFLOW_NATIVE?state.nativeProjectReady:!!
 const state={
  root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,geometry:true,inset:36,mode:"design",previewScene:"gameplay",
  projectHandle:null,nativeProjectReady:false,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
- activeUiState:null,modelKey:"bloom",history:[],future:[],dirty:false,drag:null,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[],assistantSyncing:false,bridgeBase:"",modelLoadFailed:false,autoSaveTimer:null,autoSaving:false,autoSaveQueued:false,lastAutoSaveError:""
+ activeUiState:null,modelKey:"bloom",history:[],future:[],dirty:false,drag:null,panelResize:null,explorerW:252,inspectorW:300,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[],assistantSyncing:false,bridgeBase:"",modelLoadFailed:false,autoSaveTimer:null,autoSaving:false,autoSaveQueued:false,lastAutoSaveError:""
 };
 
 let idCounter=1;
@@ -52,6 +52,10 @@ const u2=(xs=0,xo=0,ys=0,yo=0)=>({UDim2:[[xs,xo],[ys,yo]]});
 const v2=(x=0,y=0)=>({Vector2:[x,y]});
 
 const PREFS_KEY="BloomUIStudioPrefsV1";
+function applyPanelWidths(){
+ document.documentElement.style.setProperty("--explorer-w",Math.round(state.explorerW)+"px");
+ document.documentElement.style.setProperty("--inspector-w",Math.round(state.inspectorW)+"px");
+}
 function loadPrefs(){
  try{
   const p=JSON.parse(localStorage.getItem(PREFS_KEY)||"{}");
@@ -63,17 +67,21 @@ function loadPrefs(){
   if(typeof p.showHidden==="boolean")state.showHidden=p.showHidden;
   if(typeof p.geometry==="boolean")state.geometry=p.geometry;
   if(Number.isFinite(p.inset))state.inset=p.inset;
+  if(Number.isFinite(p.explorerW))state.explorerW=clamp(p.explorerW,180,460);
+  if(Number.isFinite(p.inspectorW))state.inspectorW=clamp(p.inspectorW,220,500);
   state.activeUiState=null;
   state.mode="preview";
   state.previewScene="empty";
   state.targetPath=DEFAULT_TARGET;
   state.modelKey="bloom";
  }catch{}
+ applyPanelWidths();
 }
 function savePrefs(){
  localStorage.setItem(PREFS_KEY,JSON.stringify({
   viewport:state.viewport,zoom:state.zoom,snap:state.snap,labels:state.labels,grid:state.grid,
-  showHidden:state.showHidden,geometry:state.geometry,inset:state.inset
+  showHidden:state.showHidden,geometry:state.geometry,inset:state.inset,
+  explorerW:state.explorerW,inspectorW:state.inspectorW
  }));
 }
 function syncToolbarFromState(){
@@ -1407,6 +1415,17 @@ function startMove(ev,n){
  ev.currentTarget.setPointerCapture?.(ev.pointerId);
 }
 window.addEventListener("pointermove",ev=>{
+ if(state.panelResize){
+  const rail=document.querySelector(".state-rail");
+  if(state.panelResize.side==="explorer"){
+   const railRight=rail?.getBoundingClientRect().right||0;
+   state.explorerW=clamp(ev.clientX-railRight,180,460);
+  }else{
+   state.inspectorW=clamp(window.innerWidth-ev.clientX,220,500);
+  }
+  applyPanelWidths();
+  return;
+ }
  const d=state.drag;if(!d)return;const dx=(ev.clientX-d.startX)/state.zoom,dy=(ev.clientY-d.startY)/state.zoom,s=state.snap;
  if(d.type==="move"){
   let rx=Math.round(dx/s)*s,ry=Math.round(dy/s)*s,guide={rx,ry,x:null,y:null};
@@ -1421,7 +1440,16 @@ window.addEventListener("pointermove",ev=>{
  }else if(d.type==="resize")resizeFromDrag(d,dx,dy,ev.altKey);
  else if(d.type==="group-resize")resizeGroupFromDrag(d,dx,dy,ev.altKey);
 });
-window.addEventListener("pointerup",()=>{if(state.drag){state.drag=null;clearSmartGuides();renderTree();renderInspector();updateGeometrySelection()}});
+window.addEventListener("pointerup",()=>{
+ if(state.panelResize){
+  document.body.classList.remove("panel-resizing");
+  document.querySelectorAll(".panel-resizer.dragging").forEach(x=>x.classList.remove("dragging"));
+  state.panelResize=null;
+  savePrefs();
+  requestAnimationFrame(()=>{updateOverlay();updatePixelReadout()});
+ }
+ if(state.drag){state.drag=null;clearSmartGuides();renderTree();renderInspector();updateGeometrySelection()}
+});
 
 els.overlay.querySelectorAll("i").forEach(handle=>handle.addEventListener("pointerdown",ev=>{
  ev.stopPropagation();ev.preventDefault();
@@ -2196,6 +2224,16 @@ $("#bgInput").onchange=()=>{
 $("#undoBtn").onclick=undo;$("#redoBtn").onclick=redo;
 $("#fitBtn").onclick=fitViewport;$("#zoom100Btn").onclick=()=>setZoom(1);$("#focusBtn").onclick=focusSelected;
 $("#treeSearch").addEventListener("input",e=>{state.treeQuery=e.target.value;renderTree()});
+for(const [id,side] of [["explorerResizer","explorer"],["inspectorResizer","inspector"]]){
+ const handle=$("#"+id);
+ handle?.addEventListener("pointerdown",e=>{
+  if(e.button!==0)return;
+  e.preventDefault();
+  state.panelResize={side};
+  handle.classList.add("dragging");
+  document.body.classList.add("panel-resizing");
+ });
+}
 els.stageScroller.addEventListener("wheel",e=>{
  if(!e.ctrlKey)return;e.preventDefault();
  setZoom(state.zoom*(e.deltaY<0?1.1:.9));
