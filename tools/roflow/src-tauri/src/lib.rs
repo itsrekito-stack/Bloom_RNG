@@ -795,6 +795,11 @@ fn is_required_runtime_ui_child(value: &Value) -> bool {
                 | "TutorialCompleteScale"
                 | "SlotScale"
                 | "WorkshopZoomScale"
+                | "WorldUIPrototypes"
+                | "TutorialWorldBillboard"
+                | "ActivityCheckpointBillboard"
+                | "TutorialWorldLabelTemplate"
+                | "ActivityCheckpointLabelTemplate"
         )
     )
 }
