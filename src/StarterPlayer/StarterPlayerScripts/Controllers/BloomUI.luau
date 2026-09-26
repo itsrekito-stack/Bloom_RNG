@@ -1612,6 +1612,7 @@ local REQUIRED_AUTHORED_UI={
  "TutorialSpotlight","TutorialCallout","TutorialScreenArrow",
  "Toast","ModalShade","MainPanel","RewardReveal","ActiveBoostsHUD","ActiveBoostTooltip","WorldUIPrototypes",
 }
+local RETIRED_MENU_GUI={"Dock_FieldGuide","Dock_Map","FieldGuideKit","MapKit"}
 
 local function validateBloomGui(gui)
  if not gui or not gui:IsA("ScreenGui") then return false,{"BloomUI"} end
@@ -1620,6 +1621,9 @@ local function validateBloomGui(gui)
  local missing={}
  for _,name in ipairs(REQUIRED_AUTHORED_UI) do
   if not root:FindFirstChild(name) then table.insert(missing,name) end
+ end
+ for _,name in ipairs(RETIRED_MENU_GUI) do
+  if root:FindFirstChild(name,true) then table.insert(missing,"retired:"..name) end
  end
  return #missing==0,missing
 end
