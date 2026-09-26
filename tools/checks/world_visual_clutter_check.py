@@ -12,22 +12,25 @@ def need(src,text,label):
         raise AssertionError(f"{label}: missing {text!r}")
 
 flower=read("src/ServerScriptService/Services/FlowerService.luau")
-garden=read("src/StarterPlayer/StarterPlayerScripts/Controllers/GardenPresentationController.luau")
+garden_ui=read("src/StarterPlayer/StarterPlayerScripts/Controllers/GardenPresentationController.luau")
 activity=read("src/StarterPlayer/StarterPlayerScripts/Controllers/ActivityController.luau")
 player=read("src/ServerScriptService/Services/PlayerService.luau")
 map_service=read("src/ServerScriptService/Services/MapService.luau")
 garden_plot=read("src/ServerScriptService/Services/GardenPlotService.luau")
+garden_layout=read("src/ReplicatedStorage/Config/GardenSynergyConfig.luau")
 hub=json.loads(read("src/Workspace/FruitOrchardHub.model.json"))
 
 # Existing world UI clutter guards stay intact.
 need(flower,'info.Size = UDim2.fromOffset(142, 46)',"compact flower detail card")
 need(flower,'info.MaxDistance = 28',"bounded flower detail distance")
 need(flower,'info.Enabled = false',"flower cards start hidden")
-need(garden,'local FLOWER_DETAIL_DISTANCE=24',"nearest flower focus radius")
-need(garden,'descendant.Name=="FlowerInfo"',"FlowerInfo focus scan")
-need(garden,'for _,info in ipairs(infos) do info.Enabled=info==nearest end',"single detailed flower card")
-need(garden,'ui.Menu==nil and not ui:IsWorkshopExclusive()',"flower cards suppressed by menus")
+need(garden_ui,'local FLOWER_DETAIL_DISTANCE=24',"nearest flower focus radius")
+need(garden_ui,'descendant:IsA("BillboardGui") and descendant.Name=="FlowerInfo"',"FlowerInfo focus scan")
+need(garden_ui,'for _,info in ipairs(infos) do info.Enabled=info==nearest end',"single detailed flower card")
+need(garden_ui,'ui.Menu==nil and not ui:IsWorkshopExclusive()',"flower cards suppressed by menus")
 need(activity,'billboard.MaxDistance=o.Tutorial and 90 or 58',"activity label default distance")
+if 'Instance.new("Beam")' in garden_ui or 'LocalSynergyLines' in garden_ui:
+    raise AssertionError("persistent garden synergy beam web returned")
 
 # Alpha map is intentionally sparse and authored.
 need(player,'workspace:FindFirstChild("FruitOrchardHub")',"authored hub binding")
@@ -41,10 +44,6 @@ if 'Vector3.new(95,2,95)' in map_service:
 for token in ("GatePost","GateBeam","WorkshopGlow","AncientTreeCanopy"):
     if token in map_service:
         raise AssertionError(f"alpha-unneeded runtime decoration returned: {token}")
-
-for token in ("PlotBorder","HiveBase","HiveBand_","HiveEntrance"):
-    if token in garden_plot:
-        raise AssertionError(f"alpha-unneeded plot decoration returned: {token}")
 
 def walk(node,path=""):
     name=node.get("Name") or node.get("ClassName")
@@ -98,13 +97,40 @@ for name in walkable_names:
     if abs(top_y(node)-base_y)>.13:
         raise AssertionError(f"{name} is not aligned to base Y: top={top_y(node):.3f}, base={base_y:.3f}")
 
-# Personal plots remain one clean ground disk + one bed + functional Hive/slots.
-need(garden_plot,'base.Shape=Enum.PartType.Cylinder',"rounded player plot")
-need(garden_plot,'bed.Shape=Enum.PartType.Cylinder',"single garden bed")
-need(garden_plot,'hive.Shape=Enum.PartType.Cylinder',"functional Hive")
-need(garden_plot,'pad.Shape=Enum.PartType.Cylinder',"rounded garden slots")
-need(garden_plot,'origin-Vector3.new(0,.5,0)',"plot ground aligned to origin Y")
-need(garden_plot,'pos+Vector3.new(0,.025,0)',"slot pads aligned close to plot Y")
+# Player Garden follows the isolated reference: grass disk, thin border, soil,
+# deterministic circular slots and one compact functional Hive.
+need(garden_plot,'local ground=self.X:Part(m,"Ground"', "garden ground exists")
+need(garden_plot,'Vector3.new(1,50,50)',"garden ground diameter")
+need(garden_plot,'local border=self.X:Part(m,"Border"', "minimal garden border")
+need(garden_plot,'Vector3.new(.05,40,40)',"garden border diameter")
+need(garden_plot,'local soil=self.X:Part(m,"Soil"', "garden soil exists")
+need(garden_plot,'Vector3.new(.05,38,38)',"garden soil diameter")
+need(garden_plot,'local hiveBase=self.X:Part(m,"HiveBase"', "compact Hive base")
+need(garden_plot,'Vector3.new(.12,7,7)',"Hive base footprint")
+need(garden_plot,'local hive=self.X:Part(m,"Hive"', "functional Hive body")
+need(garden_plot,'Vector3.new(5.5,6,6)',"compact Hive body size")
+need(garden_plot,'local entrance=self.X:Part(m,"HiveEntrance"', "minimal Hive entrance")
+need(garden_plot,'for i=1,C.MaxFlowerSlots do',"all configured slots render")
+need(garden_plot,'Vector3.new(.03,5,5)',"compact round slot pads")
+need(garden_plot,'self.X.FlowerService.Build(i,f,pos)',"flower roots align exactly to slot position")
+need(garden_plot,'FLOWER_SCALE_CAP=.55',"flower growth visual cap")
+need(garden_layout,'InnerCount=5',"five-slot inner ring")
+need(garden_layout,'OuterRadius=11.45',"ten-slot outer ring radius")
+need(garden_layout,'SlotY=.10',"slot surface micro-offset")
+need(garden_layout,'HiveOffset=Vector3.new(21,2.87,0)',"Hive sits beside soil bed")
+need(garden_layout,'function C.Position(i)',"deterministic shared slot layout")
+
+for token in ("GardenBed","PlotBorder","HiveBand_","Tree","Lamp","Fence"):
+    if token in garden_plot:
+        raise AssertionError(f"alpha-unneeded Garden decoration returned: {token}")
+
+# Y offsets are intentionally microscopic: Ground top=0, Border=.05,
+# Soil=.07, Slot=.10, HiveBase=.12 relative to plot origin.
+need(garden_plot,'origin-Vector3.new(0,.5,0)',"ground top aligned to plot origin")
+need(garden_plot,'origin+Vector3.new(0,.025,0)',"border micro Y")
+need(garden_plot,'origin+Vector3.new(0,.045,0)',"soil micro Y")
+need(garden_plot,'pos-Vector3.new(0,.015,0)',"slot pad micro Y")
+need(garden_plot,'Vector3.new(G.Layout.HiveOffset.X,.06,G.Layout.HiveOffset.Z)',"Hive base micro Y")
 
 retired_paths=[
  "src/Workspace/ReferenceScenery.rbxm",
@@ -127,4 +153,4 @@ for path in ("src/Workspace/Garden/GardenCenter.model.json","src/Workspace/Spawn
         raise AssertionError(f"invisible alpha marker missing: {path}")
 
 print("world visual clutter contract: PASS")
-print(f"Alpha world is sparse ({len(nodes)} authored nodes), flat on one gameplay Y plane, and free of retired scenery/template assets.")
+print(f"Alpha world is sparse ({len(nodes)} authored nodes); player Garden is a flat, low-part circular gameplay asset with no beam/decor clutter.")
