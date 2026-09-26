@@ -294,6 +294,7 @@ function S:Trials(player,profile)
    Target=cfg.Target,
    Event=cfg.Event,
    Seconds=cfg.Seconds,
+   RewardText=(profile.Quests.Trials[id] and "Repeat • 5 Coins" or (cfg.Advanced and "First clear • 3 Workshop Points" or "First clear • 2 Workshop Points")),
   })
  end
  table.sort(list,function(a,b)
