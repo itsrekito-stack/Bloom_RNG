@@ -320,6 +320,21 @@ async function switchUiModel(path,key){
  updateStatus();
  return true;
 }
+function stateFocusName(scene){
+ return {
+  gameplay:"SafeRoot",inventory_v2:"InventoryPrototype",workshop:"WorkshopTemplate",
+  fieldguide:"FieldGuideKit",map:"MapKit",trials:"TrialsKit",settings:"SettingsKit",
+  plant:"PlantKit",season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit",
+  reward:"RewardReveal",toast:"Toast",tutorial:"TutorialGuideBanner",boosts:"ActiveBoostsHUD",
+  loading:"Background"
+ }[scene]||null;
+}
+function selectStateRoot(scene){
+ const wanted=stateFocusName(scene);if(!wanted||!state.root)return;
+ let found=null;walk(state.root,n=>{if(!found&&n.Name===wanted)found=n});
+ if(found){state.selectedId=found.__id;state.selectedIds=new Set([found.__id]);state.selectionAnchorId=found.__id}
+}
+
 async function activateUiState(scene){
  const closing=state.activeUiState===scene;
  if(closing){
@@ -338,6 +353,7 @@ async function activateUiState(scene){
  state.activeUiState=scene;
  state.mode="preview";
  state.previewScene=scene;
+ selectStateRoot(scene);
  syncToolbarFromState();
  renderAll();
  savePrefs();
@@ -2173,7 +2189,11 @@ window.addEventListener("beforeunload",e=>{if(state.dirty){e.preventDefault();e.
 
 $("#dialogClose").onclick=()=>els.jsonDialog.close();$("#dialogCopy").onclick=()=>navigator.clipboard.writeText(els.jsonArea.value);
 $("#dialogApply").onclick=()=>{try{setRoot(JSON.parse(els.jsonArea.value),"JSON применён");els.jsonDialog.close()}catch(e){toast(e.message,true)}};
-$("#addMenuBtn").onclick=()=>$("#palette").scrollIntoView({behavior:"smooth"});
+$("#addMenuBtn").onclick=()=>{
+ const palette=$("#palette"),drawer=palette?.closest("details");
+ if(drawer)drawer.open=true;
+ palette?.scrollIntoView({behavior:"smooth",block:"nearest"});
+};
 window.addEventListener("resize",()=>{updateOverlay();updatePixelReadout()});
 window.addEventListener("keydown",e=>{
  const tag=document.activeElement?.tagName;if(["INPUT","TEXTAREA","SELECT"].includes(tag))return;
@@ -2188,6 +2208,7 @@ window.addEventListener("keydown",e=>{
  if(mod&&e.altKey&&code==="ArrowUp"){e.preventDefault();outdentSelected();return}
  if(mod&&code==="KeyA"){e.preventDefault();selectAllSiblings();return}
  if(code==="Escape"&&state.selectedIds.size>1){e.preventDefault();collapseSelectionToPrimary();return}
+ if(code==="Escape"&&state.activeUiState){e.preventDefault();activateUiState(state.activeUiState);return}
  if(code==="F2"){e.preventDefault();renameSelected();return}
  if(code==="KeyF"){e.preventDefault();focusSelected();return}
  if(code==="Digit0"||code==="Numpad0"){e.preventDefault();fitViewport();return}
