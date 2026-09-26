@@ -51,7 +51,7 @@ need(client,'folderCount("LocalBloomCheckpoints")',"client activity presentation
 print("PASS onboarding and multiplayer evidence markers are present")
 
 need(roflow_rust,'fn runtime_probe_report()',"RoFlow Studio log parser")
-need(roflow_rust,'latest_studio_log()',"latest Roblox Studio log discovery")
+need(roflow_rust,'fn recent_studio_logs(limit: usize)',"recent Roblox Studio log discovery")
 need(roflow_rust,'[RuntimeProbe]',"runtime probe log filtering")
 need(roflow_rust,'[PersistenceProbe]',"persistence probe log filtering")
 need(roflow_rust,'runtime_probe_report,',"Tauri runtime probe command registration")
