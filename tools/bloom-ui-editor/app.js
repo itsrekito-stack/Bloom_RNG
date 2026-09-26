@@ -1007,6 +1007,20 @@ function renderGuiNode(n,parentEl,parentNode){
 }
 els.guiRoot.addEventListener("pointerdown",ev=>{if(ev.target===els.guiRoot)select(state.root.__id,false)});
 
+function activeStateTreeIds(){
+ const ids=new Set();
+ if(!state.root||!state.activeUiState)return ids;
+ const visit=(n,parentVisible)=>{
+  const forced=previewVisible(n);
+  const visible=n===state.root?true:(forced===true?true:forced===false?false:parentVisible);
+  if(!visible)return;
+  ids.add(n.__id);
+  for(const child of n.Children||[])visit(child,visible);
+ };
+ visit(state.root,true);
+ return ids;
+}
+
 function renderTree(){
  els.tree.innerHTML="";if(!state.root)return;
  if(!state.activeUiState){
@@ -1014,10 +1028,12 @@ function renderTree(){
   $("#treeSearchMeta").textContent="";
   return;
  }
+ const stateIds=activeStateTreeIds();
  const q=state.treeQuery.trim().toLowerCase();
  const matched=new Set(),ancestors=new Set();
  if(q){
   const scan=(n,path=[])=>{
+   if(!stateIds.has(n.__id))return;
    const next=[...path,n];
    if((n.Name+" "+n.ClassName).toLowerCase().includes(q)){matched.add(n.__id);for(const a of path)ancestors.add(a.__id)}
    for(const c of n.Children||[])scan(c,next);
@@ -1025,6 +1041,7 @@ function renderTree(){
  }
  let shown=0;
  const recur=(n,depth)=>{
+  if(!stateIds.has(n.__id))return;
   if(q&&!matched.has(n.__id)&&!ancestors.has(n.__id))return;
   shown++;
   const row=document.createElement("div");row.className="tree-row"+(isSelectedId(n.__id)?" selected":"")+(n.__id===state.selectedId?" primary-selected":"")+(MODIFIERS.has(n.ClassName)?" modifier":"")+(n.Properties?.Visible===false?" runtime-hidden":"")+(matched.has(n.__id)?" search-match":"");
