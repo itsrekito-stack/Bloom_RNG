@@ -5,7 +5,9 @@ function S:Init(x) self.X=x end
 function S:Position(player,slot) local plot=self.Plots[player] return plot and plot.Origin+G.Position(slot) end
 function S:HivePosition(player) local plot=self.Plots[player] return plot and plot.Origin+Vector3.new(0,1,19) end
 function S:HivePromptText(p)
- if not p.StarterBeeGranted then return "Get Worker Bee" end
+ local inventory=p and p.Pollinators and p.Pollinators.BeeInventory
+ local ownsStarter=type(inventory)=="table" and (tonumber(inventory.WorkerBee) or 0)>0
+ if not ownsStarter then return "Get Worker Bee" end
  local cost=C.HiveCosts[p.Hive.Level+1]
  return cost and ("Upgrade Hive • "..math.floor(cost).." Honey") or "Hive MAX"
 end
