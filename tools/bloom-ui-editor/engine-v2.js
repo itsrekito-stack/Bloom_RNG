@@ -197,14 +197,14 @@ class BloomEditorEngineV2{
   const roots=this.model.ClassName==="ScreenGui"?(this.model.Children||[]):[this.model];
   this.walkChildren(sortChildren(roots),rootRect,null,null,null);
  }
- walkChildren(children,parentRect,parentNode,parentClip,layoutMap){
+ walkChildren(children,parentRect,parentNode,parentClip,parentLayoutMap){
   for(const node of children||[]){
    if(this.isModifier(node))continue;
    const forced=this.previewVisible(node);
    const runtimeHidden=node.Properties&&node.Properties.Visible===false;
    if(forced===false)continue;
    if(runtimeHidden&&forced!==true&&!this.view.showHidden)continue;
-   const rect=this.nodeRect(node,parentRect,layoutMap&&layoutMap.get(node.__id));
+   const rect=this.nodeRect(node,parentRect,parentLayoutMap&&parentLayoutMap.get(node.__id));
    if(rect.w<=0||rect.h<=0)continue;
    const p=node.Properties||{},anchor=vector2(p.AnchorPoint,[0,0]);
    const item={
@@ -215,13 +215,13 @@ class BloomEditorEngineV2{
    this.scene.push(item);this.byId.set(item.id,item);
    const childClip=item.clips?intersect(parentClip,rect):parentClip;
    const childNodes=(node.Children||[]).filter(child=>!this.isModifier(child));
-   const layoutMap=this.childLayout(node,rect,childNodes);
+   const childLayoutMap=this.childLayout(node,rect,childNodes);
    let childRect=rect;
    if(node.ClassName==="ScrollingFrame"){
     const cp=vector2(p.CanvasPosition,[0,0]);
     childRect={x:rect.x-cp[0],y:rect.y-cp[1],w:rect.w,h:rect.h};
    }
-   this.walkChildren(sortChildren(childNodes),childRect,node,childClip,layoutMap);
+   this.walkChildren(sortChildren(childNodes),childRect,node,childClip,childLayoutMap);
   }
  }
  syncProxies(){
