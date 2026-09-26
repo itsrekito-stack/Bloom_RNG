@@ -398,6 +398,58 @@ function stateFocusName(scene){
   world_ui:"WorldUIPrototypes",loading:"Background"
  }[scene]||null;
 }
+const FRAGMENT_ROOT_BASES=[
+ "CloseButton","EquipButton","UnequipButton","ConfirmButton","CancelButton","BackButton",
+ "PrimaryAction","IconButton","TabButton","CurrencyPill","StatusBadge","ProgressBar","Tooltip","ModalHeader"
+];
+const DELETABLE_MENU_BASES=[
+ "InventoryPrototype","WorkshopTemplate","FieldGuideKit","MapKit","TrialsKit","SettingsKit",
+ "PlantKit","SeasonKit","ReplayKit","CardsKit"
+];
+function nameMatchesBase(name,base){
+ const value=String(name||"");
+ return value===base||new RegExp("^"+base.replace(/[.*+?^$()|[\]\\]/g,"\\function stateFocusName(scene){
+ return {
+  gameplay:"SafeRoot",inventory_v2:"InventoryPrototype",workshop:"WorkshopTemplate",
+  fieldguide:"FieldGuideKit",map:"MapKit",trials:"TrialsKit",settings:"SettingsKit",
+  plant:"PlantKit",season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit",
+  reward:"RewardReveal",toast:"Toast",tutorial:"TutorialGuideBanner",boosts:"ActiveBoostsHUD",
+  world_ui:"WorldUIPrototypes",loading:"Background"
+ }[scene]||null;
+}")+"\\d+$").test(value);
+}
+function isFragmentRoot(n){
+ if(!n||n===state.root||MODIFIERS.has(n.ClassName))return false;
+ if(n.ClassName==="TextButton"||n.ClassName==="ImageButton")return true;
+ return FRAGMENT_ROOT_BASES.some(base=>nameMatchesBase(n.Name,base));
+}
+function fragmentInteractionRoot(n){
+ if(!n)return n;
+ let current=n;
+ while(current&&current!==state.root){
+  if(isFragmentRoot(current))return current;
+  current=findParent(current.__id);
+ }
+ return n;
+}
+function selectedMenuRoot(node=selected()){
+ let current=node;
+ while(current&&current!==state.root){
+  if(DELETABLE_MENU_BASES.some(base=>nameMatchesBase(current.Name,base)))return current;
+  const parent=findParent(current.__id);
+  if(parent?.Name==="StateKits"&&current.ClassName==="Frame")return current;
+  current=parent;
+ }
+ return null;
+}
+function activeSceneForMenuRoot(menuRoot){
+ if(!menuRoot)return null;
+ for(const scene of MENU_PREVIEW_SCENES){
+  const base=stateFocusName(scene);
+  if(base&&nameMatchesBase(menuRoot.Name,base))return scene;
+ }
+ return null;
+}
 function selectStateRoot(scene){
  const wanted=stateFocusName(scene);if(!wanted||!state.root)return;
  let found=null;walk(state.root,n=>{if(!found&&n.Name===wanted)found=n});
@@ -1301,6 +1353,11 @@ function renderInspector(){
  const n=selected();if(!n){els.inspector.className="inspector empty";els.inspector.innerHTML='<div class="empty-state">Выбери объект.</div>';return}
  els.inspector.className="inspector";const selectionCount=state.selectedIds.size;$("#selectionKind").textContent=selectionCount>1?`${selectionCount} объектов · ${n.ClassName}`:n.ClassName;
  const groups=[];
+ const menuRoot=selectedMenuRoot(n);
+ if(menuRoot)groups.push(group("MENU",[
+  '<div class="menu-root-summary"><b>'+esc(menuRoot.Name)+'</b><span>Удаляет всё меню вместе со всеми дочерними Roblox Instances.</span></div>',
+  '<button id="deleteWholeMenuBtn" class="btn danger-action">DELETE WHOLE MENU</button>'
+ ]));
  groups.push(group("INSTANCE",[
   textProp("Name",n.Name,v=>{n.Name=v;changed()}),
   readonly("Class",n.ClassName),
@@ -1416,6 +1473,7 @@ function bindInspectorHandlers(n){
  $("#spaceYBtn")?.addEventListener("click",()=>distributeSiblings("y",finite($("#arrangeGap")?.value,8)));
  $("#fitParentBtn")?.addEventListener("click",fitSelectedParent);
  $("#freeLayoutBtn")?.addEventListener("click",()=>{const current=selected(),parent=current&&findParent(current.__id);if(parent&&bakeLayout(parent)){select(current.__id)}});
+ $("#deleteWholeMenuBtn")?.addEventListener("click",deleteWholeMenu);
 }
 function setProp(n,k,v){n.Properties=n.Properties||{};n.Properties[k]=v;changed()}
 
@@ -1471,9 +1529,12 @@ function bakeLayout(parent,options={}){
 function startMove(ev,n){
  if(ev.button!==0||MODIFIERS.has(n.ClassName))return;
  ev.stopPropagation();
+ const exactNode=n;
+ if(!ev.altKey)n=fragmentInteractionRoot(n);
  if(ev.shiftKey||ev.ctrlKey||ev.metaKey){select(n.__id,true);return}
  if(!isSelectedId(n.__id))select(n.__id,false);
  else if(state.selectedId!==n.__id){setPrimarySelection(n.__id);state.selectionAnchorId=n.__id;renderTree();renderInspector();updateOverlay();updateStatus()}
+ if(ev.altKey&&n===exactNode)toast("Exact child · Alt selection");
 
  let nodes=selectedMoveRoots();
  if(!nodes.length)return;
@@ -2079,6 +2140,27 @@ function ungroupSelected(){
  toast(groups.length+" групп разгруппировано · "+moved.length+" объектов выбрано");
 }
 
+function deleteWholeMenu(){
+ const menu=selectedMenuRoot();
+ if(!menu){toast("Выбранный объект не находится внутри отдельного меню",true);return}
+ const parent=findParent(menu.__id);
+ if(!parent||menu===state.root||menu.Name==="SafeRoot"){toast("Корневой HUD удалить этой командой нельзя",true);return}
+ if(!window.confirm('Удалить меню "'+menu.Name+'" целиком?\n\nБудут удалены все дочерние UI-объекты. Undo останется доступен.'))return;
+ const scene=activeSceneForMenuRoot(menu);
+ pushHistory();
+ parent.Children=(parent.Children||[]).filter(c=>c!==menu);
+ if(scene&&state.activeUiState===scene){
+  state.activeUiState=null;state.previewScene="empty";state.mode="preview";
+  state.selectedId=null;state.selectedIds=new Set();state.selectionAnchorId=null;
+ }else{
+  state.selectedId=parent.__id;state.selectedIds=new Set([parent.__id]);state.selectionAnchorId=parent.__id;
+ }
+ changed();
+ syncToolbarFromState();
+ renderAll();
+ toast(menu.Name+" · меню удалено целиком");
+}
+
 function deleteSelected(){
  const nodes=selectedNodes().filter(n=>n&&n!==state.root);
  if(!nodes.length)return;
@@ -2451,7 +2533,7 @@ async function loadInitial(){
 $("#palette").addEventListener("click",e=>{const b=e.target.closest("[data-add]");if(b)addObject(b.dataset.add)});
 $("#patternPalette")?.addEventListener("click",e=>{const b=e.target.closest("[data-pattern]");if(b)createPattern(b.dataset.pattern)});
 $("#createFirstFrame").onclick=()=>addObject("Frame");
-$("#deleteBtn").onclick=deleteSelected;$("#duplicateBtn").onclick=duplicateSelected;$("#outdentBtn").onclick=outdentSelected;$("#groupBtn").onclick=groupSelected;$("#ungroupBtn").onclick=ungroupSelected;
+$("#deleteBtn").onclick=deleteSelected;$("#deleteMenuBtn")?.addEventListener("click",deleteWholeMenu);$("#duplicateBtn").onclick=duplicateSelected;$("#outdentBtn").onclick=outdentSelected;$("#groupBtn").onclick=groupSelected;$("#ungroupBtn").onclick=ungroupSelected;
 $("#connectBtn").onclick=connectProject;$("#pullBtn").onclick=pullProject;$("#pushBtn").onclick=pushProject;$("#aiSyncBtn").onclick=assistantSync;
 $("#exportBtn").onclick=download;$("#copyBtn").onclick=copyModel;$("#importBtn").onclick=()=>els.fileInput.click();
 els.fileInput.onchange=()=>els.fileInput.files[0]&&importFile(els.fileInput.files[0]);
