@@ -2287,7 +2287,9 @@ window.addEventListener("keydown",e=>{
  if(code==="Escape"&&state.activeUiState){e.preventDefault();activateUiState(state.activeUiState);return}
  if(code==="F2"){e.preventDefault();renameSelected();return}
  if(code==="KeyF"){e.preventDefault();focusSelected();return}
- if(code==="Digit0"||code==="Numpad0"){e.preventDefault();fitViewport();return}\n if(code==="Equal"||code==="NumpadAdd"){e.preventDefault();setZoom(state.zoom*1.1);return}\n if(code==="Minus"||code==="NumpadSubtract"){e.preventDefault();setZoom(state.zoom/1.1);return}
+ if(code==="Digit0"||code==="Numpad0"){e.preventDefault();fitViewport();return}
+ if(code==="Equal"||code==="NumpadAdd"){e.preventDefault();setZoom(state.zoom*1.1);return}
+ if(code==="Minus"||code==="NumpadSubtract"){e.preventDefault();setZoom(state.zoom/1.1);return}
  if(mod&&code==="KeyS"){e.preventDefault();hasProjectConnection()?pushProject():download();return}
  if(code==="Delete"){deleteSelected();return}
  const nodes=selectedMoveRoots();if(!nodes.length)return;
