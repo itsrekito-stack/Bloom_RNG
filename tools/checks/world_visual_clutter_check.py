@@ -115,10 +115,16 @@ retired_paths=[
  "src/Workspace/Garden/LocationTemplates/CrystalGreenhouse.rbxm",
  "src/Workspace/Garden/LocationTemplates/StarterOrchard.rbxm",
  "src/Workspace/Garden/LocationTemplates/TwilightGrove.rbxm",
+ "src/Workspace/Garden/GardenCenter.rbxm",
+ "src/Workspace/SpawnLocation.rbxm",
 ]
 for path in retired_paths:
     if (ROOT/path).exists():
         raise AssertionError(f"alpha-unneeded workspace asset returned: {path}")
+
+for path in ("src/Workspace/Garden/GardenCenter.model.json","src/Workspace/SpawnLocation.model.json"):
+    if not (ROOT/path).exists():
+        raise AssertionError(f"invisible alpha marker missing: {path}")
 
 print("world visual clutter contract: PASS")
 print(f"Alpha world is sparse ({len(nodes)} authored nodes), flat on one gameplay Y plane, and free of retired scenery/template assets.")
