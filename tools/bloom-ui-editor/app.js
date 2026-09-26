@@ -2245,9 +2245,27 @@ for(const [id,side] of [["explorerResizer","explorer"],["inspectorResizer","insp
   document.body.classList.add("panel-resizing");
  });
 }
+let trackpadGestureUntil=0;
+function isTrackpadPanEvent(e){
+ const now=performance.now();
+ const ax=Math.abs(e.deltaX),ay=Math.abs(e.deltaY);
+ const legacy=Math.abs(e.wheelDeltaY||e.wheelDelta||0);
+ const precise=e.deltaMode===0&&(
+  ax>.01||
+  (ay>0&&ay<40)||
+  (legacy>0&&legacy%120!==0)
+ );
+ if(precise)trackpadGestureUntil=now+180;
+ return precise||now<trackpadGestureUntil;
+}
 els.stageScroller.addEventListener("wheel",e=>{
- if(!e.deltaY)return;
+ if(!e.deltaX&&!e.deltaY)return;
  e.preventDefault();
+ if(isTrackpadPanEvent(e)){
+  els.stageScroller.scrollLeft+=e.deltaX;
+  els.stageScroller.scrollTop+=e.deltaY;
+  return;
+ }
  const rect=els.stageScroller.getBoundingClientRect();
  const pointerX=e.clientX-rect.left,pointerY=e.clientY-rect.top;
  const oldZoom=state.zoom;
