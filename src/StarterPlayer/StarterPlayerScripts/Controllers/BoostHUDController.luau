@@ -93,8 +93,13 @@ function S:SetSuppressed(suppressed)
 end
 
 function S:ApplyResponsiveLayout(width)
- self.ExpandedSize=UDim2.fromOffset(math.max(280,math.min(360,(tonumber(width) or 360)-20)),72)
- self.Root.Position=UDim2.new(0,10,1,-118)
+ self.ViewportWidth=tonumber(width) or self.ViewportWidth or 1366
+ local maxWidth=math.max(168,math.min(340,self.ViewportWidth-24))
+ local count=math.max(1,tonumber(self.ItemCount) or 0)
+ local contentWidth=16+count*52+math.max(0,count-1)*6
+ local expandedWidth=math.clamp(contentWidth,168,maxWidth)
+ self.ExpandedSize=UDim2.fromOffset(expandedWidth,82)
+ self.Root.Position=UDim2.new(0,12,1,-14)
  if not self.Minimized then self.Root.Size=self.ExpandedSize end
 end
 
@@ -106,7 +111,7 @@ function S:SetMinimized(minimized,animate)
  self.Title.Text=self.Minimized and ("BOOSTS  •  "..tostring(self.ItemCount)) or "ACTIVE BOOSTS"
  self.List.Visible=not self.Minimized and self.ItemCount>0
  self.Empty.Visible=not self.Minimized and self.ItemCount==0
- local target=self.Minimized and UDim2.fromOffset(132,30) or (self.ExpandedSize or UDim2.fromOffset(360,72))
+ local target=self.Minimized and UDim2.fromOffset(132,30) or (self.ExpandedSize or UDim2.fromOffset(168,82))
  if animate then
   TweenService:Create(self.Root,TweenInfo.new(Theme.Motion.Normal,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=target}):Play()
  else
@@ -209,6 +214,8 @@ function S:Update(payload,revision)
 
  local items=payload and payload.Items or {}
  self.ItemCount=#items
+ local safeWidth=self.UI.SafeRoot and self.UI.SafeRoot.AbsoluteSize.X or self.ViewportWidth or 1366
+ self:ApplyResponsiveLayout(safeWidth)
  self:SetSuppressed(self.UI:IsWorkshopExclusive())
  self:SetMinimized(self.Minimized,false)
 
