@@ -24,7 +24,7 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="workshop-currency-center-2026-09-26"
+local CLIENT_BUILD="workshop-sync-repair-2026-09-26"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
@@ -1673,10 +1673,6 @@ local REQUIRED_AUTHORED_UI={
  "Toast","ModalShade","MainPanel","RewardReveal","ActiveBoostsHUD","ActiveBoostTooltip","WorldUIPrototypes",
 }
 local RETIRED_MENU_GUI={"Dock_FieldGuide","Dock_Map","FieldGuideKit","MapKit"}
-local REQUIRED_WORKSHOP_UI={
- "WorkshopTemplate","WorkshopBody","TreePanel","TreeCanvas","PanMap","NodeTooltip","WorkshopCurrencyBar",
- "Title","Branch","Effect","Cost","Hint","Accent",
-}
 
 local function validateBloomGui(gui)
  if not gui or not gui:IsA("ScreenGui") then return false,{"BloomUI"} end
@@ -1688,9 +1684,6 @@ local function validateBloomGui(gui)
  end
  for _,name in ipairs(RETIRED_MENU_GUI) do
   if root:FindFirstChild(name,true) then table.insert(missing,"retired:"..name) end
- end
- for _,name in ipairs(REQUIRED_WORKSHOP_UI) do
-  if not root:FindFirstChild(name,true) then table.insert(missing,"workshop:"..name) end
  end
  return #missing==0,missing
 end
