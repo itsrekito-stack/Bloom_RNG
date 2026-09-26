@@ -3,7 +3,7 @@
 
 const $=s=>document.querySelector(s);
 const els={
- tree:$("#tree"),inspector:$("#inspector"),device:$("#device"),guiRoot:$("#guiRoot"),overlay:$("#selectionOverlay"),geometry:$("#geometryLayer"),
+ tree:$("#tree"),inspector:$("#inspector"),device:$("#device"),canvas:$("#viewportCanvas"),guiRoot:$("#guiRoot"),overlay:$("#selectionOverlay"),geometry:$("#geometryLayer"),
  stageScroller:$("#stageScroller"),status:$("#statusText"),pixels:$("#pixelReadout"),target:$("#targetReadout"),
  toast:$("#toast"),fileInput:$("#fileInput"),jsonDialog:$("#jsonDialog"),jsonArea:$("#jsonArea")
 };
@@ -60,6 +60,7 @@ const uid=()=> "ui_"+(idCounter++).toString(36)+"_"+Date.now().toString(36).slic
 const deepClone=x=>JSON.parse(JSON.stringify(x));
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const ZOOM_MIN=.25,ZOOM_MAX=2.5;
+let engineV2=null;
 const finite=(v,d=0)=>Number.isFinite(+v)?+v:d;
 const roundOffset=v=>Math.round(finite(v));
 const c3=(r=1,g=1,b=1)=>[r,g,b];
@@ -289,6 +290,38 @@ function imageUrl(src){
   s.match(/^(\d{6,})$/);
  if(!m)return /^https?:\/\//i.test(s)?s:"";
  return ROFLOW_NATIVE?`roflow-asset:${m[1]}`:`/api/thumbnail?id=${encodeURIComponent(m[1])}`;
+}
+
+function ensureEngineV2(){
+ if(engineV2)return engineV2;
+ if(!window.BloomEditorEngineV2||!els.canvas)return null;
+ engineV2=new window.BloomEditorEngineV2({
+  canvas:els.canvas,proxyHost:els.guiRoot,device:els.device,scroller:els.stageScroller,
+  adapter:{
+   isModifier:n=>MODIFIERS.has(n?.ClassName),
+   isText:n=>TEXT_CLASSES.has(n?.ClassName),
+   isImage:n=>IMAGE_CLASSES.has(n?.ClassName),
+   modifier,
+   previewVisible,
+   previewSize,
+   previewText,
+   imageKey:(n,p)=>String(n?.__id||"")+"|"+String(state.previewScene||"")+"|"+String(previewImage(n,p)??n?.Properties?.Image??""),
+   resolveImage:async(n,p)=>{
+    const source=previewImage(n,p)??n?.Properties?.Image??"";
+    const resolved=imageUrl(source);
+    if(ROFLOW_NATIVE&&resolved.startsWith("roflow-asset:"))return nativeThumbnail(resolved.slice("roflow-asset:".length));
+    return resolved;
+   },
+   onNodePointerDown:(ev,n)=>startMove(ev,n),
+   onBlankPointerDown:ev=>{if(ev.button===0&&state.root)select(state.root.__id,false)},
+   onHover:(n,point)=>{
+    if(!n)return;
+    els.canvas.title=(n.Name||"Object")+" · "+(n.ClassName||"GuiObject")+" · "+Math.round(point.x)+","+Math.round(point.y);
+   }
+  }
+ });
+ document.documentElement.classList.add("engine-v2-active");
+ return engineV2;
 }
 
 
@@ -907,6 +940,17 @@ function renderViewport(){
  $("#stage").style.height=(fullH*state.zoom+128)+"px";
  $(".roblox-topbar").style.height=state.inset+"px";
  $(".roblox-topbar").style.display=state.inset>0?"flex":"none";
+ const engine=ensureEngineV2();
+ if(engine){
+  els.guiRoot.style.top="0px";
+  engine.render({
+   root:state.root,viewport:state.viewport,zoom:state.zoom,inset:state.inset,
+   showHidden:state.showHidden,labels:state.labels,selectedIds:state.selectedIds,
+   activeUiState:state.activeUiState,previewScene:state.previewScene
+  });
+  renderGeometryBase();
+  return;
+ }
  els.guiRoot.style.top=state.inset+"px";
  els.guiRoot.innerHTML="";
  const children=state.root.ClassName==="ScreenGui"?state.root.Children:[state.root];

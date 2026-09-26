@@ -1744,12 +1744,15 @@ fn ui_studio_document(state: State<AppState>) -> Result<String, String> {
     let editor = root.join("tools").join("bloom-ui-editor");
     let html_path = editor.join("index.html");
     let css_path = editor.join("app.css");
+    let engine_path = editor.join("engine-v2.js");
     let js_path = editor.join("app.js");
 
     let mut html = fs::read_to_string(&html_path)
         .map_err(|e| format!("Failed to read {}: {e}", html_path.display()))?;
     let css = fs::read_to_string(&css_path)
         .map_err(|e| format!("Failed to read {}: {e}", css_path.display()))?;
+    let engine_js = fs::read_to_string(&engine_path)
+        .map_err(|e| format!("Failed to read {}: {e}", engine_path.display()))?;
     let js = fs::read_to_string(&js_path)
         .map_err(|e| format!("Failed to read {}: {e}", js_path.display()))?;
 
@@ -1764,6 +1767,19 @@ fn ui_studio_document(state: State<AppState>) -> Result<String, String> {
     html.replace_range(
         css_link_start..css_link_end,
         &format!("<style>\n{safe_css}\n</style>"),
+    );
+
+    let engine_start = html
+        .find("<script src=\"./engine-v2.js")
+        .ok_or_else(|| "UI Studio engine-v2.js tag is missing".to_string())?;
+    let engine_end = html[engine_start..]
+        .find("</script>")
+        .map(|offset| engine_start + offset + "</script>".len())
+        .ok_or_else(|| "UI Studio engine-v2.js tag is malformed".to_string())?;
+    let safe_engine_js = engine_js.replace("</script>", "<\\/script>");
+    html.replace_range(
+        engine_start..engine_end,
+        &format!("<script>\n{safe_engine_js}\n</script>"),
     );
 
     let script_start = html

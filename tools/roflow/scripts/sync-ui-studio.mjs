@@ -9,7 +9,7 @@ const target=resolve(here,"../web/ui-studio");
 await rm(target,{recursive:true,force:true});
 await mkdir(target,{recursive:true});
 
-for(const file of ["app.css","app.js"]){
+for(const file of ["app.css","engine-v2.js","app.js"]){
  await copyFile(resolve(source,file),resolve(target,file));
 }
 
