@@ -2245,41 +2245,10 @@ for(const [id,side] of [["explorerResizer","explorer"],["inspectorResizer","insp
   document.body.classList.add("panel-resizing");
  });
 }
-let trackpadGestureUntil=0;
-function isTrackpadPanEvent(e){
- const now=performance.now();
- const ax=Math.abs(e.deltaX),ay=Math.abs(e.deltaY);
- const legacy=Math.abs(e.wheelDeltaY||e.wheelDelta||0);
- const precise=e.deltaMode===0&&(
-  ax>.01||
-  (ay>0&&ay<40)||
-  (legacy>0&&legacy%120!==0)
- );
- if(precise)trackpadGestureUntil=now+180;
- return precise||now<trackpadGestureUntil;
-}
 els.stageScroller.addEventListener("wheel",e=>{
- if(!e.deltaX&&!e.deltaY)return;
+ if(!e.ctrlKey)return;
  e.preventDefault();
- if(isTrackpadPanEvent(e)){
-  els.stageScroller.scrollLeft+=e.deltaX;
-  els.stageScroller.scrollTop+=e.deltaY;
-  return;
- }
- const rect=els.stageScroller.getBoundingClientRect();
- const pointerX=e.clientX-rect.left,pointerY=e.clientY-rect.top;
- const oldZoom=state.zoom;
- const deviceLeft=els.device.offsetLeft,deviceTop=els.device.offsetTop;
- const worldX=(els.stageScroller.scrollLeft+pointerX-deviceLeft)/oldZoom;
- const worldY=(els.stageScroller.scrollTop+pointerY-deviceTop)/oldZoom;
- const rawDelta=e.deltaMode===1?e.deltaY*16:e.deltaMode===2?e.deltaY*els.stageScroller.clientHeight:e.deltaY;
- const zoomDelta=clamp(rawDelta,-120,120);
- const factor=Math.exp(-zoomDelta*.0026);
- const nextZoom=clamp(oldZoom*factor,ZOOM_MIN,ZOOM_MAX);
- if(nextZoom===oldZoom)return;
- setZoom(nextZoom);
- els.stageScroller.scrollLeft=els.device.offsetLeft+worldX*nextZoom-pointerX;
- els.stageScroller.scrollTop=els.device.offsetTop+worldY*nextZoom-pointerY;
+ setZoom(state.zoom*(e.deltaY<0?1.1:.9));
 },{passive:false});
 els.stageScroller.addEventListener("pointerdown",e=>{
  if(e.button!==1)return;e.preventDefault();
