@@ -62,6 +62,11 @@ need(hud,'self.Toggle.Activated:Connect',"authored minimize button binding")
 need(hud,'self.Toggle.Text=self.Minimized and "+" or "−"', "minimize/expand visual state")
 need(hud,'self.List.Visible=not self.Minimized and self.ItemCount>0',"collapsed list visibility")
 need(hud,'function S:ApplyResponsiveLayout(width)',"collapsed HUD responsive sizing")
+need(hud,'local contentWidth=16+count*52+math.max(0,count-1)*6',"boost-count-driven panel width")
+need(hud,'local expandedWidth=math.clamp(contentWidth,168,maxWidth)',"compact boost panel width clamp")
+need(hud,'self.ExpandedSize=UDim2.fromOffset(expandedWidth,82)',"compact expanded geometry")
+need(hud,'self.Root.Position=UDim2.new(0,12,1,-14)',"bottom-left compact placement")
+need(hud,'self:ApplyResponsiveLayout(safeWidth)',"boost count triggers responsive resize")
 need(journey,'Reward: +20% Roll Luck for 60s',"Solar Bloom reward explained before completion")
 
 root=nodes.get("ActiveBoostsHUD")
@@ -80,6 +85,26 @@ if template.get("Properties",{}).get("Visible") is not False:
     raise AssertionError("BoostTemplate must stay authored but hidden")
 if root.get("Properties",{}).get("AnchorPoint",{}).get("Vector2") != [0,1]:
     raise AssertionError("ActiveBoostsHUD must be bottom-left anchored")
+root_size=root.get("Properties",{}).get("Size",{}).get("UDim2")
+if root_size != [[0,168],[0,82]]:
+    raise AssertionError(f"ActiveBoostsHUD authored compact size regressed: {root_size}")
+boost_list=nodes.get("BoostList")
+layout=nodes.get("UIListLayout")
+value=next((child for child in template.get("Children",[]) if child.get("Name")=="Value"),None)
+icon=next((child for child in template.get("Children",[]) if child.get("Name")=="Icon"),None)
+if not boost_list or boost_list.get("Properties",{}).get("ScrollingDirection")!="X":
+    raise AssertionError("BoostList must remain horizontal")
+if not layout or layout.get("Properties",{}).get("FillDirection")!="Horizontal":
+    raise AssertionError("BoostList UIListLayout must explicitly be horizontal")
+if template.get("Properties",{}).get("Size",{}).get("UDim2") != [[0,52],[0,52]]:
+    raise AssertionError("BoostTemplate compact card size regressed")
+if not icon or icon.get("Properties",{}).get("Size",{}).get("UDim2") != [[0,30],[0,30]]:
+    raise AssertionError("Boost icon size regressed")
+if not value or value.get("Properties",{}).get("BackgroundTransparency",1)>=1:
+    raise AssertionError("Boost value must use the authored compact badge treatment")
+value_children={child.get("Name") for child in value.get("Children",[]) or []}
+if not {"ValueCorner","ValueStroke"}<=value_children:
+    raise AssertionError("Boost value badge decoration missing")
 
 print("active boosts contract: PASS")
 print("Solar Bloom reward, Bee aggregate sources, active abilities, authored HUD, hover tooltip, and server authority verified.")
