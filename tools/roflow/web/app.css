@@ -50,3 +50,14 @@ body:not(.ui-studio-focus) .studio-reload-fallback{display:none}
 .runtime-qa-readiness{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .qa-evidence{padding:5px 7px;border:1px solid #283c4d;border-radius:999px;background:#0a131d;color:#71879a;font:800 7px/1 Consolas,monospace;letter-spacing:.04em}
 .qa-evidence.ready{border-color:#277450;background:#0c261c;color:#66e0a6}
+
+.release-gate{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,.42fr);gap:12px;align-items:center;margin-top:9px;padding:10px 11px;border:1px solid #4a3540;border-radius:10px;background:#160d13}
+.release-gate-copy strong{display:block;margin-top:4px;color:#ff8a99;font-size:12px}
+.release-gate-copy small{display:block;margin-top:3px;color:#8f7080;font-size:8px;line-height:1.4}
+.release-gate-meter{height:7px;border-radius:999px;background:#080d13;border:1px solid #2b2630;overflow:hidden}
+.release-gate-meter span{display:block;width:0;height:100%;background:linear-gradient(90deg,#526273,#ffbe40);transition:width .18s ease}
+.release-gate.ready{border-color:#277450;background:#0c261c}
+.release-gate.ready .release-gate-copy strong{color:#66e0a6}
+.release-gate.ready .release-gate-copy small{color:#79a98f}
+.release-gate.ready .release-gate-meter span{background:linear-gradient(90deg,#2f88c8,#66e0a6)}
+@media(max-width:1180px){.release-gate{grid-template-columns:1fr}}
