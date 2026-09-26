@@ -24,6 +24,7 @@ local InventoryV2=require(script.Parent.InventoryV2Controller)
 local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
+local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
 local CLIENT_BUILD="settings-v2-runtime-2026-09-26"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
@@ -1951,8 +1952,8 @@ function UI:Start()
  UIS.InputBegan:Connect(function(input,processed)
   if processed then return end
   local settings=self.State and self.State.Profile and self.State.Profile.Settings or {}
-  local openKey=Enum.KeyCode[tostring(settings.OpenMenuKey or "M")] or Enum.KeyCode.M
-  local rollKey=Enum.KeyCode[tostring(settings.RollKey or "R")] or Enum.KeyCode.R
+  local openKey=KEY_CODES[tostring(settings.OpenMenuKey or "M")] or Enum.KeyCode.M
+  local rollKey=KEY_CODES[tostring(settings.RollKey or "R")] or Enum.KeyCode.R
   if input.KeyCode==Enum.KeyCode.Escape and self.Menu then
    self:Close()
   elseif input.KeyCode==openKey then
