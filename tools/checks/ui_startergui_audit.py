@@ -142,6 +142,7 @@ check('dynamic menus use authored state kits','self.StateKits=self.Panel:FindFir
 check('state kits are authored in ScreenGui',one('StateKits')[1] is not None and all(one(name+'Kit')[1] is not None for name in ['FieldGuide','Map','Trials','Settings','Plant','Season','Replay','Cards']))
 check('world UI prototypes authored in ScreenGui',one('WorldUIPrototypes')[1] is not None and one('TutorialWorldLabelTemplate')[1] is not None and one('ActivityCheckpointLabelTemplate')[1] is not None)
 check('UI Studio empty desk hides Explorer tree','if(!state.activeUiState){' in editor_source and 'No UI State open' in editor_source)
+check('UI Studio Explorer is scoped to active state','function activeStateTreeIds()' in editor_source and 'const stateIds=activeStateTreeIds();' in editor_source and 'if(!stateIds.has(n.__id))return;' in editor_source)
 check('UI Studio state rail uses Bloom icons','/api/thumbnail?id=' in editor_html and '<img src="/api/thumbnail?id=' in editor_html and '.ui-state-btn b img' in editor_css)
 check('Inventory v2 rerender follows renderer','controller.MenuRenderer=="InventoryV2"' in inventory_v2_source)
 check('Inventory v2 binds authoritative inventory','uiState.Inventory' in inventory_v2_source and 'controller:Send("Dissolve"' in inventory_v2_source and 'controller:Send("EquipBee"' in inventory_v2_source)
