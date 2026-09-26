@@ -54,7 +54,7 @@ function hasProjectConnection(){return ROFLOW_NATIVE?state.nativeProjectReady:!!
 const state={
  root:null,selectedId:null,viewport:{w:1366,h:768},zoom:.72,snap:8,labels:false,grid:true,showHidden:true,geometry:true,inset:36,mode:"design",previewScene:"gameplay",
  projectHandle:null,nativeProjectReady:false,targetPath:localStorage.getItem("bloomTargetPath")||DEFAULT_TARGET,
- activeUiState:null,modelKey:"bloom",history:[],future:[],dirty:false,drag:null,panelResize:null,explorerW:252,inspectorW:300,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[],assistantSyncing:false,bridgeBase:"",modelLoadFailed:false,autoSaveTimer:null,autoSaving:false,autoSaveQueued:false,lastAutoSaveError:""
+ activeUiState:null,modelKey:"bloom",history:[],future:[],dirty:false,drag:null,panelResize:null,explorerW:252,inspectorW:300,collapsed:new Set(),clipboard:null,treeQuery:"",pan:null,selectedIds:new Set(),selectionAnchorId:null,treeDragIds:[],assistantSyncing:false,bridgeBase:"",modelLoadFailed:false,autoSaveTimer:null,autoSaving:false,autoSaveQueued:false,lastAutoSaveError:"",suspended:false
 };
 
 let idCounter=1;
@@ -231,7 +231,7 @@ function markDirty(){
  scheduleAutoSave();
 }
 function scheduleAutoSave(delay=320){
- if(!hasProjectConnection()||!state.root||state.assistantSyncing)return;
+ if(state.suspended||!hasProjectConnection()||!state.root||state.assistantSyncing)return;
  clearTimeout(state.autoSaveTimer);
  state.autoSaveTimer=setTimeout(()=>{state.autoSaveTimer=null;autoSaveNow(true)},delay);
 }
@@ -1007,6 +1007,7 @@ function updateEmptyCanvas(){
  box.classList.toggle("hidden",!!state.activeUiState);
 }
 function renderAll(){
+ if(state.suspended){updateStatus();return}
  renderViewport();renderTree();renderInspector();updateOverlay();updateStatus();updateEmptyCanvas();
 }
 function renderViewport(){
@@ -2636,6 +2637,27 @@ window.addEventListener("pointerup",e=>{
  if(state.pan){state.pan=null;els.stageScroller.classList.remove("panning")}
 });
 window.addEventListener("pointercancel",endTouchPointer);
+async function setEditorSuspended(suspended,{flush=false}={}){
+ if(suspended===state.suspended){
+  if(suspended&&flush)return await flushAutoSave();
+  return true;
+ }
+ if(suspended){
+  state.suspended=true;
+  clearTimeout(state.autoSaveTimer);state.autoSaveTimer=null;
+  let saved=true;
+  if(flush)saved=await flushAutoSave();
+  engineV2?.suspend?.();
+  nativeThumbnailCache.clear();
+  touchPoints.clear();touchPinch=null;
+  state.pan=null;state.drag=null;
+  return saved;
+ }
+ state.suspended=false;
+ engineV2?.resume?.();
+ renderAll();
+ return true;
+}
 window.addEventListener("beforeunload",e=>{if(state.dirty){e.preventDefault();e.returnValue=""}});
 
 $("#dialogClose").onclick=()=>els.jsonDialog.close();$("#dialogCopy").onclick=()=>navigator.clipboard.writeText(els.jsonArea.value);
@@ -2688,13 +2710,31 @@ hydrateStudioIcons();
 loadInitial().then(()=>{
  requestAnimationFrame(()=>fitViewport());
  assistantStatus();
- // Catches every editing path, including drag/resize helpers that mark dirty directly.
- setInterval(()=>{if(state.dirty&&hasProjectConnection()&&!state.assistantSyncing&&!state.autoSaving&&!state.autoSaveTimer)scheduleAutoSave(180)},500);
+ // Low-frequency safety net only; edits normally schedule their own autosave.
+ setInterval(()=>{
+  if(!state.suspended&&!document.hidden&&state.dirty&&hasProjectConnection()&&!state.assistantSyncing&&!state.autoSaving&&!state.autoSaveTimer)scheduleAutoSave(180)
+ },1500);
 });
 })();
 
-window.addEventListener("message",event=>{
+window.addEventListener("message",async event=>{
+ if(event.data?.type==="roflow-suspend"&&ROFLOW_NATIVE){
+  const ok=await setEditorSuspended(true,{flush:event.data.flush!==false});
+  try{window.parent?.postMessage({type:"roflow-suspend-ready",requestId:event.data.requestId,ok},"*")}catch{}
+  return;
+ }
+ if(event.data?.type==="roflow-resume"&&ROFLOW_NATIVE){
+  await setEditorSuspended(false);
+  return;
+ }
  if(event.data?.type==="roflow-refresh-model"&&ROFLOW_NATIVE){
+  await setEditorSuspended(false);
   reloadModelFromServer("RoFlow sync: model refreshed").catch(error=>toast(String(error),true));
  }
+});
+
+document.addEventListener("visibilitychange",()=>{
+ if(!ROFLOW_NATIVE)return;
+ if(document.hidden)setEditorSuspended(true,{flush:false});
+ else if(window.parent===window)setEditorSuspended(false);
 });
