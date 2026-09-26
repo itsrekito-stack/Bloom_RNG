@@ -61,7 +61,9 @@ const uid=()=> "ui_"+(idCounter++).toString(36)+"_"+Date.now().toString(36).slic
 const deepClone=x=>JSON.parse(JSON.stringify(x));
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const ZOOM_MIN=.25,ZOOM_MAX=2.5;
-let engineV2=null;
+let engineV2=null,zoomSaveTimer=null;
+const touchPoints=new Map();
+let touchPinch=null;
 const finite=(v,d=0)=>Number.isFinite(+v)?+v:d;
 const roundOffset=v=>Math.round(finite(v));
 const c3=(r=1,g=1,b=1)=>[r,g,b];
@@ -508,7 +510,26 @@ function setZoom(value,save=true){
  state.zoom=clamp(value,ZOOM_MIN,ZOOM_MAX);
  $("#zoomRange").value=Math.round(state.zoom*100);
  $("#zoomLabel").textContent=Math.round(state.zoom*100)+"%";
- renderAll();if(save)savePrefs();
+ renderAll();
+ if(save){
+  clearTimeout(zoomSaveTimer);
+  zoomSaveTimer=setTimeout(()=>{zoomSaveTimer=null;savePrefs()},120);
+ }
+}
+function zoomAtClientPoint(nextZoom,clientX,clientY){
+ const oldZoom=state.zoom||1;
+ nextZoom=clamp(nextZoom,ZOOM_MIN,ZOOM_MAX);
+ if(Math.abs(nextZoom-oldZoom)<.0001)return;
+ const rect=els.stageScroller.getBoundingClientRect();
+ const pointerX=clientX-rect.left,pointerY=clientY-rect.top;
+ const deviceLeft=els.device.offsetLeft,deviceTop=els.device.offsetTop;
+ const worldX=(els.stageScroller.scrollLeft+pointerX-deviceLeft)/oldZoom;
+ const worldY=(els.stageScroller.scrollTop+pointerY-deviceTop)/oldZoom;
+ setZoom(nextZoom);
+ requestAnimationFrame(()=>{
+  els.stageScroller.scrollLeft=els.device.offsetLeft+worldX*nextZoom-pointerX;
+  els.stageScroller.scrollTop=els.device.offsetTop+worldY*nextZoom-pointerY;
+ });
 }
 function fitViewport(){
  const pad=128,w=Math.max(100,els.stageScroller.clientWidth-pad),h=Math.max(100,els.stageScroller.clientHeight-pad);
@@ -2307,21 +2328,66 @@ for(const [id,side] of [["explorerResizer","explorer"],["inspectorResizer","insp
  });
 }
 els.stageScroller.addEventListener("wheel",e=>{
- if(!e.ctrlKey)return;
+ if(!e.deltaX&&!e.deltaY)return;
  e.preventDefault();
- setZoom(state.zoom*(e.deltaY<0?1.1:.9));
+ if(e.ctrlKey||e.metaKey){
+  const raw=e.deltaMode===1?e.deltaY*16:e.deltaMode===2?e.deltaY*els.stageScroller.clientHeight:e.deltaY;
+  const delta=clamp(raw,-160,160);
+  const factor=Math.exp(-delta*.0028);
+  zoomAtClientPoint(state.zoom*factor,e.clientX,e.clientY);
+  return;
+ }
+ els.stageScroller.scrollLeft+=e.deltaX;
+ els.stageScroller.scrollTop+=e.deltaY;
 },{passive:false});
+
 els.stageScroller.addEventListener("pointerdown",e=>{
- if(e.button!==1)return;e.preventDefault();
+ if(e.pointerType==="touch"){
+  touchPoints.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  try{els.stageScroller.setPointerCapture(e.pointerId)}catch{}
+  if(touchPoints.size===2){
+   const pts=[...touchPoints.values()];
+   const dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
+   touchPinch={
+    distance:Math.max(1,Math.hypot(dx,dy)),
+    zoom:state.zoom,
+    centerX:(pts[0].x+pts[1].x)/2,
+    centerY:(pts[0].y+pts[1].y)/2
+   };
+  }
+  return;
+ }
+ if(e.button!==1)return;
+ e.preventDefault();
  state.pan={x:e.clientX,y:e.clientY,left:els.stageScroller.scrollLeft,top:els.stageScroller.scrollTop};
  els.stageScroller.classList.add("panning");
 });
 window.addEventListener("pointermove",e=>{
+ if(e.pointerType==="touch"&&touchPoints.has(e.pointerId)){
+  touchPoints.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(touchPoints.size===2&&touchPinch){
+   const pts=[...touchPoints.values()];
+   const dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
+   const distance=Math.max(1,Math.hypot(dx,dy));
+   const centerX=(pts[0].x+pts[1].x)/2,centerY=(pts[0].y+pts[1].y)/2;
+   zoomAtClientPoint(touchPinch.zoom*(distance/touchPinch.distance),centerX,centerY);
+  }
+  return;
+ }
  if(!state.pan)return;
  els.stageScroller.scrollLeft=state.pan.left-(e.clientX-state.pan.x);
  els.stageScroller.scrollTop=state.pan.top-(e.clientY-state.pan.y);
 });
-window.addEventListener("pointerup",()=>{if(state.pan){state.pan=null;els.stageScroller.classList.remove("panning")}});
+function endTouchPointer(e){
+ if(e.pointerType!=="touch")return;
+ touchPoints.delete(e.pointerId);
+ if(touchPoints.size<2)touchPinch=null;
+}
+window.addEventListener("pointerup",e=>{
+ endTouchPointer(e);
+ if(state.pan){state.pan=null;els.stageScroller.classList.remove("panning")}
+});
+window.addEventListener("pointercancel",endTouchPointer);
 window.addEventListener("beforeunload",e=>{if(state.dirty){e.preventDefault();e.returnValue=""}});
 
 $("#dialogClose").onclick=()=>els.jsonDialog.close();$("#dialogCopy").onclick=()=>navigator.clipboard.writeText(els.jsonArea.value);
