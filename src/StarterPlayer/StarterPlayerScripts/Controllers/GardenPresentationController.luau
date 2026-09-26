@@ -1,13 +1,69 @@
 local RS=game:GetService("ReplicatedStorage")
+local RunService=game:GetService("RunService")
+
 local G=require(RS.Config.GardenSynergyConfig)
 
-local S={Key=""}
+local FLOWER_DETAIL_DISTANCE=24
+local FLOWER_REFRESH_SECONDS=.12
+
+local S={Key="",FlowerAccumulator=0,FocusedFlowerInfo=nil}
+
+local function flowerInfoPosition(info)
+ local parent=info and info.Parent
+ return parent and parent:IsA("BasePart") and parent.Position or nil
+end
 
 function S:Init(ui)
  self.UI=ui
  self.Folder=Instance.new("Folder")
  self.Folder.Name="LocalSynergyLines"
  self.Folder.Parent=workspace
+
+ self.FlowerConnection=RunService.RenderStepped:Connect(function(dt)
+  self.FlowerAccumulator+=dt
+  if self.FlowerAccumulator<FLOWER_REFRESH_SECONDS then return end
+  self.FlowerAccumulator=0
+  self:RefreshFlowerFocus()
+ end)
+end
+
+function S:RefreshFlowerFocus()
+ local ui=self.UI
+ local player=ui and ui.Player
+ local character=player and player.Character
+ local root=character and character:FindFirstChild("HumanoidRootPart")
+ local world=workspace:FindFirstChild("BloomWorld")
+ local allowDetail=root~=nil and world~=nil and ui.Menu==nil and not ui:IsWorkshopExclusive()
+
+ local nearest=nil
+ local nearestDistance=FLOWER_DETAIL_DISTANCE
+ if allowDetail then
+  for _,descendant in ipairs(world:GetDescendants()) do
+   if descendant:IsA("BillboardGui") and descendant.Name=="FlowerInfo" then
+    local position=flowerInfoPosition(descendant)
+    if position then
+     local distance=(root.Position-position).Magnitude
+     if distance<nearestDistance then
+      nearestDistance=distance
+      nearest=descendant
+     end
+    end
+   end
+  end
+ end
+
+ if self.FocusedFlowerInfo and self.FocusedFlowerInfo~=nearest and self.FocusedFlowerInfo.Parent then
+  self.FocusedFlowerInfo.Enabled=false
+ end
+
+ if world then
+  for _,descendant in ipairs(world:GetDescendants()) do
+   if descendant:IsA("BillboardGui") and descendant.Name=="FlowerInfo" then
+    descendant.Enabled=descendant==nearest
+   end
+  end
+ end
+ self.FocusedFlowerInfo=nearest
 end
 
 function S:Update()
