@@ -5,6 +5,7 @@ use std::{
     collections::{BTreeSet, HashMap},
     env,
     fs,
+    io::{Read, Seek, SeekFrom},
     path::{Component, Path, PathBuf},
     process::{Child, Command, Stdio},
     sync::Mutex,
@@ -169,6 +170,21 @@ struct RojoStatus {
     version: String,
     project_file: bool,
     build_file: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct RuntimeProbeReport {
+    available: bool,
+    path: String,
+    modified_at: u64,
+    milestones: Vec<String>,
+    evidence: Vec<String>,
+    latest_server_checkpoint: String,
+    latest_client_checkpoint: String,
+    latest_persistence_join: String,
+    latest_persistence_leave: String,
+    lines: Vec<String>,
 }
 
 #[derive(Serialize)]
@@ -1285,6 +1301,114 @@ fn find_rojo(root: &Path) -> Option<PathBuf> {
     None
 }
 
+fn roblox_logs_dir() -> Result<PathBuf, String> {
+    #[cfg(target_os = "windows")]
+    {
+        return env::var("LOCALAPPDATA")
+            .map(PathBuf::from)
+            .map(|path| path.join("Roblox").join("logs"))
+            .map_err(|_| "LOCALAPPDATA is unavailable".to_string());
+    }
+    #[cfg(target_os = "macos")]
+    {
+        return env::var("HOME")
+            .map(PathBuf::from)
+            .map(|path| path.join("Library").join("Logs").join("Roblox"))
+            .map_err(|_| "HOME is unavailable".to_string());
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    {
+        Err("Roblox Studio log discovery is unsupported on this platform".into())
+    }
+}
+
+fn latest_studio_log() -> Result<(PathBuf, u64), String> {
+    let dir = roblox_logs_dir()?;
+    let mut latest: Option<(PathBuf, SystemTime)> = None;
+    let entries = fs::read_dir(&dir)
+        .map_err(|e| format!("Roblox log directory is unavailable ({}): {e}", dir.display()))?;
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.is_file() { continue; }
+        let name = path.file_name().and_then(|value| value.to_str()).unwrap_or("");
+        let lower = name.to_ascii_lowercase();
+        if !lower.contains("robloxstudio") || !lower.ends_with(".log") { continue; }
+        let modified = entry.metadata().and_then(|meta| meta.modified()).unwrap_or(UNIX_EPOCH);
+        if latest.as_ref().map(|(_, time)| modified > *time).unwrap_or(true) {
+            latest = Some((path, modified));
+        }
+    }
+    let (path, modified) = latest.ok_or_else(|| "No Roblox Studio log found yet".to_string())?;
+    let seconds = modified.duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
+    Ok((path, seconds))
+}
+
+fn read_file_tail(path: &Path, max_bytes: u64) -> Result<String, String> {
+    let mut file = fs::File::open(path).map_err(|e| e.to_string())?;
+    let len = file.metadata().map_err(|e| e.to_string())?.len();
+    let start = len.saturating_sub(max_bytes);
+    file.seek(SeekFrom::Start(start)).map_err(|e| e.to_string())?;
+    let mut bytes = Vec::with_capacity((len-start) as usize);
+    file.read_to_end(&mut bytes).map_err(|e| e.to_string())?;
+    let mut text = String::from_utf8_lossy(&bytes).to_string();
+    if start > 0 {
+        if let Some(index) = text.find('\n') { text.drain(..=index); }
+    }
+    Ok(text)
+}
+
+fn tagged_value(line: &str, key: &str) -> Option<String> {
+    let token = format!("{key}=");
+    let start = line.find(&token)? + token.len();
+    let rest = &line[start..];
+    let end = rest.find(char::is_whitespace).unwrap_or(rest.len());
+    let value = rest[..end].trim_matches(|c: char| c==',' || c==';').trim();
+    (!value.is_empty()).then(|| value.to_string())
+}
+
+#[tauri::command]
+fn runtime_probe_report() -> Result<RuntimeProbeReport, String> {
+    let (path, modified_at) = latest_studio_log()?;
+    let text = read_file_tail(&path, 2_000_000)?;
+    let mut milestones = BTreeSet::new();
+    let mut evidence = BTreeSet::new();
+    let mut latest_server_checkpoint = String::new();
+    let mut latest_client_checkpoint = String::new();
+    let mut latest_persistence_join = String::new();
+    let mut latest_persistence_leave = String::new();
+    let mut lines = Vec::new();
+
+    for raw in text.lines() {
+        if !(raw.contains("[RuntimeProbe]") || raw.contains("[PersistenceProbe]")) { continue; }
+        let line = raw.trim().to_string();
+        if line.contains("[RuntimeProbe][Server] MILESTONE") {
+            if let Some(name) = tagged_value(&line, "name") { milestones.insert(name); }
+        }
+        if line.contains("[RuntimeProbe][Server] EVIDENCE") && !line.contains("EVIDENCE_SUMMARY") {
+            if let Some(name) = tagged_value(&line, "name") { evidence.insert(name); }
+        }
+        if line.contains("[RuntimeProbe][Server] CHECKPOINT_") { latest_server_checkpoint = line.clone(); }
+        if line.contains("[RuntimeProbe][Client] CHECKPOINT_") { latest_client_checkpoint = line.clone(); }
+        if line.contains("[PersistenceProbe] JOIN") { latest_persistence_join = line.clone(); }
+        if line.contains("[PersistenceProbe] LEAVE") { latest_persistence_leave = line.clone(); }
+        lines.push(line);
+        if lines.len() > 160 { lines.remove(0); }
+    }
+
+    Ok(RuntimeProbeReport {
+        available: !lines.is_empty(),
+        path: path.to_string_lossy().to_string(),
+        modified_at,
+        milestones: milestones.into_iter().collect(),
+        evidence: evidence.into_iter().collect(),
+        latest_server_checkpoint,
+        latest_client_checkpoint,
+        latest_persistence_join,
+        latest_persistence_leave,
+        lines,
+    })
+}
+
 fn rojo_version(path: &Path) -> String {
     let mut command = Command::new(path);
     command.arg("--version");
@@ -1853,6 +1977,7 @@ pub fn run() {
             health_check,
             list_tasks,
             rojo_status,
+            runtime_probe_report,
             rojo_start,
             rojo_stop,
             rojo_build,
