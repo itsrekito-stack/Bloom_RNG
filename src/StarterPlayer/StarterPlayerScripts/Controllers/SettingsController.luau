@@ -1,5 +1,6 @@
 local UIS=game:GetService("UserInputService")
 local Lighting=game:GetService("Lighting")
+local RunService=game:GetService("RunService")
 
 local S={Connections={}}
 
@@ -287,6 +288,21 @@ function S.Render(ui,profile,uiState)
  if rollKey then rollKey.Text=tostring(settings.RollKey or "R") end
  bindKeybind(ui,openKey,"OpenMenuKey")
  bindKeybind(ui,rollKey,"RollKey")
+
+ local skipTutorial=find(runtime,"SkipTutorialButton","TextButton")
+ local replayTutorial=find(runtime,"ReplayTutorialButton","TextButton")
+ local studioReset=find(runtime,"StudioTutorialResetButton","TextButton")
+ if skipTutorial then bindPress(skipTutorial,function() ui:Send("Skip") end) end
+ if replayTutorial then bindPress(replayTutorial,function() ui:Send("Replay") end) end
+ if studioReset then
+  studioReset.Visible=RunService:IsStudio()
+  if RunService:IsStudio() then
+   bindPress(studioReset,function()
+    ui:Send("StudioTutorialReset")
+    ui:Close()
+   end)
+  end
+ end
 
  local reset=find(runtime,"ResetButton","TextButton")
  local apply=find(runtime,"ApplyButton","TextButton")
