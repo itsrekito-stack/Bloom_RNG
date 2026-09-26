@@ -152,6 +152,7 @@ function serialize(pretty=true){return JSON.stringify(stripNode(state.root),null
 function setRoot(raw,label="Модель загружена"){
  try{
   state.root=normalizeNode(raw);
+  const shouldOpenDefaultState=!state.activeUiState&&state.modelKey==="bloom";
   const safeRoot=(state.root.Children||[]).find(x=>x.Name==="SafeRoot"&&x.ClassName==="Frame");
   state.selectedId=(safeRoot||state.root).__id;
   state.selectedIds=new Set([state.selectedId]);
@@ -159,6 +160,13 @@ function setRoot(raw,label="Модель загружена"){
   state.history=[];state.future=[];state.dirty=false;state.modelLoadFailed=false;
   try{localStorage.setItem(lastGoodModelKey(),JSON.stringify(stripNode(state.root)))}catch{}
   const push=$("#pushBtn");if(push){push.disabled=false;push.title="Записать модель в игру"}
+  if(shouldOpenDefaultState){
+   state.activeUiState="gameplay";
+   state.mode="preview";
+   state.previewScene="gameplay";
+   selectStateRoot("gameplay");
+   syncToolbarFromState();
+  }
   syncInsetFromRoot();renderAll();toast(label);
  }catch(e){console.error("[Bloom UI Studio] model/render error",e);toast("Ошибка модели: "+e.message,true)}
 }
@@ -2193,7 +2201,15 @@ async function loadInitial(){
    const backup=localStorage.getItem(lastGoodModelKey());
    if(backup){try{state.root=normalizeNode(JSON.parse(backup));state.selectedId=state.root.__id;state.selectedIds=new Set([state.selectedId]);state.selectionAnchorId=state.selectedId;renderAll()}catch{}}
    const push=$("#pushBtn");if(push){push.disabled=true;push.title="Сначала выбери проект в RoFlow"}
-   toast("RoFlow: выбери папку Bloom_RNG, чтобы открыть модель",true);
+   const empty=$("#emptyCanvas");
+   if(empty){
+    empty.classList.remove("hidden");
+    const title=empty.querySelector("strong"),copy=empty.querySelector("span");
+    if(title)title.textContent="UI model failed to load";
+    if(copy)copy.textContent="RoFlow could not read "+state.targetPath+". Check the project connection or press Reload.";
+   }
+   console.error("[Bloom UI Studio] native model load failed",e);
+   toast("Не удалось загрузить UI: "+String(e),true);
    return;
   }
  }
@@ -2257,7 +2273,7 @@ $("#geometryToggle").onchange=e=>{state.geometry=e.target.checked;renderViewport
 $("#hiddenToggle").onchange=e=>{state.showHidden=e.target.checked;renderViewport();renderTree();updateOverlay();toast(state.showHidden?"Скрытые Roblox-объекты показаны только в редакторе":"Скрытые Roblox-объекты спрятаны");savePrefs()};
 $("#modeSelect").onchange=()=>{};
 $("#sceneSelect").onchange=()=>{};
- $("#uiStateBar")?.addEventListener("click",e=>{const b=e.target.closest("[data-ui-state]");if(b)activateUiState(b.dataset.uiState)});
+ $("#uiStateBar")?.addEventListener("click",e=>{const b=e.target.closest("[data-ui-state]");if(!b)return;activateUiState(b.dataset.uiState).catch(error=>{console.error("[Bloom UI Studio] state activation failed",error);toast("UI State не загрузился: "+String(error),true)})});
 $("#insetInput").onchange=e=>{state.inset=Math.max(0,+e.target.value);renderAll();savePrefs()};
 $("#bgBtn").onclick=()=>$("#bgInput").click();
 $("#bgClearBtn").onclick=()=>{els.device.style.backgroundImage="";els.device.style.backgroundColor="#182332";toast("Фон убран")};
