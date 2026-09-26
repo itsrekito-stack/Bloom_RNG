@@ -12,7 +12,6 @@ local F=require(RS.Config.FlowersConfig)
 local B=require(RS.Config.BeesConfig)
 local W=require(RS.Config.WorkshopConfig)
 local T=require(RS.Config.TutorialConfig)
-local Trials=require(RS.Config.BuildTrialConfig)
 local R=require(RS.Config.RarityConfig)
 local L=require(RS.Config.LocationsConfig)
 local Theme=require(RS.Config.UIThemeConfig)
@@ -1095,29 +1094,6 @@ function UI:RenderMenu(preserveInteraction)
   for id in pairs(p.World.LandmarkDiscoveries) do any=true self:Label(self.Content,"✓  "..id,32) end
   if not any then self:Label(self.Content,"Nothing discovered yet.",32) end
   self:Button(self.Content,"View Build Trials  •  start them at sector shrines",function() self:Open("Trials") end,Icons.Get("System","Quests"))
-
- elseif name=="Trials" then
-  self:Section(self.Content,"Build Trials")
-  local trialsUI=ui.Trials
-  if trialsUI and trialsUI.Active then
-   self:Label(self.Content,"ACTIVE  •  "..trialsUI.Active.Id.."  •  "..math.ceil(trialsUI.Active.TimeLeft or 0).."s",34)
-  end
-  if trialsUI and type(trialsUI.Items)=="table" then
-   for _,t in ipairs(trialsUI.Items) do
-    local hint=t.StartHint or (t.ReasonText and t.ReasonText or "")
-    local suffix=hint~="" and "  •  "..hint or ""
-    local advanced=t.Advanced and "ADVANCED  •  " or ""
-    local button=self:Button(self.Content,(t.Completed and "✓  " or "")..advanced..t.Name.."   •   "..t.Sector..suffix,function() self:Send("Trial",t.Id) end,Icons.Get("System","Quests"))
-    button.Active=t.CanStart==true
-   end
-  else
-   for id,t in pairs(Trials) do
-    local advancedLocked=t.Advanced and not p.WorkshopV5.Nodes.LEGACY_4
-    local prefix=t.Advanced and "ADVANCED  •  " or ""
-    local button=self:Button(self.Content,(p.Quests.Trials[id] and "✓  " or "")..prefix..t.Name.."   •   "..t.Sector,function() self:Send("Trial",id) end,Icons.Get("System","Quests"))
-    button.Active=not advancedLocked
-   end
-  end
 
  elseif name=="Season" then
   local preview=self.MenuArg
