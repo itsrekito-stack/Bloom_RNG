@@ -2089,7 +2089,7 @@ async function loadInitial(){
  }
  state.projectHandle=await loadHandle();
  try{
-  const r=await fetch("/src/StarterGui/BloomUI.model.json?ts="+Date.now(),{cache:"no-store"});
+  const r=await fetch("/"+state.targetPath.replace(/^\\/+/, "")+"?ts="+Date.now(),{cache:"no-store"});
   if(r.ok){
    const raw=await r.text();
    try{
@@ -2121,13 +2121,13 @@ async function loadInitial(){
     return;
    }
   }
-  throw new Error("BloomUI.model.json не найден");
+  throw new Error(state.targetPath+" not found");
  }catch(e){
   state.modelLoadFailed=true;
   const backup=localStorage.getItem(lastGoodModelKey());
   if(backup){try{state.root=normalizeNode(JSON.parse(backup));state.selectedId=state.root.__id;state.selectedIds=new Set([state.selectedId]);state.selectionAnchorId=state.selectedId;renderAll()}catch{}}
   const push=$("#pushBtn");if(push){push.disabled=true;push.title="Заблокировано: исходная модель не загружена"}
-  toast("Не удалось загрузить BloomUI.model.json. Сохранение заблокировано: "+e.message,true);
+  toast("Could not load "+state.targetPath+". Saving is blocked: "+e.message,true);
  }
 }
 
