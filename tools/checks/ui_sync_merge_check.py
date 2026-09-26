@@ -17,7 +17,7 @@ required={"ActiveBoostsHUD","ActiveBoostTooltip"}
 required_nested={"MinimizeButton"}
 workshop_required={
     "WorkshopTemplate","WorkshopBody","TreePanel","TreeCanvas","PanMap",
-    "NodeTooltip","WorkshopCurrencyBar","WorkshopPoints","PetalDust","AncientNectar",
+    "NodeTooltip","WorkshopCurrencyBar","WorkshopPoints","WorkshopCoins","WorkshopPetalDust","WorkshopAncientNectar",
 }
 
 def node(name,children=None,**props):
@@ -46,13 +46,13 @@ assert "MinimizeButton" in nested_names, "required nested minimize control was l
 base_workshop=node("WorkshopBody",[
     node("TreePanel"),
     node("NodeTooltip",[node("Branch"),node("Effect"),node("Cost")]),
-    node("WorkshopCurrencyBar",[node("WorkshopPoints"),node("PetalDust"),node("AncientNectar")]),
+    node("WorkshopCurrencyBar",[node("WorkshopPoints"),node("Coins"),node("PetalDust"),node("AncientNectar")]),
 ])
 local_workshop=node("WorkshopBody",[node("TreePanel")])
 remote_workshop=node("WorkshopBody",[
     node("TreePanel"),
     node("NodeTooltip",[node("Branch"),node("Effect"),node("Cost")],Active=False,Selectable=False,LayoutOrder=2),
-    node("WorkshopCurrencyBar",[node("WorkshopPoints"),node("PetalDust"),node("AncientNectar")]),
+    node("WorkshopCurrencyBar",[node("WorkshopPoints"),node("WorkshopCoins"),node("WorkshopPetalDust"),node("WorkshopAncientNectar")],Active=False,Selectable=False,LayoutOrder=1),
 ])
 merged_workshop=module.merge_remote_changes(base_workshop,local_workshop,remote_workshop)
 merged_workshop_names={x.get("Name") for x in merged_workshop["Children"]}
