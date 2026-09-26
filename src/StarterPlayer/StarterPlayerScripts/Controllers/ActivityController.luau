@@ -51,6 +51,26 @@ local function destroyItem(item)
  elseif item.Part then item.Part:Destroy() end
 end
 
+function S:RefreshCheckpointVisual(item)
+ if not item or not item.Label then return end
+ local tracked=self.TrackedId==item.Id
+ local prefix=tracked and "◆ TRACKED  •  " or ""
+ item.Label.Text=string.format("%s%s  •  %d/%d\nSTEP INTO CHECKPOINT",prefix,displayName(item.Kind),item.Index or 1,item.Count or 1)
+ item.Label.TextColor3=tracked and Color3.fromRGB(105,220,255) or Color3.fromRGB(235,244,252)
+ if item.Beam then
+  item.Beam.Width0=tracked and .28 or .16
+  item.Beam.Width1=tracked and .08 or .04
+ end
+ if item.Light then item.Light.Brightness=tracked and 1.7 or ((self.UI.State and self.UI.State.Profile.Settings.ReducedEffects) and .45 or 1) end
+end
+
+function S:SetTracked(id)
+ if id~=nil and not self.Items[id] then return false end
+ self.TrackedId=self.TrackedId==id and nil or id
+ for _,item in pairs(self.Items) do self:RefreshCheckpointVisual(item) end
+ return true
+end
+
 function S:GroundPosition(position)
  local params=RaycastParams.new()
  params.FilterType=Enum.RaycastFilterType.Exclude
@@ -177,6 +197,9 @@ function S:BuildCheckpoint(o)
   Core=core,
   Top=top,
   Label=label,
+  Id=o.Id,
+  Beam=beam,
+  Light=light,
   NodePosition=o.Position,
   Index=o.Index or 1,
   Count=o.Count or 1,
@@ -204,7 +227,7 @@ function S:UpdateCheckpoint(item,o)
  item.Part.CFrame=CFrame.new(ground)*CFrame.Angles(0,0,math.rad(90))
  item.Core.CFrame=CFrame.new(ground+Vector3.new(0,.06,0))*CFrame.Angles(0,0,math.rad(90))
  item.Top.Position=ground+Vector3.new(0,7,0)
- item.Label.Text=string.format("%s  •  %d/%d\nSTEP INTO CHECKPOINT",displayName(item.Kind),item.Index,item.Count)
+ self:RefreshCheckpointVisual(item)
 end
 
 function S:Init(ui)
@@ -249,6 +272,7 @@ function S:Update(list)
   if not item then
    item=self:BuildCheckpoint(o)
    self.Items[o.Id]=item
+   self:RefreshCheckpointVisual(item)
   else
    self:UpdateCheckpoint(item,o)
   end
@@ -333,6 +357,7 @@ function S:RemoveItem(id)
  if not item then return false end
  destroyItem(item)
  self.Items[id]=nil
+ if self.TrackedId==id then self.TrackedId=nil end
  return true
 end
 
