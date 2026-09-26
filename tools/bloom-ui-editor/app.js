@@ -2245,8 +2245,20 @@ for(const [id,side] of [["explorerResizer","explorer"],["inspectorResizer","insp
  });
 }
 els.stageScroller.addEventListener("wheel",e=>{
- if(!e.ctrlKey)return;e.preventDefault();
- setZoom(state.zoom*(e.deltaY<0?1.1:.9));
+ if(!e.deltaY)return;
+ e.preventDefault();
+ const rect=els.stageScroller.getBoundingClientRect();
+ const pointerX=e.clientX-rect.left,pointerY=e.clientY-rect.top;
+ const oldZoom=state.zoom;
+ const deviceLeft=els.device.offsetLeft,deviceTop=els.device.offsetTop;
+ const worldX=(els.stageScroller.scrollLeft+pointerX-deviceLeft)/oldZoom;
+ const worldY=(els.stageScroller.scrollTop+pointerY-deviceTop)/oldZoom;
+ const factor=e.deltaY<0?1.1:1/1.1;
+ const nextZoom=clamp(oldZoom*factor,.25,1.5);
+ if(nextZoom===oldZoom)return;
+ setZoom(nextZoom);
+ els.stageScroller.scrollLeft=els.device.offsetLeft+worldX*nextZoom-pointerX;
+ els.stageScroller.scrollTop=els.device.offsetTop+worldY*nextZoom-pointerY;
 },{passive:false});
 els.stageScroller.addEventListener("pointerdown",e=>{
  if(e.button!==1)return;e.preventDefault();
