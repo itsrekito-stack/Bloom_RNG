@@ -37,3 +37,12 @@ for forbidden in (
 
 print("PASS Studio runtime acceptance probes are Studio-gated, bounded and read-only")
 print("Covered evidence: core-loop milestones, frame time, memory, UI instance count, network counters and input activity.")
+
+need(server,'name=CharacterSpawned',"fresh-profile spawn evidence")
+need(server,'name=TutorialProgress',"tutorial onboarding evidence")
+need(server,'name=Multiplayer2Plus',"multiplayer server evidence")
+need(server,'EVIDENCE_SUMMARY',"server evidence summary")
+need(client,'otherPlayerCount()',"client multiplayer presence")
+need(client,'folderCount("LocalBees")',"client bee presentation evidence")
+need(client,'folderCount("LocalBloomCheckpoints")',"client activity presentation evidence")
+print("PASS onboarding and multiplayer evidence markers are present")
