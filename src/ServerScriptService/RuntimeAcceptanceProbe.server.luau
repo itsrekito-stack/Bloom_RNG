@@ -74,6 +74,10 @@ local function report(player,session,label)
   label,player.UserId,math.floor(os.clock()-session.Started),avg,percentile(samples,.95),session.MaxFrameMs,totalMemoryMb(),
   tostring(status.State),session.MilestoneCount,#MILESTONE_ORDER
  ))
+ print(string.format(
+  "[RuntimeProbe][Server] EVIDENCE_SUMMARY user=%d character=%s tutorial=%s multiplayer=%s players=%d",
+  player.UserId,tostring(session.Evidence.Character),tostring(session.Evidence.TutorialProgress),tostring(session.Evidence.Multiplayer),#Players:GetPlayers()
+ ))
 end
 
 local function start(player)
@@ -86,14 +90,27 @@ local function start(player)
   SecondFrameMs={},
   Milestones={},
   MilestoneCount=0,
+  Evidence={Character=false,TutorialProgress=false,Multiplayer=false},
   CheckpointIndex=1,
  }
  sessions[player]=session
 
  task.spawn(function()
   while player.Parent==Players do
+   if not session.Evidence.Character and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+    session.Evidence.Character=true
+    print(string.format("[RuntimeProbe][Server] EVIDENCE user=%d name=CharacterSpawned elapsed=%.1fs",player.UserId,os.clock()-session.Started))
+   end
+   if not session.Evidence.Multiplayer and #Players:GetPlayers()>=2 then
+    session.Evidence.Multiplayer=true
+    print(string.format("[RuntimeProbe][Server] EVIDENCE user=%d name=Multiplayer2Plus elapsed=%.1fs players=%d",player.UserId,os.clock()-session.Started,#Players:GetPlayers()))
+   end
    local profile=Data:GetProfile(player)
    if profile then
+    if not session.Evidence.TutorialProgress and profile.Tutorial and (profile.Tutorial.Step or 1)>1 then
+     session.Evidence.TutorialProgress=true
+     print(string.format("[RuntimeProbe][Server] EVIDENCE user=%d name=TutorialProgress elapsed=%.1fs step=%d",player.UserId,os.clock()-session.Started,profile.Tutorial.Step))
+    end
     local state=coreState(profile)
     for _,name in ipairs(MILESTONE_ORDER) do
      if state[name] and not session.Milestones[name] then
