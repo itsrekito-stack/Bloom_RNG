@@ -10,7 +10,10 @@ const state={
  tasks:[],
  health:null,
  rojo:null,
- planner:null
+ planner:null,
+ updateChecked:false,
+ updateChecking:false,
+ updateInstalling:false
 };
 
 const escapeHtml=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[char]));
@@ -27,6 +30,40 @@ function log(message){
 
 function requireProject(){
  if(!state.root)throw new Error("Choose a project first");
+}
+
+function updateBadge(text,tone="muted"){
+ const badge=$("#updateBadge");if(!badge)return;
+ badge.textContent=text;
+ badge.className="pill "+(tone==="ready"?"":"muted-pill");
+ if(tone==="ready")badge.style.color="#66e0a6";
+ else if(tone==="warn")badge.style.color="#ffbe40";
+ else badge.style.color="";
+}
+
+async function maybeAutoUpdate(){
+ if(!state.root||state.updateChecked||state.updateChecking||state.updateInstalling)return;
+ state.updateChecking=true;
+ updateBadge("CHECKING UPDATE");
+ try{
+  const info=await invoke("roflow_update_status");
+  state.updateChecked=true;
+  if(!info.available){
+   updateBadge("AUTO UPDATE ON","ready");
+   log("RoFlow auto update: current build "+shortSha(info.currentBuild));
+   return;
+  }
+  state.updateInstalling=true;
+  updateBadge("UPDATING "+(info.latestVersion||""),"warn");
+  log("RoFlow update found: "+shortSha(info.currentBuild)+" → "+shortSha(info.latestBuild)+". Installing automatically…");
+  await invoke("roflow_install_update");
+ }catch(error){
+  state.updateChecked=true;
+  updateBadge("AUTO UPDATE RETRY");
+  log("RoFlow auto update check skipped: "+error);
+ }finally{
+  state.updateChecking=false;
+ }
 }
 
 function applyStatus(status){
@@ -194,6 +231,7 @@ async function connectRoot(path){
  await Promise.all([refreshBackups(),refreshTasks(),refreshRojo(),refreshPlanner()]);
  if(state.studioLoaded)await ensureUiStudio(true);
  log("Project connected: "+path);
+ setTimeout(()=>maybeAutoUpdate(),350);
  return status;
 }
 

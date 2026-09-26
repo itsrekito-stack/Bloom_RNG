@@ -1,6 +1,6 @@
 # RoFlow
 
-**Current desktop milestone: v0.005.**
+**Current desktop milestone: v0.008.**
 
 RoFlow — desktop-инструмент для рабочего цикла:
 
@@ -107,3 +107,14 @@ RoFlow keeps local Git-backed checkpoints in a separate **Backups** window.
 - Чекбоксы сохраняются в `.roflow/planner.json`.
 - При смене календарного дня предыдущий Today сохраняется в локальной истории, а новый день получает свежий focus list.
 - Planner metadata не попадает в Git и не изменяет gameplay-код.
+
+
+## v0.008 — Auto Update
+
+- RoFlow checks a dedicated Git-backed update channel automatically after the project is connected.
+- The updater uses the existing authenticated `origin` remote; no GitHub token is stored in RoFlow.
+- GitHub Actions publishes only `latest.json` and the newest signed-by-build-pipeline NSIS installer to the `roflow-update` branch.
+- The installer is staged in the Windows temp directory and verified with SHA-256 before launch.
+- Update installation is silent; RoFlow exits, installs the newer build, and restarts itself.
+- The update channel is isolated from `main`, so installer binaries do not bloat gameplay/source history.
+- The first build containing v0.008 must still be installed manually once. Future desktop builds update automatically.

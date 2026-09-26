@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
+use sha2::{Digest, Sha256};
 use std::{
     collections::{BTreeSet, HashMap},
     env,
@@ -178,6 +179,36 @@ struct ActionResult {
     path: String,
 }
 
+#[derive(Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateManifest {
+    version: String,
+    installer_version: String,
+    source_sha: String,
+    sha256: String,
+    filename: String,
+    published_at: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateStatus {
+    available: bool,
+    current_version: String,
+    current_build: String,
+    latest_version: String,
+    latest_build: String,
+    installer_version: String,
+    published_at: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateInstallResult {
+    source_sha: String,
+    installer_path: String,
+}
+
 
 #[cfg(target_os = "windows")]
 fn hide_console(command: &mut Command) {
@@ -219,6 +250,66 @@ fn git_env(root: &Path, args: &[&str], envs: &[(&str, &str)]) -> Result<String, 
         return Err(if !stderr.is_empty() { stderr } else { stdout });
     }
     Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
+const UPDATE_REMOTE_REF: &str = "refs/remotes/origin/roflow-update";
+const UPDATE_INSTALLER_NAME: &str = "RoFlow-latest.exe";
+
+fn roflow_build_sha() -> &'static str {
+    option_env!("ROFLOW_BUILD_SHA").unwrap_or("dev")
+}
+
+fn fetch_update_manifest(root: &Path) -> Result<UpdateManifest, String> {
+    git(
+        root,
+        &[
+            "fetch",
+            "origin",
+            "+refs/heads/roflow-update:refs/remotes/origin/roflow-update",
+            "--force",
+            "--quiet",
+        ],
+    )?;
+    let raw = git(root, &["show", &format!("{UPDATE_REMOTE_REF}:latest.json")])?;
+    let manifest: UpdateManifest =
+        serde_json::from_str(&raw).map_err(|e| format!("Invalid RoFlow update manifest: {e}"))?;
+    if manifest.filename != UPDATE_INSTALLER_NAME {
+        return Err("RoFlow update manifest points to an unexpected installer".into());
+    }
+    if manifest.source_sha.len() != 40
+        || !manifest.source_sha.chars().all(|c| c.is_ascii_hexdigit())
+        || manifest.sha256.len() != 64
+        || !manifest.sha256.chars().all(|c| c.is_ascii_hexdigit())
+    {
+        return Err("RoFlow update manifest failed validation".into());
+    }
+    Ok(manifest)
+}
+
+fn git_blob(root: &Path, spec: &str) -> Result<Vec<u8>, String> {
+    let mut command = Command::new("git");
+    command.args(["show", spec]).current_dir(root);
+    hide_console(&mut command);
+    let out = command
+        .output()
+        .map_err(|e| format!("Failed to start git: {e}"))?;
+    if !out.status.success() {
+        let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
+        return Err(if stderr.is_empty() {
+            "Failed to read RoFlow update installer from Git".into()
+        } else {
+            stderr
+        });
+    }
+    Ok(out.stdout)
+}
+
+fn sha256_hex(bytes: &[u8]) -> String {
+    format!("{:x}", Sha256::digest(bytes))
+}
+
+fn ps_literal(path: &Path) -> String {
+    path.to_string_lossy().replace(''', "''")
 }
 
 fn roflow_dir(root: &Path) -> PathBuf {
@@ -1569,6 +1660,85 @@ async fn open_backups_window(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn roflow_update_status(state: State<AppState>) -> Result<UpdateStatus, String> {
+    let root = current_root(&state)?;
+    let manifest = fetch_update_manifest(&root)?;
+    let current_build = roflow_build_sha().to_string();
+    Ok(UpdateStatus {
+        available: current_build != manifest.source_sha,
+        current_version: env!("CARGO_PKG_VERSION").to_string(),
+        current_build,
+        latest_version: manifest.version.clone(),
+        latest_build: manifest.source_sha.clone(),
+        installer_version: manifest.installer_version.clone(),
+        published_at: manifest.published_at.clone(),
+    })
+}
+
+#[tauri::command]
+fn roflow_install_update(app: AppHandle, state: State<AppState>) -> Result<UpdateInstallResult, String> {
+    let root = current_root(&state)?;
+    let manifest = fetch_update_manifest(&root)?;
+    if roflow_build_sha() == manifest.source_sha {
+        return Err("RoFlow is already current".into());
+    }
+
+    let spec = format!("{UPDATE_REMOTE_REF}:{}", manifest.filename);
+    let bytes = git_blob(&root, &spec)?;
+    let digest = sha256_hex(&bytes);
+    if !digest.eq_ignore_ascii_case(&manifest.sha256) {
+        return Err("RoFlow update installer checksum mismatch".into());
+    }
+
+    let update_dir = env::temp_dir().join("roflow-updates");
+    fs::create_dir_all(&update_dir).map_err(|e| format!("Failed to create update folder: {e}"))?;
+    let short = manifest.source_sha.get(..8).unwrap_or("latest");
+    let installer = update_dir.join(format!("RoFlow-{short}-setup.exe"));
+    fs::write(&installer, &bytes).map_err(|e| format!("Failed to stage RoFlow update: {e}"))?;
+    let current_exe = env::current_exe().map_err(|e| format!("Failed to locate RoFlow executable: {e}"))?;
+    let script_path = update_dir.join(format!("install-{short}.ps1"));
+
+    #[cfg(target_os = "windows")]
+    {
+        let script = format!(
+            "$ErrorActionPreference='Stop'\nStart-Sleep -Milliseconds 900\n$installer='{}'\n$app='{}'\n$p=Start-Process -FilePath $installer -ArgumentList '/S' -Wait -PassThru\nif($p.ExitCode -eq 0){{Start-Sleep -Milliseconds 500;Start-Process -FilePath $app}}\n",
+            ps_literal(&installer),
+            ps_literal(&current_exe),
+        );
+        fs::write(&script_path, script).map_err(|e| format!("Failed to create update launcher: {e}"))?;
+        let mut command = Command::new("powershell.exe");
+        command.args([
+            "-NoLogo",
+            "-NoProfile",
+            "-WindowStyle",
+            "Hidden",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+        ]);
+        command.arg(&script_path);
+        hide_console(&mut command);
+        command
+            .spawn()
+            .map_err(|e| format!("Failed to launch RoFlow updater: {e}"))?;
+
+        let result = UpdateInstallResult {
+            source_sha: manifest.source_sha,
+            installer_path: installer.to_string_lossy().to_string(),
+        };
+        app.exit(0);
+        Ok(result)
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = app;
+        let _ = script_path;
+        Err("RoFlow auto-update is currently supported on Windows only".into())
+    }
+}
+
+#[tauri::command]
 fn ui_studio_document(state: State<AppState>) -> Result<String, String> {
     let root = current_root(&state)?;
     let editor = root.join("tools").join("bloom-ui-editor");
@@ -1676,6 +1846,8 @@ pub fn run() {
             create_backup,
             restore_backup,
             open_backups_window,
+            roflow_update_status,
+            roflow_install_update,
             ui_studio_document,
             roblox_thumbnail_url
         ])
