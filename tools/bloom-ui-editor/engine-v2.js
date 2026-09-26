@@ -60,6 +60,7 @@ class BloomEditorEngineV2{
   this.byId=new Map();
   this.imageCache=new Map();
   this.model=null;
+  this.suspended=false;
   this.view={viewport:{w:1366,h:768},zoom:1,inset:0,showHidden:true,labels:false,selectedIds:new Set()};
   this.pointer={x:0,y:0,hit:null};
   this._onPointerDown=event=>this.onPointerDown(event);
@@ -73,6 +74,24 @@ class BloomEditorEngineV2{
   this.canvas.removeEventListener("pointerdown",this._onPointerDown);
   this.canvas.removeEventListener("pointermove",this._onPointerMove);
   this.scene=[];this.byId.clear();this.imageCache.clear();
+  this.canvas.width=1;this.canvas.height=1;
+  if(this.proxyHost)this.proxyHost.innerHTML="";
+ }
+ suspend(){
+  if(this.suspended)return;
+  this.suspended=true;
+  this.scene=[];this.byId.clear();this.imageCache.clear();
+  if(this.proxyHost)this.proxyHost.innerHTML="";
+  this.canvas.width=1;this.canvas.height=1;
+ }
+ resume(){
+  if(!this.suspended)return;
+  this.suspended=false;
+  if(!this.model)return;
+  this.resizeSurface();
+  this.buildScene();
+  this.syncProxies();
+  this.paint();
  }
  render(payload){
   this.model=payload.root||null;
@@ -86,6 +105,7 @@ class BloomEditorEngineV2{
    activeUiState:payload.activeUiState||null,
    previewScene:payload.previewScene||null
   };
+  if(this.suspended)return;
   this.resizeSurface();
   this.buildScene();
   this.syncProxies();
@@ -93,7 +113,8 @@ class BloomEditorEngineV2{
  }
  resizeSurface(){
   const w=this.view.viewport.w,h=this.view.viewport.h;
-  const dpr=Math.min(2.5,Math.max(1,window.devicePixelRatio||1)*Math.max(1,Math.min(this.view.zoom,1.5)));
+  const nativeCap=window.__ROFLOW_EMBEDDED__===true?1.35:2;
+  const dpr=Math.min(nativeCap,Math.max(1,window.devicePixelRatio||1)*Math.max(1,Math.min(this.view.zoom,1.35)));
   const width=Math.max(1,Math.round(w*dpr)),height=Math.max(1,Math.round(h*dpr));
   if(this.canvas.width!==width)this.canvas.width=width;
   if(this.canvas.height!==height)this.canvas.height=height;
@@ -257,6 +278,7 @@ class BloomEditorEngineV2{
   return Math.max(0,value[0]*Math.min(item.rect.w,item.rect.h)+value[1]);
  }
  paint(){
+  if(this.suspended)return;
   const ctx=this.ctx,w=this.view.viewport.w,h=this.view.viewport.h;
   ctx.save();ctx.setTransform(this.pixelRatio,0,0,this.pixelRatio,0,0);ctx.clearRect(0,0,w,h);
   for(const item of this.scene)this.paintItem(item);
@@ -300,6 +322,11 @@ class BloomEditorEngineV2{
   if(!key)return;
   let entry=this.imageCache.get(key);
   if(!entry){
+   while(this.imageCache.size>=96){
+    const oldest=this.imageCache.keys().next().value;
+    if(oldest===undefined)break;
+    this.imageCache.delete(oldest);
+   }
    entry={state:"loading",img:null};this.imageCache.set(key,entry);
    Promise.resolve(this.adapter.resolveImage?this.adapter.resolveImage(item.node,item.parentNode):"").then(url=>{
     if(!url){entry.state="empty";return}
