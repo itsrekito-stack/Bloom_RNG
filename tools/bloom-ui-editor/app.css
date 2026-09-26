@@ -1086,3 +1086,20 @@ html.roflow-native .prop-row textarea{border-radius:5px;background:#070e15;borde
 
 /* Canvas gesture ownership: WebView page zoom is disabled; UI Studio owns pan/pinch. */
 .stage-scroller{touch-action:none;overscroll-behavior:contain}
+
+
+.pattern-drawer summary small{margin-left:auto;color:#42647d;font-size:6px;letter-spacing:.12em}
+.pattern-palette{max-height:290px;overflow:auto;padding:6px;display:grid;grid-template-columns:1fr;gap:4px;scrollbar-width:thin}
+.pattern-palette button{
+ min-height:42px;padding:5px 7px;display:grid;grid-template-columns:29px 1fr;align-items:center;gap:7px;
+ border:1px solid #1c3041;border-radius:7px;background:#0b1620;color:#94aabd;text-align:left
+}
+.pattern-palette button:hover{border-color:#347099;background:#112536;color:#e7f6ff}
+.pattern-palette button>i{
+ width:29px;height:29px;border-radius:7px;display:grid;place-items:center;background:#10273a;border:1px solid #244a66;
+ color:#6fc1f7;font-style:normal;font-size:14px;font-weight:900
+}
+.pattern-palette button>span{display:flex;min-width:0;flex-direction:column;gap:2px}
+.pattern-palette button b{font-size:8px;color:#d8e8f4}
+.pattern-palette button small{font-size:7px;color:#557085;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.roflow-native .pattern-palette{max-height:250px}
