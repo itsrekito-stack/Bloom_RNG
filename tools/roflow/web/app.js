@@ -13,6 +13,7 @@ const state={
  health:null,
  rojo:null,
  planner:null,
+ runtimeGate:null,
  updateChecked:false,
  updateLastChecked:0,
  updateLastBuild:"",
@@ -129,6 +130,7 @@ function bindPlannerCheckboxes(){
 }
 function renderPlanner(planner){
  state.planner=planner;
+ renderReleaseGate();
  const today=plannerCounts(planner.today),release=plannerCounts(planner.roadmap);
  $("#plannerDate").textContent=planner.todayDate||localPlannerDate();
  $("#plannerBadge").textContent=`${today.done}/${today.total}`;
@@ -243,6 +245,38 @@ function setQaEvidence(selector,ready,label,detail=""){
  node.classList.toggle("ready",ready);
  node.textContent=label+" · "+(ready?"EVIDENCE READY":detail||"WAITING");
 }
+const RELEASE_MANUAL_GATE_IDS=[
+ "release-bug-zero",
+ "release-publish-config",
+ "release-store-page",
+ "release-private-alpha",
+ "release-rc-fixes"
+];
+function renderReleaseGate(){
+ const runtime=state.runtimeGate||{};
+ const runtimeChecks=[
+  runtime.coreReady===true,
+  runtime.persistenceReady===true,
+  runtime.baselineReady===true,
+  runtime.onboardingReady===true,
+  runtime.multiplayerReady===true,
+  runtime.soakReady===true
+ ];
+ const runtimeDone=runtimeChecks.filter(Boolean).length;
+ const roadmap=state.planner?.roadmap||[];
+ const byId=new Map(roadmap.map(task=>[task.id,task]));
+ const manualTasks=RELEASE_MANUAL_GATE_IDS.map(id=>byId.get(id)).filter(Boolean);
+ const manualDone=manualTasks.filter(task=>task.done===true).length;
+ const manualReady=manualTasks.length===RELEASE_MANUAL_GATE_IDS.length&&manualDone===RELEASE_MANUAL_GATE_IDS.length;
+ const ready=runtimeDone===runtimeChecks.length&&manualReady;
+ const total=runtimeChecks.length+RELEASE_MANUAL_GATE_IDS.length;
+ const complete=runtimeDone+manualDone;
+ const gate=$("#releaseGate"),stateNode=$("#releaseGateState"),detail=$("#releaseGateDetail"),bar=$("#releaseGateBar");
+ if(gate)gate.classList.toggle("ready",ready);
+ if(stateNode)stateNode.textContent=ready?"READY FOR FINAL CHECKPOINT":"BLOCKED";
+ if(detail)detail.textContent=`Runtime evidence ${runtimeDone}/${runtimeChecks.length} · manual release checks ${manualDone}/${RELEASE_MANUAL_GATE_IDS.length}${ready?" · final checkpoint can begin":""}`;
+ if(bar)bar.style.width=Math.round(complete/total*100)+"%";
+}
 function renderRuntimeProbe(report){
  const milestones=report?.milestones||[],evidence=report?.evidence||[],minutes=report?.checkpointMinutes||[];
  const milestoneSet=new Set(milestones),evidenceSet=new Set(evidence);
@@ -252,12 +286,15 @@ function renderRuntimeProbe(report){
  const onboardingReady=evidenceSet.has("CharacterSpawned")&&evidenceSet.has("TutorialProgress")&&milestoneSet.has("Bee")&&milestoneSet.has("Roll");
  const multiplayerReady=evidenceSet.has("Multiplayer2Plus");
  const soakCount=[15,30,60].filter(x=>minutes.includes(x)).length;
+ const soakReady=soakCount===3;
+ state.runtimeGate={coreReady,persistenceReady,baselineReady,onboardingReady,multiplayerReady,soakReady};
+ renderReleaseGate();
  setQaEvidence("#qaCoreEvidence",coreReady,"CORE LOOP");
  setQaEvidence("#qaPersistenceEvidence",persistenceReady,"PERSISTENCE");
  setQaEvidence("#qaBaselineEvidence",baselineReady,"10M BASELINE");
  setQaEvidence("#qaOnboardingEvidence",onboardingReady,"ONBOARDING");
  setQaEvidence("#qaMultiplayerEvidence",multiplayerReady,"MULTIPLAYER");
- setQaEvidence("#qaSoakEvidence",soakCount===3,"SOAK",soakCount+"/3 CHECKPOINTS");
+ setQaEvidence("#qaSoakEvidence",soakReady,"SOAK",soakCount+"/3 CHECKPOINTS");
  const milestoneNode=$("#runtimeMilestones");
  milestoneNode.textContent=(milestones.length>=7?"7/7 PASS · ":milestones.length+"/7 · ")+(milestones.length?milestones.join(", "):"waiting");
  milestoneNode.style.color=milestones.length>=7?"#66e0a6":"";
@@ -281,6 +318,8 @@ async function refreshRuntimeProbe(silent=false){
   const report=await invoke("runtime_probe_report");
   renderRuntimeProbe(report);
  }catch(error){
+  state.runtimeGate=null;
+  renderReleaseGate();
   if(!silent)log("Runtime probe read failed: "+error);
   $("#runtimeProbeMeta").textContent=String(error);
   $("#runtimeProbeOutput").textContent="Start a Roblox Studio Play session after AI SYNC to collect probe output.";
