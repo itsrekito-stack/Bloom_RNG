@@ -33116,6 +33116,404 @@
               }
             }
           ]
+        },
+        {
+          "ClassName": "Frame",
+          "Name": "WorldUIPrototypes",
+          "Properties": {
+            "AnchorPoint": {
+              "Vector2": [
+                0.5,
+                0.5
+              ]
+            },
+            "Position": {
+              "UDim2": [
+                [
+                  0.5,
+                  0
+                ],
+                [
+                  0.5,
+                  0
+                ]
+              ]
+            },
+            "Size": {
+              "UDim2": [
+                [
+                  0,
+                  520
+                ],
+                [
+                  0,
+                  210
+                ]
+              ]
+            },
+            "BackgroundColor3": [
+              0.028,
+              0.047,
+              0.074
+            ],
+            "BackgroundTransparency": 0.025,
+            "BorderSizePixel": 0,
+            "Visible": false,
+            "ZIndex": 100,
+            "ClipsDescendants": false
+          },
+          "Children": [
+            {
+              "ClassName": "UICorner",
+              "Name": "UICorner",
+              "Properties": {
+                "CornerRadius": {
+                  "UDim": [
+                    0,
+                    16
+                  ]
+                }
+              }
+            },
+            {
+              "ClassName": "UIStroke",
+              "Name": "UIStroke",
+              "Properties": {
+                "Color": [
+                  0.08,
+                  0.36,
+                  0.59
+                ],
+                "Thickness": 2,
+                "Transparency": 0.08,
+                "ApplyStrokeMode": "Border"
+              }
+            },
+            {
+              "ClassName": "TextLabel",
+              "Name": "Title",
+              "Properties": {
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      18
+                    ],
+                    [
+                      0,
+                      12
+                    ]
+                  ]
+                },
+                "Size": {
+                  "UDim2": [
+                    [
+                      1,
+                      -36
+                    ],
+                    [
+                      0,
+                      24
+                    ]
+                  ]
+                },
+                "BackgroundTransparency": 1,
+                "BorderSizePixel": 0,
+                "Text": "WORLD UI PROTOTYPES",
+                "TextColor3": [
+                  0.19,
+                  0.73,
+                  1
+                ],
+                "TextSize": 11,
+                "TextXAlignment": "Left",
+                "TextYAlignment": "Center",
+                "Font": "GothamBold",
+                "Visible": true,
+                "ZIndex": 101
+              }
+            },
+            {
+              "ClassName": "TextLabel",
+              "Name": "Hint",
+              "Properties": {
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      18
+                    ],
+                    [
+                      0,
+                      34
+                    ]
+                  ]
+                },
+                "Size": {
+                  "UDim2": [
+                    [
+                      1,
+                      -36
+                    ],
+                    [
+                      0,
+                      20
+                    ]
+                  ]
+                },
+                "BackgroundTransparency": 1,
+                "BorderSizePixel": 0,
+                "Text": "These authored labels are cloned into runtime BillboardGui targets.",
+                "TextColor3": [
+                  0.45,
+                  0.55,
+                  0.65
+                ],
+                "TextSize": 8,
+                "TextXAlignment": "Left",
+                "TextYAlignment": "Center",
+                "Font": "Gotham",
+                "Visible": true,
+                "ZIndex": 101
+              }
+            },
+            {
+              "ClassName": "Frame",
+              "Name": "TutorialWorldBillboard",
+              "Properties": {
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      18
+                    ],
+                    [
+                      0,
+                      70
+                    ]
+                  ]
+                },
+                "Size": {
+                  "UDim2": [
+                    [
+                      0,
+                      224
+                    ],
+                    [
+                      0,
+                      112
+                    ]
+                  ]
+                },
+                "BackgroundColor3": [
+                  0.035,
+                  0.055,
+                  0.086
+                ],
+                "BackgroundTransparency": 0.04,
+                "BorderSizePixel": 0,
+                "Visible": true,
+                "ZIndex": 101
+              },
+              "Children": [
+                {
+                  "ClassName": "UICorner",
+                  "Name": "UICorner",
+                  "Properties": {
+                    "CornerRadius": {
+                      "UDim": [
+                        0,
+                        12
+                      ]
+                    }
+                  }
+                },
+                {
+                  "ClassName": "UIStroke",
+                  "Name": "UIStroke",
+                  "Properties": {
+                    "Color": [
+                      1,
+                      0.73,
+                      0.18
+                    ],
+                    "Thickness": 1.5,
+                    "Transparency": 0.14,
+                    "ApplyStrokeMode": "Border"
+                  }
+                },
+                {
+                  "ClassName": "TextLabel",
+                  "Name": "TutorialWorldLabelTemplate",
+                  "Properties": {
+                    "Size": {
+                      "UDim2": [
+                        [
+                          1,
+                          0
+                        ],
+                        [
+                          1,
+                          0
+                        ]
+                      ]
+                    },
+                    "Position": {
+                      "UDim2": [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          0,
+                          0
+                        ]
+                      ]
+                    },
+                    "BackgroundTransparency": 1,
+                    "BorderSizePixel": 0,
+                    "Text": "TARGET\n▼",
+                    "TextColor3": [
+                      1,
+                      0.73,
+                      0.18
+                    ],
+                    "TextStrokeColor3": [
+                      0.025,
+                      0.04,
+                      0.06
+                    ],
+                    "TextStrokeTransparency": 0.22,
+                    "TextSize": 19,
+                    "TextWrapped": true,
+                    "TextXAlignment": "Center",
+                    "TextYAlignment": "Center",
+                    "Font": "GothamBold",
+                    "Visible": true,
+                    "ZIndex": 103
+                  }
+                }
+              ]
+            },
+            {
+              "ClassName": "Frame",
+              "Name": "ActivityCheckpointBillboard",
+              "Properties": {
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      258
+                    ],
+                    [
+                      0,
+                      70
+                    ]
+                  ]
+                },
+                "Size": {
+                  "UDim2": [
+                    [
+                      0,
+                      244
+                    ],
+                    [
+                      0,
+                      112
+                    ]
+                  ]
+                },
+                "BackgroundColor3": [
+                  0.035,
+                  0.055,
+                  0.086
+                ],
+                "BackgroundTransparency": 0.04,
+                "BorderSizePixel": 0,
+                "Visible": true,
+                "ZIndex": 101
+              },
+              "Children": [
+                {
+                  "ClassName": "UICorner",
+                  "Name": "UICorner",
+                  "Properties": {
+                    "CornerRadius": {
+                      "UDim": [
+                        0,
+                        12
+                      ]
+                    }
+                  }
+                },
+                {
+                  "ClassName": "UIStroke",
+                  "Name": "UIStroke",
+                  "Properties": {
+                    "Color": [
+                      0.19,
+                      0.73,
+                      1
+                    ],
+                    "Thickness": 1.5,
+                    "Transparency": 0.18,
+                    "ApplyStrokeMode": "Border"
+                  }
+                },
+                {
+                  "ClassName": "TextLabel",
+                  "Name": "ActivityCheckpointLabelTemplate",
+                  "Properties": {
+                    "Size": {
+                      "UDim2": [
+                        [
+                          1,
+                          0
+                        ],
+                        [
+                          1,
+                          0
+                        ]
+                      ]
+                    },
+                    "Position": {
+                      "UDim2": [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          0,
+                          0
+                        ]
+                      ]
+                    },
+                    "BackgroundTransparency": 1,
+                    "BorderSizePixel": 0,
+                    "Text": "SOLAR BLOOM  •  1/3\nSTEP INTO CHECKPOINT",
+                    "TextColor3": [
+                      0.96,
+                      0.972,
+                      1
+                    ],
+                    "TextStrokeColor3": [
+                      0.025,
+                      0.04,
+                      0.06
+                    ],
+                    "TextStrokeTransparency": 0.22,
+                    "TextSize": 14,
+                    "TextWrapped": true,
+                    "TextXAlignment": "Center",
+                    "TextYAlignment": "Center",
+                    "Font": "GothamBold",
+                    "Visible": true,
+                    "ZIndex": 103
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     }
