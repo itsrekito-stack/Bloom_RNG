@@ -151,7 +151,7 @@ check('UI Studio state rail uses Bloom icons','data-asset-id=' in editor_html an
 check('RoFlow native UI Studio injection is version agnostic','appScript=/<script src=' in roflow_ui_sync and '__ROFLOW_EMBEDDED__=true' in roflow_ui_sync and 'app.js?v=8' not in roflow_ui_sync)
 check('UI Studio thumbnails use native bridge','roflow-asset:' in editor_source and 'nativeThumbnail(assetId)' in editor_source and 'roblox_thumbnail_url' in editor_source)
 check('RoFlow serves UI Studio live from project','fn ui_studio_document(state: State<AppState>)' in roflow_rust and 'tools").join("bloom-ui-editor' in roflow_rust and 'ui_studio_document,' in roflow_rust)
-check('RoFlow reloads live UI Studio after AI Sync','const documentHtml=await invoke("ui_studio_document")' in roflow_web and 'frame.srcdoc=documentHtml' in roflow_web and 'if(state.studioLoaded)await ensureUiStudio(true)' in roflow_web)
+check('RoFlow reloads live UI Studio after AI Sync','const documentHtml=await invoke("ui_studio_document")' in roflow_web and 'frame.srcdoc=documentHtml' in roflow_web and 'if(state.currentPage==="ui")await ensureUiStudio(true)' in roflow_web and 'unloadUiStudio("AI Sync while inactive")' in roflow_web)
 check('RoFlow keeps bundled UI Studio as fallback','frame.src="./ui-studio/index.html?ts="+Date.now()' in roflow_web and 'Bundled UI Studio fallback loaded' in roflow_web)
 check('Inventory v2 rerender follows renderer','controller.MenuRenderer=="InventoryV2"' in inventory_v2_source)
 check('Inventory v2 binds authoritative inventory','uiState.Inventory' in inventory_v2_source and 'controller:Send("Dissolve"' in inventory_v2_source and 'controller:Send("EquipBee"' in inventory_v2_source)
