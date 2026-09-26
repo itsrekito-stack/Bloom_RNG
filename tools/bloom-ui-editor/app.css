@@ -853,8 +853,11 @@ button{cursor:pointer}
 }
 .ui-state-btn b{
  width:24px;height:26px;border-radius:7px;display:grid;place-items:center;
- background:#0f1924;border:1px solid #1b2c3d;color:#89a0b4;font-size:13px;font-weight:600
+ background:#0f1924;border:1px solid #1b2c3d;color:#89a0b4;font-size:13px;font-weight:600;overflow:hidden
 }
+.ui-state-btn b img{width:18px;height:18px;object-fit:contain;display:block;opacity:.72;filter:saturate(.86) brightness(.9);transition:.12s ease}
+.ui-state-btn:hover b img{opacity:1;filter:saturate(1) brightness(1.08)}
+.ui-state-btn.active b img{opacity:1;filter:saturate(1.12) brightness(1.12) drop-shadow(0 0 5px rgba(83,173,255,.25))}
 .ui-state-btn:hover{background:#0d1823;color:#dbeaf6;border-color:#172c3f}
 .ui-state-btn:hover b{border-color:#2d526f;color:#79c2ff}
 .ui-state-btn.active{background:#10253a;color:#f2f9ff;border-color:#244a69}
