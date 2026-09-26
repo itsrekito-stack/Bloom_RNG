@@ -1569,6 +1569,52 @@ async fn open_backups_window(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn ui_studio_document(state: State<AppState>) -> Result<String, String> {
+    let root = current_root(&state)?;
+    let editor = root.join("tools").join("bloom-ui-editor");
+    let html_path = editor.join("index.html");
+    let css_path = editor.join("app.css");
+    let js_path = editor.join("app.js");
+
+    let mut html = fs::read_to_string(&html_path)
+        .map_err(|e| format!("Failed to read {}: {e}", html_path.display()))?;
+    let css = fs::read_to_string(&css_path)
+        .map_err(|e| format!("Failed to read {}: {e}", css_path.display()))?;
+    let js = fs::read_to_string(&js_path)
+        .map_err(|e| format!("Failed to read {}: {e}", js_path.display()))?;
+
+    let css_link_start = html
+        .find("<link rel=\"stylesheet\"")
+        .ok_or_else(|| "UI Studio stylesheet tag is missing".to_string())?;
+    let css_link_end = html[css_link_start..]
+        .find('>')
+        .map(|offset| css_link_start + offset + 1)
+        .ok_or_else(|| "UI Studio stylesheet tag is malformed".to_string())?;
+    let safe_css = css.replace("</style>", "<\\/style>");
+    html.replace_range(
+        css_link_start..css_link_end,
+        &format!("<style>\n{safe_css}\n</style>"),
+    );
+
+    let script_start = html
+        .rfind("<script src=\"./app.js")
+        .ok_or_else(|| "UI Studio app.js tag is missing".to_string())?;
+    let script_end = html[script_start..]
+        .find("</script>")
+        .map(|offset| script_start + offset + "</script>".len())
+        .ok_or_else(|| "UI Studio app.js tag is malformed".to_string())?;
+    let safe_js = js.replace("</script>", "<\\/script>");
+    html.replace_range(
+        script_start..script_end,
+        &format!(
+            "<script>window.__ROFLOW_EMBEDDED__=true;</script>\n<script>\n{safe_js}\n</script>"
+        ),
+    );
+
+    Ok(html)
+}
+
+#[tauri::command]
 async fn roblox_thumbnail_url(asset_id: String) -> Result<String, String> {
     if asset_id.is_empty() || asset_id.len() > 20 || !asset_id.chars().all(|c| c.is_ascii_digit()) {
         return Err("Invalid Roblox asset id".into());
@@ -1630,6 +1676,7 @@ pub fn run() {
             create_backup,
             restore_backup,
             open_backups_window,
+            ui_studio_document,
             roblox_thumbnail_url
         ])
         .run(tauri::generate_context!())
