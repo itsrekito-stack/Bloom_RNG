@@ -11,7 +11,8 @@ def need(src,text,label):
 for src,label in ((server,"server"),(client,"client")):
     need(src,'if not RunService:IsStudio() then return end',f"{label} Studio gate")
     need(src,'REPORT_CHECKPOINTS={60,600,900,1800,3600}',f"{label} checkpoint schedule")
-    need(src,'#secondFrameMs>3600',f"{label} bounded sample history")
+need(server,'#session.SecondFrameMs>3600',"server bounded sample history")
+need(client,'#secondFrameMs>3600',"client bounded sample history")
 
 need(server,'Data:GetProfile(player)',"authoritative profile observation")
 need(server,'Data:GetPersistenceStatus(player)',"persistence observation")
