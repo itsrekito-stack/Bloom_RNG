@@ -40,16 +40,16 @@ function S:Init(ui)
  bill.Parent=anchor
  self.Billboard=bill
 
- local billText=Instance.new("TextLabel")
+ local prototypes=ui.SafeRoot and ui.SafeRoot:FindFirstChild("WorldUIPrototypes")
+ local template=prototypes and prototypes:FindFirstChild("TutorialWorldLabelTemplate",true)
+ if not template or not template:IsA("TextLabel") then
+  error("[TutorialGuide] Authored TutorialWorldLabelTemplate missing from SafeRoot/WorldUIPrototypes")
+ end
+ local billText=template:Clone()
+ billText.Name="Label"
  billText.Size=UDim2.fromScale(1,1)
- billText.BackgroundTransparency=1
- billText.Text="TARGET\n▼"
- billText.TextSize=19
- billText.TextColor3=C.Gold
- billText.TextStrokeColor3=C.Black
- billText.TextStrokeTransparency=.28
- billText.Font=Enum.Font.GothamBlack
- billText.TextWrapped=true
+ billText.Position=UDim2.fromScale(0,0)
+ billText.Visible=true
  billText.Parent=bill
  self.BillboardText=billText
 
