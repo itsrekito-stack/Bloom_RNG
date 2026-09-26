@@ -226,7 +226,8 @@ function X:Start(data,services,names)
  self.DataService=data self.ServiceNames=names for _,name in ipairs(names) do self[name]=services[name] end
  local center=workspace:FindFirstChild("Garden") local marker=center and center:FindFirstChild("GardenCenter") self.Origin=(marker and marker.Position or Vector3.zero)+Vector3.new(0,5,0)
  local world=Instance.new("Folder") world.Name="BloomWorld" world.Parent=workspace self.World=world
- self:Part(world,"CentralMeadow",self.Origin-Vector3.new(0,2,0),Vector3.new(440,2,440),Color3.fromRGB(97,155,88),true)
+ local authoredHub=workspace:FindFirstChild("FruitOrchardHub")
+ if not authoredHub then warn("[Bloom][WORLD] Authored FruitOrchardHub is missing; run AI SYNC before Play") end
  for _,name in ipairs(names) do local s=self[name] if s.Init then s:Init(self) end end
  self.MapService:Build() self.RemoteService:Start()
  data:GetProfileLoadedSignal():Connect(function(player) self:Loaded(player) end)
