@@ -353,7 +353,7 @@ const PREVIEW_META={
  fieldguide:{title:"Field Guide",subtitle:"Collection, odds, and discovered synergies"},
  map:{title:"Map",subtitle:"Sectors, discoveries, and travel"},
  trials:{title:"Trials",subtitle:"Short build trials started at sector shrines"},
- settings:{title:"Settings",subtitle:"Effects, sound, and automation"},
+ settings:{title:"Settings",subtitle:"Game & UI preferences"},
  plant:{title:"Plant",subtitle:"Choose an available flower for this garden slot"},
  season:{title:"Season",subtitle:"Reset progression for permanent Legacy growth"},
  replay:{title:"Tutorial Replay",subtitle:"Review every tutorial step"},
