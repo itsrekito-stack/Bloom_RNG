@@ -192,6 +192,7 @@ async function connectRoot(path){
  localStorage.setItem("roflowProjectRoot",path);
  applyStatus(status);
  await Promise.all([refreshBackups(),refreshTasks(),refreshRojo(),refreshPlanner()]);
+ if(state.studioLoaded)await ensureUiStudio(true);
  log("Project connected: "+path);
  return status;
 }
@@ -226,8 +227,9 @@ async function runSync(){
  try{
   const data=await invoke("safe_ai_sync",{editorModel:null});
   out.textContent=(data.changed?"Updated to ":"Already current at ")+shortSha(data.head)+"\n"+data.subject+(data.modelMerged?"\nBloomUI.model.json merged safely":"")+(data.stashed&&data.restored?"\nOther local changes restored":"")+(data.backupVersion?"\nCheckpoint: "+data.backupVersion:"");
-  notifyStudioModelChanged();
   await refresh();
+  if(state.studioLoaded)await ensureUiStudio(true);
+  else notifyStudioModelChanged();
   log("Safe AI Sync completed");
   return data;
  }catch(error){
@@ -268,13 +270,25 @@ async function runDevCycle(){
  }finally{button.disabled=false}
 }
 
-function ensureUiStudio(force=false){
+async function ensureUiStudio(force=false){
  const frame=$("#uiStudioFrame");
- if(force||!state.studioLoaded){
-  frame.src="./ui-studio/index.html?ts="+Date.now();
-  state.studioLoaded=true;
-  log("Embedded UI Studio loaded");
+ if(!force&&state.studioLoaded)return;
+ if(state.root){
+  try{
+   const documentHtml=await invoke("ui_studio_document");
+   frame.removeAttribute("src");
+   frame.srcdoc=documentHtml;
+   state.studioLoaded=true;
+   log("UI Studio loaded live from connected project");
+   return;
+  }catch(error){
+   log("Live UI Studio load failed; using bundled fallback: "+error);
+  }
  }
+ frame.removeAttribute("srcdoc");
+ frame.src="./ui-studio/index.html?ts="+Date.now();
+ state.studioLoaded=true;
+ log("Bundled UI Studio fallback loaded");
 }
 
 function diffClass(line){
@@ -357,7 +371,7 @@ function navigate(page){
  $("#"+page+"Page")?.classList.add("active");
  const label=document.querySelector(`.nav[data-page="${page}"]`)?.childNodes?.[0]?.textContent?.trim()||page;
  $("#pageTitle").textContent=label;
- if(page==="ui")ensureUiStudio();
+ if(page==="ui")ensureUiStudio().catch(error=>log("UI Studio load failed: "+error));
  if(page==="changes")loadChanges();
  if(page==="planner")refreshPlanner();
  if(page==="tasks")refreshTasks();
@@ -373,7 +387,7 @@ $("#devCycleBtn").onclick=runDevCycle;
 $("#checkpointBtn").onclick=()=>createCheckpoint("Manual dashboard checkpoint").catch(error=>log("Checkpoint failed: "+error));
 $("#healthBtn").onclick=()=>runHealth().catch(error=>log("Health check failed: "+error));
 $("#backupsBtn").onclick=async()=>{try{requireProject();await invoke("open_backups_window");log("Backups window opened")}catch(error){log("Failed to open backups: "+error)}};
-$("#reloadStudioBtn").onclick=()=>ensureUiStudio(true);
+$("#reloadStudioBtn").onclick=()=>ensureUiStudio(true).catch(error=>log("UI Studio reload failed: "+error));
 $("#reloadChangesBtn").onclick=loadChanges;
 $("#changesCheckpointBtn").onclick=()=>createCheckpoint("Checkpoint from Changes review").catch(error=>log("Checkpoint failed: "+error));
 $("#commitBtn").onclick=commitChanges;
