@@ -12,6 +12,7 @@ const MODIFIERS=new Set(["UICorner","UIStroke","UIPadding","UIListLayout","UIGri
 const TEXT_CLASSES=new Set(["TextLabel","TextButton","TextBox"]);
 const IMAGE_CLASSES=new Set(["ImageLabel","ImageButton"]);
 const CONTAINERS=new Set(["ScreenGui","Frame","ScrollingFrame","TextButton","ImageButton"]);
+const CREATION_CONTAINERS=new Set(["ScreenGui","Frame","ScrollingFrame"]);
 const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 const LOADING_TARGET="src/ReplicatedFirst/BloomLoadingTemplate.model.json";
 function lastGoodModelKey(){return state?.targetPath===LOADING_TARGET?"BloomUIStudioLastGoodModelLoading":"BloomUIStudioLastGoodModel"}
@@ -1701,15 +1702,64 @@ function defaultObject(kind){
  return normalizeNode({ClassName:kind,Name:uniqueName(kind),Properties:m[kind]||common,Children:[]});
 }
 function uniqueName(base){let i=1,name=base;const names=new Set();walk(state.root,n=>names.add(n.Name));while(names.has(name))name=base+(++i);return name}
-function addObject(kind){
- if(!state.root)return;pushHistory();let parent=selected();
- if(parent===state.root){
-  const safeRoot=(state.root.Children||[]).find(x=>x.Name==="SafeRoot"&&x.ClassName==="Frame");
-  if(safeRoot)parent=safeRoot;
+function nearestCreationParent(node){
+ let p=node;
+ while(p&&p!==state.root&&!CREATION_CONTAINERS.has(p.ClassName))p=findParent(p.__id);
+ if(p&&CREATION_CONTAINERS.has(p.ClassName))return p;
+ const safeRoot=(state.root?.Children||[]).find(x=>x.Name==="SafeRoot"&&x.ClassName==="Frame");
+ return safeRoot||state.root;
+}
+function creationPosition(parent,node){
+ if(MODIFIERS.has(node.ClassName))return null;
+ const parentRect=engineV2?.getRect(parent.__id)||localRect(els.guiRoot.querySelector(`[data-id="${parent.__id}"]`));
+ const size=u2v(node,"Size",u2(0,160,0,60));
+ const pw=Math.max(1,parentRect?.w||state.viewport.w),ph=Math.max(1,parentRect?.h||state.viewport.h);
+ const w=Math.max(1,size[0][0]*pw+size[0][1]),h=Math.max(1,size[1][0]*ph+size[1][1]);
+
+ let localX=Math.max(0,(pw-w)/2),localY=Math.max(0,(ph-h)/2);
+ if(parentRect){
+  const scrollerRect=els.stageScroller.getBoundingClientRect();
+  const deviceRect=els.device.getBoundingClientRect();
+  const z=state.zoom||1;
+  const visibleLeft=(scrollerRect.left-deviceRect.left)/z;
+  const visibleTop=(scrollerRect.top-deviceRect.top)/z;
+  const visibleRight=(scrollerRect.right-deviceRect.left)/z;
+  const visibleBottom=(scrollerRect.bottom-deviceRect.top)/z;
+  const vx1=Math.max(parentRect.x??parentRect.left,visibleLeft);
+  const vy1=Math.max(parentRect.y??parentRect.top,visibleTop);
+  const vx2=Math.min((parentRect.x??parentRect.left)+pw,visibleRight);
+  const vy2=Math.min((parentRect.y??parentRect.top)+ph,visibleBottom);
+  if(vx2>vx1&&vy2>vy1){
+   const px=parentRect.x??parentRect.left,py=parentRect.y??parentRect.top;
+   localX=(vx1+vx2-w)/2-px;
+   localY=(vy1+vy2-h)/2-py;
+  }
  }
- if(!parent||!CONTAINERS.has(parent.ClassName))parent=findParent(state.selectedId)||state.root;
- if(MODIFIERS.has(kind)&&parent.ClassName==="ScreenGui"){toast("Выбери GuiObject для "+kind,true);return}
- const n=defaultObject(kind);parent.Children=parent.Children||[];parent.Children.push(n);state.selectedId=n.__id;state.selectedIds=new Set([n.__id]);state.selectionAnchorId=n.__id;changed();toast(kind+" создан")
+ const margin=8;
+ localX=clamp(localX,margin,Math.max(margin,pw-w-margin));
+ localY=clamp(localY,margin,Math.max(margin,ph-h-margin));
+ const a=v2v(node,"AnchorPoint",[0,0]);
+ return {UDim2:[[0,roundOffset(localX+a[0]*w)],[0,roundOffset(localY+a[1]*h)]]};
+}
+function addObject(kind){
+ if(!state.root)return;
+ let parent=selected();
+ if(MODIFIERS.has(kind)){
+  if(!parent||parent===state.root||MODIFIERS.has(parent.ClassName)){toast("Выбери GuiObject для "+kind,true);return}
+ }else{
+  parent=nearestCreationParent(parent);
+ }
+ if(!parent){toast("Не удалось определить родителя для "+kind,true);return}
+ pushHistory();
+ const n=defaultObject(kind);
+ const position=creationPosition(parent,n);
+ if(position)n.Properties.Position=position;
+ parent.Children=parent.Children||[];
+ parent.Children.push(n);
+ state.selectedId=n.__id;state.selectedIds=new Set([n.__id]);state.selectionAnchorId=n.__id;
+ changed();
+ requestAnimationFrame(()=>focusSelected());
+ toast(kind+" создан")
 }
 
 
