@@ -12,6 +12,8 @@ const state={
  rojo:null,
  planner:null,
  updateChecked:false,
+ updateLastChecked:0,
+ updateLastBuild:"",
  updateChecking:false,
  updateInstalling:false
 };
@@ -41,16 +43,22 @@ function updateBadge(text,tone="muted"){
  else badge.style.color="";
 }
 
-async function maybeAutoUpdate(){
- if(!state.root||state.updateChecked||state.updateChecking||state.updateInstalling)return;
+async function maybeAutoUpdate(force=false){
+ if(!state.root||state.updateChecking||state.updateInstalling)return;
+ const now=Date.now();
+ if(!force&&state.updateLastChecked&&now-state.updateLastChecked<60000)return;
  state.updateChecking=true;
  updateBadge("CHECKING UPDATE");
  try{
   const info=await invoke("roflow_update_status");
   state.updateChecked=true;
+  state.updateLastChecked=Date.now();
   if(!info.available){
    updateBadge("AUTO UPDATE ON","ready");
-   log("RoFlow auto update: current build "+shortSha(info.currentBuild));
+   if(state.updateLastBuild!==info.currentBuild){
+    log("RoFlow auto update: current build "+shortSha(info.currentBuild));
+    state.updateLastBuild=info.currentBuild;
+   }
    return;
   }
   state.updateInstalling=true;
@@ -58,7 +66,8 @@ async function maybeAutoUpdate(){
   log("RoFlow update found: "+shortSha(info.currentBuild)+" → "+shortSha(info.latestBuild)+". Installing automatically…");
   await invoke("roflow_install_update");
  }catch(error){
-  state.updateChecked=true;
+  state.updateChecked=false;
+  state.updateLastChecked=Date.now();
   updateBadge("AUTO UPDATE RETRY");
   log("RoFlow auto update check skipped: "+error);
  }finally{
@@ -418,9 +427,10 @@ function navigate(page){
 }
 
 document.querySelectorAll(".nav[data-page]").forEach(button=>button.onclick=()=>navigate(button.dataset.page));
+setInterval(()=>{if(state.root)maybeAutoUpdate()},60000);
 document.querySelectorAll("[data-go]").forEach(button=>button.onclick=()=>navigate(button.dataset.go));
 $("#chooseBtn").onclick=chooseProject;
-$("#refreshBtn").onclick=()=>refresh().catch(()=>{});
+$("#refreshBtn").onclick=async()=>{await refresh().catch(()=>{});await maybeAutoUpdate(true)};
 $("#syncBtn").onclick=()=>runSync().catch(()=>{});
 $("#devCycleBtn").onclick=runDevCycle;
 $("#checkpointBtn").onclick=()=>createCheckpoint("Manual dashboard checkpoint").catch(error=>log("Checkpoint failed: "+error));
