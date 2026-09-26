@@ -183,6 +183,10 @@ need(service,'elseif step.Id=="FirstSeed" and (p.Tutorial.Events.SeedReward or 0
 need(player,'tutorialStep and tutorialStep.Id=="InventoryExplain"',"inventory review server validation")
 need(player,'self.Temp[player].MenuName=a',"server tracks successfully opened menu")
 assert bloom.index('self:RenderMenu()', bloom.index('function UI:Open')) < bloom.index('self:Send("Menu",name)', bloom.index('function UI:Open')), "menu must render before server acknowledgement"
+need(bloom,'function UI:OpenPlantInventory(slot)',"Plant picker Inventory handoff")
+need(bloom,'self:Open("SeedSatchel",{PlantSlot=slot},{SilentMenu=true})',"Plant picker must not pre-complete Inventory tutorial")
+need(bloom,'elseif kind=="PlantPicker" then self:OpenPlantInventory(payload)',"PlantPicker event uses Inventory V2")
+assert 'elseif name=="Plant" then' not in bloom, "standalone Plant menu returned"
 
 # Completion handoff.
 need(bloom,'self.ObjectiveTitle.Text="TUTORIAL COMPLETE"',"completion title")
