@@ -22,11 +22,16 @@ function S:Init(x)
  self.X=x
 end
 
+local function starterBeeOwned(profile)
+ local inventory=profile and profile.Pollinators and profile.Pollinators.BeeInventory
+ return type(inventory)=="table" and (tonumber(inventory.WorkerBee) or 0)>0
+end
+
 function S:Interact(player)
  local p=self.X:Profile(player)
  if not p then return false end
 
- if not p.StarterBeeGranted then
+ if not starterBeeOwned(p) then
   p.StarterBeeGranted=true
   local isNew=self.X.InventoryService:Grant(player,"Bee","WorkerBee")
   p.Pollinators.EquippedBeeSlots[1]="WorkerBee"
@@ -43,6 +48,11 @@ function S:Interact(player)
    IsNew=isNew==true,
   })
   return true
+ end
+
+ if not p.StarterBeeGranted then
+  p.StarterBeeGranted=true
+  self.X:MarkStateDirty(player)
  end
 
  local nextLevel=p.Hive.Level+1
