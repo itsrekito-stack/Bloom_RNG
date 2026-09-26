@@ -222,10 +222,12 @@ function S.Render(ui,profile,uiState)
 
  local headerTitle=find(header,"Title","TextLabel")
  local headerSubtitle=find(header,"Subtitle","TextLabel")
- local selectedCategory="General"
+ ui.SettingsV2State=ui.SettingsV2State or {Category="General"}
+ local selectedCategory=CATEGORY_Y[ui.SettingsV2State.Category]~=nil and ui.SettingsV2State.Category or "General"
 
  local function selectCategory(name)
   selectedCategory=name
+  ui.SettingsV2State.Category=name
   local y=CATEGORY_Y[name] or 0
   scroll.CanvasPosition=Vector2.new(0,y)
   if headerTitle then headerTitle.Text=string.upper(name) end
@@ -287,7 +289,10 @@ function S.Render(ui,profile,uiState)
  local reset=find(runtime,"ResetButton","TextButton")
  local apply=find(runtime,"ApplyButton","TextButton")
  local save=find(runtime,"SaveButton","TextButton")
- if reset then bindPress(reset,function() ui:Send("ResetSettings") end) end
+ if reset then bindPress(reset,function()
+  ui:SetAutoRolling(false)
+  ui:Send("ResetSettings")
+ end) end
  if apply then bindPress(apply,function()
   S.ApplyEffects(ui,ui.State and ui.State.Profile or profile)
   ui:Toast("Settings applied")
