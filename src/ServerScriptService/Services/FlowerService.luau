@@ -140,11 +140,12 @@ local function makeFlowerModel(slotId: number, species: any, position: Vector3):
 
     local info = Instance.new("BillboardGui")
     info.Name = "FlowerInfo"
-    info.Size = UDim2.fromOffset(178, 58)
-    info.StudsOffset = Vector3.new(0, 3.9, 0)
+    info.Size = UDim2.fromOffset(142, 46)
+    info.StudsOffset = Vector3.new(0, 3.45, 0)
     info.AlwaysOnTop = true
-    info.MaxDistance = 68
+    info.MaxDistance = 28
     info.LightInfluence = 0
+    info.Enabled = false
     info.Parent = bloom
 
     local card = Instance.new("Frame")
@@ -155,18 +156,18 @@ local function makeFlowerModel(slotId: number, species: any, position: Vector3):
     card.BorderSizePixel = 0
     card.Parent = info
     local cardCorner = Instance.new("UICorner")
-    cardCorner.CornerRadius = UDim.new(0, 12)
+    cardCorner.CornerRadius = UDim.new(0, 9)
     cardCorner.Parent = card
     local cardStroke = Instance.new("UIStroke")
     cardStroke.Color = UIColors.BorderDark
-    cardStroke.Thickness = 2
-    cardStroke.Transparency = .05
+    cardStroke.Thickness = 1.25
+    cardStroke.Transparency = .16
     cardStroke.Parent = card
 
     local accent = Instance.new("Frame")
     accent.Name = "Accent"
-    accent.Size = UDim2.fromOffset(4, 28)
-    accent.Position = UDim2.fromOffset(8, 8)
+    accent.Size = UDim2.fromOffset(3, 22)
+    accent.Position = UDim2.fromOffset(7, 7)
     accent.BackgroundColor3 = species.AccentColor
     accent.BorderSizePixel = 0
     accent.Parent = card
@@ -176,13 +177,13 @@ local function makeFlowerModel(slotId: number, species: any, position: Vector3):
 
     local tx = Instance.new("TextLabel")
     tx.Name = "LevelText"
-    tx.Position = UDim2.fromOffset(18, 6)
-    tx.Size = UDim2.new(1, -28, 0, 27)
+    tx.Position = UDim2.fromOffset(15, 4)
+    tx.Size = UDim2.new(1, -22, 0, 22)
     tx.BackgroundTransparency = 1
     tx.TextColor3 = UIColors.Text
     tx.TextStrokeTransparency = 1
     tx.Font = Enum.Font.GothamBold
-    tx.TextSize = 11
+    tx.TextSize = 10
     tx.TextXAlignment = Enum.TextXAlignment.Left
     tx.TextTruncate = Enum.TextTruncate.AtEnd
     tx.Text = species.DisplayName .. "  •  LV.1"
@@ -190,8 +191,8 @@ local function makeFlowerModel(slotId: number, species: any, position: Vector3):
 
     local bg = Instance.new("Frame")
     bg.Name = "ProgressBG"
-    bg.Position = UDim2.fromOffset(18, 38)
-    bg.Size = UDim2.new(1, -30, 0, 8)
+    bg.Position = UDim2.fromOffset(15, 31)
+    bg.Size = UDim2.new(1, -23, 0, 6)
     bg.BackgroundColor3 = UIColors.PanelRaised
     bg.BorderSizePixel = 0
     bg.Parent = card
