@@ -277,6 +277,11 @@ function InventoryV2.Render(controller,profile,uiState)
  if not table.find(SORT_ORDER,state.Sort) then state.Sort="Rarity" end
  if not table.find(FILTER_ORDER,state.Filter) then state.Filter="All" end
  state.Selected=state.Selected or {}
+ local plantSlot=tonumber(controller.InventoryPlantSlot)
+ if plantSlot and (plantSlot%1~=0 or plantSlot<1) then
+  controller.InventoryPlantSlot=nil
+  plantSlot=nil
+ end
 
  local all=buildItems(profile,inventory)
  local shellRoot=prototype:Clone()
@@ -355,6 +360,9 @@ function InventoryV2.Render(controller,profile,uiState)
  end)
 
  sectionTitle.Text=CATEGORY_TITLES[state.Category] or string.upper(state.Category)
+ if plantSlot and state.Category=="Flowers" then
+  sectionTitle.Text="FLOWERS  •  GARDEN SLOT "..tostring(plantSlot)
+ end
 
  local function drawDetails(item)
   if not item then
@@ -390,7 +398,11 @@ function InventoryV2.Render(controller,profile,uiState)
   local description=details:FindFirstChild("Description")
   if description and description:IsA("TextLabel") then
    if item.Kind=="Flower" or item.Kind=="Seed" then
-    description.Text=item.DisplayName.." • "..item.Rarity..". Plant a free copy, protect rare items, and upgrade Mastery with Petal Dust."
+    if plantSlot then
+     description.Text=item.DisplayName.." • "..item.Rarity..". Choose an available copy for Garden Slot "..tostring(plantSlot).."."
+    else
+     description.Text=item.DisplayName.." • "..item.Rarity..". Plant a free copy, protect rare items, and upgrade Mastery with Petal Dust."
+    end
    elseif item.Kind=="Bee" then
     local ability=Bees.GetAbilityDescription(item.Id)
     local passive=Bees.GetPassiveDescription(item.Id)
@@ -461,13 +473,22 @@ function InventoryV2.Render(controller,profile,uiState)
   local mastery=details:FindFirstChild("MasteryButton")
 
   if item.Kind=="Flower" or item.Kind=="Seed" then
-   local slot=firstFreeGardenSlot(profile)
-   local canPrepare=(item.Free or 0)>0 and slot~=nil
-   setButton(plant,true,canPrepare and "PLANT AT GARDEN" or ((item.Free or 0)<=0 and "NO FREE COPY" or "NO FREE PLOT"),canPrepare,function()
-    controller.LastSeed=item.Id
-    controller:Close()
-    controller:Toast("Flower selected. Go to an unlocked garden pad and use its Plant prompt.")
-   end)
+   if plantSlot then
+    local canPlant=(item.Free or 0)>0
+    setButton(plant,true,canPlant and ("PLANT IN SLOT "..tostring(plantSlot)) or "NO FREE COPY",canPlant,function()
+     controller.LastSeed=item.Id
+     controller.PendingPlantFlowerId=item.Id
+     controller:Send("Plant",plantSlot,item.Id)
+    end)
+   else
+    local slot=firstFreeGardenSlot(profile)
+    local canPrepare=(item.Free or 0)>0 and slot~=nil
+    setButton(plant,true,canPrepare and "PLANT AT GARDEN" or ((item.Free or 0)<=0 and "NO FREE COPY" or "NO FREE PLOT"),canPrepare,function()
+     controller.LastSeed=item.Id
+     controller:Close()
+     controller:Toast("Flower selected. Go to an unlocked garden pad and use its Plant prompt.")
+    end)
+   end
    setButton(favorite,true,item.Favorite and "★  REMOVE FAVORITE" or "★  FAVORITE",true,function() controller:Send("Flag",item.Id,"FavoriteFlowers") end)
    setButton(protect,true,item.Protected and "◆  UNPROTECT" or "◆  PROTECT",true,function() controller:Send("Flag",item.Id,"LockedFlowers") end)
    setButton(dissolve,true,"DISSOLVE ×1",item.CanDissolve==true,function() controller:Send("Dissolve",item.Id,1) end)
