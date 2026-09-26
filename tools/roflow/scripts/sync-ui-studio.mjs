@@ -15,9 +15,11 @@ for(const file of ["app.css","app.js"]){
 
 let html=await readFile(resolve(source,"index.html"),"utf8");
 html=html.replace("<title>Bloom UI Studio</title>","<title>RoFlow · UI Studio</title>");
+const appScript=/<script src="\.\/app\.js(?:\?[^"]*)?"><\/script>/;
+if(!appScript.test(html))throw new Error("Bloom UI Studio app.js tag not found");
 html=html.replace(
- '<script src="./app.js?v=8"></script>',
- '<script>window.__ROFLOW_EMBEDDED__=true;</script>\n<script src="./app.js?v=8"></script>'
+ appScript,
+ match=>'<script>window.__ROFLOW_EMBEDDED__=true;</script>\n'+match
 );
 await writeFile(resolve(target,"index.html"),html,"utf8");
 
