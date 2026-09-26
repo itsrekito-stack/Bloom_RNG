@@ -1010,3 +1010,75 @@ dialog::backdrop{background:rgba(2,5,8,.78)}
 .engine-v2-active .roblox-topbar{z-index:25}
 .engine-v2-active .empty-canvas{z-index:40}
 .engine-badge{padding:2px 6px;border:1px solid rgba(68,177,255,.28);border-radius:5px;background:rgba(31,112,173,.14);color:#79c8ff!important;font-weight:800;letter-spacing:.05em}
+
+
+/* =========================================================
+   ROFLOW DESKTOP MODE
+   ========================================================= */
+.desktop-command-label{display:none}
+html.roflow-native{--titlebar-h:40px;--statusbar-h:22px;--state-rail-w:66px;--explorer-w:236px;--inspector-w:296px}
+html.roflow-native body{background:#070b10}
+html.roflow-native .studio-app{background:#070b10}
+html.roflow-native .app-titlebar{height:var(--titlebar-h);gap:8px;padding:0 8px;background:#0a1119;border-bottom:1px solid #172534;box-shadow:none}
+html.roflow-native .brand{display:none}
+html.roflow-native .desktop-command-label{display:flex;align-items:baseline;gap:7px;min-width:max-content;padding:0 5px;color:#dcebf7}
+html.roflow-native .desktop-command-label strong{font-size:10px;letter-spacing:.12em}
+html.roflow-native .desktop-command-label span{font-size:7px;font-weight:800;letter-spacing:.12em;color:#4f8fb9;padding:3px 5px;border:1px solid #1c4058;border-radius:4px;background:#0a1b27}
+html.roflow-native .project-chip{height:24px;max-width:330px;padding:0 8px;border-radius:6px;background:#070d13;border-color:#1a2b3a;color:#678094;font-size:8px}
+html.roflow-native .project-dot{width:6px;height:6px}
+html.roflow-native #connectBtn,
+html.roflow-native #aiSyncBtn,
+html.roflow-native #aiBridgeStatus,
+html.roflow-native #copyBtn{display:none!important}
+html.roflow-native .top-actions{gap:3px}
+html.roflow-native .tool-action,
+html.roflow-native .icon-btn{height:25px;min-width:25px;border-radius:5px}
+html.roflow-native .tool-action{padding:0 8px;font-size:9px}
+html.roflow-native .toolbar-sep{height:15px;margin:0 2px;background:#192838}
+html.roflow-native .app-workspace{grid-template-columns:var(--state-rail-w) var(--explorer-w) minmax(420px,1fr) var(--inspector-w);background:#070b10}
+html.roflow-native .state-rail{gap:2px;padding:5px 4px;background:#080e15;border-right-color:#172534}
+html.roflow-native .rail-head{height:25px;padding:0;text-align:center;align-items:center}
+html.roflow-native .rail-head span{font-size:9px}
+html.roflow-native .rail-head small{display:none}
+html.roflow-native .rail-foot{display:none}
+html.roflow-native .rail-sep{margin:3px 6px;background:#152433}
+html.roflow-native .ui-state-btn{min-height:39px;grid-template-columns:1fr;grid-template-rows:23px 10px;place-items:center;gap:1px;padding:3px 2px;border-radius:6px;text-align:center;font-size:7px}
+html.roflow-native .ui-state-btn b{width:25px;height:25px;border-radius:6px;background:#0c151e;border-color:#17293a}
+html.roflow-native .ui-state-btn b img{width:18px;height:18px}
+html.roflow-native .ui-state-btn>span{width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:10px;color:#657b8e}
+html.roflow-native .ui-state-btn.active>span{color:#d6e9f7}
+html.roflow-native .ui-state-btn.active{background:#0d2232;border-color:#1e4966;box-shadow:inset 2px 0 #50adf2}
+html.roflow-native .sidebar{background:#091018;border-color:#172534}
+html.roflow-native .panel-head{min-height:39px;height:39px;padding:6px 9px;background:#0a121b;border-color:#172534}
+html.roflow-native .panel-head strong{font-size:9px;letter-spacing:.1em}
+html.roflow-native .panel-head small{font-size:7px}
+html.roflow-native .tree-search-wrap{height:29px;margin:6px 7px 3px;border-radius:5px;background:#070d13;border-color:#172838}
+html.roflow-native .section-title{height:26px;background:#09121b}
+html.roflow-native .tree-row{height:24px;border-radius:4px}
+html.roflow-native .object-drawer summary{height:30px}
+html.roflow-native .center{grid-template-rows:36px minmax(0,1fr) var(--statusbar-h);background:#060a0f}
+html.roflow-native .viewbar{height:36px;gap:5px;padding:0 7px;background:#09121b;border-color:#172534}
+html.roflow-native .viewbar input,
+html.roflow-native .viewbar select,
+html.roflow-native select{height:23px;border-radius:5px;background:#0b151f;border-color:#1b3144}
+html.roflow-native .viewbar input[type=number]{width:56px}
+html.roflow-native .viewbar input[type=range]{width:78px}
+html.roflow-native .toolbar-btn{height:24px;padding:0 7px;border-radius:5px;font-size:8px}
+html.roflow-native .stage-scroller{background-color:#05090d;background-image:linear-gradient(rgba(55,83,105,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(55,83,105,.08) 1px,transparent 1px);background-size:18px 18px}
+html.roflow-native .stage{padding:44px}
+html.roflow-native .device{background:#111a24;box-shadow:0 0 0 1px #263747,0 18px 55px rgba(0,0,0,.4)}
+html.roflow-native .statusbar{height:var(--statusbar-h);padding:0 7px;gap:10px;background:#081018;border-color:#172534;font-size:8px}
+html.roflow-native .engine-badge{padding:1px 4px;border-radius:3px;background:#0b1c27;border-color:#1a435d;color:#54a9df!important;font-size:7px}
+html.roflow-native .status-hint{opacity:.55}
+html.roflow-native .quick-layout{padding:6px 7px;background:#09111a;border-bottom:1px solid #172534}
+html.roflow-native .quick-row{gap:4px}
+html.roflow-native .mini-action{height:24px;border-radius:5px;font-size:8px}
+html.roflow-native .inspector{padding:7px;background:#080f16}
+html.roflow-native .ins-group{margin-bottom:7px;border-radius:6px;border-color:#182a3a}
+html.roflow-native .ins-title{height:25px;background:#0d1822;font-size:8px}
+html.roflow-native .ins-body{padding:6px;gap:4px}
+html.roflow-native .prop-row{grid-template-columns:82px minmax(0,1fr);min-height:24px}
+html.roflow-native .prop-row>label{font-size:9px}
+html.roflow-native .prop-row input,
+html.roflow-native .prop-row select,
+html.roflow-native .prop-row textarea{border-radius:5px;background:#070e15;border-color:#1a2d3e;padding:3px 5px}
