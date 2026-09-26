@@ -100,7 +100,9 @@ function D.Apply(p)
  local slots,planted={},{}
  for key,slot in pairs(p.Garden.Slots) do
   local index=tonumber(key)
-  if not index or index%1~=0 or index<1 or index>C.MaxFlowerSlots then
+  if index and index%1==0 and index>C.MaxFlowerSlots then
+   if Rules.HasState(slot) or type(slot)~="table" then D.Archive(p,"Garden.OverflowSlots",key,slot) end
+  elseif not index or index%1~=0 or index<1 then
    if Rules.HasState(slot) or type(slot)~="table" then error("INVALID_GARDEN_SLOT:"..tostring(key)) end
   else
    if slots[index] and not U.Equal(slots[index],slot) then error("CONFLICTING_GARDEN_SLOT:"..index) end
