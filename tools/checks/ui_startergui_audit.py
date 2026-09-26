@@ -136,6 +136,7 @@ check('Workshop hides active boosts','self.BoostHUD:SetSuppressed(exclusive)' in
 check('Workshop visibility snapshot restore','function UI:CaptureWorkshopHUDVisibility()' in source and 'function UI:RestoreWorkshopHUDVisibility()' in source and 'self:RestoreWorkshopHUDVisibility()' in source)
 check('BloomUI validates authored schema before choosing runtime clone','local REQUIRED_AUTHORED_UI={' in source and 'validateBloomGui(candidate)' in source and 'Rejecting stale PlayerGui/BloomUI' in source)
 check('stale runtime BloomUI replaced from current StarterGui','Replacing stale runtime HUD from current StarterGui template' in source and 'template:Clone()' in source)
+check('stale retired-menu HUD rejected','RETIRED_MENU_GUI={"Dock_FieldGuide","Dock_Map","FieldGuideKit","MapKit"}' in source and 'root:FindFirstChild(name,true)' in source)
 check('boost HUD never infinite-waits authored roots','WaitForChild("ActiveBoostsHUD")' not in boost_hud_source and 'WaitForChild("ActiveBoostTooltip")' not in boost_hud_source)
 check('boost HUD missing hierarchy fails fast','[BoostHUD] Authored boost HUD is missing from canonical BloomUI' in boost_hud_source and '[BoostHUD] Authored boost HUD hierarchy is incomplete' in boost_hud_source)
 
@@ -164,7 +165,7 @@ check('physical Plant picker renderer exists','elseif name=="Plant" then' in sou
 check('BR-010 map exposes physical gate actionability','NearGate=nearGate' in ui_state_source and 'PrerequisiteReady=prerequisiteReady' in ui_state_source and 'CanUnlock=not unlocked and prerequisiteReady and hiveReady and nearGate' in ui_state_source and 'UnlockHint=hint' in ui_state_source)
 check('BR-010 map tells Hive-ready players to use gate','Hive ready — go to the ' in ui_state_source and 'Use the world gate prompt to unlock' in ui_state_source)
 check('BR-010 trials expose shrine guidance','NearShrine=nearShrine' in ui_state_source and 'StartHint=startHint' in ui_state_source and 'Garden Trials shrine' in ui_state_source)
-check('BR-010 client renders derived world guidance','sector.UnlockHint' in source and 'trial.StartHint' in quests_v2_source and 'AT SHRINE' in quests_v2_source)
+check('BR-010 client renders derived trial guidance','trial.StartHint' in quests_v2_source and 'AT SHRINE' in quests_v2_source)
 check('UI Studio uses desktop state rail','class="state-rail"' in editor_html and 'class="app-titlebar"' in editor_html and 'class="app-workspace"' in editor_html)
 check('UI Studio exposes all authored state buttons',all(('data-ui-state="'+state+'"') in editor_html for state in ['gameplay','inventory_v2','workshop','trials','settings','plant','season','replay','cards','reward','toast','tutorial','boosts','world_ui','loading']))
 check('UI Studio hides retired alpha menus','data-ui-state="fieldguide"' not in editor_html and 'data-ui-state="map"' not in editor_html)
