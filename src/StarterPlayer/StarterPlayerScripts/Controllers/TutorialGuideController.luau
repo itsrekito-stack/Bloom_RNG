@@ -307,6 +307,13 @@ function S:Update()
  local ui=self.UI
  if not ui.State then return end
  local p=ui.State.Profile
+ if not ui.ReplayIndex and p.Settings and p.Settings.TutorialsEnabled==false then
+  self:HideWorldTarget()
+  self:HideScreenTarget()
+  ui.Guide.Visible=false
+  self.LastMissingKey=nil
+  return
+ end
  local step=T.Steps[ui.ReplayIndex or p.Tutorial.Step]
 
  if not ui.ReplayIndex and step then
