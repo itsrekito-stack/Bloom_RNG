@@ -427,7 +427,7 @@
       "id": "release-fresh-profile-a",
       "group": "7 · QA",
       "title": "Fresh profile: onboarding smoke",
-      "detail": "Spawn, get starter bee, complete tutorial opening and first roll without manual fixes.",
+      "detail": "RuntimeProbe now records CharacterSpawned, TutorialProgress, Bee ownership and first Roll milestones. Real fresh-profile Studio execution is still required.",
       "done": false
     },
     {
@@ -469,21 +469,21 @@
       "id": "release-multiplayer-a",
       "group": "7 · QA",
       "title": "Multiplayer: shared world state",
-      "detail": "Verify sectors, Server Bloom, activities and shared progression behavior with 2+ players.",
+      "detail": "RuntimeProbe records when a Studio server reaches 2+ players and includes current player count at checkpoints. Shared world behavior still needs a real 2+ player session.",
       "done": false
     },
     {
       "id": "release-multiplayer-b",
       "group": "7 · QA",
       "title": "Multiplayer: public replication",
-      "detail": "Verify nearby bees/tokens replicate correctly and respect player visibility settings.",
+      "detail": "Client RuntimeProbe records other-player count plus LocalBees and LocalBloomCheckpoints counts, while existing server replication filters remain CI-guarded. Visual/behavioral replication still needs real multiplayer verification.",
       "done": false
     },
     {
       "id": "release-multiplayer-c",
       "group": "7 · QA",
       "title": "Multiplayer: leave / join during activity",
-      "detail": "Test owner/visitor disconnects while activities, trials and public replication are active.",
+      "detail": "RuntimeProbe and PersistenceProbe are ready to capture join/leave state during 2+ player sessions. Owner/visitor disconnect behavior still requires real Studio execution.",
       "done": false
     },
     {
