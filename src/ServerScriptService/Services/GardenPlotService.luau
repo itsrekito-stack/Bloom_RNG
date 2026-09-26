@@ -110,27 +110,27 @@ function S:Build(player)
   plot={Index=i,Origin=origin,Model=m,Flowers={}}
   self.Plots[player]=plot
 
-  local ground=self.X:Part(m,"Ground",origin-Vector3.new(0,.5,0),Vector3.new(1,50,50),Color3.fromRGB(85,145,80),true)
+  local ground=self.X:Part(m,"Ground",origin-Vector3.new(0,.5,0),Vector3.new(1,38,38),Color3.fromRGB(85,145,80),true)
   horizontalCylinder(ground,Enum.Material.Grass)
 
-  local border=self.X:Part(m,"Border",origin+Vector3.new(0,.025,0),Vector3.new(.05,40,40),Color3.fromRGB(190,154,111),false)
+  local border=self.X:Part(m,"Border",origin+Vector3.new(0,.025,0),Vector3.new(.05,30,30),Color3.fromRGB(190,154,111),false)
   horizontalCylinder(border,Enum.Material.Sandstone)
   border.CanQuery=false
 
-  local soil=self.X:Part(m,"Soil",origin+Vector3.new(0,.045,0),Vector3.new(.05,38,38),Color3.fromRGB(105,76,52),false)
+  local soil=self.X:Part(m,"Soil",origin+Vector3.new(0,.045,0),Vector3.new(.05,28,28),Color3.fromRGB(105,76,52),false)
   horizontalCylinder(soil,Enum.Material.Ground)
   soil.CanQuery=false
 
   local hivePosition=self:HivePosition(player)
   local hiveBasePosition=origin+Vector3.new(G.Layout.HiveOffset.X,.06,G.Layout.HiveOffset.Z)
-  local hiveBase=self.X:Part(m,"HiveBase",hiveBasePosition,Vector3.new(.12,7,7),Color3.fromRGB(118,112,102),false)
+  local hiveBase=self.X:Part(m,"HiveBase",hiveBasePosition,Vector3.new(.12,6,6),Color3.fromRGB(118,112,102),false)
   horizontalCylinder(hiveBase,Enum.Material.Slate)
   hiveBase.CanQuery=false
 
-  local hive=self.X:Part(m,"Hive",hivePosition,Vector3.new(5.5,6,6),Color3.fromRGB(224,169,56),true)
+  local hive=self.X:Part(m,"Hive",hivePosition,Vector3.new(5,5.2,5.2),Color3.fromRGB(224,169,56),true)
   horizontalCylinder(hive,Enum.Material.WoodPlanks)
 
-  local entrance=self.X:Part(m,"HiveEntrance",hivePosition+Vector3.new(0,-.35,-3),Vector3.new(1.35,1.35,1.35),Color3.fromRGB(61,47,37),false)
+  local entrance=self.X:Part(m,"HiveEntrance",hivePosition+Vector3.new(0,-.3,-2.6),Vector3.new(1.1,1.1,1.1),Color3.fromRGB(61,47,37),false)
   entrance.Shape=Enum.PartType.Ball
   entrance.Material=Enum.Material.SmoothPlastic
   entrance.CanQuery=false
@@ -158,7 +158,7 @@ function S:Build(player)
    content,
    "Slot_"..i,
    pos-Vector3.new(0,.015,0),
-   Vector3.new(.03,5,5),
+   Vector3.new(.03,4.25,4.25),
    unlocked and Color3.fromRGB(140,101,65) or Color3.fromRGB(72,70,68),
    false
   )
