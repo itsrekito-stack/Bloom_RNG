@@ -13,6 +13,7 @@ def need(src,text,label):
 
 bloom=read("src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau")
 inventory=read("src/StarterPlayer/StarterPlayerScripts/Controllers/InventoryV2Controller.luau")
+quests=read("src/StarterPlayer/StarterPlayerScripts/Controllers/QuestsController.luau")
 boost=read("src/StarterPlayer/StarterPlayerScripts/Controllers/BoostHUDController.luau")
 tutorial=read("src/StarterPlayer/StarterPlayerScripts/Controllers/TutorialGuideController.luau")
 activity=read("src/StarterPlayer/StarterPlayerScripts/Controllers/ActivityController.luau")
@@ -32,6 +33,7 @@ pattern=re.compile(r'Instance\.new\("('+"|".join(map(re.escape,screen_classes))+
 for name,src in [
     ("BloomUI",bloom),
     ("InventoryV2Controller",inventory),
+    ("QuestsController",quests),
     ("BoostHUDController",boost),
     ("LoadingScreen",loading),
 ]:
@@ -59,19 +61,23 @@ nodes={n.get("Name"):n for n in walk(model)}
 for required in [
     "TutorialSpotlight","TutorialCallout","TutorialScreenArrow",
     "ActionHitboxTemplate","OverlayHitboxTemplate","SearchBoxTemplate","EmptyStateTemplate",
+    "QuestsPrototype","QuestCardTemplate","QuestList","Tab_Main","Tab_Activities","Tab_Trials","Tab_Completed",
     "StateKits","HoverScale","TutorialCompleteScale","WorkshopZoomScale",
     "WorldUIPrototypes","TutorialWorldBillboard","ActivityCheckpointBillboard",
     "TutorialWorldLabelTemplate","ActivityCheckpointLabelTemplate",
 ]:
     assert required in nodes, f"authored BloomUI node missing: {required}"
 
-for kit in ["FieldGuideKit","MapKit","TrialsKit","SettingsKit","PlantKit","SeasonKit","ReplayKit","CardsKit"]:
+for kit in ["FieldGuideKit","MapKit","SettingsKit","PlantKit","SeasonKit","ReplayKit","CardsKit"]:
     assert kit in nodes, f"authored UI state kit missing: {kit}"
+assert "TrialsKit" not in nodes, "legacy TrialsKit returned after Quests V2 migration"
 
 need(bloom,'function UI:MenuTemplate(name)',"dynamic menu authored template resolver")
 need(bloom,'self.StateKits=self.Panel:FindFirstChild("StateKits")',"state kit runtime binding")
 need(inventory,'componentTemplate(button,"ActionHitboxTemplate"):Clone()',"inventory authored hitbox clone")
 need(inventory,'componentTemplate(searchBar,"SearchBoxTemplate"):Clone()',"inventory authored search clone")
+need(quests,'cardTemplate(runtime):Clone()',"Quests authored card clone")
+need(quests,'EmptyStateTemplate',"Quests authored empty-state clone")
 need(boost,'badge:FindFirstChild("HoverScale")',"boost authored hover scale")
 
 assert loading_model.get("ClassName")=="ScreenGui"
