@@ -246,6 +246,8 @@ REQUIRED_RUNTIME_UI_CHILDREN = {
     "TutorialSpotlight", "TutorialCallout", "TutorialScreenArrow", "StateKits",
     "ActionHitboxTemplate", "OverlayHitboxTemplate", "SearchBoxTemplate", "EmptyStateTemplate",
     "HoverScale", "TutorialCompleteScale", "SlotScale", "WorkshopZoomScale",
+    "WorldUIPrototypes", "TutorialWorldBillboard", "ActivityCheckpointBillboard",
+    "TutorialWorldLabelTemplate", "ActivityCheckpointLabelTemplate",
 }
 
 
