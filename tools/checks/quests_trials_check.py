@@ -20,6 +20,7 @@ player=read("src/ServerScriptService/Services/PlayerService.luau")
 meta=read("src/ServerScriptService/Services/MetaProgressionService.luau")
 state=read("src/ServerScriptService/Services/UIStateService.luau")
 ui=read("src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau")
+quests_ui=read("src/StarterPlayer/StarterPlayerScripts/Controllers/QuestsController.luau")
 
 base_ids={"MeadowCircuit","SwiftRoute","CrystalTriangle"}
 advanced_ids={"NoCelestial","SignatureBloom","TwilightPulse","MinimalGarden","MutationStudy"}
@@ -112,13 +113,17 @@ need(journey_guide,'string.format("Solar Bloom  •  Checkpoint %d/%d  •  Rewa
 need(ui,'self.JourneyGuideController=require(script.Parent.JourneyGuideController)',"Journey guide wiring")
 need(ui,'self.JourneyGuideController:Init(self,self.GuideController)',"Journey guide uses shared visual pointer layer")
 
-# UI mirrors server gating and explicitly labels the advanced set.
+# Quests V2 mirrors server gating and never invents client-side trial authority.
 need(state,'ADVANCED_TRIAL_LOCKED="Unlock Advanced Trials in the Workshop"',"advanced lock reason")
 need(state,'cfg.Advanced and not Effects.Feature(profile,"LEGACY_4","AdvancedTrials")',"UI advanced feature gate")
 need(state,'Advanced=cfg.Advanced==true',"trial payload advanced flag")
 need(state,'CanStart=reason==nil',"UI startability derives from server-style reason")
-need(ui,'local advanced=t.Advanced and "ADVANCED  •  " or ""',"authoritative advanced label")
-need(ui,'local advancedLocked=t.Advanced and not p.WorkshopV5.Nodes.LEGACY_4',"fallback advanced lock")
+need(state,'RewardText=(profile.Quests.Trials[id] and "Repeat • 5 Coins"',"server-derived trial reward copy")
+need(quests_ui,'elseif trial.CanStart then',"Quests V2 uses authoritative CanStart")
+need(quests_ui,'description=trial.StartHint or trial.ReasonText',"Quests V2 uses authoritative guidance")
+need(quests_ui,'action=function() controller:Send("Trial",trial.Id) end',"Quests V2 sends only the trial id to server")
+need(quests_ui,'state.Tab=="Completed"',"completed trial view")
+need(ui,'Trials="QuestsV2"',"Trials feature routes to Quests V2")
 
 print("quests / activities / trials contract: PASS")
 print("3 base Season trials + 5 Workshop-gated advanced trials; shrine/proximity/expiry/reward paths are server-authoritative.")
