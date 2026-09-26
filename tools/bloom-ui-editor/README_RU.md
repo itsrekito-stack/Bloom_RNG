@@ -1,62 +1,147 @@
 # Bloom UI Studio
 
-Локальный визуальный редактор Roblox GUI для проекта Bloom RNG.
+Bloom UI Studio — визуальный редактор Roblox ScreenGui внутри desktop-приложения RoFlow.
 
-## Что он делает
+Основной режим работы больше не строится вокруг старой схемы DESIGN/PREVIEW и mock HTML. Редактор работает от **UI STATES**: выбираешь конкретное состояние игры и редактируешь настоящие Roblox GUI instances из Rojo-модели.
 
-- Читает настоящий Rojo `*.model.json`, без промежуточного формата.
-- Визуализирует Roblox `UDim2`, `AnchorPoint`, `ZIndex`, transparency, colors, text, images, `UICorner`, `UIStroke`, `UIPadding`, `UIListLayout` и `UIGridLayout`.
-- Canvas имеет реальные разрешения устройств: 1366×768, 1920×1080, 1280×720, mobile и custom.\n- **Фон Roblox** загружает скриншот из Studio прямо под HUD и автоматически выставляет viewport по реальному размеру изображения — можно сравнивать интерфейс поверх настоящего кадра игры.
-- На каждом элементе можно показывать `Name · ClassName`.
-- Drag, resize, exact property inspector, raw properties JSON, undo/redo, duplicate/delete.
-- Проверяет/округляет UDim/UDim2 offsets до целых чисел при экспорте, чтобы Rojo не получил invalid UnresolvedValue.
-- Кнопка **← Из Roblox** читает `src/StarterGui/BloomUI.model.json`.
-- Кнопка **В ИГРУ →** записывает туда текущую модель. Если Rojo Serve уже работает, изменение сразу синхронизируется в Studio.
-- **AI** копирует полную Roblox-модель. ChatGPT может редактировать этот же файл в GitHub, поэтому приложение становится визуальным мостом между ChatGPT и Roblox Studio.
+## Главный принцип
 
-## Запуск
+Постоянный игровой интерфейс должен быть authored в Roblox GUI-моделях.
 
-В корне проекта дважды нажми:
+- Основной HUD и окна: `src/StarterGui/BloomUI.model.json`
+- Loading Screen: `src/ReplicatedFirst/BloomLoadingTemplate.model.json`
+- Runtime Luau связывает данные, события и клонирует authored templates для динамических списков.
+- Скрипты не должны собирать постоянный ScreenGui через `Instance.new()`.
+- World-space объекты могут создаваться runtime, но их визуальные UI-прототипы хранятся в `WorldUIPrototypes` и редактируются через UI Studio.
 
-`Start Bloom UI Editor.bat`
+## UI STATES
 
-Откроется:
+Левая вертикальная панель — основной способ навигации:
 
-`http://127.0.0.1:8765/tools/bloom-ui-editor/`
+- HUD
+- Inventory
+- Workshop
+- Field Guide
+- Map
+- Trials
+- Settings
+- Plant
+- Season
+- Replay
+- Cards
+- Reward
+- Toast
+- Tutorial
+- Active Boosts
+- World UI
+- Loading
 
-Используй Chrome или Edge.
+Нажатие на state показывает только его authored Roblox UI на canvas и переводит Explorer/Inspector в контекст этого интерфейса.
 
-При первом запуске нажми **Подключить проект** и выбери корень, например `C:\Bloom_RNG`. Браузер запросит разрешение на запись. После этого кнопка **В ИГРУ →** сможет обновлять Rojo-файл напрямую.
+**Повторное нажатие на уже активный state закрывает его и возвращает пустой рабочий стол.**
+
+Loading автоматически переключает редактор на отдельную `BloomLoadingTemplate.model.json`. Возврат к любому игровому state автоматически возвращает `BloomUI.model.json`.
+
+## Desktop workflow
+
+Используй Bloom UI Studio через **RoFlow**. Это основной desktop workflow.
+
+Верхняя панель:
+
+- **Project** — выбрать проект.
+- **Save** — записать текущую Roblox GUI-модель.
+- **AI SYNC** — забрать актуальный `main`, безопасно объединить authored UI и перезагрузить текущую модель.
+- Undo / Redo.
+- Import / Export JSON.
+- Copy model for AI.
+
+Старый запуск через локальную HTML-страницу остаётся только как developer fallback для отладки самого редактора; это не основной пользовательский workflow.
+
+## Canvas
+
+Canvas использует реальные Roblox viewport размеры:
+
+- 1366×768
+- 1280×720
+- 1920×1080
+- 1440×900
+- mobile/custom
+
+Можно загрузить screenshot Roblox как background и подгонять интерфейс поверх реального кадра.
+
+Поддерживаются:
+
+- UDim2 / AnchorPoint
+- ZIndex
+- transparency / colors
+- TextLabel / TextButton / TextBox
+- ImageLabel / ImageButton
+- ScrollingFrame
+- UICorner / UIStroke
+- UIPadding
+- UIListLayout / UIGridLayout
+- UIScale
+- drag / resize
+- multi-select
+- group / ungroup
+- duplicate
+- exact Inspector
+- smart guides
+- snapping
+- undo / redo
+
+## Explorer и Inspector
+
+Когда UI STATE не выбран, workspace и Explorer остаются пустыми — это нормальное состояние.
+
+После выбора state редактор фокусирует соответствующий authored root. Из Explorer можно менять иерархию, а через Inspector — реальные Roblox properties.
+
+Не создавай отдельный декоративный HTML-preview вместо Roblox UI. Если элемент должен существовать в игре, он должен существовать в одной из authored GUI-моделей.
+
+## Динамические интерфейсы
+
+Некоторые списки зависят от профиля игрока: Inventory cards, Settings rows, Trials, Field Guide rows и т. п.
+
+Для них в ScreenGui существуют authored templates/state kits. Runtime может:
+
+1. найти authored template;
+2. клонировать его;
+3. подставить серверные данные;
+4. подключить события.
+
+Геометрия, stroke, corner, padding, fonts, icons и базовый стиль остаются редактируемыми в UI Studio.
 
 ## Горячие клавиши
 
-- Ctrl+Z / Ctrl+Y — undo/redo
+- Ctrl+Z / Ctrl+Y — undo / redo
 - Ctrl+D — duplicate
+- Ctrl+C / Ctrl+V — copy / paste GUI object
 - Delete — delete
+- F2 — rename
 - Arrow keys — nudge 1 px
-- Shift+Arrow — nudge на Snap
-- Ctrl+S — записать в игру, если проект подключён
+- Shift+Arrow — nudge по Snap
+- Ctrl+F — поиск в Explorer
+- Ctrl+G — group
+- Ctrl+Shift+G — ungroup
+- Ctrl+S — Save
+- 0 — Fit viewport
+- Esc — закрыть активный UI STATE / свернуть multi-selection
+
+## Geometry
+
+Geometry helpers существуют только в редакторе и не попадают в Roblox:
+
+- rulers;
+- viewport center axes;
+- safe inset line;
+- live X/Y/W/H;
+- distances to parent;
+- smart guides;
+- smart snap к родителю, viewport и соседям;
+- Alt временно отключает smart snap.
 
 ## Точность
 
-Позиции и размеры считаются из Roblox UDim2: `parentPixels * Scale + Offset`, с учётом AnchorPoint. Основные 2D GuiObject/UILayout свойства визуализируются напрямую.
+Редактор сохраняет Rojo model JSON напрямую. UDim/UDim2 offsets нормализуются до целых значений перед записью.
 
-Разница с реальным Roblox возможна для вещей, зависящих от движка: точная растеризация Gotham, AutomaticSize, RichText, UIGradient sequences, некоторые image slicing/9-slice режимы, CoreGui safe insets разных устройств и asset moderation. Эти свойства модель не теряет: неизвестные Properties сохраняются и доступны через RAW PROPERTIES.
-
-
-## Геометрическая помощь
-
-Переключатель **Geometry** включает редакторские направляющие. Они существуют только в Bloom UI Studio и не записываются в Roblox.
-
-- Линейки X/Y по краям Roblox viewport.
-- Постоянные оси центра экрана.
-- Линия Roblox GUI inset.
-- Живые X/Y/W/H в подписи выбранного объекта.
-- Размер выбранного объекта прямо на canvas.
-- Расстояния от объекта до границ родителя.
-- Smart Snap при drag/resize к краям и центрам родителя, viewport и соседних объектов.
-- Розовые smart guides показывают, к чему именно произошёл snap.
-- Удерживай **Alt** во время drag/resize, чтобы временно отключить smart snap.
-- В Inspector блок **GEOMETRY** позволяет одним кликом выровнять объект Left / Center X / Right / Top / Center Y / Bottom или точно по центру родителя.
-
-Обычный **Snap** продолжает задавать шаг перемещения по пиксельной сетке, а Geometry добавляет поверх него смысловое выравнивание.
+Некоторые вещи рендерятся приблизительно относительно Roblox Engine: точная Gotham rasterization, отдельные AutomaticSize случаи, сложные UIGradient sequences, image slicing и platform-specific CoreGui inset. Сами свойства при этом не теряются.
