@@ -1701,6 +1701,126 @@ function defaultObject(kind){
  };
  return normalizeNode({ClassName:kind,Name:uniqueName(kind),Properties:m[kind]||common,Children:[]});
 }
+
+function patternCorner(radius=8){
+ return {ClassName:"UICorner",Name:"UICorner",Properties:{CornerRadius:ud(0,radius)},Children:[]};
+}
+function patternStroke(colorValue=c3(.05,.08,.12),thickness=2,transparency=.08){
+ return {ClassName:"UIStroke",Name:"UIStroke",Properties:{Color:colorValue,Thickness:thickness,Transparency:transparency,ApplyStrokeMode:"Border"},Children:[]};
+}
+function patternText(name,text,size,position,sizePx,colorValue=c3(1,1,1),font="GothamBold"){
+ return {ClassName:"TextLabel",Name:name,Properties:{
+  BackgroundTransparency:1,BorderSizePixel:0,Position:position,Size:sizePx,AnchorPoint:v2(0,0),
+  Text:text,TextColor3:colorValue,TextSize:size,TextWrapped:true,TextXAlignment:"Center",TextYAlignment:"Center",Font:font,
+  ZIndex:2,Visible:true
+ },Children:[]};
+}
+function patternButton(name,text,w,h,bg,strokeColor,textColor=c3(1,1,1),textSize=14){
+ return {ClassName:"TextButton",Name:name,Properties:{
+  Size:u2(0,w,0,h),Position:u2(0,0,0,0),AnchorPoint:v2(0,0),
+  BackgroundColor3:bg,BackgroundTransparency:0,BorderSizePixel:0,ZIndex:2,Visible:true,
+  Text:text,TextColor3:textColor,TextSize:textSize,TextWrapped:true,TextXAlignment:"Center",TextYAlignment:"Center",
+  Font:"GothamBold",AutoButtonColor:false
+ },Children:[patternCorner(Math.min(12,Math.round(h*.28))),patternStroke(strokeColor,2,.08)]};
+}
+function patternFragment(kind){
+ const blue=c3(.08,.33,.52),blueStroke=c3(.20,.58,.86),green=c3(.08,.43,.28),greenStroke=c3(.23,.77,.48);
+ const dark=c3(.07,.11,.16),darkStroke=c3(.18,.29,.39),red=c3(.34,.10,.14),redStroke=c3(.76,.27,.33);
+ let root=null;
+ switch(kind){
+  case "close":
+   root=patternButton("CloseButton","×",38,38,dark,redStroke,c3(.96,.97,1),22);break;
+  case "equip":
+   root=patternButton("EquipButton","EQUIP",150,44,green,greenStroke,c3(.91,1,.95),14);break;
+  case "unequip":
+   root=patternButton("UnequipButton","UNEQUIP",150,44,dark,darkStroke,c3(.78,.86,.92),13);break;
+  case "confirm":
+   root=patternButton("ConfirmButton","CONFIRM",160,44,green,greenStroke,c3(.92,1,.96),13);break;
+  case "cancel":
+   root=patternButton("CancelButton","CANCEL",140,42,dark,darkStroke,c3(.76,.84,.90),12);break;
+  case "back":
+   root=patternButton("BackButton","‹  BACK",118,38,dark,darkStroke,c3(.77,.88,.96),12);break;
+  case "primary":
+   root=patternButton("PrimaryAction","CONTINUE  →",180,46,blue,blueStroke,c3(.94,.98,1),13);break;
+  case "icon":
+   root=patternButton("IconButton","◆",42,42,dark,blueStroke,c3(.42,.77,1),17);break;
+  case "tab":
+   root=patternButton("TabButton","OVERVIEW",126,36,c3(.07,.22,.34),blueStroke,c3(.87,.96,1),11);break;
+  case "currency":
+   root={ClassName:"Frame",Name:"CurrencyPill",Properties:{
+    Size:u2(0,164,0,42),Position:u2(),AnchorPoint:v2(0,0),BackgroundColor3:c3(.055,.10,.15),BackgroundTransparency:0,
+    BorderSizePixel:0,ZIndex:2,Visible:true
+   },Children:[
+    patternCorner(12),patternStroke(c3(.20,.43,.60),2,.14),
+    patternText("Icon","✦",17,u2(0,10,0,5),u2(0,32,0,32),c3(.95,.74,.25)),
+    patternText("Value","12,450",14,u2(0,48,0,4),u2(0,104,0,34),c3(.94,.98,1))
+   ]};break;
+  case "badge":
+   root={ClassName:"TextLabel",Name:"StatusBadge",Properties:{
+    Size:u2(0,88,0,26),Position:u2(),AnchorPoint:v2(0,0),BackgroundColor3:c3(.12,.30,.20),BackgroundTransparency:0,
+    BorderSizePixel:0,ZIndex:3,Visible:true,Text:"NEW",TextColor3:c3(.75,1,.86),TextSize:10,TextWrapped:false,
+    TextXAlignment:"Center",TextYAlignment:"Center",Font:"GothamBold"
+   },Children:[patternCorner(13),patternStroke(c3(.28,.68,.45),1,.12)]};break;
+  case "progress":
+   root={ClassName:"Frame",Name:"ProgressBar",Properties:{
+    Size:u2(0,280,0,32),Position:u2(),AnchorPoint:v2(0,0),BackgroundColor3:c3(.045,.075,.11),BackgroundTransparency:0,
+    BorderSizePixel:0,ZIndex:2,Visible:true,ClipsDescendants:true
+   },Children:[
+    patternCorner(10),patternStroke(c3(.16,.30,.40),1,.2),
+    {ClassName:"Frame",Name:"Fill",Properties:{
+     Size:u2(.62,0,1,0),Position:u2(),AnchorPoint:v2(0,0),BackgroundColor3:c3(.10,.49,.72),BackgroundTransparency:0,
+     BorderSizePixel:0,ZIndex:2,Visible:true
+    },Children:[patternCorner(10)]},
+    patternText("Label","62%",11,u2(),u2(1,0,1,0),c3(.96,.99,1))
+   ]};break;
+  case "tooltip":
+   root={ClassName:"Frame",Name:"Tooltip",Properties:{
+    Size:u2(0,248,0,82),Position:u2(),AnchorPoint:v2(0,0),BackgroundColor3:c3(.035,.065,.095),BackgroundTransparency:.02,
+    BorderSizePixel:0,ZIndex:20,Visible:true
+   },Children:[
+    patternCorner(10),patternStroke(c3(.19,.42,.58),1,.1),
+    {ClassName:"UIPadding",Name:"UIPadding",Properties:{PaddingLeft:ud(0,12),PaddingRight:ud(0,12),PaddingTop:ud(0,10),PaddingBottom:ud(0,10)},Children:[]},
+    patternText("Text","Useful information about this control.",11,u2(),u2(1,0,1,0),c3(.78,.88,.95),"Gotham")
+   ]};break;
+  case "modalHeader":
+   root={ClassName:"Frame",Name:"ModalHeader",Properties:{
+    Size:u2(0,520,0,56),Position:u2(),AnchorPoint:v2(0,0),BackgroundColor3:c3(.055,.09,.13),BackgroundTransparency:0,
+    BorderSizePixel:0,ZIndex:3,Visible:true
+   },Children:[
+    patternCorner(12),patternStroke(c3(.15,.31,.43),1,.15),
+    {ClassName:"TextLabel",Name:"Title",Properties:{
+     Size:u2(1,-64,1,0),Position:u2(0,16,0,0),AnchorPoint:v2(0,0),BackgroundTransparency:1,BorderSizePixel:0,
+     Text:"TITLE",TextColor3:c3(.91,.96,1),TextSize:16,TextWrapped:false,TextXAlignment:"Left",TextYAlignment:"Center",
+     Font:"GothamBold",ZIndex:4,Visible:true
+    },Children:[]},
+    {ClassName:"TextButton",Name:"CloseButton",Properties:{
+     Size:u2(0,34,0,34),Position:u2(1,-44,.5,-17),AnchorPoint:v2(0,0),BackgroundColor3:dark,BackgroundTransparency:0,
+     BorderSizePixel:0,ZIndex:5,Visible:true,Text:"×",TextColor3:c3(.92,.95,.98),TextSize:20,TextWrapped:false,
+     TextXAlignment:"Center",TextYAlignment:"Center",Font:"GothamBold",AutoButtonColor:false
+    },Children:[patternCorner(9),patternStroke(redStroke,1,.1)]}
+   ]};break;
+ }
+ if(!root)return null;
+ root.Name=uniqueName(root.Name||"Pattern");
+ return normalizeNode(root);
+}
+function createPattern(kind){
+ if(!state.root)return;
+ const parent=nearestCreationParent(selected());
+ if(!parent){toast("Не удалось определить родителя для паттерна",true);return}
+ const n=patternFragment(kind);
+ if(!n){toast("Неизвестный UI Pattern: "+kind,true);return}
+ pushHistory();
+ const position=creationPosition(parent,n);
+ if(position)n.Properties.Position=position;
+ parent.Children=parent.Children||[];
+ parent.Children.push(n);
+ state.selectedId=n.__id;state.selectedIds=new Set([n.__id]);state.selectionAnchorId=n.__id;
+ changed();
+ requestAnimationFrame(()=>focusSelected());
+ toast("Pattern · "+(n.Name||kind)+" создан");
+}
+
 function uniqueName(base){let i=1,name=base;const names=new Set();walk(state.root,n=>names.add(n.Name));while(names.has(name))name=base+(++i);return name}
 function nearestCreationParent(node){
  let p=node;
@@ -2329,6 +2449,7 @@ async function loadInitial(){
 }
 
 $("#palette").addEventListener("click",e=>{const b=e.target.closest("[data-add]");if(b)addObject(b.dataset.add)});
+$("#patternPalette")?.addEventListener("click",e=>{const b=e.target.closest("[data-pattern]");if(b)createPattern(b.dataset.pattern)});
 $("#createFirstFrame").onclick=()=>addObject("Frame");
 $("#deleteBtn").onclick=deleteSelected;$("#duplicateBtn").onclick=duplicateSelected;$("#outdentBtn").onclick=outdentSelected;$("#groupBtn").onclick=groupSelected;$("#ungroupBtn").onclick=ungroupSelected;
 $("#connectBtn").onclick=connectProject;$("#pullBtn").onclick=pullProject;$("#pushBtn").onclick=pushProject;$("#aiSyncBtn").onclick=assistantSync;
@@ -2443,9 +2564,9 @@ window.addEventListener("beforeunload",e=>{if(state.dirty){e.preventDefault();e.
 $("#dialogClose").onclick=()=>els.jsonDialog.close();$("#dialogCopy").onclick=()=>navigator.clipboard.writeText(els.jsonArea.value);
 $("#dialogApply").onclick=()=>{try{setRoot(JSON.parse(els.jsonArea.value),"JSON применён");els.jsonDialog.close()}catch(e){toast(e.message,true)}};
 $("#addMenuBtn").onclick=()=>{
- const palette=$("#palette"),drawer=palette?.closest("details");
- if(drawer)drawer.open=true;
- palette?.scrollIntoView({behavior:"smooth",block:"nearest"});
+ const patterns=$("#patternPalette"),patternDrawer=patterns?.closest("details");
+ if(patternDrawer)patternDrawer.open=true;
+ patterns?.scrollIntoView({behavior:"smooth",block:"nearest"});
 };
 window.addEventListener("resize",()=>{updateOverlay();updatePixelReadout()});
 window.addEventListener("keydown",e=>{
