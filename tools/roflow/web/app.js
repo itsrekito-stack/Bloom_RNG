@@ -238,8 +238,26 @@ function checkpointLabel(line){
  const match=String(line||"").match(/CHECKPOINT_(\d+)m/);
  return match?match[1]+" min":"—";
 }
+function setQaEvidence(selector,ready,label,detail=""){
+ const node=$(selector);if(!node)return;
+ node.classList.toggle("ready",ready);
+ node.textContent=label+" · "+(ready?"EVIDENCE READY":detail||"WAITING");
+}
 function renderRuntimeProbe(report){
  const milestones=report?.milestones||[],evidence=report?.evidence||[],minutes=report?.checkpointMinutes||[];
+ const milestoneSet=new Set(milestones),evidenceSet=new Set(evidence);
+ const coreReady=milestones.length>=7;
+ const persistenceReady=report?.persistenceVerdict==="MATCH";
+ const baselineReady=minutes.includes(10);
+ const onboardingReady=evidenceSet.has("CharacterSpawned")&&evidenceSet.has("TutorialProgress")&&milestoneSet.has("Bee")&&milestoneSet.has("Roll");
+ const multiplayerReady=evidenceSet.has("Multiplayer2Plus");
+ const soakCount=[15,30,60].filter(x=>minutes.includes(x)).length;
+ setQaEvidence("#qaCoreEvidence",coreReady,"CORE LOOP");
+ setQaEvidence("#qaPersistenceEvidence",persistenceReady,"PERSISTENCE");
+ setQaEvidence("#qaBaselineEvidence",baselineReady,"10M BASELINE");
+ setQaEvidence("#qaOnboardingEvidence",onboardingReady,"ONBOARDING");
+ setQaEvidence("#qaMultiplayerEvidence",multiplayerReady,"MULTIPLAYER");
+ setQaEvidence("#qaSoakEvidence",soakCount===3,"SOAK",soakCount+"/3 CHECKPOINTS");
  const milestoneNode=$("#runtimeMilestones");
  milestoneNode.textContent=(milestones.length>=7?"7/7 PASS · ":milestones.length+"/7 · ")+(milestones.length?milestones.join(", "):"waiting");
  milestoneNode.style.color=milestones.length>=7?"#66e0a6":"";
