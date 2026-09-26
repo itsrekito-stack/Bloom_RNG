@@ -1498,12 +1498,13 @@ function UI:ResolveRouletteReward(payload)
    if not self:StepRoulette(duration*revealScale,final and target or nil,generation) then break end
   end
   if generation==self.RouletteGeneration then
-   local remaining=math.max(0,((RollAudio.MinimumVisualSpin or 0)*revealScale)-(os.clock()-visualStart))
+   local quick=self.State and self.State.Profile and self.State.Profile.Settings.QuickRoll==true
+   local speedScale=quick and .55 or 1
+   local remaining=math.max(0,((RollAudio.MinimumVisualSpin or 0)*revealScale*speedScale)-(os.clock()-visualStart))
    if remaining>0 then task.wait(remaining) end
    self:PlayRouletteRewardSound()
    self:AnimateRouletteResult(revealScale)
-   local quick=self.State and self.State.Profile and self.State.Profile.Settings.QuickRoll==true
-   task.wait(RollAudio.ResultHold*revealScale*(quick and .55 or 1))
+   task.wait(RollAudio.ResultHold*revealScale*speedScale)
   end
   if generation~=self.RouletteGeneration then return end
   self.RouletteLanding=false
