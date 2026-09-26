@@ -178,6 +178,14 @@
             <div><span class="label">CLIENT</span><strong id="runtimeClientCheckpoint">—</strong><small>Latest checkpoint</small></div>
             <div><span class="label">PERSISTENCE</span><strong id="runtimePersistence">—</strong><small>JOIN / LEAVE digest evidence</small></div>
           </div>
+          <div class="runtime-qa-readiness">
+            <span id="qaCoreEvidence" class="qa-evidence">CORE LOOP · WAITING</span>
+            <span id="qaPersistenceEvidence" class="qa-evidence">PERSISTENCE · WAITING</span>
+            <span id="qaBaselineEvidence" class="qa-evidence">10M BASELINE · WAITING</span>
+            <span id="qaOnboardingEvidence" class="qa-evidence">ONBOARDING · WAITING</span>
+            <span id="qaMultiplayerEvidence" class="qa-evidence">MULTIPLAYER · WAITING</span>
+            <span id="qaSoakEvidence" class="qa-evidence">SOAK · WAITING</span>
+          </div>
           <div id="runtimeProbeMeta" class="runtime-qa-meta">Start Play in Roblox Studio to collect RuntimeProbe evidence.</div>
           <pre id="runtimeProbeOutput" class="runtime-qa-output">Waiting for Roblox Studio probe output.</pre>
         </article>
