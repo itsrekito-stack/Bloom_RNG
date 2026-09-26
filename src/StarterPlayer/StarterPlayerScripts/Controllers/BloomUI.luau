@@ -21,15 +21,17 @@ local BloomConfig=require(RS.Config.BloomConfig)
 local NumberFormatter=require(RS.Shared.NumberFormatter)
 local WorkshopEffects=require(RS.Shared.WorkshopEffects)
 local InventoryV2=require(script.Parent.InventoryV2Controller)
+local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
-local CLIENT_BUILD="roll-correlation-v6-2026-09-25"
+local CLIENT_BUILD="settings-v2-runtime-2026-09-26"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
-local MENU_RENDERERS={SeedSatchel="InventoryV2"}
+local MENU_RENDERERS={SeedSatchel="InventoryV2",Settings="SettingsV2"}
 local MENU_REFRESH_ACTIONS={
  Setting="Settings",
+ ResetSettings="Settings",
  DissolveFilter="Settings",
  EquipBee="SeedSatchel",
  Dissolve="SeedSatchel",
@@ -59,7 +61,7 @@ local MENU_HINTS={
  FieldGuide="Collection, odds, and discovered synergies",
  Map="Sectors, discoveries, and travel",
  Trials="Short build trials",
- Settings="Effects, sound, and automation",
+ Settings="Game & UI preferences",
  Plant="Choose a seed for an empty flower bed",
  Season="Review the changes before confirming",
  Replay="Replay the tutorial without resetting progress",
@@ -578,18 +580,26 @@ end
 
 function UI:ClearPanel()
  self:DisconnectWorkshopPan()
+ SettingsV2.Cleanup()
  self.WorkshopRuntime=nil
  for _,x in ipairs(self.Content:GetChildren()) do
   if not x:IsA("UIListLayout") and not x:IsA("UIPadding") then x:Destroy() end
  end
 end
 
+function UI:GetMenuScale()
+ if self.Menu=="Workshop" then return 1 end
+ local settings=self.State and self.State.Profile and self.State.Profile.Settings
+ return math.clamp(tonumber(settings and settings.UIScale) or 1,.8,1.15)
+end
+
 function UI:SetPanelVisible(visible)
  self.Panel.Visible=visible
  self.ModalShade.Visible=visible
  if visible then
-  self.PanelScale.Scale=.96
-  TweenService:Create(self.PanelScale,TweenInfo.new(Theme.Motion.Normal,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
+  local scale=self:GetMenuScale()
+  self.PanelScale.Scale=scale*.96
+  TweenService:Create(self.PanelScale,TweenInfo.new(Theme.Motion.Normal,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=scale}):Play()
  end
 end
 
@@ -681,6 +691,8 @@ function UI:RenderMenu(preserveInteraction)
    self.Panel.Size=UDim2.fromOffset(math.max(300,safeW-16),math.max(300,safeH-108))
   elseif renderer=="InventoryV2" then
    self.Panel.Size=UDim2.fromOffset(math.min(1220,math.max(700,safeW-24)),math.min(660,math.max(500,safeH-24)))
+  elseif renderer=="SettingsV2" then
+   self.Panel.Size=UDim2.fromOffset(math.min(920,math.max(720,safeW-64)),math.min(570,math.max(500,safeH-72)))
   else
    self.Panel.Size=UDim2.fromOffset(600,420)
   end
@@ -719,6 +731,13 @@ function UI:RenderMenu(preserveInteraction)
   self.Content.ScrollingEnabled=false
   self.Content.ScrollBarThickness=0
   InventoryV2.Render(self,p,ui)
+
+ elseif renderer=="SettingsV2" then
+  self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
+  self.Content.CanvasSize=UDim2.fromOffset(0,0)
+  self.Content.ScrollingEnabled=false
+  self.Content.ScrollBarThickness=0
+  SettingsV2.Render(self,p,ui)
 
  elseif renderer=="Workshop" then
   local shell=self.WorkshopRuntime
@@ -1081,34 +1100,6 @@ function UI:RenderMenu(preserveInteraction)
    end
   end
 
- elseif name=="Settings" then
-  self:Section(self.Content,"Interface and Effects")
-  for _,id in ipairs({"ReducedEffects","ShowOtherPollinators","HideOtherPlayersTokens","RareFeed","AutoDissolve"}) do
-   local on=p.Settings[id]==true
-   local enabled=not (id=="AutoDissolve" and ui.Settings and not ui.Settings.AutoDissolveUnlocked)
-   local button=self:Button(self.Content,(SETTINGS_NAMES[id] or id).."   •   "..(on and "ON" or "OFF"),function() self:Send("Setting",id,not on) end,Icons.Get("System",on and "Confirm" or "Minus"))
-   button.Active=enabled
-  end
-  self:Button(self.Content,"Activity volume   •   "..math.floor((p.Settings.TokenSoundVolume or 0)*100).."%",function() self:Send("Setting","TokenSoundVolume",(p.Settings.TokenSoundVolume+.25)%1.25) end,Icons.Get("System","Info"))
-  if p.WorkshopV5.Nodes.ECONOMY_2 then
-   self:Section(self.Content,"Auto-Dissolve Filter")
-   for _,rarity in ipairs(R.Order) do
-    local on=p.Settings.DissolveRarities[rarity]==true
-    self:Button(self.Content,"Dissolve "..rarity.."   •   "..(on and "ON" or "OFF"),function() self:Send("DissolveFilter",rarity) end,Icons.Get("WorkshopHex","Duplicate"))
-   end
-  end
-  self:Section(self.Content,"Tutorial")
-  self:Button(self.Content,"Skip Tutorial",function() self:Send("Skip") end,Icons.Get("System","Warning"))
-  self:Button(self.Content,"Replay Tutorial",function() self:Send("Replay") end,Icons.Get("System","Tutorial"))
-  if RunService:IsStudio() then
-   self:Section(self.Content,"Studio Tutorial Test")
-   self:Label(self.Content,"Starts a session-only fresh profile. Your saved Studio profile is restored when Play ends.",42)
-   self:Button(self.Content,"RESTART TUTORIAL V4 (STUDIO)",function()
-    self:Send("StudioTutorialReset")
-    self:Close()
-   end,Icons.Get("System","Tutorial"))
-  end
-
  elseif name=="Season" then
   local preview=self.MenuArg
   self:Section(self.Content,"What Will Be Kept")
@@ -1328,7 +1319,8 @@ function UI:SetRouletteSlot(slot,data,role)
  if chance and chance:IsA("TextLabel") then
   local odds=tonumber(data.Odds)
   chance.Text=odds and odds<math.huge and ("1 / "..compact(math.max(1,math.floor(odds+.5)))) or "1 / ∞"
-  chance.TextColor3=current and C.Gold or color
+  local showRarity=not self.State or not self.State.Profile or self.State.Profile.Settings.ShowRarityColors~=false
+  chance.TextColor3=current and C.Gold or (showRarity and color or C.Muted)
   chance.TextTransparency=faint
   chance.TextSize=current and 10 or 9
  end
@@ -1372,7 +1364,8 @@ function UI:PlayRouletteTick()
  local s=self.RouletteSpinSound
  if not s then return end
  s:Stop() s.TimePosition=0
- local master=self.State and self.State.Profile.Settings.TokenSoundVolume or .5
+ local settings=self.State and self.State.Profile.Settings or {}
+ local master=settings.MuteAll and 0 or (tonumber(settings.SFXVolume) or tonumber(settings.TokenSoundVolume) or .5)
  s.Volume=RollAudio.SpinVolume*math.clamp(master*2,0,1)
  s.PlaybackSpeed=RollAudio.SpinPlaybackSpeed+Random.new():NextNumber(-.06,.06)
  s:Play()
@@ -1382,7 +1375,8 @@ function UI:PlayRouletteRewardSound()
  local s=self.RouletteRewardSound
  if not s then return end
  s:Stop() s.TimePosition=0
- local master=self.State and self.State.Profile.Settings.TokenSoundVolume or .5
+ local settings=self.State and self.State.Profile.Settings or {}
+ local master=settings.MuteAll and 0 or (tonumber(settings.SFXVolume) or tonumber(settings.TokenSoundVolume) or .5)
  s.Volume=RollAudio.RewardVolume*math.clamp(master*2,0,1)
  s.PlaybackSpeed=RollAudio.RewardPlaybackSpeed s:Play()
 end
@@ -1395,7 +1389,9 @@ function UI:StepRoulette(duration,targetIndex,generation)
   self:RefreshRouletteSlots()
  end
  self.RouletteStrip.Position=UDim2.fromOffset(0,0)
- local tween=TweenService:Create(self.RouletteStrip,TweenInfo.new(duration,Enum.EasingStyle.Linear),{Position=UDim2.fromOffset(0,RollAudio.StepPixels)})
+ local quick=self.State and self.State.Profile and self.State.Profile.Settings.QuickRoll==true
+ local actualDuration=duration*(quick and .58 or 1)
+ local tween=TweenService:Create(self.RouletteStrip,TweenInfo.new(actualDuration,Enum.EasingStyle.Linear),{Position=UDim2.fromOffset(0,RollAudio.StepPixels)})
  self.RouletteTween=tween self:PlayRouletteTick() tween:Play() tween.Completed:Wait()
  if generation and generation~=self.RouletteGeneration then return false end
  if self.RouletteTween==tween then self.RouletteTween=nil end
@@ -1506,7 +1502,8 @@ function UI:ResolveRouletteReward(payload)
    if remaining>0 then task.wait(remaining) end
    self:PlayRouletteRewardSound()
    self:AnimateRouletteResult(revealScale)
-   task.wait(RollAudio.ResultHold*revealScale)
+   local quick=self.State and self.State.Profile and self.State.Profile.Settings.QuickRoll==true
+   task.wait(RollAudio.ResultHold*revealScale*(quick and .55 or 1))
   end
   if generation~=self.RouletteGeneration then return end
   self.RouletteLanding=false
@@ -1797,6 +1794,7 @@ function UI:ApplyState(payload,source)
  local previousTutorialStep=not firstState and self.State.Profile and self.State.Profile.Tutorial and self.State.Profile.Tutorial.Step or nil
  if not firstState and payload.Revision~=nil and self.State.Revision==payload.Revision then return false end
  self.State=payload
+ SettingsV2.ApplyEffects(self,payload.Profile)
  if firstState then
   self.ObjectiveCard.Visible=true
   self.CurrencyHUD.Visible=true
@@ -1905,7 +1903,8 @@ function UI:Start()
    end
   elseif kind=="TokenCollected" then
    if self.State then
-    local volume=self.State.Profile.Settings.TokenSoundVolume
+    local audioSettings=self.State.Profile.Settings
+    local volume=audioSettings.MuteAll and 0 or (tonumber(audioSettings.SFXVolume) or tonumber(audioSettings.TokenSoundVolume) or .5)
     if volume>0 then
      local sound=Instance.new("Sound")
      sound.SoundId=require(RS.Config.ActivityConfig).TokenSound
@@ -1927,7 +1926,7 @@ function UI:Start()
   elseif kind=="Trials" then self:Open("Trials",payload)
   elseif kind=="RareFeed" then if self.State and self.State.Profile.Settings.RareFeed then self:Toast(payload.Player.." • "..payload.Name) end
   elseif kind=="Ceremony" then
-   if self.State then
+   if self.State and self.State.Profile.Settings.RewardPopups~=false then
     self.Rewards:Enqueue({
      Kind=payload.RewardKind or "Ceremony",
      Id=payload.RewardId,
@@ -1950,8 +1949,16 @@ function UI:Start()
 
  UIS.InputBegan:Connect(function(input,processed)
   if processed then return end
-  if input.KeyCode==Enum.KeyCode.M then self.Dock.Visible=not self.Dock.Visible
-  elseif input.KeyCode==Enum.KeyCode.Escape and self.Menu then self:Close() end
+  local settings=self.State and self.State.Profile and self.State.Profile.Settings or {}
+  local openKey=Enum.KeyCode[tostring(settings.OpenMenuKey or "M")] or Enum.KeyCode.M
+  local rollKey=Enum.KeyCode[tostring(settings.RollKey or "R")] or Enum.KeyCode.R
+  if input.KeyCode==Enum.KeyCode.Escape and self.Menu then
+   self:Close()
+  elseif input.KeyCode==openKey then
+   self.Dock.Visible=not self.Dock.Visible
+  elseif input.KeyCode==rollKey and self.State and self.State.Profile.Tutorial.FeatureUnlocks.Roll==true then
+   self:SetAutoRolling(not self.Auto)
+  end
  end)
 
  local cameraConnection=nil
