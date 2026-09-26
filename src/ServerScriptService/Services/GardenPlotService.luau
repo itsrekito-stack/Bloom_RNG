@@ -117,13 +117,13 @@ function S:Build(player)
   horizontalCylinder(border,Enum.Material.Sandstone)
   border.CanQuery=false
 
-  local soil=self.X:Part(m,"Soil",origin+Vector3.new(0,.045,0),Vector3.new(.05,28,28),Color3.fromRGB(105,76,52),false)
+  local soil=self.X:Part(m,"Soil",origin+Vector3.new(0,.045,0),Vector3.new(.05,26,26),Color3.fromRGB(105,76,52),false)
   horizontalCylinder(soil,Enum.Material.Ground)
   soil.CanQuery=false
 
   local hivePosition=self:HivePosition(player)
   local hiveBasePosition=origin+Vector3.new(G.Layout.HiveOffset.X,.06,G.Layout.HiveOffset.Z)
-  local hiveBase=self.X:Part(m,"HiveBase",hiveBasePosition,Vector3.new(.12,6,6),Color3.fromRGB(118,112,102),false)
+  local hiveBase=self.X:Part(m,"HiveBase",hiveBasePosition,Vector3.new(.12,5.5,5.5),Color3.fromRGB(118,112,102),false)
   horizontalCylinder(hiveBase,Enum.Material.Slate)
   hiveBase.CanQuery=false
 
