@@ -1075,32 +1075,8 @@ function UI:RenderMenu(preserveInteraction)
    end
 
    if firstWorkshopBuild then
-    if self.WorkshopCanvasPosition then
-     canvas.CanvasPosition=self.WorkshopCanvasPosition
-    end
     self:BindWorkshopPan(canvas,nodes)
-    task.defer(function()
-     if not canvas.Parent then return end
-     local position=self.WorkshopCanvasPosition
-     if not position then
-      local core=nodes:FindFirstChild("Node_CORE")
-      if core and core:IsA("GuiObject") then
-       local zoom=self.WorkshopZoom or 1
-       local coreCenter=Vector2.new(
-        core.Position.X.Offset+core.Size.X.Offset*.5,
-        core.Position.Y.Offset+core.Size.Y.Offset*.5
-       )*zoom
-       position=coreCenter-canvas.AbsoluteSize*.5
-      else
-       position=Vector2.new(650,500)
-      end
-     end
-     position=self:ClampWorkshopCanvasPosition(canvas,position)
-     canvas.CanvasPosition=position
-     self.WorkshopCanvasPosition=position
-    end)
    end
-  end
  elseif name=="Plant" then
   local slot=tonumber(self.MenuArg)
   self:Section(self.Content,slot and ("Garden Slot "..tostring(slot)) or "Garden")
