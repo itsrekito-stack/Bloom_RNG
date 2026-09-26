@@ -80,8 +80,8 @@ RunService.RenderStepped:Connect(function(dt)
  end
 end)
 
-game:BindToClose(function()
- report("CLIENT_CLOSE")
+script.Destroying:Connect(function()
+ report("CLIENT_DESTROY")
 end)
 
 print("[RuntimeProbe][Client] Studio-only read-only probe active. Frame/memory/UI/input checkpoints at 1/10/15/30/60 minutes.")
