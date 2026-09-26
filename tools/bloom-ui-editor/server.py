@@ -248,7 +248,6 @@ REQUIRED_RUNTIME_UI_CHILDREN = {
     "HoverScale", "TutorialCompleteScale", "SlotScale", "WorkshopZoomScale",
     "WorkshopTemplate", "WorkshopBody", "TreePanel", "TreeCanvas", "PanMap",
     "NodeTooltip", "WorkshopCurrencyBar", "WorkshopPoints", "PetalDust", "AncientNectar",
-    "Title", "Branch", "Effect", "Cost", "Hint", "Accent", "Value", "Icon",
     "WorldUIPrototypes", "TutorialWorldBillboard", "ActivityCheckpointBillboard",
     "TutorialWorldLabelTemplate", "ActivityCheckpointLabelTemplate",
 }
