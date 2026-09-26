@@ -15,6 +15,7 @@ bloom=read("src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau")
 inventory=read("src/StarterPlayer/StarterPlayerScripts/Controllers/InventoryV2Controller.luau")
 boost=read("src/StarterPlayer/StarterPlayerScripts/Controllers/BoostHUDController.luau")
 tutorial=read("src/StarterPlayer/StarterPlayerScripts/Controllers/TutorialGuideController.luau")
+activity=read("src/StarterPlayer/StarterPlayerScripts/Controllers/ActivityController.luau")
 loading=read("src/ReplicatedFirst/LoadingScreen.client.luau")
 editor=read("tools/bloom-ui-editor/app.js")
 editor_html=read("tools/bloom-ui-editor/index.html")
@@ -44,6 +45,10 @@ assert 'Instance.new("UIScale")' not in tutorial
 need(tutorial,'ui.SafeRoot:FindFirstChild("TutorialSpotlight")',"tutorial spotlight authored binding")
 need(tutorial,'ui.SafeRoot:FindFirstChild("TutorialCallout")',"tutorial callout authored binding")
 need(tutorial,'ui.SafeRoot:FindFirstChild("TutorialScreenArrow")',"tutorial arrow authored binding")
+need(tutorial,'prototypes:FindFirstChild("TutorialWorldLabelTemplate",true)',"tutorial world label authored prototype")
+assert 'Instance.new("TextLabel")' not in tutorial, "tutorial creates visual TextLabel at runtime instead of cloning authored prototype"
+need(activity,'prototypes:FindFirstChild("ActivityCheckpointLabelTemplate",true)',"activity world label authored prototype")
+assert 'Instance.new("TextLabel")' not in activity, "activity creates visual TextLabel at runtime instead of cloning authored prototype"
 
 def walk(node):
     yield node
@@ -55,6 +60,8 @@ for required in [
     "TutorialSpotlight","TutorialCallout","TutorialScreenArrow",
     "ActionHitboxTemplate","OverlayHitboxTemplate","SearchBoxTemplate","EmptyStateTemplate",
     "StateKits","HoverScale","TutorialCompleteScale","WorkshopZoomScale",
+    "WorldUIPrototypes","TutorialWorldBillboard","ActivityCheckpointBillboard",
+    "TutorialWorldLabelTemplate","ActivityCheckpointLabelTemplate",
 ]:
     assert required in nodes, f"authored BloomUI node missing: {required}"
 
@@ -75,11 +82,14 @@ for required in ["Background","Card","ProgressTrack","ProgressFill","Status","De
 need(loading,'RF:WaitForChild("BloomLoadingTemplate",10)',"loading authored model binding")
 assert 'Instance.new("ScreenGui")' not in loading
 
-states=["gameplay","inventory_v2","workshop","fieldguide","map","trials","settings","plant","season","replay","cards","reward","toast","tutorial","boosts","loading"]
+states=["gameplay","inventory_v2","workshop","fieldguide","map","trials","settings","plant","season","replay","cards","reward","toast","tutorial","boosts","world_ui","loading"]
 for state in states:
     assert f'data-ui-state="{state}"' in editor_html, f"UI STATE button missing: {state}"
 need(editor,'const closing=state.activeUiState===scene',"UI STATE toggle-off behavior")
 need(editor,'state.activeUiState=null',"empty workspace state")
+need(editor,'if(!state.activeUiState){',"empty Explorer state")
+need(editor,'world_ui:"World UI"', "World UI state title")
+need(editor,'world_ui:"WorldUIPrototypes"', "World UI authored focus")
 assert "MOCK PREVIEW · NOT RUNTIME" not in editor
 assert '<div class="preview-menu-generic">' not in editor
 need(editor,'LOADING_TARGET="src/ReplicatedFirst/BloomLoadingTemplate.model.json"',"loading model editor target")
