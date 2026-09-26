@@ -29,6 +29,7 @@ function roflowTauri(){
  return null;
 }
 const ROFLOW_NATIVE=window.__ROFLOW_EMBEDDED__===true&&!!roflowTauri()?.core?.invoke;
+if(ROFLOW_NATIVE)document.documentElement.classList.add("roflow-native");
 const nativeThumbnailCache=new Map();
 function nativeThumbnail(assetId){
  let pending=nativeThumbnailCache.get(String(assetId));
