@@ -4,7 +4,7 @@ local RunService=game:GetService("RunService")
 local G=require(RS.Config.GardenSynergyConfig)
 
 local FLOWER_DETAIL_DISTANCE=24
-local FLOWER_REFRESH_SECONDS=.12
+local FLOWER_REFRESH_SECONDS=.18
 
 local S={Key="",FlowerAccumulator=0,FocusedFlowerInfo=nil}
 
@@ -37,32 +37,26 @@ function S:RefreshFlowerFocus()
 
  local nearest=nil
  local nearestDistance=FLOWER_DETAIL_DISTANCE
- if allowDetail then
+ local infos={}
+ if world then
   for _,descendant in ipairs(world:GetDescendants()) do
    if descendant:IsA("BillboardGui") and descendant.Name=="FlowerInfo" then
-    local position=flowerInfoPosition(descendant)
-    if position then
-     local distance=(root.Position-position).Magnitude
-     if distance<nearestDistance then
-      nearestDistance=distance
-      nearest=descendant
+    table.insert(infos,descendant)
+    if allowDetail then
+     local position=flowerInfoPosition(descendant)
+     if position then
+      local distance=(root.Position-position).Magnitude
+      if distance<nearestDistance then
+       nearestDistance=distance
+       nearest=descendant
+      end
      end
     end
    end
   end
  end
 
- if self.FocusedFlowerInfo and self.FocusedFlowerInfo~=nearest and self.FocusedFlowerInfo.Parent then
-  self.FocusedFlowerInfo.Enabled=false
- end
-
- if world then
-  for _,descendant in ipairs(world:GetDescendants()) do
-   if descendant:IsA("BillboardGui") and descendant.Name=="FlowerInfo" then
-    descendant.Enabled=descendant==nearest
-   end
-  end
- end
+ for _,info in ipairs(infos) do info.Enabled=info==nearest end
  self.FocusedFlowerInfo=nearest
 end
 
