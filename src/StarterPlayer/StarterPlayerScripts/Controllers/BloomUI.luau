@@ -24,7 +24,7 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="workshop-sync-repair-2026-09-26"
+local CLIENT_BUILD="plant-inventory-flow-2026-09-26"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
@@ -48,7 +48,6 @@ local MENU_NAMES={
  Workshop="Workshop",
  Trials="Quests",
  Settings="Settings",
- Plant="Planting",
  Season="Season Turn",
  Replay="Tutorial Replay",
  Cards="Season Cards",
@@ -58,7 +57,6 @@ local MENU_HINTS={
  Workshop="Permanent upgrades and progression branches",
  Trials="Tasks, progress & rewards",
  Settings="Game & UI preferences",
- Plant="Choose a seed for an empty flower bed",
  Season="Review the changes before confirming",
  Replay="Replay the tutorial without resetting progress",
  Cards="Choose an effect for the new Season",
@@ -663,6 +661,7 @@ function UI:Close()
  self:DisconnectWorkshopPan()
  self.ReplayIndex=nil
  local wasWorkshop=self.Menu=="Workshop"
+ local serverMenuOpen=self.MenuServerOpen==true
  if wasWorkshop then
   self.WorkshopRuntime=nil
   self.WorkshopCanvasPosition=nil
@@ -671,17 +670,28 @@ function UI:Close()
  if self.Menu=="Season" then self:Send("SeasonCancel") end
  self.Menu=nil
  self.MenuRenderer=nil
+ self.MenuArg=nil
  self.MenuRefreshRequested=false
+ self.InventoryPlantSlot=nil
+ self.PendingPlantFlowerId=nil
+ self.MenuServerOpen=false
  self:SetPanelVisible(false)
  if wasWorkshop then self:SetWorkshopFocus(false) end
- self:Send("Menu",false)
+ if serverMenuOpen then self:Send("Menu",false) end
 end
 
-function UI:Open(name,arg)
+function UI:Open(name,arg,options)
  if self:IsWorkshopExclusive() and name~="Workshop" then return end
  if self.Menu==name and arg==nil then self:Close() return end
  if not self.State then return end
- if name~="Settings" and name~="Plant" and name~="Season" and name~="Cards" and name~="Replay" and not self.State.Profile.Tutorial.FeatureUnlocks[name] then return end
+ if name~="Settings" and name~="Season" and name~="Cards" and name~="Replay" and not self.State.Profile.Tutorial.FeatureUnlocks[name] then return end
+
+ local silentMenu=type(options)=="table" and options.SilentMenu==true
+ if silentMenu and self.MenuServerOpen then
+  self:Send("Menu",false)
+  self.MenuServerOpen=false
+ end
+
  self.Menu=name
  self.MenuRenderer=MENU_RENDERERS[name] or name
  self.MenuArg=arg
@@ -689,8 +699,36 @@ function UI:Open(name,arg)
  self:SetPanelVisible(true)
  if name=="Workshop" then self:SetWorkshopFocus(true) end
  self:RenderMenu()
- if name~="Plant" and name~="Season" and name~="Cards" and name~="Replay" then self:Send("Menu",name) end
+
+ local announcesMenu=name~="Season" and name~="Cards" and name~="Replay"
+ if announcesMenu and not silentMenu then
+  self:Send("Menu",name)
+  self.MenuServerOpen=true
+ elseif silentMenu then
+  self.MenuServerOpen=false
+ end
  self:ApplyWorkshopFocusVisibility()
+end
+
+function UI:OpenPlantInventory(slot)
+ slot=tonumber(slot)
+ if not slot or slot%1~=0 or slot<1 then
+  self:Toast("This garden slot is unavailable.")
+  return
+ end
+ local state=self.InventoryV2State
+ if type(state)~="table" then
+  state={Category="Flowers",Search="",Sort="Rarity",Filter="Available",Selected={}}
+  self.InventoryV2State=state
+ else
+  state.Category="Flowers"
+  state.Search=""
+  state.Filter="Available"
+  state.Selected=state.Selected or {}
+ end
+ self.InventoryPlantSlot=slot
+ self.PendingPlantFlowerId=nil
+ self:Open("SeedSatchel",{PlantSlot=slot},{SilentMenu=true})
 end
 
 function UI:RenderMenu(preserveInteraction)
@@ -721,8 +759,7 @@ function UI:RenderMenu(preserveInteraction)
    local kitIcon=kit and kit:FindFirstChild("KitHeader") and kit.KitHeader:FindFirstChild("StateIcon")
    local headerImage=(kitIcon and kitIcon:IsA("ImageLabel") and kitIcon.Image) or Icons.Get("Menus",name)
    if headerImage=="" then
-    if name=="Plant" then headerImage=Icons.Get("System","Garden")
-    elseif name=="Season" or name=="Cards" then headerImage=Icons.Get("System","Flower")
+    if name=="Season" or name=="Cards" then headerImage=Icons.Get("System","Flower")
     elseif name=="Replay" then headerImage=Icons.Get("System","Tutorial")
     else headerImage=Icons.Get("System","Info") end
    end
@@ -1077,49 +1114,6 @@ function UI:RenderMenu(preserveInteraction)
    if firstWorkshopBuild then
     self:BindWorkshopPan(canvas,nodes)
    end
- elseif name=="Plant" then
-  local slot=tonumber(self.MenuArg)
-  self:Section(self.Content,slot and ("Garden Slot "..tostring(slot)) or "Garden")
-  if not slot then
-   self:Label(self.Content,"Use an unlocked garden pad to choose where to plant.",40)
-  else
-   self:Label(self.Content,"Choose a free flower copy for this physical garden slot.",42)
-   local flowers=ui.Inventory and ui.Inventory.Flowers or {}
-   local available={}
-   for _,item in ipairs(flowers) do
-    if (tonumber(item.Free) or 0)>0 then table.insert(available,item) end
-   end
-   table.sort(available,function(a,b)
-    local preferredA=a.Id==self.LastSeed
-    local preferredB=b.Id==self.LastSeed
-    if preferredA~=preferredB then return preferredA end
-    return tostring(a.DisplayName or a.Id)<tostring(b.DisplayName or b.Id)
-   end)
-   if WorkshopEffects.Feature(p,"GARDEN_3","RepeatPlant") and self.LastSeed then
-    for _,item in ipairs(available) do
-     if item.Id==self.LastSeed then
-      self:Toast("Quick Replant • "..tostring(item.DisplayName or item.Id))
-      self:Send("Plant",slot,item.Id)
-      self:Close()
-      return
-     end
-    end
-   end
-   if #available==0 then
-    self:Label(self.Content,"No free flower copies are available. Roll or dissolve/manage planted copies first.",48)
-   else
-    for _,item in ipairs(available) do
-     local label=(item.Id==self.LastSeed and "★  " or "")..tostring(item.DisplayName or item.Id).."   •   "..tostring(item.Rarity or "Common").."   •   x"..tostring(item.Free)
-     self:Button(self.Content,label,function()
-      self.LastSeed=item.Id
-      self:Send("Plant",slot,item.Id)
-      self:Close()
-     end,Icons.GetFlowerIcon(item.Id))
-    end
-   end
-   self:Button(self.Content,"Cancel",function() self:Close() end,Icons.Get("System","Close"))
-  end
-
  elseif name=="Season" then
   local preview=self.MenuArg
   self:Section(self.Content,"What Will Be Kept")
@@ -1942,7 +1936,7 @@ function UI:Start()
   elseif kind=="Reward" then
    self.NextRoll=os.clock()+payload.Cooldown
    self:ResolveRouletteReward(payload)
-  elseif kind=="PlantPicker" then self:Open("Plant",payload)
+  elseif kind=="PlantPicker" then self:OpenPlantInventory(payload)
   elseif kind=="Activities" then
    self.Activities:Update(payload)
    if self.MenuRenderer=="QuestsV2" then self:RenderMenu(true) end
