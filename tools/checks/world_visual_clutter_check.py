@@ -14,6 +14,9 @@ def need(src,text,label):
 flower=read("src/ServerScriptService/Services/FlowerService.luau")
 garden=read("src/StarterPlayer/StarterPlayerScripts/Controllers/GardenPresentationController.luau")
 activity=read("src/StarterPlayer/StarterPlayerScripts/Controllers/ActivityController.luau")
+player=read("src/ServerScriptService/Services/PlayerService.luau")
+map_service=read("src/ServerScriptService/Services/MapService.luau")
+garden_plot=read("src/ServerScriptService/Services/GardenPlotService.luau")
 hub=json.loads(read("src/Workspace/FruitOrchardHub.model.json"))
 
 # Flower info is compact, disabled by default, and client-focus controlled.
@@ -31,8 +34,13 @@ need(activity,'billboard.MaxDistance=o.Tutorial and 90 or 58',"activity label de
 need(activity,'item.Billboard.MaxDistance=tracked and 100 or (item.Tutorial and 90 or 58)',"tracked activity label distance")
 need(activity,'Billboard=billboard',"activity billboard retained for state changes")
 
-# Authored hub scenery must not contain the old camera-blocking gold orb or
-# oversized 27-stud canopy spheres.
+# Static world should be authored, compact and composed from editable Roblox objects.
+need(player,'workspace:FindFirstChild("FruitOrchardHub")',"authored hub binding")
+if '"CentralMeadow"' in player:
+    raise AssertionError("runtime 440-stud CentralMeadow baseplate returned")
+if 'Vector3.new(95,2,95)' in map_service:
+    raise AssertionError("runtime 95x95 sector placeholder slabs returned")
+
 def walk(node,path=""):
     name=node.get("Name") or node.get("ClassName")
     here=f"{path}/{name}" if path else name
@@ -41,24 +49,57 @@ def walk(node,path=""):
         yield from walk(child,here)
 
 nodes=list(walk(hub))
-gold=next((n for p,n in nodes if n.get("Name")=="Golden hive monument"),None)
-if not gold:
-    raise AssertionError("Golden hive monument missing")
-gold_size=gold.get("Properties",{}).get("Size")
-if gold_size != [4.5,5,4.5]:
-    raise AssertionError(f"Golden hive monument size regressed: {gold_size}")
-if gold.get("Properties",{}).get("CanQuery") is not False:
-    raise AssertionError("Golden hive monument must be non-queryable decorative scenery")
+top_names={child.get("Name") for child in hub.get("Children",[]) or []}
+required={"Terrain","Central Hub","Paths","Biome Zones","Environment"}
+missing=required-top_names
+if missing:
+    raise AssertionError(f"authored hub groups missing: {sorted(missing)}")
 
-canopies=[n for p,n in nodes if "Great fruit tree" in p and (n.get("Name") or "").startswith("Canopy mass ")]
-if len(canopies)!=7:
-    raise AssertionError(f"Expected 7 Great fruit tree canopy masses, got {len(canopies)}")
+if len(nodes)>300:
+    raise AssertionError(f"authored hub became too dense: {len(nodes)} nodes (budget 300)")
+
+for retired in ("Great fruit tree","Garden promenade","Golden hive monument"):
+    if any(retired in path for path,_ in nodes):
+        raise AssertionError(f"retired oversized/overdense scenery returned: {retired}")
+
+by_name={node.get("Name"):node for _,node in nodes if node.get("Name")}
+main=by_name.get("Main Meadow Grass")
+if not main:
+    raise AssertionError("Main Meadow Grass missing")
+main_props=main.get("Properties",{})
+if main_props.get("Size") != [1,296,296]:
+    raise AssertionError(f"unexpected main meadow footprint: {main_props.get('Size')}")
+if main_props.get("CanCollide") is not True or main_props.get("CanQuery") is not True:
+    raise AssertionError("main meadow must remain a physical/queryable gameplay surface")
+
+for name in ("Sunny Orchard Grass","Crystal Garden Grass","Twilight Grove Grass"):
+    zone=by_name.get(name)
+    if not zone:
+        raise AssertionError(f"authored biome surface missing: {name}")
+    props=zone.get("Properties",{})
+    if props.get("CanCollide") is not True or props.get("CanQuery") is not True:
+        raise AssertionError(f"biome surface must remain walkable/queryable: {name}")
+
+canopies=[
+    node for _,node in nodes
+    if "Canopy" in (node.get("Name") or "") and node.get("ClassName")=="Part"
+]
+if not canopies:
+    raise AssertionError("low-poly tree canopies missing")
 for node in canopies:
-    size=node.get("Properties",{}).get("Size")
-    if size != [18,15,18]:
-        raise AssertionError(f"Oversized Great fruit tree canopy returned: {node.get('Name')} {size}")
+    size=node.get("Properties",{}).get("Size") or []
+    if not size or max(size)>12:
+        raise AssertionError(f"camera-blocking canopy returned: {node.get('Name')} {size}")
     if node.get("Properties",{}).get("CanQuery") is not False:
-        raise AssertionError(f"Decorative canopy must be non-queryable: {node.get('Name')}")
+        raise AssertionError(f"decorative canopy must be non-queryable: {node.get('Name')}")
+
+# Personal plots stay gameplay-compatible but should no longer be neon/square placeholders.
+need(garden_plot,'base.Shape=Enum.PartType.Cylinder',"rounded player plot")
+need(garden_plot,'hive.Shape=Enum.PartType.Cylinder',"low-poly Hive body")
+need(garden_plot,'pad.Shape=Enum.PartType.Cylinder',"rounded garden slots")
+need(garden_plot,'hive.Material=Enum.Material.WoodPlanks',"Hive material")
+if 'Vector3.new(44,2,48)' in garden_plot:
+    raise AssertionError("old rectangular player plot returned")
 
 print("world visual clutter contract: PASS")
-print("Covered: oversized hub spheres, single focused flower card, menu suppression and bounded activity labels.")
+print(f"Covered: authored low-poly hub ({len(nodes)} nodes), walkable biome surfaces, bounded canopies, rounded plots and no runtime sector/baseplate placeholders.")
