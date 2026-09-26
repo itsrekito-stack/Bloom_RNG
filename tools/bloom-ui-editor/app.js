@@ -408,15 +408,10 @@ const DELETABLE_MENU_BASES=[
 ];
 function nameMatchesBase(name,base){
  const value=String(name||"");
- return value===base||new RegExp("^"+base.replace(/[.*+?^$()|[\]\\]/g,"\\function stateFocusName(scene){
- return {
-  gameplay:"SafeRoot",inventory_v2:"InventoryPrototype",workshop:"WorkshopTemplate",
-  fieldguide:"FieldGuideKit",map:"MapKit",trials:"TrialsKit",settings:"SettingsKit",
-  plant:"PlantKit",season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit",
-  reward:"RewardReveal",toast:"Toast",tutorial:"TutorialGuideBanner",boosts:"ActiveBoostsHUD",
-  world_ui:"WorldUIPrototypes",loading:"Background"
- }[scene]||null;
-}")+"\\d+$").test(value);
+ if(value===base)return true;
+ if(!value.startsWith(base))return false;
+ const suffix=value.slice(base.length);
+ return suffix.length>0&&/^\d+$/.test(suffix);
 }
 function isFragmentRoot(n){
  if(!n||n===state.root||MODIFIERS.has(n.ClassName))return false;
