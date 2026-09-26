@@ -76,14 +76,14 @@ assert 'WaitForChild("WorkshopBody")' not in ui, "Workshop must validate structu
 need(ui,'error("[BloomUI] Authored WorkshopTemplate is stale or incomplete. AI SYNC must provide NodeTooltip, WorkshopCurrencyBar and the tree structure.")','Workshop open-time authored validation')
 
 # Workshop-only currency strip is authored and bound to authoritative profile state.
-for name in ('WorkshopCurrencyBar','WorkshopPoints','Coins','PetalDust','AncientNectar'):
+for name in ('WorkshopCurrencyBar','WorkshopPoints','WorkshopCoins','WorkshopPetalDust','WorkshopAncientNectar'):
     assert one(name) is not None, f"authored Workshop currency UI missing: {name}"
 for token in (
     'local currencyBar=structure.CurrencyBar',
     'setWorkshopCurrency("WorkshopPoints",p.WorkshopV5.Points,pointIcon)',
-    'setWorkshopCurrency("Coins",p.Currencies.Coins,coinIcon)',
-    'setWorkshopCurrency("PetalDust",p.Currencies.PetalDust,dustIcon)',
-    'setWorkshopCurrency("AncientNectar",p.Currencies.AncientNectar,nectarIcon)',
+    'setWorkshopCurrency("WorkshopCoins",p.Currencies.Coins,coinIcon)',
+    'setWorkshopCurrency("WorkshopPetalDust",p.Currencies.PetalDust,dustIcon)',
+    'setWorkshopCurrency("WorkshopAncientNectar",p.Currencies.AncientNectar,nectarIcon)',
 ):
     need(ui,token,'Workshop currency binding')
 
