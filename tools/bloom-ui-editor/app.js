@@ -1876,13 +1876,13 @@ async function reloadModelFromServer(label="AI изменения загруже
   return;
  }
  const base=state.bridgeBase||location.origin;
- const r=await fetch(base+"/src/StarterGui/BloomUI.model.json?ts="+Date.now(),{cache:"no-store"});
- if(!r.ok)throw new Error("BloomUI.model.json не найден после синхронизации");
- const type=(r.headers.get("content-type")||"").toLowerCase();
+ const modelUrl=base+"/"+state.targetPath.replace(/^\/+/, "")+"?ts="+Date.now();
+ const r=await fetch(modelUrl,{cache:"no-store"});
+ if(!r.ok)throw new Error(state.targetPath+" was not found after sync");
  const raw=await r.text();
- if(raw.trim().startsWith("<"))throw new Error("Сервер вернул HTML вместо BloomUI.model.json");
+ if(raw.trim().startsWith("<"))throw new Error("Server returned HTML instead of "+state.targetPath);
  let model;
- try{model=JSON.parse(raw)}catch{throw new Error("BloomUI.model.json содержит неверный JSON")}
+ try{model=JSON.parse(raw)}catch{throw new Error(state.targetPath+" contains invalid JSON")}
  setRoot(model,label);
 }
 async function assistantSync(){
