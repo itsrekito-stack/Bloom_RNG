@@ -54,7 +54,7 @@
       "id": "today-playtest",
       "group": "QA",
       "title": "Studio-only core-loop acceptance at 1366×768 and 1280×720",
-      "detail": "Runtime-only acceptance remains: roll → inventory → garden → bees → hive → Workshop, including real input/focus and visual behavior.",
+      "detail": "Runtime acceptance probe is now authored and CI-guarded. Real Studio play is still required: complete roll → inventory → garden → bees → hive → Workshop at 1366×768 and 1280×720 and retain RuntimeProbe output.",
       "done": false
     },
     {
@@ -147,21 +147,21 @@
       "id": "release-low-end-a",
       "group": "2 · Runtime & Performance",
       "title": "Low-end profile: 10-minute baseline",
-      "detail": "Record client/server frame time, Lua memory and replication during normal core-loop play.",
+      "detail": "Instrumentation ready: RuntimeProbe records client/server frame time, total memory, UI instance count and network counters at 10 minutes. Real low-end Studio session is still required.",
       "done": false
     },
     {
       "id": "release-low-end-b",
       "group": "2 · Runtime & Performance",
       "title": "Low-end profile: identify top hotspots",
-      "detail": "Capture the largest UI, replication and Lua-time offenders before changing code.",
+      "detail": "RuntimeProbe now captures bounded frame/memory/UI/network evidence for hotspot triage. Task remains open until a real 10-minute low-end baseline identifies measured offenders.",
       "done": false
     },
     {
       "id": "release-low-end-c",
       "group": "2 · Runtime & Performance",
       "title": "Low-end profile: optimize and re-measure",
-      "detail": "Fix only measured hotspots, then compare against the baseline.",
+      "detail": "Optimization must follow measured RuntimeProbe evidence and then be re-measured on the same device/viewport. No synthetic PASS.",
       "done": false
     },
     {
@@ -490,7 +490,7 @@
       "id": "release-resolutions-a",
       "group": "7 · QA",
       "title": "Input acceptance: mouse / keyboard",
-      "detail": "Check focus, drag, wheel and click behavior across all release menus.",
+      "detail": "RuntimeProbe counts keyboard/mouse/touch/wheel activity, but focus/drag/wheel/click behavior still requires real Studio verification.",
       "done": false
     },
     {
@@ -504,14 +504,14 @@
       "id": "release-session-a",
       "group": "7 · QA",
       "title": "Session matrix: normal leave / rejoin",
-      "detail": "Verify no duplicate grants, stale locks or lost progression after a normal reconnect.",
+      "detail": "Use RuntimeProbe together with PersistenceProbe; normal reconnect PASS still requires matching LEAVE/JOIN persistence digests in Studio.",
       "done": false
     },
     {
       "id": "release-session-b",
       "group": "7 · QA",
       "title": "Session matrix: interrupted disconnect",
-      "detail": "Disconnect during roll/activity/trial/menu states and verify safe recovery.",
+      "detail": "RuntimeProbe + PersistenceProbe are ready to capture interrupted-session evidence. Real disconnect/recovery execution remains open.",
       "done": false
     },
     {
@@ -525,21 +525,21 @@
       "id": "release-long-session-a",
       "group": "7 · QA",
       "title": "Soak: 15-minute functional pass",
-      "detail": "Watch for duplicated signals, stuck popups, stale activities and state drift.",
+      "detail": "RuntimeProbe emits a 15-minute checkpoint and core-loop milestones. Real Studio soak remains required.",
       "done": false
     },
     {
       "id": "release-long-session-b",
       "group": "7 · QA",
       "title": "Soak: 30-minute memory / replication pass",
-      "detail": "Compare Lua memory, UI instance count and replication behavior against baseline.",
+      "detail": "RuntimeProbe emits a 30-minute checkpoint with memory/UI/network/frame metrics. Real Studio soak remains required.",
       "done": false
     },
     {
       "id": "release-long-session-c",
       "group": "7 · QA",
       "title": "Soak: 60-minute release soak",
-      "detail": "Run the final long session after blocker fixes and record remaining anomalies.",
+      "detail": "RuntimeProbe emits a 60-minute release checkpoint. Real Studio soak remains required.",
       "done": false
     },
     {
