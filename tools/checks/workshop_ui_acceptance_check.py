@@ -62,9 +62,8 @@ need(ui,'shell.Name="WorkshopRuntime"','Workshop runtime identity')
 need(ui,'shell.Visible=true','Workshop runtime visibility')
 
 # Stale authored/runtime structures must fail fast and rebuild, never hang forever.
+assert 'REQUIRED_WORKSHOP_UI' not in ui, "Workshop completeness must not gate the entire BloomUI client bootstrap"
 for token in (
-    'local REQUIRED_WORKSHOP_UI={',
-    '"WorkshopTemplate","WorkshopBody","TreePanel","TreeCanvas","PanMap","NodeTooltip","WorkshopCurrencyBar"',
     'local function workshopStructure(shell)',
     'local structure=workshopStructure(shell)',
     'local templateStructure=workshopStructure(template)',
@@ -74,6 +73,7 @@ for token in (
     need(ui,token,'Workshop stale-runtime recovery')
 assert 'WaitForChild("NodeTooltip")' not in ui, "Workshop must not infinite-yield on a stale NodeTooltip"
 assert 'WaitForChild("WorkshopBody")' not in ui, "Workshop must validate structure instead of yielding forever"
+need(ui,'error("[BloomUI] Authored WorkshopTemplate is stale or incomplete. AI SYNC must provide NodeTooltip, WorkshopCurrencyBar and the tree structure.")','Workshop open-time authored validation')
 
 # Workshop-only currency strip is authored and bound to authoritative profile state.
 for name in ('WorkshopCurrencyBar','WorkshopPoints','Coins','PetalDust','AncientNectar'):
