@@ -16,7 +16,7 @@ local C={
  Layout={
   Radius=9.2,
   SlotY=.10,
-  HiveOffset=Vector3.new(15.2,2.62,0),
+  HiveOffset=Vector3.new(16,2.62,0),
  }
 }
 
