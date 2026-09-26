@@ -59,6 +59,7 @@ let idCounter=1;
 const uid=()=> "ui_"+(idCounter++).toString(36)+"_"+Date.now().toString(36).slice(-4);
 const deepClone=x=>JSON.parse(JSON.stringify(x));
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const ZOOM_MIN=.25,ZOOM_MAX=2.5;
 const finite=(v,d=0)=>Number.isFinite(+v)?+v:d;
 const roundOffset=v=>Math.round(finite(v));
 const c3=(r=1,g=1,b=1)=>[r,g,b];
@@ -75,7 +76,7 @@ function loadPrefs(){
  try{
   const p=JSON.parse(localStorage.getItem(PREFS_KEY)||"{}");
   if(p.viewport&&Number.isFinite(p.viewport.w)&&Number.isFinite(p.viewport.h))state.viewport={w:p.viewport.w,h:p.viewport.h};
-  if(Number.isFinite(p.zoom))state.zoom=clamp(p.zoom,.25,1.5);
+  if(Number.isFinite(p.zoom))state.zoom=clamp(p.zoom,ZOOM_MIN,ZOOM_MAX);
   if(Number.isFinite(p.snap))state.snap=p.snap;
   if(typeof p.labels==="boolean")state.labels=p.labels;
   if(typeof p.grid==="boolean")state.grid=p.grid;
@@ -462,14 +463,14 @@ function previewSize(n){
 function injectRuntimePreview(){/* UI STATE shows authored Roblox instances only. No HTML mock overlays. */}
 
 function setZoom(value,save=true){
- state.zoom=clamp(value,.25,1.5);
+ state.zoom=clamp(value,ZOOM_MIN,ZOOM_MAX);
  $("#zoomRange").value=Math.round(state.zoom*100);
  $("#zoomLabel").textContent=Math.round(state.zoom*100)+"%";
  renderAll();if(save)savePrefs();
 }
 function fitViewport(){
  const pad=128,w=Math.max(100,els.stageScroller.clientWidth-pad),h=Math.max(100,els.stageScroller.clientHeight-pad);
- setZoom(Math.min(w/state.viewport.w,h/state.viewport.h,1.5));
+ setZoom(Math.min(w/state.viewport.w,h/state.viewport.h,ZOOM_MAX));
  els.stageScroller.scrollLeft=0;els.stageScroller.scrollTop=0;
  toast("Viewport вписан в рабочую область");
 }
@@ -2253,8 +2254,10 @@ els.stageScroller.addEventListener("wheel",e=>{
  const deviceLeft=els.device.offsetLeft,deviceTop=els.device.offsetTop;
  const worldX=(els.stageScroller.scrollLeft+pointerX-deviceLeft)/oldZoom;
  const worldY=(els.stageScroller.scrollTop+pointerY-deviceTop)/oldZoom;
- const factor=e.deltaY<0?1.1:1/1.1;
- const nextZoom=clamp(oldZoom*factor,.25,1.5);
+ const rawDelta=e.deltaMode===1?e.deltaY*16:e.deltaMode===2?e.deltaY*els.stageScroller.clientHeight:e.deltaY;
+ const zoomDelta=clamp(rawDelta,-120,120);
+ const factor=Math.exp(-zoomDelta*.0026);
+ const nextZoom=clamp(oldZoom*factor,ZOOM_MIN,ZOOM_MAX);
  if(nextZoom===oldZoom)return;
  setZoom(nextZoom);
  els.stageScroller.scrollLeft=els.device.offsetLeft+worldX*nextZoom-pointerX;
