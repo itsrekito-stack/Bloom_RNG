@@ -2089,7 +2089,7 @@ async function loadInitial(){
  }
  state.projectHandle=await loadHandle();
  try{
-  const r=await fetch("/"+state.targetPath.replace(/^\\/+/, "")+"?ts="+Date.now(),{cache:"no-store"});
+  const r=await fetch("/"+state.targetPath.replace(/^\/+/, "")+"?ts="+Date.now(),{cache:"no-store"});
   if(r.ok){
    const raw=await r.text();
    try{
