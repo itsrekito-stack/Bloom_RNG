@@ -239,17 +239,24 @@ function checkpointLabel(line){
  return match?match[1]+" min":"—";
 }
 function renderRuntimeProbe(report){
- const milestones=report?.milestones||[],evidence=report?.evidence||[];
- $("#runtimeMilestones").textContent=milestones.length?milestones.length+"/7 · "+milestones.join(", "):"0/7";
- $("#runtimeEvidence").textContent=evidence.length?"Evidence: "+evidence.join(", "):"No onboarding/multiplayer evidence yet.";
+ const milestones=report?.milestones||[],evidence=report?.evidence||[],minutes=report?.checkpointMinutes||[];
+ const milestoneNode=$("#runtimeMilestones");
+ milestoneNode.textContent=(milestones.length>=7?"7/7 PASS · ":milestones.length+"/7 · ")+(milestones.length?milestones.join(", "):"waiting");
+ milestoneNode.style.color=milestones.length>=7?"#66e0a6":"";
+ const evidenceText=[];
+ if(evidence.length)evidenceText.push("Evidence: "+evidence.join(", "));
+ if(minutes.length)evidenceText.push("Paired checkpoints: "+minutes.map(x=>x+"m").join(", "));
+ $("#runtimeEvidence").textContent=evidenceText.length?evidenceText.join(" · "):"No onboarding/multiplayer evidence yet.";
  $("#runtimeServerCheckpoint").textContent=checkpointLabel(report?.latestServerCheckpoint);
  $("#runtimeClientCheckpoint").textContent=checkpointLabel(report?.latestClientCheckpoint);
- const join=!!report?.latestPersistenceJoin,leave=!!report?.latestPersistenceLeave;
- $("#runtimePersistence").textContent=join&&leave?"JOIN + LEAVE":join?"JOIN only":leave?"LEAVE only":"—";
+ const verdict=String(report?.persistenceVerdict||"NO_PAIR");
+ const persistence=$("#runtimePersistence");
+ persistence.textContent=verdict==="MATCH"?"MATCH":verdict==="MISMATCH"?"MISMATCH":verdict==="WAITING_REJOIN"?"WAITING REJOIN":"—";
+ persistence.style.color=verdict==="MATCH"?"#66e0a6":verdict==="MISMATCH"?"#ff697b":verdict==="WAITING_REJOIN"?"#ffbe40":"";
  const path=report?.path||"";
- $("#runtimeProbeMeta").textContent=path?("Latest Studio log · "+path.split(/[\\/]/).pop()):"No Roblox Studio log found.";
+ $("#runtimeProbeMeta").textContent=path?("Scanned "+(report.logsScanned||1)+" Studio log(s) · latest "+path.split(/[\\/]/).pop()):"No Roblox Studio log found.";
  const lines=report?.lines||[];
- $("#runtimeProbeOutput").textContent=lines.length?lines.slice(-80).join("\n"):"No RuntimeProbe/PersistenceProbe lines in the latest Studio log.";
+ $("#runtimeProbeOutput").textContent=lines.length?lines.slice(-80).join("\n"):"No RuntimeProbe/PersistenceProbe lines in the recent Studio logs.";
 }
 async function refreshRuntimeProbe(silent=false){
  try{
