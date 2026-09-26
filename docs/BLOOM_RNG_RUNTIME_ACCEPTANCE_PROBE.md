@@ -88,3 +88,23 @@ Join/leave/rejoin persistence PASS still requires:
 `previous LEAVE digest == next JOIN digest`
 
 in the same published Studio test experience with API access enabled.
+
+
+## RoFlow Studio QA panel
+
+RoFlow reads the newest local Roblox Studio log directly from the standard Roblox log directory and extracts only `[RuntimeProbe]` / `[PersistenceProbe]` evidence.
+
+Open **RoFlow → Roblox → Studio QA**.
+
+The panel shows:
+
+- core-loop milestone count and names,
+- onboarding / multiplayer evidence markers,
+- latest server checkpoint,
+- latest client checkpoint,
+- whether persistence JOIN and LEAVE evidence are present,
+- the latest bounded probe lines.
+
+The panel refreshes every five seconds **only while the Roblox page is visible**. It does not poll in the background.
+
+This is a log viewer, not an automatic PASS authority. A task remains open when its acceptance still depends on visual behavior, real DataStore rejoin, multiplayer behavior, or human play.
