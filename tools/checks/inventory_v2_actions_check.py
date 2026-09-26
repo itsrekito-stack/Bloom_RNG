@@ -37,13 +37,18 @@ for text,label in [
  ('controller:Send("EquipBee","",equippedSlot)',"Bee unequip action"),
  ('controller:Send("EquipBee",item.Id,slot)',"Bee equip action"),
  ('controller.LastSeed=item.Id',"Plant selection handoff"),
- ('Go to an unlocked garden pad and use its Plant prompt.',"physical Plant guidance"),
+ ('controller:Send("Plant",plantSlot,item.Id)',"Inventory Plant request"),
+ ('"PLANT IN SLOT "..tostring(plantSlot)',"target garden slot action"),
 ]:
     need(client,text,label)
 
-# Physical planting remains world/proximity gated.
-need(bloom,'elseif kind=="PlantPicker" then self:Open("Plant",payload)',"PlantPicker event route")
-need(bloom,'self:Send("Plant",slot,item.Id)',"Plant picker request")
+# Physical planting opens Inventory V2 on Flowers and remains world/proximity gated.
+need(bloom,'function UI:OpenPlantInventory(slot)',"Inventory Plant picker entry point")
+need(bloom,'state.Category="Flowers"',"Plant picker opens Flowers category")
+need(bloom,'state.Filter="Available"',"Plant picker defaults to available copies")
+need(bloom,'self:Open("SeedSatchel",{PlantSlot=slot},{SilentMenu=true})',"Plant picker uses Inventory without tutorial Menu event")
+need(bloom,'elseif kind=="PlantPicker" then self:OpenPlantInventory(payload)',"PlantPicker event route")
+assert 'elseif name=="Plant" then' not in bloom, "standalone Plant renderer returned"
 need(garden,'self.X.U.Near(player,pos,C.InteractionDistance)',"Plant proximity validation")
 need(garden,'self.X.InventoryService:Available(p,id)<1',"Plant free-copy validation")
 need(garden,'Rules.HasProgress(old)',"Plant progression protection")
@@ -97,5 +102,5 @@ for text,label in [
     need(state,text,label)
 
 print("inventory-v2 action contract: PASS")
-print("Covered: category/search/sort/filter, Plant, Favorite, Protect, flower dissolve, Bee dismantle, Mastery and Bee equip/unequip.")
+print("Covered: category/search/sort/filter, Garden Plant picker through Flowers, Favorite, Protect, flower dissolve, Bee dismantle, Mastery and Bee equip/unequip.")
 print("Server authority: unlock, proximity, ownership, protection, cost and capacity guards verified.")
