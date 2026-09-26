@@ -404,6 +404,7 @@ async function buildProject(){
 }
 
 function navigate(page){
+ document.body.classList.toggle("ui-studio-focus",page==="ui");
  document.querySelectorAll(".nav[data-page]").forEach(button=>button.classList.toggle("active",button.dataset.page===page));
  document.querySelectorAll(".page").forEach(section=>section.classList.remove("active"));
  $("#"+page+"Page")?.classList.add("active");
