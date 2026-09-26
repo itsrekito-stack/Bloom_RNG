@@ -1,6 +1,6 @@
-local RS=game:GetService("ReplicatedStorage") local Players=game:GetService("Players") local U=require(RS.Shared.BloomUtil) local C=require(RS.Config.BloomConfig) local T=require(RS.Config.TutorialConfig) local L=require(RS.Config.LocationsConfig)
+local RS=game:GetService("ReplicatedStorage") local Players=game:GetService("Players") local U=require(RS.Shared.BloomUtil) local C=require(RS.Config.BloomConfig) local T=require(RS.Config.TutorialConfig) local L=require(RS.Config.LocationsConfig) local DefaultSettings=require(game:GetService("ServerScriptService").Data.DefaultProfile).Settings
 local X={Temp={},Revisions={},StateRevisions={},LastPushedStateRevision={},Connections={},ClientReadyConnections={},U=U}
-local STATE_NEUTRAL={Ready=true,Menu=true,Replay=true,SeasonCancel=true}
+local STATE_NEUTRAL={Ready=true,Menu=true,Replay=true,SeasonCancel=true,SaveSettings=true}
 function X:StateRevision(player) return self.StateRevisions[player] or 0 end
 function X:MarkStateDirty(player)
  if not self.Temp[player] then return end
@@ -90,6 +90,9 @@ function X:ResetStudioTutorial(player)
  return true
 end
 
+local function validKeybind(value)
+ return type(value)=="string" and #value>0 and #value<=16 and value~="Unknown" and value~="Escape" and Enum.KeyCode[value]~=nil
+end
 function X:Request(player,action,a,b,c)
  local p=self:Profile(player) if not p then return false,"PROFILE_LOADING" end
  if action=="SeasonCancel" then self.SeasonService.Pending[player]=nil return true end
@@ -124,6 +127,17 @@ function X:Request(player,action,a,b,c)
  elseif action=="Skip" then self.TutorialService:Skip(player) return true
  elseif action=="Replay" then self.TutorialService:Replay(player) return true
  elseif action=="StudioTutorialReset" then return self:ResetStudioTutorial(player)
+ elseif action=="SaveSettings" then
+  local result=self.DataService:SaveProfile(player,false)
+  if result and result.Committed then
+   self:Send(player,"Message","Settings saved")
+   return true
+  end
+  if result and result.Code=="RETRYABLE_FAILURE" then return false,"PERSISTENCE_BUSY" end
+  return false,"PERSISTENCE_UNCONFIRMED"
+ elseif action=="ResetSettings" then
+  p.Settings=U.Copy(DefaultSettings)
+  return true
  elseif action=="Menu" then
   if a==false then
    local closing=self.Temp[player].MenuName
@@ -140,14 +154,36 @@ function X:Request(player,action,a,b,c)
   if a=="SeedSatchel" then self:Emit(player,"SatchelOpen",1) end
   return true
  elseif action=="Setting" then
-  if a=="TokenSoundVolume" then
-   if type(b)~="number" or b~=b then return false,"INVALID_VALUE" end
-   p.Settings[a]=math.clamp(b,0,1)
+  local numericLimits={
+   TokenSoundVolume={0,1},
+   MusicVolume={0,1},
+   SFXVolume={0,1},
+   UIScale={.8,1.15},
+  }
+  local limits=numericLimits[a]
+  if limits then
+   if type(b)~="number" or b~=b or math.abs(b)==math.huge then return false,"INVALID_VALUE" end
+   p.Settings[a]=math.clamp(b,limits[1],limits[2])
+   if a=="SFXVolume" then p.Settings.TokenSoundVolume=p.Settings[a] end
+   if a=="TokenSoundVolume" then p.Settings.SFXVolume=p.Settings[a] end
    return true
   end
-  if not ({ReducedEffects=true,ShowOtherPollinators=true,HideOtherPlayersTokens=true,RareFeed=true,AutoDissolve=true})[a] or type(b)~="boolean" then
-   return false,"INVALID_SETTING"
+  if a=="Language" then
+   if b~="English" then return false,"INVALID_VALUE" end
+   p.Settings.Language=b
+   return true
   end
+  if a=="OpenMenuKey" or a=="RollKey" then
+   if not validKeybind(b) then return false,"INVALID_VALUE" end
+   p.Settings[a]=b
+   return true
+  end
+  local booleanSettings={
+   TutorialsEnabled=true,RewardPopups=true,QuickRoll=true,ShowRarityColors=true,CompactHUD=true,
+   BloomEnabled=true,MuteAll=true,ReducedEffects=true,ShowOtherPollinators=true,
+   HideOtherPlayersTokens=true,RareFeed=true,AutoDissolve=true,
+  }
+  if not booleanSettings[a] or type(b)~="boolean" then return false,"INVALID_SETTING" end
   if a=="AutoDissolve" and not p.WorkshopV5.Nodes.ECONOMY_1 then return false,"AUTO_DISSOLVE_LOCKED" end
   p.Settings[a]=b
   return true
