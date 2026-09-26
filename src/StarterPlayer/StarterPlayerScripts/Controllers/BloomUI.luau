@@ -726,7 +726,10 @@ function UI:OpenPlantInventory(slot)
   state.Filter="Available"
   state.Selected=state.Selected or {}
  end
- if self.LastSeed then state.Selected.Flowers=self.LastSeed end
+ local p=self.State and self.State.Profile
+ if p and WorkshopEffects.Feature(p,"GARDEN_3","RepeatPlant") and self.LastSeed then
+  state.Selected.Flowers=self.LastSeed
+ end
  self.InventoryPlantSlot=slot
  self.PendingPlantFlowerId=nil
  self:Open("SeedSatchel",{PlantSlot=slot},{SilentMenu=true})
