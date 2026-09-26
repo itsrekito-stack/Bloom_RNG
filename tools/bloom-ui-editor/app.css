@@ -1103,3 +1103,11 @@ html.roflow-native .prop-row textarea{border-radius:5px;background:#070e15;borde
 .pattern-palette button b{font-size:8px;color:#d8e8f4}
 .pattern-palette button small{font-size:7px;color:#557085;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html.roflow-native .pattern-palette{max-height:250px}
+
+
+.menu-root-summary{display:flex;flex-direction:column;gap:3px;padding:7px 8px;border:1px solid #4b2730;border-radius:6px;background:#1a0d12}
+.menu-root-summary b{font-size:9px;color:#ffd7dd}
+.menu-root-summary span{font-size:7px;line-height:1.45;color:#a46f79}
+.danger-action{width:100%;height:28px;border-color:#73313d!important;background:#35131a!important;color:#ffb8c4!important;font-weight:900;letter-spacing:.05em}
+.danger-action:hover{border-color:#aa4455!important;background:#4a1821!important;color:#fff!important}
+.menu-delete{min-width:27px!important;color:#db7181!important}
