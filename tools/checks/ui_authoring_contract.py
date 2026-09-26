@@ -62,6 +62,7 @@ for required in [
     "TutorialSpotlight","TutorialCallout","TutorialScreenArrow",
     "ActionHitboxTemplate","OverlayHitboxTemplate","SearchBoxTemplate","EmptyStateTemplate",
     "QuestsPrototype","QuestCardTemplate","QuestList","Tab_Main","Tab_Activities","Tab_Trials","Tab_Completed",
+    "WorkshopTemplate","WorkshopBody","TreePanel","TreeCanvas","PanMap","NodeTooltip","WorkshopCurrencyBar","WorkshopPoints",
     "StateKits","HoverScale","TutorialCompleteScale","WorkshopZoomScale",
     "WorldUIPrototypes","TutorialWorldBillboard","ActivityCheckpointBillboard",
     "TutorialWorldLabelTemplate","ActivityCheckpointLabelTemplate",
@@ -79,6 +80,9 @@ need(inventory,'componentTemplate(button,"ActionHitboxTemplate"):Clone()',"inven
 need(inventory,'componentTemplate(searchBar,"SearchBoxTemplate"):Clone()',"inventory authored search clone")
 need(quests,'cardTemplate(runtime):Clone()',"Quests authored card clone")
 need(quests,'EmptyStateTemplate',"Quests authored empty-state clone")
+need(bloom,'local function workshopStructure(shell)',"Workshop authored structure binding")
+need(bloom,'local currencyBar=structure.CurrencyBar',"Workshop authored currency binding")
+assert 'WaitForChild("NodeTooltip")' not in bloom, "Workshop must not wait forever for a stale authored tooltip"
 need(boost,'badge:FindFirstChild("HoverScale")',"boost authored hover scale")
 
 assert loading_model.get("ClassName")=="ScreenGui"
