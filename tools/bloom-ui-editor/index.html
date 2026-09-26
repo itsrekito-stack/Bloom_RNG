@@ -80,7 +80,8 @@
           <button id="groupBtn" class="tiny" title="Group">▣</button>
           <button id="ungroupBtn" class="tiny" title="Ungroup">◫</button>
           <button id="duplicateBtn" class="tiny" title="Duplicate">⧉</button>
-          <button id="deleteBtn" class="tiny danger" title="Delete">⌫</button>
+          <button id="deleteMenuBtn" class="tiny danger menu-delete" title="Delete whole menu containing selection">▣×</button>
+          <button id="deleteBtn" class="tiny danger" title="Delete selected object">⌫</button>
         </div>
       </div>
       <div id="tree" class="tree"></div>
@@ -188,7 +189,7 @@
       <footer class="statusbar">
         <span id="statusText">Ready</span><span class="engine-badge">ENGINE V2 · CANVAS2D</span>
         <span id="pixelReadout">—</span>
-        <span class="status-hint">Two-finger scroll: pan · Pinch: zoom · +/-: zoom · Del: delete</span>
+        <span class="status-hint">Drag: move fragment · Alt+drag: exact child · Two-finger: pan · Pinch: zoom · Del: delete</span>
       </footer>
     </main>
 
