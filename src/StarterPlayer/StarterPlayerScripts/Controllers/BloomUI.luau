@@ -876,9 +876,9 @@ function UI:RenderMenu(preserveInteraction)
    local nectarIcon=Icons.GetCurrencyIcon("AncientNectar")
    if nectarIcon=="" then nectarIcon=Icons.Get("System","Flower") end
    setWorkshopCurrency("WorkshopPoints",p.WorkshopV5.Points,pointIcon)
-   setWorkshopCurrency("Coins",p.Currencies.Coins,coinIcon)
-   setWorkshopCurrency("PetalDust",p.Currencies.PetalDust,dustIcon)
-   setWorkshopCurrency("AncientNectar",p.Currencies.AncientNectar,nectarIcon)
+   setWorkshopCurrency("WorkshopCoins",p.Currencies.Coins,coinIcon)
+   setWorkshopCurrency("WorkshopPetalDust",p.Currencies.PetalDust,dustIcon)
+   setWorkshopCurrency("WorkshopAncientNectar",p.Currencies.AncientNectar,nectarIcon)
 
    local effects=require(RS.Config.WorkshopEffectsConfig)
 
