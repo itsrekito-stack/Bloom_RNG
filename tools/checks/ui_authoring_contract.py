@@ -68,9 +68,10 @@ for required in [
 ]:
     assert required in nodes, f"authored BloomUI node missing: {required}"
 
-for kit in ["FieldGuideKit","MapKit","SettingsKit","PlantKit","SeasonKit","ReplayKit","CardsKit"]:
+for kit in ["SettingsKit","PlantKit","SeasonKit","ReplayKit","CardsKit"]:
     assert kit in nodes, f"authored UI state kit missing: {kit}"
-assert "TrialsKit" not in nodes, "legacy TrialsKit returned after Quests V2 migration"
+for retired in ["TrialsKit","FieldGuideKit","MapKit","Dock_FieldGuide","Dock_Map"]:
+    assert retired not in nodes, f"retired alpha menu returned: {retired}"
 
 need(bloom,'function UI:MenuTemplate(name)',"dynamic menu authored template resolver")
 need(bloom,'self.StateKits=self.Panel:FindFirstChild("StateKits")',"state kit runtime binding")
@@ -88,9 +89,11 @@ for required in ["Background","Card","ProgressTrack","ProgressFill","Status","De
 need(loading,'RF:WaitForChild("BloomLoadingTemplate",10)',"loading authored model binding")
 assert 'Instance.new("ScreenGui")' not in loading
 
-states=["gameplay","inventory_v2","workshop","fieldguide","map","trials","settings","plant","season","replay","cards","reward","toast","tutorial","boosts","world_ui","loading"]
+states=["gameplay","inventory_v2","workshop","trials","settings","plant","season","replay","cards","reward","toast","tutorial","boosts","world_ui","loading"]
 for state in states:
     assert f'data-ui-state="{state}"' in editor_html, f"UI STATE button missing: {state}"
+for retired in ("fieldguide","map"):
+    assert f'data-ui-state="{retired}"' not in editor_html, f"retired UI STATE still exposed: {retired}"
 need(editor,'const closing=state.activeUiState===scene',"UI STATE toggle-off behavior")
 need(editor,'state.activeUiState=null',"empty workspace state")
 need(editor,'if(!state.activeUiState){',"empty Explorer state")
