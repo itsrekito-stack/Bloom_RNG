@@ -62,6 +62,9 @@ function S:RefreshCheckpointVisual(item)
   item.Beam.Width1=tracked and .08 or .04
  end
  if item.Light then item.Light.Brightness=tracked and 1.7 or ((self.UI.State and self.UI.State.Profile.Settings.ReducedEffects) and .45 or 1) end
+ if item.Billboard then
+  item.Billboard.MaxDistance=tracked and 100 or (item.Tutorial and 90 or 58)
+ end
 end
 
 function S:SetTracked(id)
@@ -160,7 +163,7 @@ function S:BuildCheckpoint(o)
  billboard.Name="CheckpointLabel"
  billboard.Size=UDim2.fromOffset(190,54)
  billboard.AlwaysOnTop=true
- billboard.MaxDistance=180
+ billboard.MaxDistance=o.Tutorial and 90 or 58
  billboard.StudsOffset=Vector3.new(0,.7,0)
  billboard.Parent=top
 
@@ -197,6 +200,7 @@ function S:BuildCheckpoint(o)
   Core=core,
   Top=top,
   Label=label,
+  Billboard=billboard,
   Id=o.Id,
   Beam=beam,
   Light=light,
