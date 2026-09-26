@@ -1652,7 +1652,7 @@ end
 local REQUIRED_AUTHORED_UI={
  "ObjectiveCard","CurrencyHUD","MenuDock","RollHUD","VerticalRoulette","TutorialGuideBanner",
  "TutorialSpotlight","TutorialCallout","TutorialScreenArrow",
- "Toast","ModalShade","MainPanel","RewardReveal","ActiveBoostsHUD","ActiveBoostTooltip",
+ "Toast","ModalShade","MainPanel","RewardReveal","ActiveBoostsHUD","ActiveBoostTooltip","WorldUIPrototypes",
 }
 
 local function validateBloomGui(gui)
