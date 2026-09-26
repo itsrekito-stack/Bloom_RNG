@@ -40,15 +40,24 @@ local function uiCount()
  return gui and #gui:GetDescendants() or 0
 end
 
+local function folderCount(name)
+ local folder=workspace:FindFirstChild(name)
+ return folder and #folder:GetChildren() or 0
+end
+
+local function otherPlayerCount()
+ return math.max(0,#Players:GetPlayers()-1)
+end
+
 local function report(label)
  local avg=0
  for _,value in ipairs(secondFrameMs) do avg+=value end
  if #secondFrameMs>0 then avg/=#secondFrameMs end
  print(string.format(
-  "[RuntimeProbe][Client] %s user=%d elapsed=%ds frame_avg=%.2fms frame_p95=%.2fms frame_max=%.2fms memory=%.1fMB ui_instances=%d recv=%.1fkbps send=%.1fkbps input=k%d/m%d/t%d/w%d",
+  "[RuntimeProbe][Client] %s user=%d elapsed=%ds frame_avg=%.2fms frame_p95=%.2fms frame_max=%.2fms memory=%.1fMB ui_instances=%d recv=%.1fkbps send=%.1fkbps input=k%d/m%d/t%d/w%d others=%d local_bees=%d checkpoints=%d",
   label,player.UserId,math.floor(os.clock()-started),avg,percentile(secondFrameMs,.95),maxFrameMs,totalMemoryMb(),uiCount(),
   networkMetric("DataReceiveKbps"),networkMetric("DataSendKbps"),
-  inputs.Keyboard,inputs.Mouse,inputs.Touch,inputs.Wheel
+  inputs.Keyboard,inputs.Mouse,inputs.Touch,inputs.Wheel,otherPlayerCount(),folderCount("LocalBees"),folderCount("LocalBloomCheckpoints")
  ))
 end
 
