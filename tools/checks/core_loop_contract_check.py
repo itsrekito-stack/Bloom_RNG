@@ -26,7 +26,7 @@ checks=[
     (roll,'self.X:Send(player,"Reward",result)',"Roll returns authoritative reward"),
     (inventory,'f.OwnedSeedCopies[id]=(f.OwnedSeedCopies[id] or 0)+1',"Flower reward becomes owned inventory"),
     (inventory,'self.X:Emit(player,"SeedReward",1)',"Seed reward advances progression events"),
-    (bloom_ui,'MENU_RENDERERS={SeedSatchel="InventoryV2",Settings="SettingsV2"}',"Inventory V2 and Settings V2 own authored menu routes"),
+    (bloom_ui,'MENU_RENDERERS={SeedSatchel="InventoryV2",Trials="QuestsV2",Settings="SettingsV2"}',"Inventory V2, Quests V2 and Settings V2 own authored menu routes"),
     (inventory_ui,'"PLANT AT GARDEN"',"Inventory routes planting into world interaction"),
     (inventory_ui,'controller.LastSeed=item.Id',"Inventory carries preferred seed into PlantPicker"),
     (bloom_ui,'"PlantPicker"',"Physical garden prompt opens planting picker"),
