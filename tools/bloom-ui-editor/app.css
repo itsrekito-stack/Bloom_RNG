@@ -878,6 +878,13 @@ button{cursor:pointer}
 .tree-search-wrap input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#d8e7f3;font-size:9px}
 .tree-search-wrap input::placeholder{color:#455b6e}
 .tree-search-wrap kbd{font:7px ui-monospace,monospace;color:#4d6579;padding:2px 4px;border:1px solid #203447;border-radius:4px;background:#0d1721}
+
+.tree-empty{
+ margin:12px 9px;padding:18px 12px;border:1px dashed #20384c;border-radius:10px;background:#09131d;
+ display:flex;flex-direction:column;gap:5px;align-items:center;text-align:center;color:#60788c
+}
+.tree-empty strong{font-size:9px;color:#a8c3d8;text-transform:uppercase;letter-spacing:.08em}
+.tree-empty span{font-size:8px;line-height:1.45;color:#50697d}
 .tree-search-meta{min-height:13px;padding:0 10px;color:#466076;font-size:7px}
 .section-title{height:29px;padding:0 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #152230;color:#647c91;font-size:7px;font-weight:900;letter-spacing:.11em}
 .tree-actions{display:flex;gap:2px}.tiny{height:21px;min-width:21px;padding:0 4px;font-size:9px}.tiny.danger{color:#b96170}
