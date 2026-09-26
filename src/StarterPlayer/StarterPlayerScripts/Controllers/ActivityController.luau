@@ -144,16 +144,17 @@ function S:BuildCheckpoint(o)
  billboard.StudsOffset=Vector3.new(0,.7,0)
  billboard.Parent=top
 
- local label=Instance.new("TextLabel")
+ local prototypes=self.UI and self.UI.SafeRoot and self.UI.SafeRoot:FindFirstChild("WorldUIPrototypes")
+ local template=prototypes and prototypes:FindFirstChild("ActivityCheckpointLabelTemplate",true)
+ if not template or not template:IsA("TextLabel") then
+  error("[ActivityController] Authored ActivityCheckpointLabelTemplate missing from SafeRoot/WorldUIPrototypes")
+ end
+ local label=template:Clone()
+ label.Name="Label"
  label.Size=UDim2.fromScale(1,1)
- label.BackgroundTransparency=1
+ label.Position=UDim2.fromScale(0,0)
+ label.Visible=true
  label.Text=string.format("%s  •  %d/%d\nSTEP INTO CHECKPOINT",displayName(o.Kind),o.Index or 1,o.Count or 1)
- label.TextColor3=Color3.fromRGB(245,248,255)
- label.TextStrokeColor3=Color3.fromRGB(10,16,24)
- label.TextStrokeTransparency=.2
- label.TextSize=14
- label.Font=Enum.Font.GothamBold
- label.TextWrapped=true
  label.Parent=billboard
 
  local light=Instance.new("PointLight")
