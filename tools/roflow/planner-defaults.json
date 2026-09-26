@@ -98,21 +98,21 @@
       "id": "release-studio-persistence-a",
       "group": "1 · Stability",
       "title": "Studio persistence: join / leave / rejoin",
-      "detail": "Verify one profile loads once, saves on leave, and returns with the same inventory/progression.",
+      "detail": "PersistenceProbe + RoFlow Studio QA now compare the previous LEAVE digest with the next JOIN across recent Studio logs and show MATCH / MISMATCH / WAITING REJOIN. Real published Studio join/leave/rejoin is still required.",
       "done": false
     },
     {
       "id": "release-studio-persistence-b",
       "group": "1 · Stability",
       "title": "Studio persistence: throttling / failure paths",
-      "detail": "Exercise DataStore refusal/throttling and confirm fail-closed behavior with no silent progress loss.",
+      "detail": "Deterministic fault paths are CI-covered; RoFlow Studio QA now preserves runtime persistence evidence across recent logs. Real Roblox DataStore refusal/throttling behavior still requires Studio/API execution.",
       "done": false
     },
     {
       "id": "release-studio-persistence-c",
       "group": "1 · Stability",
       "title": "Studio persistence: shutdown / session ownership",
-      "detail": "Test BindToClose/server shutdown and stale-session ownership ordering.",
+      "detail": "Deterministic shutdown/session ownership is CI-covered; RuntimeProbe/PersistenceProbe evidence is now collected across recent Studio logs. Real BindToClose/server shutdown remains required.",
       "done": false
     },
     {
