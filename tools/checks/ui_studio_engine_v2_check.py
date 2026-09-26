@@ -7,6 +7,10 @@ app=(ROOT/"tools/bloom-ui-editor/app.js").read_text(encoding="utf-8")
 engine=(ROOT/"tools/bloom-ui-editor/engine-v2.js").read_text(encoding="utf-8")
 sync=(ROOT/"tools/roflow/scripts/sync-ui-studio.mjs").read_text(encoding="utf-8")
 rust=(ROOT/"tools/roflow/src-tauri/src/lib.rs").read_text(encoding="utf-8")
+roflow_html=(ROOT/"tools/roflow/web/index.html").read_text(encoding="utf-8")
+roflow_css=(ROOT/"tools/roflow/web/app.css").read_text(encoding="utf-8")
+roflow_app=(ROOT/"tools/roflow/web/app.js").read_text(encoding="utf-8")
+editor_css=(ROOT/"tools/bloom-ui-editor/app.css").read_text(encoding="utf-8")
 
 def need(src,text,label):
     if text not in src:
@@ -29,3 +33,10 @@ need(rust,'let engine_path = editor.join("engine-v2.js");',"RoFlow live engine l
 need(rust,'UI Studio engine-v2.js tag is missing',"RoFlow engine script inlining")
 print("Bloom UI Studio Engine V2 contract: PASS")
 print("Canvas2D owns viewport rendering and hit-testing; DOM remains editor chrome plus geometry compatibility proxies.")
+
+need(roflow_html,'class="studio-reload-fallback"',"RoFlow full-surface UI Studio")
+need(roflow_app,'ui-studio-focus',"RoFlow UI Studio focus mode")
+need(roflow_css,'body.ui-studio-focus main',"RoFlow chrome removal")
+need(editor_css,'html.roflow-native',"Editor native desktop presentation")
+need(editor_css,'--state-rail-w:66px',"Compact desktop state rail")
+print("RoFlow native UI Studio desktop mode: PASS")
