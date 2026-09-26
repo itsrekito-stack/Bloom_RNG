@@ -222,7 +222,7 @@ end
 function S:Skip(player)
  local p=self.X:Profile(player)
  if not p then return end
- if not p.StarterBeeGranted then self.X.HiveService:Interact(player) end
+ if not starterBeeOwned(p) then self.X.HiveService:Interact(player) end
  p.Tutorial.Version=T.Version
  p.Tutorial.Step=#T.Steps+1
  p.Tutorial.Skipped=true
