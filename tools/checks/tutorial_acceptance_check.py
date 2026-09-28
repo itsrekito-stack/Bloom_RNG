@@ -25,7 +25,7 @@ pollinator=read("src/ServerScriptService/Services/PollinatorService.luau")
 ids=re.findall(r'\{Id="([^"]+)"',config)
 expected=["GardenSlot","FirstFlowerRoll","Plant","FirstBeeRoll","EquipBee","FillBloom","BloomRoll","InventoryExplain","PollenSpark","HiveUpgrade","WorkshopPurchase","Synergy","Quests"]
 assert ids==expected, f"unexpected tutorial sequence: {ids}"
-assert 'Version=10' in config and len(ids)==13
+assert 'Version=11' in config and len(ids)==13
 
 for removed in ("BeeWork","NormalRoll","WorkshopVisit","SunnyVisit"):
     assert f'Id="{removed}"' not in config, f"removed tutorial step returned: {removed}"
@@ -72,7 +72,7 @@ need(bloom,'self.MeterLabel.Text=string.format("BLOOM  %.0f%%",bloomPercent)',"B
 assert 'DISCOVERY  %d/%d' not in bloom, "Discovery n/n returned to Bloom HUD"
 assert 'NormalRoll' not in bloom, "removed NormalRoll client step returned"
 
-need(default,'Tutorial={Version=10,Step=1,FeatureUnlocks={},Events={}}',"fresh tutorial version")
+need(default,'Tutorial={Version=11,Step=1,FeatureUnlocks={},Events={}}',"fresh tutorial version")
 need(settings,'find(runtime,"StudioTutorialResetButton","TextButton")',"Studio tutorial reset authored binding")
 need(settings,'ui:Send("StudioTutorialReset")',"Studio tutorial reset action")
 need(hive,'self.X:Emit(player,"FirstGardenSlot",1)',"first Garden slot")
