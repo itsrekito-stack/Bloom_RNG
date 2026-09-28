@@ -27,7 +27,7 @@ checks=[
  (inventory,'self.X.FlowerProgressionService:AddDuplicate(player,id,1)',"duplicate Flower advances Level"),
  (inventory,'pollinators.BeeInventory[id]=1',"first Bee grants species ownership"),
  (inventory,'self.X.PollinatorService:AddMastery(player,id,C.BeeDuplicateXP)',"duplicate Bee advances Mastery"),
- (bloom_ui,'MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Index="IndexV1",Trials="QuestsV2",Settings="SettingsV2"}',"authored menu routes stay centralized"),
+ (bloom_ui,'MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Hive="HiveV1",Index="IndexV1",Trials="QuestsV2",Settings="SettingsV2"}',"authored menu routes stay centralized"),
  (inventory_ui,'CATEGORY_ORDER={"Bees","Resources","Special"}',"Inventory excludes Flowers; planting stays in Garden"),
  (bloom_ui,'function UI:OpenGardenMenu(slot)',"Garden menu owns planting entry point"),
  (bloom_ui,'GardenEditor.Render(self,p,ui)',"authored Garden editor renderer"),
