@@ -4,6 +4,7 @@ local Features=require(RS.Config.FeatureUnlockConfig)
 local Bloom=require(RS.Config.BloomConfig)
 local Workshop=require(RS.Config.WorkshopConfig)
 local Flowers=require(RS.Config.FlowersConfig)
+local Bees=require(RS.Config.BeesConfig)
 
 local S={LastWaiting={}}
 
@@ -19,10 +20,19 @@ local function completionKey(step)
  return "TutorialStep_"..step.Id
 end
 
-local function starterBeeOwned(profile)
- local pollinators=profile and profile.Pollinators
- local inventory=pollinators and pollinators.BeeInventory
- return type(inventory)=="table" and (tonumber(inventory.WorkerBee) or 0)>0
+local function hasFlower(profile)
+ return next(profile.FlowerCollection.DiscoveredFlowers or {})~=nil
+end
+
+local function hasBee(profile)
+ return next(profile.Pollinators.DiscoveredBees or {})~=nil
+end
+
+local function hasPlanted(profile)
+ for _,slot in ipairs(profile.Garden.Slots or {}) do
+  if slot.SpeciesId then return true end
+ end
+ return false
 end
 
 function S:Init(x)
@@ -31,8 +41,11 @@ end
 
 function S:LegacyStepComplete(p,step)
  local events=p.Tutorial.Events
- if step.Id=="HiveIntro" then return p.StarterBeeGranted or (events.StarterBee or 0)>0 or (events.Wake or 0)>0 end
- if step.Id=="StarterBee" then return starterBeeOwned(p) end
+ if step.Id=="HiveIntro" then return (events.HiveApproach or 0)>0 or (events.Wake or 0)>0 end
+ if step.Id=="GardenSlot" then return (events.FirstGardenSlot or 0)>0 or (tonumber(p.Garden.UnlockedSlots) or 0)>0 or (events.StarterBee or 0)>0 end
+ if step.Id=="FirstFlowerRoll" then return (events.TutorialFlowerRoll or 0)>0 or (events.SeedReward or 0)>0 or hasFlower(p) end
+ if step.Id=="Plant" then return (events.Plant or 0)>0 or hasPlanted(p) end
+ if step.Id=="FirstBeeRoll" then return (events.TutorialBeeRoll or 0)>0 or (events.StarterBee or 0)>0 or hasBee(p) end
  if step.Id=="HiveUpgrade" then return p.Hive.Level>=2 or (events.HiveUpgrade or 0)>0 end
  if step.Id=="WorkshopPurchase" then return next(p.WorkshopV5.Nodes)~=nil or (events.WorkshopPurchase or 0)>0 end
  if step.Id=="InventoryExplain" then return (events.InventoryReviewed or 0)>0 or (events.SatchelOpen or 0)>0 end
@@ -54,11 +67,7 @@ function S:Migrate(player,p)
  end
 
  for _,step in ipairs(T.Steps) do
-  if self:LegacyStepComplete(p,step) then
-   t.Events[completionKey(step)]=1
-  else
-   break
-  end
+  if self:LegacyStepComplete(p,step) then t.Events[completionKey(step)]=1 else break end
  end
  t.Step=1
  print("[Tutorial] migrated to v"..T.Version.." player="..playerName(player))
@@ -84,11 +93,8 @@ function S:ApplyUnlocks(p)
   local unlocked=rule.Step and t.Step>=rule.Step
    or rule.Event and (t.Events[rule.Event] or 0)>0
    or rule.Node and p.WorkshopV5.Nodes[rule.Node]==true
-  if rule.Node then
-   t.FeatureUnlocks[id]=unlocked==true
-  elseif unlocked then
-   t.FeatureUnlocks[id]=true
-  end
+  if rule.Node then t.FeatureUnlocks[id]=unlocked==true
+  elseif unlocked then t.FeatureUnlocks[id]=true end
  end
 end
 
@@ -114,9 +120,8 @@ function S:Assist(player,p)
   t.Events.TutorialAssistWorkshop=1
   self.X:MarkStateDirty(player)
  elseif step.Id=="Synergy" and not t.Events.TutorialAssistSynergy then
-  if Flowers.Species.Tulip and self.X.InventoryService:Available(p,"Tulip")<1 then
-   p.FlowerCollection.DiscoveredFlowers.Tulip=true
-   p.FlowerCollection.OwnedSeedCopies.Tulip=(p.FlowerCollection.OwnedSeedCopies.Tulip or 0)+1
+  if Flowers.Species.Tulip and not p.FlowerCollection.DiscoveredFlowers.Tulip then
+   self.X.InventoryService:Grant(player,"FlowerSeed","Tulip")
   end
   t.Events.TutorialAssistSynergy=1
   self.X:MarkStateDirty(player)
@@ -129,34 +134,14 @@ function S:Refresh(player)
  local t=p.Tutorial
  self:Migrate(player,p)
 
- if p.StarterBeeGranted and not starterBeeOwned(p) then
-  p.StarterBeeGranted=false
-  self.X.GardenPlotService:RefreshHivePrompt(player)
-  self.X:MarkStateDirty(player)
- elseif starterBeeOwned(p) and not p.StarterBeeGranted then
-  p.StarterBeeGranted=true
-  self.X.GardenPlotService:RefreshHivePrompt(player)
-  self.X:MarkStateDirty(player)
- end
-
- -- Profiles created by older tutorial builds may contain the gameplay event
- -- but not the v4 per-step completion marker. Reconcile only the current
- -- step so a valid event cannot leave the tutorial permanently stuck.
  local current=T.Steps[t.Step]
- if current and not t.Events[completionKey(current)] then
-  local recorded=(t.Events[current.Event] or 0)>0
-  if current.Id=="StarterBee" then recorded=recorded and starterBeeOwned(p) end
-  if recorded then
-   t.Events[completionKey(current)]=1
-   self.X:MarkStateDirty(player)
-  end
+ if current and not t.Events[completionKey(current)] and (t.Events[current.Event] or 0)>0 then
+  t.Events[completionKey(current)]=1
+  self.X:MarkStateDirty(player)
  end
 
  local old=t.Step
- while T.Steps[t.Step] and t.Events[completionKey(T.Steps[t.Step])] do
-  t.Step+=1
- end
-
+ while T.Steps[t.Step] and t.Events[completionKey(T.Steps[t.Step])] do t.Step+=1 end
  self:ApplyUnlocks(p)
 
  if t.Step~=old then
@@ -192,29 +177,11 @@ function S:Tick(player)
    self.X:EmitOnce(player,"HiveApproach")
    return true
   end
- elseif step.Id=="StarterBee" and starterBeeOwned(p) then
-  if not p.StarterBeeGranted then
-   p.StarterBeeGranted=true
-   self.X.GardenPlotService:RefreshHivePrompt(player)
-   self.X:MarkStateDirty(player)
-  end
-  if not p.Tutorial.Events.StarterBee then self.X:Emit(player,"StarterBee",1)
-  else
-   self:RecordEvent(player,"StarterBee")
-   self:Refresh(player)
-  end
-  return true
  elseif step.Id=="PollenSpark" then
   self.X.GardenActivityService:EnsureTutorialSpark(player)
- elseif step.Id=="FirstSeed" and (p.Tutorial.Events.SeedReward or 0)>0 then
-  self:RecordEvent(player,"SeedReward")
-  self:Refresh(player)
+ elseif step.Id=="SunnyVisit" and self.X.MapService:Sector(player)=="SunnyOrchard" then
+  self.X:Emit(player,"SunnyVisit",1)
   return true
- elseif step.Id=="SunnyVisit" then
-  if self.X.MapService:Sector(player)=="SunnyOrchard" then
-   self.X:Emit(player,"SunnyVisit",1)
-   return true
-  end
  end
  return false
 end
@@ -222,12 +189,29 @@ end
 function S:Skip(player)
  local p=self.X:Profile(player)
  if not p then return end
- if not starterBeeOwned(p) then self.X.HiveService:Interact(player) end
+ local f=p.FlowerCollection
+ if not f.DiscoveredFlowers.Daisy then
+  f.DiscoveredFlowers.Daisy=true
+  f.OwnedSeedCopies.Daisy=1
+  f.ObtainedFlowers.Daisy=math.max(1,f.ObtainedFlowers.Daisy or 0)
+  f.FlowerMastery.Daisy=f.FlowerMastery.Daisy or {Level=1,XP=0}
+ end
+ local bees=p.Pollinators
+ if not bees.DiscoveredBees.WorkerBee then
+  bees.DiscoveredBees.WorkerBee=true
+  bees.BeeInventory.WorkerBee=1
+  bees.BeeObtained.WorkerBee=math.max(1,bees.BeeObtained.WorkerBee or 0)
+  bees.BeeMastery.WorkerBee=bees.BeeMastery.WorkerBee or 0
+ end
+ p.Tutorial.Events.FirstGardenSlot=math.max(1,p.Tutorial.Events.FirstGardenSlot or 0)
  p.Tutorial.Version=T.Version
  p.Tutorial.Step=#T.Steps+1
  p.Tutorial.Skipped=true
+ p.Pollinators.EquippedBeeSlots[1]="WorkerBee"
  for id,r in pairs(Features) do if not r.Node then p.Tutorial.FeatureUnlocks[id]=true end end
  self.LastWaiting[player]=nil
+ self.X.GardenPlotService:RefreshCapacity(player)
+ self.X.GardenSynergyService:Recalculate(player)
 end
 
 function S:Replay(player)
