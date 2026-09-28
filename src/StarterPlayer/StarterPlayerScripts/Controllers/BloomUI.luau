@@ -31,6 +31,7 @@ local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
 local MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Index="IndexV1",Trials="QuestsV2",Settings="SettingsV2"}
+local RETURN_TO_INVENTORY={Workshop=true,Index=true,Trials=true,Settings=true}
 local MENU_REFRESH_ACTIONS={
  Setting="Settings",
  ResetSettings="Settings",
@@ -717,18 +718,26 @@ function UI:SetPanelVisible(visible)
  end
 end
 
-function UI:Close()
+function UI:Close(options)
+ options=type(options)=="table" and options or {}
+ local closingMenu=self.Menu
+ local returnToInventory=options.SuppressInventoryReturn~=true
+  and RETURN_TO_INVENTORY[closingMenu]==true
+  and self.State
+  and self.State.Profile
+  and self.State.Profile.Tutorial.FeatureUnlocks.SeedSatchel==true
+
  self:DisconnectWorkshopPan()
  self.ReplayIndex=nil
- local wasWorkshop=self.Menu=="Workshop"
- local wasIndex=self.Menu=="Index"
+ local wasWorkshop=closingMenu=="Workshop"
+ local wasIndex=closingMenu=="Index"
  local serverMenuOpen=self.MenuServerOpen==true
  if wasWorkshop then
   self.WorkshopRuntime=nil
   self.WorkshopCanvasPosition=nil
   self.WorkshopZoom=nil
  end
- if self.Menu=="Season" then self:Send("SeasonCancel") end
+ if closingMenu=="Season" then self:Send("SeasonCancel") end
  self.Menu=nil
  self.MenuRenderer=nil
  self.MenuArg=nil
@@ -738,6 +747,7 @@ function UI:Close()
  if wasWorkshop then self:SetWorkshopFocus(false) end
  if wasIndex then self:SetIndexFocus(false) end
  if serverMenuOpen then self:Send("Menu",false) end
+ if returnToInventory then self:Open("SeedSatchel") end
 end
 
 function UI:Open(name,arg,options)
@@ -1232,13 +1242,20 @@ function UI:ApplyResponsiveLayout(width,height)
  -- Desktop layout is authored in StarterGui. Do not overwrite positions/sizes here,
  -- so designers can move every HUD block directly in Studio.
  self.IsMobileLayout=width<700
- if width>=700 then return end
+ local dockScale=self.Dock and self.Dock:FindFirstChild("UserScale")
+ if width>=700 then
+  if dockScale then dockScale.Scale=1 end
+  self.Dock.AnchorPoint=Vector2.new(1,1)
+  self.Dock.Position=UDim2.new(.5,-46,1,-14)
+  return
+ end
 
  -- Small-screen safety only. These adjustments intentionally touch as little as possible.
  self.ObjectiveCard.Size=UDim2.fromOffset(math.max(280,width-24),66)
  self.CurrencyHUD.Position=UDim2.fromOffset(10,208)
+ if dockScale then dockScale.Scale=math.min(1,math.max(.68,(width-16)/332)) end
  self.Dock.AnchorPoint=Vector2.new(.5,1)
- self.Dock.Position=UDim2.new(.5,-84,1,-10)
+ self.Dock.Position=UDim2.new(.5,0,1,-94)
  self.Guide.Size=UDim2.fromOffset(math.max(260,width-24),38)
  self.RollHUD.Size=UDim2.fromOffset(math.min(300,width-18),38)
  self.RollHUD.AnchorPoint=Vector2.new(.5,1)
@@ -1319,9 +1336,32 @@ function UI:Render()
  self.BloomFill.Size=UDim2.fromScale(charge/bloomMax,1)
  self.MeterArea.Visible=rollUnlocked and (p.Tutorial.Step>=(T.IndexById.Delivery or 8) or p.Tutorial.Skipped)
 
- self.Dock.Visible=true
+ local inventoryUnlocked=p.Tutorial.FeatureUnlocks.SeedSatchel==true
+ self.Dock.Visible=inventoryUnlocked
+ local dockUnlocked={
+  SeedSatchel=inventoryUnlocked,
+  Index=inventoryUnlocked,
+  Workshop=p.Tutorial.FeatureUnlocks.Workshop==true,
+  Trials=p.Tutorial.FeatureUnlocks.Trials==true,
+  Settings=inventoryUnlocked,
+ }
  for name,b in pairs(self.DockButtons) do
-  b.Visible=name=="SeedSatchel" and p.Tutorial.FeatureUnlocks.SeedSatchel==true
+  local enabled=dockUnlocked[name]==true
+  local progressionButton=name=="Workshop" or name=="Trials"
+  b.Visible=inventoryUnlocked and (enabled or not progressionButton)
+  b.Active=enabled
+  b.Selectable=enabled
+  b:SetAttribute("BloomDockEnabled",enabled)
+  local icon=b:FindFirstChild("Icon")
+  if icon and icon:IsA("ImageLabel") then
+   icon.ImageTransparency=enabled and 0 or .58
+   icon.ImageColor3=enabled and C.White or C.Muted
+  end
+  local tip=self.DockTooltips[name]
+  if tip then
+   tip.Text=(MENU_NAMES[name] or name)..(enabled and "" or " • LOCKED")
+   if not b.Visible then tip.Visible=false end
+  end
  end
  if not self:IsWorkshopExclusive() then
   self.GuideController:Update()
@@ -1681,16 +1721,31 @@ function UI:BindStaticUI()
  self.DockLayout=self.Dock:FindFirstChildOfClass("UIListLayout")
  self.DockButtons={}
  self.DockTooltips={}
- for _,name in ipairs({"SeedSatchel","Workshop","Trials","Settings"}) do
+ for _,name in ipairs({"SeedSatchel","Index","Workshop","Trials","Settings"}) do
   local button=self.Dock:WaitForChild("Dock_"..name)
   local tip=button:WaitForChild("Tooltip")
   tip.Text=MENU_NAMES[name] or name
   local icon=button:FindFirstChild("Icon")
   local image=Icons.Get("Menus",name)
   if icon and icon:IsA("ImageLabel") then icon.Image=image end
-  button.MouseEnter:Connect(function() tip.Visible=true TweenService:Create(button,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelHover}):Play() end)
-  button.MouseLeave:Connect(function() tip.Visible=false TweenService:Create(button,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.Panel}):Play() end)
-  button.Activated:Connect(function() self:Open(name) end)
+  button.MouseEnter:Connect(function()
+   if not button.Visible then return end
+   tip.Visible=true
+   if icon and icon:IsA("ImageLabel") and button:GetAttribute("BloomDockEnabled")~=false then
+    TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{ImageColor3=C.Blue}):Play()
+   end
+  end)
+  button.MouseLeave:Connect(function()
+   tip.Visible=false
+   if icon and icon:IsA("ImageLabel") then
+    local enabled=button:GetAttribute("BloomDockEnabled")~=false
+    TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{ImageColor3=enabled and C.White or C.Muted}):Play()
+   end
+  end)
+  button.Activated:Connect(function()
+   if button:GetAttribute("BloomDockEnabled")==false then return end
+   self:Open(name)
+  end)
   self.DockButtons[name]=button
   self.DockTooltips[name]=tip
  end
