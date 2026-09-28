@@ -13,12 +13,17 @@ hive=read("src/ServerScriptService/Services/HiveService.luau")
 garden=read("src/ServerScriptService/Services/GardenPlotService.luau")
 map_service=read("src/ServerScriptService/Services/MapService.luau")
 features=read("src/ReplicatedStorage/Config/FeatureUnlockConfig.luau")
+roll_pool=read("src/ReplicatedStorage/Config/RollPoolConfig.luau")
+config_validation=read("src/ServerScriptService/Tests/ConfigValidation.luau")
 
 need(locations,"Order={}","all location entries removed")
 need(locations,"Sectors={}","all location sectors removed")
 for stale in ("SunnyOrchard","CrystalGreenhouse","TwilightGrove"):
     if stale in locations or stale in map_service or stale in hive:
         raise AssertionError(f"removed location still referenced: {stale}")
+assert "LocationsConfig" not in config_validation and "AllowedBiomes" not in config_validation, "ConfigValidation still validates removed biomes"
+assert "AllowedBiomes" not in roll_pool and "UnlockedSectors" not in roll_pool, "RollPool still gates rewards by removed locations"
+need(roll_pool,"local unlocked=true","global roll pool after location removal")
 
 costs_match=re.search(r'HiveCosts=\{([^}]+)\}',bloom)
 if not costs_match: raise AssertionError("HiveCosts missing")

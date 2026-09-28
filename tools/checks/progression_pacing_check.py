@@ -53,10 +53,8 @@ hive8_developed=hive8_one/developed_workers
 if not 25<=hive8_developed<=60:
     raise AssertionError(f"developed Hive8 throughput drift: {hive8_developed:.2f}m")
 
-sector_hives={name:int(level) for name,level in re.findall(r'(SunnyOrchard|CrystalGreenhouse|TwilightGrove)=\{[^}]*Hive=(\d+)',locations)}
-if sector_hives!={"SunnyOrchard":2,"CrystalGreenhouse":4,"TwilightGrove":6}: raise AssertionError(f"location pacing drift: {sector_hives}")
-need(locations,'Requires="SunnyOrchard"',"Crystal follows Sunny")
-need(locations,'Requires="CrystalGreenhouse"',"Twilight follows Crystal")
+need(locations,"Order={}","removed location list stays empty")
+need(locations,"Sectors={}","removed location sectors stay empty")
 need(workshop,"local HIVE_BY_INDEX={1,2,3,4,5,5}","Workshop depth reaches Hive5")
 need(hive,"C.WorkshopPointHiveMilestones[nextLevel] or 0","Workshop points are milestone-based")
 

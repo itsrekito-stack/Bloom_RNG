@@ -34,16 +34,18 @@ need(default,"UnlockedSlots=0","fresh profile starts with zero Garden slots")
 need(default,"Slots={{},{},{},{},{},{},{}}","fresh profile carries seven empty slot records")
 
 ids=re.findall(r'\{Id="([^"]+)"',tutorial)
-expected=["HiveIntro","GardenSlot","FirstFlowerRoll","Plant","FirstBeeRoll","BeeWork","PollenSpark","Inventory","InventoryExplain","Delivery","HiveUpgrade","WorkshopVisit","WorkshopPurchase","Synergy","SunnyVisit"]
+expected=["GardenSlot","FirstFlowerRoll","Plant","FirstBeeRoll","EquipBee","FillBloom","BloomRoll","InventoryExplain","PollenSpark","HiveUpgrade","WorkshopPurchase","Synergy","Quests"]
 if ids!=expected: raise AssertionError(f"tutorial path changed: {ids}")
-need(tutorial,"Version=5","tutorial schema v5")
-need(features,'Roll={Step=3}',"Roll unlocks for guaranteed Flower roll")
+need(tutorial,"Version=10","tutorial schema v10")
+need(features,'Roll={Step=2}',"Roll unlocks for guaranteed Flower roll")
 need(hive,'self.X:Emit(player,"FirstGardenSlot",1)',"Hive grants tutorial Garden slot")
 need(roll,'if stepId=="FirstFlowerRoll" then',"Flower-only tutorial roll")
 need(roll,'item.Kind=="FlowerSeed" and item.Id=="Daisy"',"tutorial prefers Daisy")
 need(roll,'elseif stepId=="FirstBeeRoll" then',"Bee-only tutorial roll")
 need(roll,'item.Kind=="Bee" and item.Id=="WorkerBee"',"tutorial prefers Worker Bee")
-need(roll,'self.X.InventoryService:EquipBee(player,item.Id,1)',"tutorial Bee auto-equips")
+if 'self.X.InventoryService:EquipBee(player,item.Id,1)' in roll:
+    raise AssertionError("tutorial Bee roll must not auto-equip before the Equip Bee step")
+need(roll,'if T.Steps[p.Tutorial.Step] and automatic then return false,"TUTORIAL_SINGLE_ROLL" end',"tutorial rolls stay single-use")
 if 'InventoryService:Grant(player,"Bee","WorkerBee")' in hive:
     raise AssertionError("old direct starter Bee grant returned")
 
@@ -65,7 +67,7 @@ for key in ("Discoveries","Synergies","BeeMasteryLevel","Activities","Trials"):
     need(bloom,key+"=","Hive quest table covers "+key)
 need(hive,"if not questReady then","Hive upgrade blocks incomplete quest")
 need(hive,"C.WorkshopPointHiveMilestones[nextLevel] or 0","static Hive milestone points")
-need(meta,'local POINT_MILESTONES={WorkshopVisit=1,Synergy=1,Trait=1,Trial=2,SeasonReady=2}',"Journey point milestone table")
+need(meta,'local POINT_MILESTONES={Synergy=1,Trait=1,Trial=2,SeasonReady=2}',"Journey point milestone table")
 need(meta,'self.X.WorkshopService:Point(player,"JourneyMilestone_"..key,points)',"key Journey milestones award Workshop Points through one-time sources")
 
 honey_per=number(bloom,"HoneyPerDelivery")
@@ -79,11 +81,8 @@ if deliveries!=10 or coins<30:
 need(tutorial_service,"p.Hive.Honey=need","tutorial cannot stall on Hive 2 Honey")
 need(tutorial_service,"p.WorkshopV5.Points=math.max(p.WorkshopV5.Points,node.Cost or 0)","tutorial guarantees first Workshop point")
 
-sector_hives={name:int(level) for name,level in re.findall(r'(SunnyOrchard|CrystalGreenhouse|TwilightGrove)=\{[^}]*Hive=(\d+)',locations)}
-if sector_hives!={"SunnyOrchard":2,"CrystalGreenhouse":4,"TwilightGrove":6}:
-    raise AssertionError(f"unexpected sector thresholds: {sector_hives}")
-season_hive=int(number(season,"Hive"))
-if max(sector_hives.values())>season_hive: raise AssertionError("required sector unlocks after Season gate")
+need(locations,"Order={}","removed location list stays empty")
+need(locations,"Sectors={}","removed location sectors stay empty")
 
 flower_ids=re.findall(r'species\("([^"]+)"',flowers)
 bee_block=bees.split("C.Bees={",1)[1].split("\nlocal Rarity=",1)[0]

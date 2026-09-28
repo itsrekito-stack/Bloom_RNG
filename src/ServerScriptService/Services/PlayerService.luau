@@ -1,4 +1,4 @@
-local RS=game:GetService("ReplicatedStorage") local Players=game:GetService("Players") local U=require(RS.Shared.BloomUtil) local C=require(RS.Config.BloomConfig) local T=require(RS.Config.TutorialConfig) local L=require(RS.Config.LocationsConfig) local DefaultSettings=require(game:GetService("ServerScriptService").Data.DefaultProfile).Settings
+local RS=game:GetService("ReplicatedStorage") local Players=game:GetService("Players") local U=require(RS.Shared.BloomUtil) local C=require(RS.Config.BloomConfig) local T=require(RS.Config.TutorialConfig) local DefaultSettings=require(game:GetService("ServerScriptService").Data.DefaultProfile).Settings
 local X={Temp={},Revisions={},StateRevisions={},LastPushedStateRevision={},Connections={},ClientReadyConnections={},U=U}
 local VALID_KEYBINDS={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do VALID_KEYBINDS[item.Name]=true end
 local STATE_NEUTRAL={Ready=true,Menu=true,Replay=true,SeasonCancel=true,SaveSettings=true}

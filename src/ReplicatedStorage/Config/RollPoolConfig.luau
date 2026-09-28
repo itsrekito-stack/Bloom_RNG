@@ -3,7 +3,7 @@ local S={}
 function S.Build(p,luck,temp)
  temp=temp or {}
  local pool={} local function add(kind,items) for id,v in pairs(items) do
-  local unlocked=kind=="Bee" if kind=="FlowerSeed" then for sector in pairs(v.AllowedBiomes) do if p.World.UnlockedSectors[sector] or sector=="SunnyOrchard" then unlocked=true end end end
+  local unlocked=true
   if unlocked then local discovered=kind=="Bee" and p.Pollinators.DiscoveredBees[id] or kind=="FlowerSeed" and p.FlowerCollection.DiscoveredFlowers[id]
    local rank=R.Rank[v.Rarity] local w=v.DropWeight*(1+(luck-1)*(rank-1)*.25)
    if p.RollState.SpecialRollReady then if rank>=3 then w=w*C.SpecialRareMultiplier end if not discovered then w=w*C.SpecialNewMultiplier*E.Value(p,"BLOOM_3","NewWeight",1)*(p.Season.ActiveCard=="AutumnFortune" and 1.5 or 1) end if temp.Eclipse then w=w*(rank>=5 and (1.5*E.Value(p,"EXPLORATION_5","EclipseWeight",1)) or 1) end if p.WorkshopV5.Nodes.BLOOM_6 and temp.Signature and rank>=5 then w=w*E.Value(p,"BLOOM_6","SignatureWeight",1) end end

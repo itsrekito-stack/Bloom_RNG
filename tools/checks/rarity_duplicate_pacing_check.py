@@ -42,7 +42,7 @@ need(pool,'if #new>0 then pool=new end',"pity leaves natural pool intact when no
 if 'if v.Undiscovered then table.insert(new,v)' in pool:
     raise AssertionError("uncapped all-rarity discovery pity returned")
 
-# Parse release flower weights + sector availability.
+# Parse release flower weights. Physical locations were removed, so every Flower is in the global roll pool.
 weight_block=flowers.split("local DROP_WEIGHTS={",1)[1].split("}",1)[0]
 flower_weights={k:int(v) for k,v in re.findall(r'([A-Za-z0-9_]+)=(\d+)',weight_block)}
 flower_rows=[]
@@ -64,24 +64,21 @@ if len(flower_rows)!=12:
 if len(bee_rows)!=13:
     raise AssertionError(f"expected 13 release bees, got {len(bee_rows)}")
 
-# Early roulette = all bees + Sunny/Starter flowers.
-early=[]
-for fid,r,sectors,w in flower_rows:
-    if "StarterOrchard" in sectors:
-        early.append((fid,r,w))
+# Global roulette = all shipped Flowers + all shipped Bees.
+early=[(fid,r,w) for fid,r,_sectors,w in flower_rows]
 early.extend(bee_rows)
 total=sum(w for _,_,w in early)
 by_rarity={r:sum(w for _,rr,w in early if rr==r) for r in rarities}
 share={r:(by_rarity[r]/total if total else 0) for r in rarities}
 
 guardrails={
-    "Common":(.55,.70),
-    "Uncommon":(.28,.42),
-    "Rare":(.012,.04),
-    "Epic":(.003,.012),
-    "Legendary":(.0005,.003),
-    "Mythic":(.0001,.001),
-    "Celestial":(.000005,.00005),
+    "Common":(.55,.65),
+    "Uncommon":(.30,.38),
+    "Rare":(.04,.07),
+    "Epic":(.008,.018),
+    "Legendary":(.001,.003),
+    "Mythic":(.0002,.0008),
+    "Celestial":(.000005,.00003),
 }
 for r,(lo,hi) in guardrails.items():
     if not lo<=share[r]<=hi:
@@ -95,10 +92,7 @@ if not 2000<=mythic_odds<=6000:
     raise AssertionError(f"Mythic natural odds drift: 1/{mythic_odds:.0f}")
 
 # Pity-protected tiers are sufficient for release progression without touching Legendary+.
-protected_flowers=sum(
-    1 for _,r,sectors,_ in flower_rows
-    if rank[r]<=cap_rank and ("StarterOrchard" in sectors or "CrystalGreenhouse" in sectors)
-)
+protected_flowers=sum(1 for _,r,_sectors,_ in flower_rows if rank[r]<=cap_rank)
 protected_bees=sum(1 for _,r,_ in bee_rows if rank[r]<=cap_rank)
 season_flowers=int(re.search(r'\bFlowers=(\d+)',season).group(1))
 season_bees=int(re.search(r'\bBees=(\d+)',season).group(1))
@@ -132,4 +126,4 @@ if not 25<=pity_seconds<=60:
 
 print("rarity / duplicate pacing contract: PASS")
 print(f"Early natural odds: Mythic ~1/{mythic_odds:.0f}, Celestial ~1/{celestial_odds:.0f}; pity caps at {pity_cap}.")
-print(f"Pity-protected progression pool: {protected_flowers} flowers through Crystal, {protected_bees} bees; Season needs {season_flowers}/{season_bees}.")
+print(f"Pity-protected progression pool: {protected_flowers} global flowers, {protected_bees} bees; Season needs {season_flowers}/{season_bees}.")
