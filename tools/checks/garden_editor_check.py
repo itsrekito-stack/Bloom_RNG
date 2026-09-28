@@ -26,7 +26,7 @@ def find(node,name):
 
 kit=find(model,"GardenKit")
 if not kit: raise AssertionError("authored GardenKit missing")
-for name in ["GardenShell","FlowerPanel","FlowerList","FlowerCardTemplate","LayoutPanel","SlotRing","SynergyPanel","SynergyName","SynergyEffect","GhostHint","RemoveButton"]:
+for name in ["GardenShell","FlowerPanel","FlowerList","FlowerCardTemplate","UsedBadge","LayoutPanel","SlotRing","SynergyPanel","SynergyName","SynergyEffect","GhostHint","RemoveButton"]:
     if not find(kit,name): raise AssertionError(f"GardenKit authored node missing: {name}")
 for i in range(1,8):
     slot=find(kit,f"Slot{i}")
@@ -74,7 +74,8 @@ need(bloom,'Garden="GardenV1"',"Garden renderer id")
 need(bloom,'GardenEditor.Render(self,p,ui)',"Garden renderer dispatch")
 need(bloom,'Garden="GardenV1"',"Garden menu renderer")
 need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Index","Workshop","Trials","Settings"}) do',"Garden dock authored binding")
-need(bloom,'local visible=rollUnlocked and self.Menu==nil',"Roll hidden whenever a menu is open")
+need(bloom,'local controlsVisible=rollUnlocked and self.Menu==nil',"Roll controls hide whenever a menu is open")
+need(bloom,'self.RouletteViewport.Visible=rollUnlocked and',"roulette stays beneath the Garden menu")
 
 need(editor_html,'data-ui-state="garden"',"Garden UI Studio state")
 need(editor,'garden:"Garden"',"Garden UI Studio title")
