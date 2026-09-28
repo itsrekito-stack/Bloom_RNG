@@ -118,7 +118,7 @@ function X:Request(player,action,a,b,c)
  if self.SeasonService.Pending[player] and action~="SeasonConfirm" and action~="Menu" and action~="Ready" and action~="FullReset" then return false,"SEASON_PREVIEW_OPEN" end
  if action=="Ready" then self.GardenActivityService:Push(player) return true
  elseif action=="Roll" then return self.RollService:Roll(player,a==true,b)
- elseif action=="Plant" then return self.GardenPlotService:Plant(player,a,b)
+ elseif action=="Plant" then return false,"USE_GARDEN_MENU"
  elseif action=="GardenEdit" then return self.GardenPlotService:GardenEdit(player,a,b)
  elseif action=="EquipBee" then return self.InventoryService:EquipBee(player,a,b)
  elseif action=="Flag" then
@@ -155,6 +155,7 @@ function X:Request(player,action,a,b,c)
    local closing=self.Temp[player].MenuName
    self.Temp[player].MenuOpen=false
    self.Temp[player].MenuName=nil
+   if closing=="Garden" then self.GardenPlotService:CloseEditor(player) end
    local tutorialStep=T.Steps[p.Tutorial.Step]
    if closing=="SeedSatchel" and tutorialStep and tutorialStep.Id=="InventoryExplain" then self:Emit(player,"InventoryReviewed",1) end
    return true
@@ -163,6 +164,14 @@ function X:Request(player,action,a,b,c)
   if a~="Settings" and not p.Tutorial.FeatureUnlocks[a] then return false,"LOCKED" end
   self.Temp[player].MenuOpen=true
   self.Temp[player].MenuName=a
+  if a=="Garden" then
+   local ok,reason=self.GardenPlotService:OpenEditor(player)
+   if not ok then
+    self.Temp[player].MenuOpen=false
+    self.Temp[player].MenuName=nil
+    return false,reason
+   end
+  end
   local tutorialStep=T.Steps[p.Tutorial.Step]
   if a=="SeedSatchel" then
    self:Emit(player,"SatchelOpen",1)
