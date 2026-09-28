@@ -11,7 +11,10 @@ local Trials=require(RS.Config.BuildTrialConfig)
 local Seasons=require(RS.Config.SeasonConfig)
 local Features=require(RS.Config.FeatureUnlockConfig)
 local Tutorial=require(RS.Config.TutorialConfig)
+local GardenSynergy=require(RS.Config.GardenSynergyConfig)
 local Rules=require(RS.Shared.GardenRules)
+local SYNERGY_IDS={} for _,recipe in ipairs(GardenSynergy.Recipes) do SYNERGY_IDS[recipe.Id]=true end
+local TRAIT_IDS={} for id in pairs(B.Traits) do TRAIT_IDS[id]=true end
 local D={}
 local MAX_SAFE=9007199254740991 -- representation bound, not a gameplay progression cap
 function D.Archive(p,path,key,value)
@@ -146,6 +149,7 @@ function D.Apply(p)
   if type(p.Settings[key])~="boolean" then D.Archive(p,"Settings",key,p.Settings[key]);p.Settings[key]=false end
  end
  number(p,p.Settings,"TokenSoundVolume","Settings",.5,false,1)
+ number(p,p.Settings,"EffectiveLuck","Settings",0,false,1000000)
  map(p,p.Settings.DissolveRarities,"Settings.DissolveRarities",R.Rank,"flag")
  number(p,p.Season,"Count","Season",0,true)
  if p.Season.ActiveCard~="" and not table.find(Seasons.Cards,p.Season.ActiveCard) then D.Archive(p,"Season","ActiveCard",p.Season.ActiveCard);p.Season.ActiveCard="" end
@@ -167,6 +171,10 @@ function D.Apply(p)
  map(p,p.World.EventStats,"World.EventStats",nil,"number")
  map(p,p.GardenSynergies.Discovered,"GardenSynergies.Discovered",nil,"flag")
  map(p,p.GardenSynergies.Mastery,"GardenSynergies.Mastery",nil,"number")
+ map(p,p.Index.Read.Flowers,"Index.Read.Flowers",F.Species,"flag")
+ map(p,p.Index.Read.Bees,"Index.Read.Bees",B.Bees,"flag")
+ map(p,p.Index.Read.Synergies,"Index.Read.Synergies",SYNERGY_IDS,"flag")
+ map(p,p.Index.Read.Traits,"Index.Read.Traits",TRAIT_IDS,"flag")
  for _,key in ipairs({"StarterBeeGranted"}) do
   if p[key]~=nil and type(p[key])~="boolean" then D.Archive(p,"Profile",key,p[key]);p[key]=false end
  end
