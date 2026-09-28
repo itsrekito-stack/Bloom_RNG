@@ -141,7 +141,7 @@ check('boost HUD never infinite-waits authored roots','WaitForChild("ActiveBoost
 check('boost HUD missing hierarchy fails fast','[BoostHUD] Authored boost HUD is missing from canonical BloomUI' in boost_hud_source and '[BoostHUD] Authored boost HUD hierarchy is incomplete' in boost_hud_source)
 
 # BR-002: feature id and renderer are explicit and editor has one live inventory preview.
-check('authored v2 menu routes','SeedSatchel="InventoryV2"' in source and 'Trials="QuestsV2"' in source and 'Settings="SettingsV2"' in source)
+check('authored v2 menu routes','SeedSatchel="InventoryV2"' in source and 'Garden="GardenV1"' in source and 'Trials="QuestsV2"' in source and 'Settings="SettingsV2"' in source)
 check('Inventory v2 backend linked','InventoryV2Controller' in source and 'InventoryV2.Render(self,p,ui)' in source)
 check('Quests v2 backend linked','QuestsController' in source and 'QuestsV2.Render(self,p,ui)' in source and one('QuestsPrototype')[1] is not None and one('QuestCardTemplate')[1] is not None)
 check('legacy TrialsKit removed',one('TrialsKit')[1] is None)
@@ -160,7 +160,7 @@ check('RoFlow reloads live UI Studio after AI Sync','const documentHtml=await in
 check('RoFlow keeps bundled UI Studio as fallback','frame.src="./ui-studio/index.html?ts="+Date.now()' in roflow_web and 'Bundled UI Studio fallback loaded' in roflow_web)
 check('Inventory v2 rerender follows renderer','controller.MenuRenderer=="InventoryV2"' in inventory_v2_source)
 check('Inventory v2 binds authoritative species inventory','uiState.Inventory' in inventory_v2_source and 'item.Obtained or 1' in inventory_v2_source and 'controller:Send("EquipBee"' in inventory_v2_source)
-check('physical Plant opens Inventory Flowers','function UI:OpenPlantInventory(slot)' in source and 'state.Category="Flowers"' in source and 'state.Filter="Available"' in source and 'self:Open("SeedSatchel",{PlantSlot=slot},{SilentMenu=true})' in source)
+check('physical Garden opens authored Garden editor','function UI:OpenPlantInventory(slot)' in source and 'self:Open("Garden",{Slot=slot},{SilentMenu=true})' in source and 'GardenEditor.Render(self,p,ui)' in source and one('GardenKit')[1] is not None)
 check('Inventory v2 executes server-authoritative Plant','controller:Send("Plant",plantSlot,item.Id)' in inventory_v2_source and '"PLANT IN SLOT "..tostring(plantSlot)' in inventory_v2_source)
 check('standalone Plant menu removed','elseif name=="Plant" then' not in source and one('PlantKit')[1] is None)
 check('BR-010 map exposes physical gate actionability','NearGate=nearGate' in ui_state_source and 'PrerequisiteReady=prerequisiteReady' in ui_state_source and 'CanUnlock=not unlocked and prerequisiteReady and hiveReady and nearGate' in ui_state_source and 'UnlockHint=hint' in ui_state_source)
