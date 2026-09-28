@@ -71,7 +71,7 @@ for required in [
     "TraitFilterPanel","TraitFilterList","TraitChipTemplate","UnequipAllButton","EquippedBadge","InventoryHoverScale",
     "BeeSummary","PassiveRowTemplate","AbilityDescription",
     "LuckBadge","ScrollLeft","ScrollRight","UsedBadge","GhostBadge","CurrencyHelp",
-    "Nav_Inventory","Nav_Garden","Nav_Index","Nav_Workshop","Nav_Quests","Nav_Settings",
+    "MenuDock","Dock_SeedSatchel","Dock_Garden","Dock_Index","Dock_Workshop","Dock_Trials","Dock_Settings",
 ]:
     assert required in nodes, f"authored BloomUI node missing: {required}"
 
@@ -118,8 +118,8 @@ need(quests,'cardTemplate(runtime):Clone()',"Quests authored card clone")
 need(quests,'EmptyStateTemplate',"Quests authored empty-state clone")
 need(bloom,'local function workshopStructure(shell)',"Workshop authored structure binding")
 need(bloom,'local currencyBar=structure.CurrencyBar',"Workshop authored currency binding")
-need(bloom,'function UI:BindMenuNavigation(root)',"shared authored menu navigation binder")
-need(bloom,'self:BindMenuNavigation(shell)',"Workshop navigation binding")
+assert 'function UI:BindMenuNavigation(root)' not in bloom, "legacy internal menu navigation binder returned"
+assert 'self:BindMenuNavigation(shell)' not in bloom, "Workshop must use the shared bottom MenuDock"
 assert 'WaitForChild("NodeTooltip")' not in bloom, "Workshop must not wait forever for a stale authored tooltip"
 need(boost,'badge:FindFirstChild("HoverScale")',"boost authored hover scale")
 
