@@ -17,7 +17,7 @@ const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 const LOADING_TARGET="src/ReplicatedFirst/BloomLoadingTemplate.model.json";
 function lastGoodModelKey(){return state?.targetPath===LOADING_TARGET?"BloomUIStudioLastGoodModelLoading":"BloomUIStudioLastGoodModel"}
 const UI_STATE_TITLES={
- gameplay:"HUD",inventory_v2:"Inventory",index:"Index",traits:"Traits",garden:"Garden",hive:"Hive",workshop:"Workshop",trials:"Quests",
+ gameplay:"HUD",inventory_v2:"Inventory",index:"Index",traits:"Traits",garden:"Garden",hive:"Hive",workshop:"Workshop",quests:"Quests",
  settings:"Settings",season:"Season",replay:"Tutorial Replay",cards:"Cards",
  reward:"Reward",toast:"Toast",tutorial:"Tutorial Guidance",boosts:"Active Boosts",world_ui:"World UI",loading:"Loading Screen"
 };
@@ -346,14 +346,14 @@ const MOCK_PREVIEW_DATA={
  }
 };
 
-const MENU_PREVIEW_SCENES=new Set(["inventory_v2","index","garden","hive","workshop","trials","settings","season","replay","cards"]);
+const MENU_PREVIEW_SCENES=new Set(["inventory_v2","index","garden","hive","workshop","quests","settings","season","replay","cards"]);
 const PREVIEW_META={
  inventory_v2:{title:"Inventory",subtitle:"Flowers, bees, resources, and keepsakes"},
  index:{title:"Index",subtitle:"Discovered Flowers, Bees, Synergies, and Traits"},
  garden:{title:"Garden",subtitle:"Arrange seven Flower slots and inspect the active Synergy"},
  hive:{title:"Hive",subtitle:"Level your Hive and follow the Workshop Point road"},
  workshop:{title:"Workshop",subtitle:"Permanent upgrades and progression branches"},
- trials:{title:"Quests",subtitle:"Tasks, progress & rewards"},
+ quests:{title:"Quests",subtitle:"Tasks, progress & rewards"},
  settings:{title:"Settings",subtitle:"Game & UI preferences"},
  season:{title:"Season",subtitle:"Reset progression for permanent Legacy growth"},
  replay:{title:"Tutorial Replay",subtitle:"Review every tutorial step"},
@@ -392,7 +392,7 @@ async function switchUiModel(path,key){
 function stateFocusName(scene){
  return {
   gameplay:"SafeRoot",inventory_v2:"InventoryPrototype",index:"IndexPrototype",traits:"TraitHUD",garden:"GardenKit",hive:"HiveKit",workshop:"WorkshopTemplate",
-  trials:"QuestsPrototype",settings:"SettingsKit",
+  quests:"QuestsPrototype",settings:"SettingsKit",
   season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit",
   reward:"RewardReveal",toast:"Toast",tutorial:"TutorialGuideBanner",boosts:"ActiveBoostsHUD",
   world_ui:"WorldUIPrototypes",loading:"Background"
@@ -495,8 +495,8 @@ function previewVisible(n){
  if(name==="InventoryPrototype")return scene==="inventory_v2";
  if(name==="IndexPrototype")return scene==="index";
  if(name==="WorkshopTemplate")return scene==="workshop";
- if(name==="QuestsPrototype")return scene==="trials";
- if(name==="StateKits")return MENU_PREVIEW_SCENES.has(scene)&&scene!=="inventory_v2"&&scene!=="index"&&scene!=="workshop"&&scene!=="trials";
+ if(name==="QuestsPrototype")return scene==="quests";
+ if(name==="StateKits")return MENU_PREVIEW_SCENES.has(scene)&&scene!=="inventory_v2"&&scene!=="index"&&scene!=="workshop"&&scene!=="quests";
  if(p==="StateKits"){
   const wanted={
    garden:"GardenKit",hive:"HiveKit",settings:"SettingsKit",season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit"

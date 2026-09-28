@@ -12,6 +12,7 @@ local F=require(RS.Config.FlowersConfig)
 local B=require(RS.Config.BeesConfig)
 local W=require(RS.Config.WorkshopConfig)
 local T=require(RS.Config.TutorialConfig)
+local QuestConfig=require(RS.Config.QuestConfig)
 local R=require(RS.Config.RarityConfig)
 local Theme=require(RS.Config.UIThemeConfig)
 local RollAudio=require(RS.Config.RollAudioConfig)
@@ -28,12 +29,12 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="bloom-roll-roulette-highlight-v14-2026-09-29"
+local CLIENT_BUILD="quests-no-trials-content-v15-2026-09-29"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
-local MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Hive="HiveV1",Index="IndexV1",Trials="QuestsV2",Settings="SettingsV2"}
-local MENU_DOCK_CONTEXT={SeedSatchel=true,Garden=true,Hive=true,Index=true,Workshop=true,Trials=true,Settings=true}
+local MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Hive="HiveV1",Index="IndexV1",Quests="QuestsV2",Settings="SettingsV2"}
+local MENU_DOCK_CONTEXT={SeedSatchel=true,Garden=true,Hive=true,Index=true,Workshop=true,Quests=true,Settings=true}
 local MENU_REFRESH_ACTIONS={
  Setting="Settings",
  ResetSettings="Settings",
@@ -45,7 +46,7 @@ local MENU_REFRESH_ACTIONS={
  IndexViewed="Index",
  Flag="SeedSatchel",
  WorkshopBuy="Workshop",
- Trial="Trials",
+ ClaimQuest="Quests",
 }
 
 local MENU_NAMES={
@@ -54,7 +55,7 @@ local MENU_NAMES={
  Hive="Hive",
  Index="Index",
  Workshop="Workshop",
- Trials="Quests",
+ Quests="Quests",
  Settings="Settings",
  Season="Season Turn",
  Replay="Tutorial Replay",
@@ -66,7 +67,7 @@ local MENU_HINTS={
  Hive="Level your Hive, spend resources, and earn Workshop Points",
  Index="Discovered Flowers, Bees, Synergies, and Traits",
  Workshop="Permanent upgrades and progression branches",
- Trials="Tasks, progress & rewards",
+ Quests="25 progression quests, activities & rewards",
  Settings="Game & UI preferences",
  Season="Review the changes before confirming",
  Replay="Replay the tutorial without resetting progress",
@@ -78,16 +79,14 @@ local SETTINGS_NAMES={
  HideOtherPlayersTokens="Hide other players' activities",
  RareFeed="Show rare discoveries",
 }
-local JOURNEY={
- "Get your first bee","Collect a Pollen Spark","Honey delivery","Make a roll","Plant a flower","Fill the Bloom Meter","Make a Bloom Roll","Reach Hive Level 2","Buy a Workshop node","Create a synergy","Unlock the second bee slot","Activate a Bee Trait","Discover 6 flowers","Prepare a Season Turn",
-}
-
 function UI:JourneyCount()
- return #JOURNEY
+ return #QuestConfig.Order
 end
 
 function UI:JourneyText(step)
- return JOURNEY[tonumber(step) or 1] or "Keep growing your garden"
+ local id=QuestConfig.Order[tonumber(step) or 1]
+ local quest=id and QuestConfig.Get(id)
+ return quest and tostring(quest.Text or quest.Title) or "All current quests complete"
 end
 
 local PERSISTENT_HOVERS=setmetatable({}, {__mode="k"})
@@ -132,7 +131,7 @@ local WORKSHOP_FEATURE_TEXT={
  LaunchPads="Unlocks fast travel",
  KeepSeasonCard="Keeps a card between Seasons",
  MemoryMutation="Keeps a mutation in memory",
- AdvancedTrials="Unlocks advanced trials",
+ QuestRewardMultiplier="Quest Coin and Petal Dust rewards",
  ThirdMemory="Unlocks an additional memory slot",
 }
 
@@ -1340,7 +1339,7 @@ function UI:RefreshMenuDock()
   Hive=inventoryUnlocked,
   Index=inventoryUnlocked,
   Workshop=p.Tutorial.FeatureUnlocks.Workshop==true,
-  Trials=p.Tutorial.FeatureUnlocks.Trials==true,
+  Quests=p.Tutorial.FeatureUnlocks.Quests==true,
   Settings=inventoryUnlocked,
  }
 
@@ -1409,15 +1408,16 @@ function UI:RenderQuestTracker()
  end
 
  local journeyStep=math.max(1,tonumber(p.Quests.JourneyStep) or 1)
- local journeyDone=journeyStep>#JOURNEY
+ local journeyCount=self:JourneyCount()
+ local journeyDone=journeyStep>journeyCount
  local journeyRow=self.QuestRows[2]
  journeyRow.Visible=not journeyDone
  if not journeyDone then
   setRow(
    journeyRow,
-   "JOURNEY  •  STEP "..tostring(math.min(journeyStep,#JOURNEY)),
+   "QUEST  •  "..tostring(math.min(journeyStep,journeyCount)).." / "..tostring(journeyCount),
    self:JourneyText(journeyStep),
-   tostring(journeyStep).." / "..tostring(#JOURNEY),
+   tostring(math.min(journeyStep,journeyCount)).." / "..tostring(journeyCount),
    C.Blue
   )
  end
@@ -1486,7 +1486,7 @@ function UI:Render()
   self.ObjectiveProgressFill.Size=UDim2.fromScale(math.clamp((p.Tutorial.Step-1)/#T.Steps,0,1),1)
   self.ObjectiveProgress.Visible=true
  else
-  self.ObjectiveTitle.Text="JOURNEY  •  STEP "..tostring(p.Quests.JourneyStep or 1)
+  self.ObjectiveTitle.Text="QUEST  •  "..tostring(math.min(tonumber(p.Quests.JourneyStep) or 1,self:JourneyCount())).." / "..tostring(self:JourneyCount())
   self.ObjectiveText.Text=self:JourneyText(p.Quests.JourneyStep)
   self.ObjectiveProgress.Visible=false
   if self.JourneyGuideController then self.JourneyGuideController:RenderObjective() end
@@ -1977,7 +1977,7 @@ function UI:BindStaticUI()
   self.QuestRows[i]=row
   row.Activated:Connect(function()
    local p=self.State and self.State.Profile
-   if p and p.Tutorial.FeatureUnlocks.Trials then self:Open("Trials")
+   if p and p.Tutorial.FeatureUnlocks.Quests then self:Open("Quests")
    else self:Toast("Quests unlock through progression") end
   end)
  end
@@ -2001,7 +2001,7 @@ function UI:BindStaticUI()
  self.DockLayout=self.Dock:FindFirstChildOfClass("UIListLayout")
  self.DockButtons={}
  self.DockTooltips={}
- for _,name in ipairs({"SeedSatchel","Garden","Hive","Index","Workshop","Trials","Settings"}) do
+ for _,name in ipairs({"SeedSatchel","Garden","Hive","Index","Workshop","Quests","Settings"}) do
   local button=self.Dock:WaitForChild("Dock_"..name)
   local tip=button:WaitForChild("Tooltip")
   tip.Text=MENU_NAMES[name] or name
@@ -2199,6 +2199,7 @@ local function validateBloomGui(gui)
     end
    end
    if not root:FindFirstChild("Dock_Hive",true) then table.insert(missing,"MenuDock/Dock_Hive") end
+   if not root:FindFirstChild("Dock_Quests",true) then table.insert(missing,"MenuDock/Dock_Quests") end
  end
  for _,name in ipairs(RETIRED_MENU_GUI) do
   if root:FindFirstChild(name,true) then table.insert(missing,"retired:"..name) end
@@ -2477,7 +2478,6 @@ function UI:Start()
   elseif kind=="Bees" then self.Bees:Update(payload)
   elseif kind=="Message" then self:Toast(payload)
   elseif kind=="Open" then task.defer(function() self:Open(payload) end)
-  elseif kind=="Trials" then self:Open("Trials",payload)
   elseif kind=="RareFeed" then if self.State and self.State.Profile.Settings.RareFeed then self:Toast(payload.Player.." • "..payload.Name) end
   elseif kind=="Ceremony" then
    if self.State and self.State.Profile.Settings.RewardPopups~=false then

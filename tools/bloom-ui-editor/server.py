@@ -245,7 +245,7 @@ REQUIRED_RUNTIME_UI_CHILDREN = {
     "ActiveBoostsHUD", "ActiveBoostTooltip", "MinimizeButton", "LuckBadge", "ScrollLeft", "ScrollRight",
     "TraitFilterPanel", "TraitFilterList", "TraitChipTemplate", "UnequipAllButton", "EquippedBadge", "InventoryHoverScale",
     "BeeSummary", "PassiveRowTemplate", "AbilityDescription", "UsedBadge", "GhostBadge", "CurrencyHelp",
-    "Dock_SeedSatchel", "Dock_Garden", "Dock_Hive", "Dock_Index", "Dock_Workshop", "Dock_Trials", "Dock_Settings",
+    "Dock_SeedSatchel", "Dock_Garden", "Dock_Hive", "Dock_Index", "Dock_Workshop", "Dock_Quests", "Dock_Settings",
     "HiveKit", "HiveShell", "RoadList", "RoadNodeTemplate", "UpgradeButton",
     "TraitBeeStrip", "TraitBeeIconTemplate", "EquipSynergyButton",
     "TutorialSpotlight", "TutorialCallout", "TutorialScreenArrow", "StateKits",

@@ -913,7 +913,7 @@ fn is_required_runtime_ui_child(value: &Value) -> bool {
                 | "Dock_Hive"
                 | "Dock_Index"
                 | "Dock_Workshop"
-                | "Dock_Trials"
+                | "Dock_Quests"
                 | "Dock_Settings"
                 | "HiveKit"
                 | "HiveShell"

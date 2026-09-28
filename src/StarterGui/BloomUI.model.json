@@ -1979,7 +1979,7 @@
             },
             {
               "ClassName": "TextButton",
-              "Name": "Dock_Trials",
+              "Name": "Dock_Quests",
               "Properties": {
                 "Size": {
                   "UDim2": [
@@ -17736,7 +17736,7 @@
                                         },
                                         "BackgroundTransparency": 1,
                                         "BorderSizePixel": 0,
-                                        "Text": "Advanced Trials",
+                                        "Text": "Quest Bounty",
                                         "TextColor3": [
                                           0.96,
                                           0.98,
@@ -42673,7 +42673,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "Main",
+                                "Text": "Quests",
                                 "TextColor3": [
                                   0.7765,
                                   0.8471,
@@ -42883,168 +42883,6 @@
                         },
                         {
                           "ClassName": "TextButton",
-                          "Name": "Tab_Trials",
-                          "Properties": {
-                            "Size": {
-                              "UDim2": [
-                                [
-                                  1,
-                                  -16
-                                ],
-                                [
-                                  0,
-                                  54
-                                ]
-                              ]
-                            },
-                            "Position": {
-                              "UDim2": [
-                                [
-                                  0,
-                                  8
-                                ],
-                                [
-                                  0,
-                                  166
-                                ]
-                              ]
-                            },
-                            "BackgroundColor3": [
-                              0.0549,
-                              0.1176,
-                              0.1804
-                            ],
-                            "BackgroundTransparency": 0.03,
-                            "BorderSizePixel": 0,
-                            "Text": "",
-                            "TextColor3": [
-                              0.9608,
-                              0.9725,
-                              0.9882
-                            ],
-                            "TextSize": 12,
-                            "TextWrapped": true,
-                            "Font": "GothamBold",
-                            "AutoButtonColor": false,
-                            "ZIndex": 59,
-                            "Visible": true
-                          },
-                          "Children": [
-                            {
-                              "ClassName": "ImageLabel",
-                              "Name": "Icon",
-                              "Properties": {
-                                "Size": {
-                                  "UDim2": [
-                                    [
-                                      0,
-                                      25
-                                    ],
-                                    [
-                                      0,
-                                      25
-                                    ]
-                                  ]
-                                },
-                                "Position": {
-                                  "UDim2": [
-                                    [
-                                      0,
-                                      12
-                                    ],
-                                    [
-                                      0.5,
-                                      -13
-                                    ]
-                                  ]
-                                },
-                                "BackgroundTransparency": 1,
-                                "BorderSizePixel": 0,
-                                "Image": "rbxthumb://type=Asset&id=131390447056966&w=420&h=420",
-                                "ScaleType": "Fit",
-                                "ZIndex": 60,
-                                "Visible": true
-                              },
-                              "Children": []
-                            },
-                            {
-                              "ClassName": "TextLabel",
-                              "Name": "Label",
-                              "Properties": {
-                                "Size": {
-                                  "UDim2": [
-                                    [
-                                      1,
-                                      -54
-                                    ],
-                                    [
-                                      1,
-                                      0
-                                    ]
-                                  ]
-                                },
-                                "Position": {
-                                  "UDim2": [
-                                    [
-                                      0,
-                                      48
-                                    ],
-                                    [
-                                      0,
-                                      0
-                                    ]
-                                  ]
-                                },
-                                "BackgroundTransparency": 1,
-                                "BorderSizePixel": 0,
-                                "Text": "Trials",
-                                "TextColor3": [
-                                  0.7765,
-                                  0.8471,
-                                  0.9176
-                                ],
-                                "TextSize": 13,
-                                "TextWrapped": true,
-                                "TextXAlignment": "Left",
-                                "TextYAlignment": "Center",
-                                "Font": "GothamBold",
-                                "ZIndex": 60,
-                                "Visible": true
-                              },
-                              "Children": []
-                            },
-                            {
-                              "ClassName": "UICorner",
-                              "Name": "UICorner",
-                              "Properties": {
-                                "CornerRadius": {
-                                  "UDim": [
-                                    0,
-                                    10
-                                  ]
-                                }
-                              },
-                              "Children": []
-                            },
-                            {
-                              "ClassName": "UIStroke",
-                              "Name": "UIStroke",
-                              "Properties": {
-                                "Color": [
-                                  0.0627,
-                                  0.2549,
-                                  0.4078
-                                ],
-                                "Thickness": 1,
-                                "Transparency": 0.34,
-                                "ApplyStrokeMode": "Border"
-                              },
-                              "Children": []
-                            }
-                          ]
-                        },
-                        {
-                          "ClassName": "TextButton",
                           "Name": "Tab_Completed",
                           "Properties": {
                             "Size": {
@@ -43067,7 +42905,7 @@
                                 ],
                                 [
                                   0,
-                                  228
+                                  166
                                 ]
                               ]
                             },
@@ -43476,7 +43314,7 @@
                         },
                         {
                           "ClassName": "Frame",
-                          "Name": "SummaryTrials",
+                          "Name": "SummaryQuests",
                           "Properties": {
                             "Size": {
                               "UDim2": [
@@ -43627,7 +43465,7 @@
                                 },
                                 "BackgroundTransparency": 1,
                                 "BorderSizePixel": 0,
-                                "Text": "Trials cleared",
+                                "Text": "Quests complete",
                                 "TextColor3": [
                                   0.4784,
                                   0.6039,
