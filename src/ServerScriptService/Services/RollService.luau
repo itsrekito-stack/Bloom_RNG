@@ -19,12 +19,37 @@ function S:Charge(player,amount)
  end
 end
 
+local function tutorialPoolKind(profile)
+ local step=T.Steps[profile.Tutorial.Step]
+ if not step then return nil end
+ if step.Id=="FirstFlowerRoll" then return "FlowerSeed" end
+ if step.Id=="FirstBeeRoll" then return "Bee" end
+ return nil
+end
+
 function S:Odds(player)
  local p=self.X:Profile(player)
  if not p then return {} end
  local t=self.X.Temp[player]
  local luck=self.X.BoostService and self.X.BoostService:RollLuck(player,p) or (self.X.StatsService:Get(p).Luck+(t.Dew or 0)*.1)
- return Pool.Build(p,luck,t)
+ local pool,total=Pool.Build(p,luck,t)
+ local kind=tutorialPoolKind(p)
+ if not kind then return pool,total end
+
+ local filtered={}
+ local filteredTotal=0
+ for _,item in ipairs(pool) do
+  if item.Kind==kind then
+   table.insert(filtered,item)
+   filteredTotal+=item.Weight
+  end
+ end
+ if filteredTotal<=0 then return {},0 end
+ for _,item in ipairs(filtered) do
+  item.Chance=item.Weight/filteredTotal
+  item.Odds=filteredTotal/item.Weight
+ end
+ return filtered,filteredTotal
 end
 
 local function tutorialReward(pool,stepId)
