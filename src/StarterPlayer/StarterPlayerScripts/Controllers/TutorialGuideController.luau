@@ -332,6 +332,11 @@ function S:Update()
   return
  end
 
+ if step.Target=="BloomMeter" then
+  if self:PlaceScreenTarget(ui.MeterArea,"BLOOM METER",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+  return
+ end
+
  if step.Target=="SeedSatchel" then
   local button=ui.DockButtons.SeedSatchel
   if button and button.Visible then ui.Dock.Visible=true end
