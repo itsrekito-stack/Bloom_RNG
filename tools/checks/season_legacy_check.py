@@ -39,7 +39,7 @@ need(service,'if q.Revision~=self.X.Revisions[player] or not self.X.U.Equal(q.Be
 need(service,'if q.Confirm==0 then q.Confirm=1 self.X:Send(player,"SeasonConfirm",token) return true end',"second confirmation")
 need(service,'local result=self.X.DataService:CommitProfile(player,plan.After,token)',"transactional persistence")
 need(service,'if result.Code~="SUCCESS" then',"commit failure handling")
-need(player,'if self.SeasonService.Pending[player] and action~="SeasonConfirm" and action~="Menu" and action~="Ready" then return false,"SEASON_PREVIEW_OPEN" end',"preview mutation lock")
+need(player,'if self.SeasonService.Pending[player] and action~="SeasonConfirm" and action~="Menu" and action~="Ready" and action~="FullReset" then return false,"SEASON_PREVIEW_OPEN" end',"preview mutation lock with explicit full-reset escape")
 
 # Season reset remains immediately plantable while respecting the seven-slot cap.
 need(plan,'UnlockedSlots=1',"Season reset preserves one usable Garden slot")
