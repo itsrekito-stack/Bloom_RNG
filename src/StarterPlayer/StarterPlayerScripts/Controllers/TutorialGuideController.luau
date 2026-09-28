@@ -385,6 +385,49 @@ function S:Update()
   return
  end
 
+ if step.Target=="InventoryBeeEquip" then
+  if ui.Menu~="SeedSatchel" then
+   local button=ui.DockButtons.SeedSatchel
+   if button and button.Visible then ui.Dock.Visible=true end
+   if self:PlaceScreenTarget(button,"OPEN INVENTORY",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+   return
+  end
+
+  local runtime=ui.Content and ui.Content:FindFirstChild("InventoryV2Runtime",true)
+  if not runtime then self:Missing(step) return end
+
+  local state=ui.InventoryV2State or {}
+  if state.Category~="Bees" then
+   local category=runtime:FindFirstChild("Category_Bees",true)
+   if category and category:IsA("GuiObject") and category.Visible then
+    if self:PlaceScreenTarget(category,"OPEN BEES",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+   else
+    self:Missing(step)
+   end
+   return
+  end
+
+  local beeId=tostring(step.BeeId or "WorkerBee")
+  local selected=state.Selected and state.Selected.Bees
+  if selected~=beeId then
+   local card=runtime:FindFirstChild("Item_"..beeId,true)
+   if card and card:IsA("GuiObject") and card.Visible then
+    if self:PlaceScreenTarget(card,"SELECT WORKER BEE",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+   else
+    self:Missing(step)
+   end
+   return
+  end
+
+  local equip=runtime:FindFirstChild("PlantButton",true)
+  if equip and equip:IsA("GuiObject") and equip.Visible then
+   if self:PlaceScreenTarget(equip,"EQUIP BEE",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+  else
+   self:Missing(step)
+  end
+  return
+ end
+
  if step.Target=="GardenEditorSlot" then
   if ui.Menu~="Garden" then
    local garden=ui.DockButtons.Garden
