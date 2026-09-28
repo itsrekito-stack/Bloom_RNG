@@ -73,7 +73,7 @@ local SETTINGS_NAMES={
  RareFeed="Show rare discoveries",
 }
 local JOURNEY={
- "Get your first bee","Collect a Pollen Spark","Honey delivery","Make a roll","Plant a flower","Fill the Bloom Meter","Make a Bloom Roll","Reach Hive Level 2","Visit the Workshop","Buy a Workshop node","Create a synergy","Unlock the second bee slot","Activate a Bee Trait","Visit Sunny Orchard","Complete Solar Bloom","Discover 6 flowers","Unlock Crystal Gate","Complete a trial","Visit Crystal Greenhouse","Prepare a Season Turn",
+ "Get your first bee","Collect a Pollen Spark","Honey delivery","Make a roll","Plant a flower","Fill the Bloom Meter","Make a Bloom Roll","Reach Hive Level 2","Open Workshop","Buy a Workshop node","Create a synergy","Unlock the second bee slot","Activate a Bee Trait","Discover 6 flowers","Complete a trial","Prepare a Season Turn",
 }
 
 function UI:JourneyCount()
