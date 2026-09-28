@@ -7,6 +7,8 @@ local Locations=require(RS.Config.LocationsConfig)
 local Bloom=require(RS.Config.BloomConfig)
 local Rarity=require(RS.Config.RarityConfig)
 local Effects=require(RS.Shared.WorkshopEffects)
+local RollPool=require(RS.Config.RollPoolConfig)
+local GardenSynergy=require(RS.Config.GardenSynergyConfig)
 
 local S={}
 
@@ -124,6 +126,7 @@ function S:Inventory(player,profile)
     Protected=locked,
     CanDissolve=free>0 and count>1 and not locked and not favorite,
     CanUpgrade=(mastery.Level or 1)<Bloom.MasteryCap and profile.Currencies.PetalDust>=cost,
+    Odds=RollPool.FormatBaseOdds("FlowerSeed",id),
    })
   end
  end
@@ -157,6 +160,7 @@ function S:Inventory(player,profile)
     Traits=bee.Traits,
     Ability=bee.Ability and bee.Ability.Name or "",
     Mastery=mastery,
+    Odds=RollPool.FormatBaseOdds("Bee",id),
    })
   end
  end
@@ -316,10 +320,103 @@ function S:Trials(player,profile)
  return {Items=list,Active=activePublic}
 end
 
+local function sortedFlowerIds()
+ local ids={} for id in pairs(Flowers.Species) do table.insert(ids,id) end
+ table.sort(ids,function(a,b)
+  local x,y=Flowers.Species[a],Flowers.Species[b]
+  local wx,wy=tonumber(x.DropWeight)or 0,tonumber(y.DropWeight)or 0
+  if wx==wy then return tostring(x.DisplayName)<tostring(y.DisplayName) end
+  return wx>wy
+ end)
+ return ids
+end
+local function sortedBeeIds()
+ local ids={} for id in pairs(Bees.Bees) do table.insert(ids,id) end
+ table.sort(ids,function(a,b)
+  local x,y=Bees.Get(a),Bees.Get(b)
+  return (x and x.SortOrder or 999)<(y and y.SortOrder or 999)
+ end)
+ return ids
+end
+local function traitDiscovered(profile,traitId)
+ for beeId in pairs(profile.Pollinators.DiscoveredBees or {}) do
+  local bee=Bees.Get(beeId)
+  if bee and table.find(bee.Traits or {},traitId) then return true end
+ end
+ return false
+end
+local function progress(items)
+ local unlocked=0 for _,item in ipairs(items) do if item.Unlocked then unlocked+=1 end end
+ return {Unlocked=unlocked,Total=#items,Percent=#items>0 and math.floor(unlocked/#items*100+.5) or 0}
+end
+
+function S:Index(player,profile)
+ local read=profile.Index and profile.Index.Read or {Flowers={},Bees={},Synergies={},Traits={}}
+ local flowers={}
+ for slot,id in ipairs(sortedFlowerIds()) do
+  if profile.FlowerCollection.DiscoveredFlowers[id] then
+   local cfg=Flowers.Species[id]
+   local mastery=profile.FlowerCollection.FlowerMastery[id] or {Level=1}
+   flowers[#flowers+1]={Slot=slot,Unlocked=true,Id=id,Name=cfg.DisplayName,Odds=RollPool.FormatBaseOdds("FlowerSeed",id),Level=mastery.Level or 1,New=read.Flowers[id]~=true}
+  else
+   flowers[#flowers+1]={Slot=slot,Unlocked=false}
+  end
+ end
+ local bees={}
+ for slot,id in ipairs(sortedBeeIds()) do
+  if profile.Pollinators.DiscoveredBees[id] then
+   local cfg=Bees.Get(id)
+   bees[#bees+1]={Slot=slot,Unlocked=true,Id=id,Name=cfg.DisplayName,Odds=RollPool.FormatBaseOdds("Bee",id),Mastery=Bees.GetMasteryState(profile.Pollinators.BeeMastery[id]),Traits=self.X.U.Copy(cfg.Traits or {}),Ability=cfg.Ability and self.X.U.Copy(cfg.Ability) or nil,New=read.Bees[id]~=true}
+  else
+   bees[#bees+1]={Slot=slot,Unlocked=false}
+  end
+ end
+ local synergies={}
+ for slot,recipe in ipairs(GardenSynergy.Recipes) do
+  if profile.GardenSynergies.Discovered[recipe.Id] then
+   synergies[#synergies+1]={Slot=slot,Unlocked=true,Id=recipe.Id,Name=recipe.Name or recipe.Id,Kind=recipe.Kind,Species=recipe.Species and self.X.U.Copy(recipe.Species) or nil,New=read.Synergies[recipe.Id]~=true}
+  else
+   synergies[#synergies+1]={Slot=slot,Unlocked=false}
+  end
+ end
+ local traitIds={} for id in pairs(Bees.Traits) do table.insert(traitIds,id) end
+ table.sort(traitIds,function(a,b)return tostring(Bees.Traits[a].Name)<tostring(Bees.Traits[b].Name)end)
+ local traits={}
+ for slot,id in ipairs(traitIds) do
+  if traitDiscovered(profile,id) then
+   local cfg=Bees.Traits[id]
+   traits[#traits+1]={Slot=slot,Unlocked=true,Id=id,Name=cfg.Name,Description=cfg.Description,Breakpoints=self.X.U.Copy(cfg.Breakpoints or {}),BeeIds=Bees.GetTraitBees(id),BiomeModifiers={},New=read.Traits[id]~=true}
+  else
+   traits[#traits+1]={Slot=slot,Unlocked=false}
+  end
+ end
+ return {
+  Flowers={Items=flowers,Progress=progress(flowers)},
+  Bees={Items=bees,Progress=progress(bees)},
+  Synergies={Items=synergies,Progress=progress(synergies)},
+  Traits={Items=traits,Progress=progress(traits)},
+ }
+end
+
+function S:MarkIndexRead(profile,category,id)
+ local read=profile.Index and profile.Index.Read
+ if not read or type(read[category])~="table" then return false,"INVALID_VALUE" end
+ local allowed=false
+ if category=="Flowers" then allowed=Flowers.Exists(id) and profile.FlowerCollection.DiscoveredFlowers[id]==true
+ elseif category=="Bees" then allowed=Bees.Exists(id) and profile.Pollinators.DiscoveredBees[id]==true
+ elseif category=="Synergies" then allowed=profile.GardenSynergies.Discovered[id]==true
+ elseif category=="Traits" then allowed=Bees.Traits[id]~=nil and traitDiscovered(profile,id)
+ end
+ if not allowed then return false,"NOT_DISCOVERED" end
+ read[category][id]=true
+ return true
+end
+
 function S:Settings(profile)
  return {
   AutoDissolveUnlocked=profile.WorkshopV5.Nodes.ECONOMY_1==true,
   DissolveFiltersUnlocked=profile.WorkshopV5.Nodes.ECONOMY_2==true,
+  EffectiveLuck=tonumber(profile.Settings.EffectiveLuck) or 0,
  }
 end
 
@@ -333,6 +430,7 @@ function S:Snapshot(player)
   Map=self:Map(player,profile),
   Trials=self:Trials(player,profile),
   Settings=self:Settings(profile),
+  Index=self:Index(player,profile),
   Boosts=self.X.BoostService and self.X.BoostService:Snapshot(player,profile) or {Items={}},
  }
 end
