@@ -37,6 +37,7 @@ local REASONS={
  NOT_DISCOVERED="Discover this item first",
  NOT_OWNED="You do not own this item",
  ALREADY_EQUIPPED="This Bee species is already equipped",
+ ALREADY_PLANTED="This Flower species is already planted",
  NO_FREE_COPY="No free copy available",
  LAST_COPY="You cannot dissolve your last copy",
  PROTECTED="Item is protected",
@@ -112,21 +113,21 @@ function S:Inventory(player,profile)
    local planted=plantedCount(profile,id)
    local free=math.max(0,count-planted)
    local mastery=profile.FlowerCollection.FlowerMastery[id] or {Level=1,XP=0}
-   local cost=masteryCost(profile,id)
    local locked=profile.FlowerCollection.LockedFlowers[id]==true
    local favorite=profile.FlowerCollection.FavoriteFlowers[id]==true
    table.insert(flowers,{
     Id=id,
     DisplayName=data.DisplayName,
     Rarity=data.Rarity,
-    Count=count,
+    Count=1,
+    Obtained=profile.FlowerCollection.ObtainedFlowers[id] or 1,
     Planted=planted,
     Free=free,
-    Mastery={Level=mastery.Level or 1,XP=mastery.XP or 0,NextXP=(mastery.Level or 1)*Bloom.MasteryXP,Cost=cost},
+    Mastery={Level=mastery.Level or 1,XP=mastery.XP or 0,NextXP=(mastery.Level or 1)*Bloom.MasteryXP},
     Favorite=favorite,
     Protected=locked,
-    CanDissolve=free>0 and count>1 and not locked and not favorite,
-    CanUpgrade=(mastery.Level or 1)<Bloom.MasteryCap and profile.Currencies.PetalDust>=cost,
+    CanDissolve=false,
+    CanUpgrade=false,
     Odds=RollPool.FormatBaseOdds("FlowerSeed",id),
    })
   end
@@ -148,16 +149,17 @@ function S:Inventory(player,profile)
   if bee and count>0 then
    local mastery=Bees.GetMasteryState(profile.Pollinators.BeeMastery[id])
    local equipped=equippedCounts[id] or 0
-   local free=math.max(0,count-equipped)
+   local free=equipped>0 and 0 or 1
    table.insert(bees,{
     Id=id,
     DisplayName=bee.DisplayName,
     Rarity=bee.Rarity,
-    Count=count,
+    Count=1,
+    Obtained=profile.Pollinators.BeeObtained[id] or 1,
     Equipped=equipped,
     Free=free,
-    CanDissolve=free>0 and count>1,
-    DissolveValue=Bloom.BeeDustPerCopy,
+    CanDissolve=false,
+    DissolveValue=0,
     Traits=bee.Traits,
     Ability=bee.Ability and bee.Ability.Name or "",
     Mastery=mastery,
@@ -367,7 +369,7 @@ function S:Index(player,profile)
  for slot,id in ipairs(sortedBeeIds()) do
   if profile.Pollinators.DiscoveredBees[id] then
    local cfg=Bees.Get(id)
-   bees[#bees+1]={Slot=slot,Unlocked=true,Id=id,Name=cfg.DisplayName,Odds=RollPool.FormatBaseOdds("Bee",id),Mastery=Bees.GetMasteryState(profile.Pollinators.BeeMastery[id]),Traits=self.X.U.Copy(cfg.Traits or {}),Ability=cfg.Ability and self.X.U.Copy(cfg.Ability) or nil,New=read.Bees[id]~=true}
+   bees[#bees+1]={Slot=slot,Unlocked=true,Id=id,Name=cfg.DisplayName,Odds=RollPool.FormatBaseOdds("Bee",id),Obtained=profile.Pollinators.BeeObtained[id] or 1,Mastery=Bees.GetMasteryState(profile.Pollinators.BeeMastery[id]),Traits=self.X.U.Copy(cfg.Traits or {}),Ability=cfg.Ability and self.X.U.Copy(cfg.Ability) or nil,New=read.Bees[id]~=true}
   else
    bees[#bees+1]={Slot=slot,Unlocked=false}
   end
@@ -375,7 +377,7 @@ function S:Index(player,profile)
  local synergies={}
  for slot,recipe in ipairs(GardenSynergy.Recipes) do
   if profile.GardenSynergies.Discovered[recipe.Id] then
-   synergies[#synergies+1]={Slot=slot,Unlocked=true,Id=recipe.Id,Name=recipe.Name or recipe.Id,Kind=recipe.Kind,Species=recipe.Species and self.X.U.Copy(recipe.Species) or nil,New=read.Synergies[recipe.Id]~=true}
+   synergies[#synergies+1]={Slot=slot,Unlocked=true,Id=recipe.Id,Name=recipe.Name or recipe.Id,Species=self.X.U.Copy(recipe.Species or {}),LevelRequirements=self.X.U.Copy(recipe.Levels or {}),Effect=self.X.U.Copy(recipe.Effect or {}),Tier=recipe.Tier or 1,Strength=recipe.Strength or 0,New=read.Synergies[recipe.Id]~=true}
   else
    synergies[#synergies+1]={Slot=slot,Unlocked=false}
   end
@@ -431,6 +433,7 @@ function S:Snapshot(player)
   Map=self:Map(player,profile),
   Trials=self:Trials(player,profile),
   Settings=self:Settings(profile),
+  Garden={ActiveSynergy=profile.Garden.ActiveSynergy or "",Hint=self.X.GardenSynergyService:Hint(profile)},
   Index=self:Index(player,profile),
   Boosts=self.X.BoostService and self.X.BoostService:Snapshot(player,profile) or {Items={}},
  }
