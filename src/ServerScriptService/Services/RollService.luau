@@ -96,10 +96,6 @@ function S:Roll(player,automatic,requestId)
  local special=p.RollState.SpecialRollReady
  local new=self.X.InventoryService:Grant(player,item.Kind,item.Id)
 
- if tutorialStep and tutorialStep.Id=="FirstBeeRoll" and item.Kind=="Bee" then
-  self.X.InventoryService:EquipBee(player,item.Id,1)
- end
-
  p.RollState.TotalRolls+=1
  p.RollState.DiscoveryPity=new and 0 or math.min(C.DiscoveryThreshold,p.RollState.DiscoveryPity+1)
 
