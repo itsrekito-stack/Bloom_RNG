@@ -95,9 +95,10 @@ need(activity,'self.X:Emit(player,"ActivityCompleted",1)',"activity progression 
 need(activity,'local completedSector=o.Sector or self.X.MapService:Sector(player)',"physical sector fallback")
 need(activity,'if completedSector and completedSector~="Center" then self.X:Emit(player,"WorldActivity",1) end',"tutorial/world activity completion event")
 
-# Journey/collection objectives contribute useful rewards.
+# Journey objectives contribute coins, while selected milestones award Workshop Points.
 need(meta,'p.Currencies.Coins=p.Currencies.Coins+10',"Journey coin reward")
-need(meta,'self.X.WorkshopService:Point(player,"Collection_"..threshold,2)',"collection Workshop point rewards")
+need(meta,'local POINT_MILESTONES={WorkshopVisit=1,Synergy=1,Trait=1,Trial=2,SeasonReady=2}',"Journey Workshop Point milestones")
+need(meta,'self.X.WorkshopService:Point(player,"JourneyMilestone_"..key,points)',"Journey Workshop Point reward")
 
 # Journey 15 must explain and point to Solar Bloom instead of showing a label-only objective.
 need(meta,'"SunnyVisit","SolarBloom","Discover6"',"Solar Bloom Journey ordering")
