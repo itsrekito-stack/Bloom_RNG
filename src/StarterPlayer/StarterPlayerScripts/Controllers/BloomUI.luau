@@ -1561,10 +1561,7 @@ function UI:ResolveRouletteReward(payload)
    task.wait(rare and 1.15 or RollAudio.ResultHold*revealScale*speedScale)
    if focused then self:SetRareRollFocus(false,payload.Rarity) end
   end
-  if generation~=self.RouletteGeneration then
-   self:SetRareRollFocus(false,payload.Rarity)
-   return
-  end
+  if generation~=self.RouletteGeneration then return end
   self.RouletteLanding=false
   -- Normal roll rewards are shown only by the roulette itself.
   -- RewardReveal is reserved for non-roll ceremonies.
