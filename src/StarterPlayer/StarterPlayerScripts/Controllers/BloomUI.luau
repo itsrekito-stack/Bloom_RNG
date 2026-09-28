@@ -1409,8 +1409,9 @@ function UI:Render()
   self.BoostHUD:Update(boosts,self.State.Revision)
  end
  if self.TraitHUD then
-  local traits=self.State.UI and self.State.UI.Inventory and self.State.UI.Inventory.Traits or {}
-  self.TraitHUD:Update(traits,self.State.Revision)
+  local inventory=self.State.UI and self.State.UI.Inventory or {}
+  local traits=inventory.Traits or {}
+  self.TraitHUD:Update(traits,inventory.EquippedBeeSlots or {},self.State.Revision)
  end
  self:ApplyWorkshopFocusVisibility()
  self:ApplyIndexFocusVisibility()
