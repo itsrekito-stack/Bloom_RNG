@@ -186,13 +186,11 @@ end
 
 function S:Workshop(player,profile)
  local nodes={}
- local canRespec=false
  for id,node in pairs(Workshop.Nodes) do
   local reason=workshopReason(profile,node)
   local owned=id=="CORE" or profile.WorkshopV5.Nodes[id]==true
   local parentOwned=node.Parent=="CORE" or (node.Parent and profile.WorkshopV5.Nodes[node.Parent]==true) or node.Parent==nil
   local revealed=owned or id=="CORE" or parentOwned
-  if id~="CORE" and profile.WorkshopV5.Nodes[id] and not node.Permanent then canRespec=true end
   nodes[id]={
    Id=id,
    Owned=owned,
@@ -209,7 +207,7 @@ function S:Workshop(player,profile)
    Permanent=revealed and node.Permanent==true or false,
   }
  end
- return {Points=profile.WorkshopV5.Points,Nodes=nodes,CanRespec=canRespec}
+ return {Points=profile.WorkshopV5.Points,Nodes=nodes,CanRespec=false}
 end
 
 function S:Map(player,profile)
