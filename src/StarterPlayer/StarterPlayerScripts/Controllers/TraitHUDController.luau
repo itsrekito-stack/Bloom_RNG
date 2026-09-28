@@ -109,7 +109,7 @@ end
 
 function S:Init(ui)
  self.UI=ui
- local root=ui.Root
+ local root=ui.SafeRoot
  self.Root=root:FindFirstChild("TraitHUD")
  self.Tooltip=root:FindFirstChild("TraitTooltip")
  self.Popup=root:FindFirstChild("TraitTierPopup")
