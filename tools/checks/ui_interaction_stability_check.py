@@ -27,7 +27,7 @@ need(ui,'state.Scroll[key]=instance.CanvasPosition',"scroll position capture")
 need(ui,'function UI:RestorePanelInteractionState(state)',"generic panel interaction restore")
 need(ui,'frame.CanvasPosition=position',"scroll position restore")
 need(ui,'function UI:RenderMenu(preserveInteraction)',"render supports stable refresh")
-need(ui,'if not workshop and not preserveInteraction then self.Content.CanvasPosition=Vector2.new() end',
+need(ui,'if not fullscreen and not preserveInteraction then self.Content.CanvasPosition=Vector2.new() end',
      "scroll reset limited to fresh menu opens")
 need(ui,'self:RenderMenu(true)',"state-driven relevant refresh preserves interaction state")
 
