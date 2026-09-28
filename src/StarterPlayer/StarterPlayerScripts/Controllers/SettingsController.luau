@@ -54,6 +54,7 @@ function S.Cleanup()
  table.clear(S.Connections)
  S.Runtime=nil
  S.ListeningKeybind=nil
+ S.FullResetConfirmUntil=nil
 end
 
 local function find(root,name,className)
@@ -325,6 +326,40 @@ function S.Render(ui,profile,uiState)
     ui:Close()
    end)
   end
+ end
+
+ local fullReset=find(runtime,"FullResetButton","TextButton")
+ local resetWarning=find(runtime,"ResetProgressWarning","TextLabel")
+ if fullReset then
+  local idleText="RESET ALL PROGRESS"
+  local confirmText="CONFIRM FULL RESET"
+  local idleWarning=resetWarning and resetWarning.Text or ""
+  bindPress(fullReset,function()
+   local now=os.clock()
+   if S.FullResetConfirmUntil and now<=S.FullResetConfirmUntil then
+    S.FullResetConfirmUntil=nil
+    fullReset.Active=false
+    fullReset.Text="RESETTING..."
+    if resetWarning then resetWarning.Text="Resetting saved progress..." end
+    ui:SetAutoRolling(false)
+    ui:Send("FullReset","RESET_ALL_PROGRESS")
+    ui:Close({SuppressInventoryReturn=true})
+    return
+   end
+   S.FullResetConfirmUntil=now+6
+   fullReset.Text=confirmText
+   if resetWarning then resetWarning.Text="This cannot be undone. Click CONFIRM FULL RESET within 6 seconds." end
+   ui:Toast("Full reset armed • click again within 6 seconds")
+   task.delay(6,function()
+    if S.Runtime~=runtime or not fullReset.Parent then return end
+    if S.FullResetConfirmUntil and os.clock()>=S.FullResetConfirmUntil then
+     S.FullResetConfirmUntil=nil
+     fullReset.Text=idleText
+     fullReset.Active=true
+     if resetWarning then resetWarning.Text=idleWarning end
+    end
+   end)
+  end)
  end
 
  local reset=find(runtime,"ResetButton","TextButton")
