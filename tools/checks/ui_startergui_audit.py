@@ -116,6 +116,7 @@ item_card=one('ItemCardTemplate')[1]
 check('InventoryPrototype authored',inventory_prototype is not None and inventory_prototype.get('Properties',{}).get('Visible') is False)
 check('Inventory v2 item card authored',item_card is not None and item_card.get('Properties',{}).get('Visible') is False)
 check('legacy SeedSatchelTemplate absent',one('SeedSatchelTemplate')[1] is None)
+check('obsolete Seeds inventory category absent',one('Category_Seeds')[1] is None)
 check('legacy InventoryTileTemplate absent',one('InventoryTileTemplate')[1] is None)
 
 boost_root_path,boost_root=one('ActiveBoostsHUD')
@@ -161,7 +162,7 @@ check('RoFlow keeps bundled UI Studio as fallback','frame.src="./ui-studio/index
 check('Inventory v2 rerender follows renderer','controller.MenuRenderer=="InventoryV2"' in inventory_v2_source)
 check('Inventory v2 binds authoritative species inventory','uiState.Inventory' in inventory_v2_source and 'item.Obtained or 1' in inventory_v2_source and 'controller:Send("EquipBee"' in inventory_v2_source)
 check('physical Garden opens authored Garden editor','function UI:OpenPlantInventory(slot)' in source and 'self:Open("Garden",{Slot=slot},{SilentMenu=true})' in source and 'GardenEditor.Render(self,p,ui)' in source and one('GardenKit')[1] is not None)
-check('Inventory v2 executes server-authoritative Plant','controller:Send("Plant",plantSlot,item.Id)' in inventory_v2_source and '"PLANT IN SLOT "..tostring(plantSlot)' in inventory_v2_source)
+check('Inventory v2 hands Flower actions to Garden editor','"PLANT IN GARDEN"' in inventory_v2_source and '"EDIT / REMOVE IN GARDEN"' in inventory_v2_source and 'controller.LastSeed=item.Id' in inventory_v2_source and 'controller:Send("Plant",plantSlot,item.Id)' not in inventory_v2_source)
 check('standalone Plant menu removed','elseif name=="Plant" then' not in source and one('PlantKit')[1] is None)
 check('BR-010 map exposes physical gate actionability','NearGate=nearGate' in ui_state_source and 'PrerequisiteReady=prerequisiteReady' in ui_state_source and 'CanUnlock=not unlocked and prerequisiteReady and hiveReady and nearGate' in ui_state_source and 'UnlockHint=hint' in ui_state_source)
 check('BR-010 map tells Hive-ready players to use gate','Hive ready — go to the ' in ui_state_source and 'Use the world gate prompt to unlock' in ui_state_source)
