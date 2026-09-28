@@ -8,6 +8,7 @@ VIEWPORTS=[(1920,1080),(1366,768),(1280,720)]
 NO_OVERLAP=[('ObjectiveCard','VerticalRoulette'),('CurrencyHUD','MenuDock'),('RollHUD','RollButton'),('ActiveBoostsHUD','RollButton'),('ActiveBoostsHUD','RollHUD')]
 DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Index','Dock_Workshop','Dock_Trials','Dock_Settings']
 MIN_HIT=44
+MENU_DOCK_MIN_Z=130
 EXPANDED_DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Index','Dock_Workshop','Dock_Trials','Dock_Settings']
 
 def children(node): return node.get('Children',[]) or []
@@ -47,6 +48,13 @@ def contained(inner,outer):
 safe=find(model,'SafeRoot')
 if not safe: raise SystemExit('FAIL SafeRoot missing')
 direct={child.get('Name'):child for child in children(safe)}
+
+dock_node=direct.get('MenuDock')
+shade_node=direct.get('ModalShade')
+if not dock_node or int(dock_node.get('Properties',{}).get('ZIndex',0))<MENU_DOCK_MIN_Z:
+    failed.append('MenuDock must render above modal dimming')
+if shade_node and dock_node and int(dock_node.get('Properties',{}).get('ZIndex',0))<=int(shade_node.get('Properties',{}).get('ZIndex',0)):
+    failed.append('ModalShade must stay below MenuDock')
 failed=[]
 dock_model=direct.get('MenuDock')
 if dock_model:
