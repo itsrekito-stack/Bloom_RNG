@@ -38,7 +38,8 @@ function S:Get(p)
  for _,beeId in pairs(p.Pollinators.EquippedBeeSlots or {}) do
   if type(beeId)=="string" then
    local state=B.GetMasteryState and B.GetMasteryState(p.Pollinators.BeeMastery[beeId]) or nil
-   masteryLuck*=tonumber(state and state.LuckMultiplier) or 1
+   local masteryMultiplier=tonumber(state and state.LuckMultiplier) or 1
+   masteryLuck=masteryLuck*masteryMultiplier
   end
  end
  return {
