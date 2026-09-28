@@ -28,7 +28,7 @@ checks=[
  (inventory,'self.X.FlowerProgressionService:AddDuplicate(player,id,1)',"duplicate Flower advances Level"),
  (inventory,'pollinators.BeeInventory[id]=1',"first Bee grants species ownership"),
  (inventory,'self.X.PollinatorService:AddMastery(player,id,C.BeeDuplicateXP)',"duplicate Bee advances Mastery"),
- (bloom_ui,'MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Trials="QuestsV2",Settings="SettingsV2"}',"authored menu routes stay centralized"),
+ (bloom_ui,'MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Index="IndexV1",Trials="QuestsV2",Settings="SettingsV2"}',"authored menu routes stay centralized"),
  (inventory_ui,'"PLANT IN GARDEN"',"Inventory hands unplanted Flowers to Garden editor"),
  (inventory_ui,'"EDIT / REMOVE IN GARDEN"',"Inventory hands planted Flowers to Garden editor"),
  (bloom_ui,'"PlantPicker"',"physical Garden opens editor"),
