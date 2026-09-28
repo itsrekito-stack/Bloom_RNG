@@ -103,7 +103,7 @@ need(season_plan,'after.Currencies.AncientNectar=after.Currencies.AncientNectar+
 need(workshop_service,"p.Currencies.AncientNectar-=(n.Nectar or 0)","Ancient Nectar Legacy sink")
 need(season_service,"p.Currencies.AncientNectar-=cost","Ancient Nectar post-Legacy repeatable sink")
 need(season_service,"p.Currencies.PetalDust+=Bloom.NectarDistillDust","Ancient Nectar distill destination")
-need(hive,'C.WorkshopPointHiveMilestones[nextLevel] or 0',"static Hive Workshop Point table")
+need(hive,'C.WorkshopPointsForHiveLevel(nextLevel)',"Hive Workshop Points continue after release milestones")
 need(hive,'self.X.WorkshopService:Point(player,"Hive_"',"Workshop Point Hive source")
 need(trial,'self.X.WorkshopService:Point(player,"Trial_"',"Workshop Point trial source")
 need(meta,'local POINT_MILESTONES={Synergy=1,Trait=1,SeasonReady=2}',"Trial-free Journey Workshop Point table")
