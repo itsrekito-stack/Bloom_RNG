@@ -342,7 +342,64 @@ When Inventory is open:
 - remaining navigation/actions can live at bottom of Inventory
 - avoid duplicate menu controls across HUD and open menu
 
-## 13. Implementation translation rules
+## 13. Index rules
+
+Index is a fullscreen encyclopedia/collection browser, separate from Inventory.
+
+Categories:
+- Flowers
+- Bees
+- Synergies
+- Traits
+
+Layout:
+- fullscreen, Workshop-like focus
+- persistent vertical category nav on the left
+- dense small-card grid in the main browser area
+- selected entry opens details in a right-side panel without leaving the grid
+
+Discovery:
+- undiscovered entries render as locked empty slots
+- do not show silhouettes, recipe hints or hidden shape clues
+- newly discovered entries get a small `NEW` badge until first viewed
+- no milestone/stat rewards for filling Index
+- progress is shown separately per category; no combined global completion percentage
+
+Opened Bee entry:
+- icon + name
+- 1/N odds
+- species-wide Mastery
+- obtained count
+- Traits
+- ability
+- short lore/description
+
+Opened Flower entry:
+- icon + name
+- 1/N odds
+- Level
+- intentionally omit verbose Synergy membership lists
+
+Opened Synergy entry:
+- exact Flower composition
+- per-Flower level requirements
+- effect
+- tier/strength
+- only after discovery
+
+Opened Trait entry:
+- thresholds
+- full tier effects
+- member Bees
+- biome modifier info
+- short lore/description
+
+Data model implication:
+- Index discovery/read state must be persistent where needed for `NEW` badges.
+- Obtained-count stats should not be conflated with inventory copy counts.
+- Hidden recipe data must not be leaked to client payloads before discovery.
+
+## 14. Implementation translation rules
 
 When asked to “implement the Q&A”:
 - Do not attempt a giant rewrite.
@@ -371,7 +428,7 @@ When asked to “balance”:
 - Use progression targets and current configs.
 - Preserve the role of weak items where the vision explicitly needs them as build enablers.
 
-## 14. Known vision-vs-current-code migration warning
+## 15. Known vision-vs-current-code migration warning
 
 The Q&A is newer than parts of the existing implementation. Examples may include:
 - Garden capacity/layout
@@ -391,7 +448,7 @@ If asked to implement one of these newer rules:
 - migrate carefully
 - retain data compatibility where possible
 
-## 15. Definition of success for future AI work
+## 16. Definition of success for future AI work
 
 A good change:
 - matches the latest game vision
