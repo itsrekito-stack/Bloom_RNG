@@ -118,7 +118,6 @@ function X:Request(player,action,a,b,c)
  if self.SeasonService.Pending[player] and action~="SeasonConfirm" and action~="Menu" and action~="Ready" and action~="FullReset" then return false,"SEASON_PREVIEW_OPEN" end
  if action=="Ready" then self.GardenActivityService:Push(player) return true
  elseif action=="Roll" then return self.RollService:Roll(player,a==true,b)
- elseif action=="Plant" then return false,"USE_GARDEN_MENU"
  elseif action=="GardenEdit" then return self.GardenPlotService:GardenEdit(player,a,b)
  elseif action=="EquipBee" then return self.InventoryService:EquipBee(player,a,b)
  elseif action=="Flag" then
