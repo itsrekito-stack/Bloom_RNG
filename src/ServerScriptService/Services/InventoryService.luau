@@ -34,66 +34,40 @@ function S:Grant(player,kind,id)
   local f=p.FlowerCollection
   local new=not f.DiscoveredFlowers[id]
   f.DiscoveredFlowers[id]=true
-  f.OwnedSeedCopies[id]=(f.OwnedSeedCopies[id] or 0)+1
-  if not new
-   and p.Settings.AutoDissolve
-   and p.WorkshopV5.Nodes.ECONOMY_1
-   and p.Settings.DissolveRarities[F.Species[id].Rarity]
-   and not f.LockedFlowers[id]
-   and not f.FavoriteFlowers[id]
-  then
-   self:Dissolve(player,id,1)
+  f.ObtainedFlowers[id]=(f.ObtainedFlowers[id] or 0)+1
+  if new then
+   f.OwnedSeedCopies[id]=1
+   f.FlowerMastery[id]=f.FlowerMastery[id] or {Level=1,XP=0}
+  else
+   self.X.FlowerProgressionService:AddDuplicate(player,id,1)
   end
   self.X:Emit(player,"SeedReward",1)
   return new
  end
 
  if kind=="Bee" and B.Exists(id) then
-  local inv=p.Pollinators
-  local new=not inv.DiscoveredBees[id]
-  inv.DiscoveredBees[id]=true
-  inv.BeeInventory[id]=(inv.BeeInventory[id] or 0)+1
+  local pollinators=p.Pollinators
+  local new=not pollinators.DiscoveredBees[id]
+  pollinators.DiscoveredBees[id]=true
+  pollinators.BeeObtained[id]=(pollinators.BeeObtained[id] or 0)+1
+  if new then
+   pollinators.BeeInventory[id]=1
+   pollinators.BeeMastery[id]=pollinators.BeeMastery[id] or 0
+  else
+   self.X.PollinatorService:AddMastery(player,id,C.BeeDuplicateXP)
+  end
   return new
  end
 
  return nil
 end
 
-function S:Dissolve(player,id,n)
- local p=self.X:Profile(player)
- if not p then return false,"PROFILE_LOADING" end
- if type(id)~="string" or not F.Exists(id) then return false,"INVALID_ITEM" end
- if type(n)~="number" or n%1~=0 or n<1 or n>10000 then return false,"INVALID_VALUE" end
-
- local f=p.FlowerCollection
- if f.LockedFlowers[id] then return false,"PROTECTED" end
- if f.FavoriteFlowers[id] then return false,"FAVORITE" end
- if self:Available(p,id)<n then return false,"NO_FREE_COPY" end
- if (f.OwnedSeedCopies[id] or 0)-n<1 then return false,"LAST_COPY" end
-
- f.OwnedSeedCopies[id]-=n
- p.Currencies.PetalDust+=n*C.DustPerCopy
-  *(p.Season.ActiveCard=="AutumnFortune" and 1.5 or 1)
-  *E.Value(p,"ECONOMY_3","DustYield",1)
- self.X.FlowerProgressionService:Add(player,id,n)
- return true
+function S:Dissolve()
+ return false,"ACTION_UNAVAILABLE"
 end
 
-function S:DissolveBee(player,id,n)
- local p=self.X:Profile(player)
- if not p then return false,"PROFILE_LOADING" end
- if type(id)~="string" or not B.Exists(id) then return false,"INVALID_ITEM" end
- if type(n)~="number" or n%1~=0 or n<1 or n>10000 then return false,"INVALID_VALUE" end
-
- local inv=p.Pollinators
- if self:AvailableBee(p,id)<n then return false,"NO_FREE_COPY" end
- if (inv.BeeInventory[id] or 0)-n<1 then return false,"LAST_COPY" end
-
- inv.BeeInventory[id]-=n
- p.Currencies.PetalDust+=n*C.BeeDustPerCopy
-  *(p.Season.ActiveCard=="AutumnFortune" and 1.5 or 1)
-  *E.Value(p,"ECONOMY_3","DustYield",1)
- return true
+function S:DissolveBee()
+ return false,"ACTION_UNAVAILABLE"
 end
 
 function S:EquipBee(player,id,slot)
