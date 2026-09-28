@@ -65,6 +65,10 @@ local REASONS={
  FILTER_LOCKED="Unlock filters in the Workshop first",
  AUTO_DISSOLVE_LOCKED="Unlock Auto Dissolve in the Workshop first",
  NO_CHANGES="No upgrades available to reset",
+ TUTORIAL_ROLL_LOCKED="Complete the tutorial to roll again",
+ TUTORIAL_SINGLE_ROLL="Tutorial rolls are single-use",
+ USE_GARDEN_MENU="Plant Flowers from the Garden menu",
+ MENU_REQUIRED="Open the Garden menu to edit planting",
 }
 
 local function plantedCount(profile,id)
