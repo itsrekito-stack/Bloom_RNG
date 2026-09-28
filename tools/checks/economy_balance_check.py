@@ -81,12 +81,12 @@ pity_seconds=pity*roll_cd
 if not 25<=pity_seconds<=60:
     raise AssertionError(f"base pity cadence outside guardrail: {pity_seconds:.1f}s")
 
-# Static Hive milestones + three key trials + selected Journey milestones fund meaningful choices without filling the tree.
+# Static Hive milestones + three key trials + the remaining non-Trial Journey milestones fund early Workshop choices.
 hive_points=2+1+1+2
 trial_points=3*2
-journey_points=1+1+1+2+2
+journey_points=1+1+2
 minimum_first_season_points=hive_points+trial_points+journey_points
-if not 18<=minimum_first_season_points<36:
+if not 16<=minimum_first_season_points<36:
     raise AssertionError(f"first-Season Workshop point pacing drift: {minimum_first_season_points}")
 
 # Every release currency has both a live source and a live sink/reset.
@@ -95,7 +95,8 @@ need(hive,"p.Hive.Honey-=cost","Honey sink")
 need(poll,"profile.Currencies.Coins+=coins","Coin source")
 need(workshop_service,"p.Currencies.Coins-=(n.Coins or 0)","Coin Workshop sink")
 need(season_plan,"after.Currencies.Coins=0","Coin Season sink")
-need(map_service,"p.Currencies.PetalDust=p.Currencies.PetalDust+3","Petal Dust world landmark source")
+if "PetalDust" in map_service:
+    raise AssertionError("removed world landmarks must not remain a Petal Dust source")
 need(social,"p.Currencies.PetalDust=p.Currencies.PetalDust+2+math.min(8,math.floor(n/10))","Petal Dust Server Bloom source")
 need(workshop_service,"p.Currencies.PetalDust-=(n.Dust or 0)","Petal Dust Workshop sink")
 need(season_plan,'after.Currencies.AncientNectar=after.Currencies.AncientNectar+C.SeasonReward',"Ancient Nectar source")
@@ -105,7 +106,7 @@ need(season_service,"p.Currencies.PetalDust+=Bloom.NectarDistillDust","Ancient N
 need(hive,'C.WorkshopPointHiveMilestones[nextLevel] or 0',"static Hive Workshop Point table")
 need(hive,'self.X.WorkshopService:Point(player,"Hive_"',"Workshop Point Hive source")
 need(trial,'self.X.WorkshopService:Point(player,"Trial_"',"Workshop Point trial source")
-need(meta,'local POINT_MILESTONES={WorkshopVisit=1,Synergy=1,Trait=1,Trial=2,SeasonReady=2}',"Journey Workshop Point table")
+need(meta,'local POINT_MILESTONES={Synergy=1,Trait=1,SeasonReady=2}',"Trial-free Journey Workshop Point table")
 need(meta,'self.X.WorkshopService:Point(player,"JourneyMilestone_"..key,points)',"Journey Workshop Point source")
 need(workshop_service,"w.Points-=(n.Cost or 0)","Workshop Point sink")
 
