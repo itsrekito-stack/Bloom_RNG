@@ -21,7 +21,7 @@ function S.BuildSeasonTurnPlan(profile)
  }
 
  after.Garden={
-  UnlockedSlots=C.StartingSlots,
+  UnlockedSlots=1,
   Slots={},
   Revision=profile.Garden.Revision+1,
  }
@@ -33,8 +33,6 @@ function S.BuildSeasonTurnPlan(profile)
  after.FlowerCollection.OwnedSeedCopies[flower]=math.max(1,after.FlowerCollection.OwnedSeedCopies[flower] or 0)
  after.Garden.Slots[1]={
   SpeciesId=flower,
-  Level=1,
-  XP=0,
   Mutation=profile.WorkshopV5.Nodes.LEGACY_3 and profile.Season.Keepsakes.Flower and "Memory" or "",
   TotalPollination=0,
  }
@@ -70,11 +68,10 @@ function S.BuildSeasonTurnPlan(profile)
   after.FlowerCollection.OwnedSeedCopies[id]=math.max(id==flower and 2 or 1,after.FlowerCollection.OwnedSeedCopies[id] or 0)
   after.Garden.Slots[2]={
    SpeciesId=id,
-   Level=1,
-   XP=0,
    Mutation="Memory",
    TotalPollination=0,
   }
+  after.Garden.UnlockedSlots=math.max(after.Garden.UnlockedSlots,2)
  end
 
  after.StarterBeeGranted=true
