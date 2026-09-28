@@ -1319,7 +1319,10 @@ function UI:Render()
  self.BloomFill.Size=UDim2.fromScale(charge/bloomMax,1)
  self.MeterArea.Visible=rollUnlocked and (p.Tutorial.Step>=(T.IndexById.Delivery or 8) or p.Tutorial.Skipped)
 
- for name,b in pairs(self.DockButtons) do b.Visible=name=="Settings" or p.Tutorial.FeatureUnlocks[name]==true end
+ self.Dock.Visible=true
+ for name,b in pairs(self.DockButtons) do
+  b.Visible=name=="SeedSatchel" and p.Tutorial.FeatureUnlocks.SeedSatchel==true
+ end
  if not self:IsWorkshopExclusive() then
   self.GuideController:Update()
   if self.JourneyGuideController then self.JourneyGuideController:Update() end
@@ -2105,7 +2108,12 @@ function UI:Start()
   if input.KeyCode==Enum.KeyCode.Escape and self.Menu then
    self:Close()
   elseif input.KeyCode==openKey then
-   self.Dock.Visible=not self.Dock.Visible
+   local unlocked=self.State and self.State.Profile.Tutorial.FeatureUnlocks.SeedSatchel==true
+   if self.Menu=="SeedSatchel" then
+    self:Close()
+   elseif unlocked then
+    self:Open("SeedSatchel")
+   end
   elseif input.KeyCode==rollKey and self.State and self.State.Profile.Tutorial.FeatureUnlocks.Roll==true then
    self:SetAutoRolling(not self.Auto)
   end
