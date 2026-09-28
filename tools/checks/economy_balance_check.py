@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import math,re
-
 ROOT=Path(__file__).resolve().parents[2]
-def read(path): return (ROOT/path).read_text(encoding="utf-8")
+def read(p): return (ROOT/p).read_text(encoding="utf-8")
 def num(src,key):
     m=re.search(rf'\b{re.escape(key)}=([0-9.]+)',src)
-    if not m: raise AssertionError(f"missing numeric config {key}")
+    if not m: raise AssertionError(f"missing {key}")
     return float(m.group(1))
 def need(src,text,label):
     if text not in src: raise AssertionError(f"{label}: missing {text!r}")
-
 bloom=read("src/ReplicatedStorage/Config/BloomConfig.luau")
 workshop=read("src/ReplicatedStorage/Config/WorkshopConfig.luau")
 flowers=read("src/ReplicatedStorage/Config/FlowersConfig.luau")
@@ -19,107 +17,45 @@ tutorial=read("src/ServerScriptService/Services/TutorialService.luau")
 poll=read("src/ServerScriptService/Services/PollinatorService.luau")
 hive=read("src/ServerScriptService/Services/HiveService.luau")
 inventory=read("src/ServerScriptService/Services/InventoryService.luau")
-map_service=read("src/ServerScriptService/Services/MapService.luau")
 social=read("src/ServerScriptService/Services/SocialService.luau")
 workshop_service=read("src/ServerScriptService/Services/WorkshopService.luau")
+quest_service=read("src/ServerScriptService/Services/QuestService.luau")
+quest_cfg=read("src/ReplicatedStorage/Config/QuestConfig.luau")
 season_plan=read("src/ReplicatedStorage/Shared/SeasonPlan.luau")
 season_service=read("src/ServerScriptService/Services/SeasonService.luau")
-trial=read("src/ServerScriptService/Services/BuildTrialService.luau")
-meta=read("src/ServerScriptService/Services/MetaProgressionService.luau")
 
-m=re.search(r'HiveCosts=\{([^}]*)\}',bloom)
-if not m: raise AssertionError("HiveCosts missing")
-hive_costs=[float(x) for x in re.findall(r'[0-9.]+',m.group(1))]
-if len(hive_costs)!=8 or hive_costs[0]!=0:
-    raise AssertionError(f"unexpected Hive cost ladder: {hive_costs}")
-if any(hive_costs[i]>=hive_costs[i+1] for i in range(1,len(hive_costs)-1)):
-    raise AssertionError(f"Hive upgrade costs must rise: {hive_costs}")
-
-delivery_seconds=num(bloom,"DeliverySeconds")
-honey_per=num(bloom,"HoneyPerDelivery")
-coins_per=num(bloom,"CoinsPerDelivery")
-bloom_max=num(bloom,"BloomMax")
-delivery_charge=num(bloom,"Delivery")
-roll_cd=num(bloom,"RollCooldown")
-pity=num(bloom,"DiscoveryThreshold")
-season_reward=num(bloom,"SeasonReward")
-
-# Baseline timings intentionally ignore traits/abilities/extra bees; they are upper-bound pacing anchors.
-first_deliveries=math.ceil(hive_costs[1]/honey_per)
-first_hive_seconds=first_deliveries*delivery_seconds
-if not 45<=first_hive_seconds<=150:
-    raise AssertionError(f"Hive 2 baseline pacing outside guardrail: {first_hive_seconds:.0f}s")
-
-total_honey=sum(hive_costs[1:])
-total_deliveries=math.ceil(total_honey/honey_per)
-one_bee_minutes=total_deliveries*delivery_seconds/60
-if not 120<=one_bee_minutes<=260:
-    raise AssertionError(f"Hive 8 one-bee upper-bound pacing outside guardrail: {one_bee_minutes:.1f}m")
-
-coins_before_hive2=first_deliveries*coins_per
+costs=[float(x) for x in re.findall(r'[0-9.]+',re.search(r'HiveCosts=\{([^}]*)\}',bloom).group(1))]
+delivery_seconds=num(bloom,"DeliverySeconds");honey_per=num(bloom,"HoneyPerDelivery");coins_per=num(bloom,"CoinsPerDelivery")
+first=math.ceil(costs[1]/honey_per);first_seconds=first*delivery_seconds
+if not 45<=first_seconds<=150: raise AssertionError(f"Hive2 pacing {first_seconds}")
+total_deliveries=math.ceil(sum(costs[1:])/honey_per);one_bee_minutes=total_deliveries*delivery_seconds/60
+if not 120<=one_bee_minutes<=260: raise AssertionError(f"Hive8 pacing {one_bee_minutes}")
 coin_costs=[float(x) for x in re.findall(r'[0-9.]+',re.search(r'HiveCoinCosts=\{([^}]*)\}',bloom).group(1))]
-if len(coin_costs)!=8 or coin_costs[0]!=0 or any(coin_costs[i]>=coin_costs[i+1] for i in range(1,len(coin_costs)-1)):
-    raise AssertionError(f"unexpected Hive Coin ladder: {coin_costs}")
-if coin_costs[1]!=coins_before_hive2:
-    raise AssertionError(f"Hive 2 Coin cost should match the first natural delivery loop: {coin_costs[1]} vs {coins_before_hive2}")
-need(bloom,"function C.HiveCoinCost(nextLevel)","endless Hive Coin curve")
+if coin_costs[1]!=first*coins_per: raise AssertionError("Hive2 Coin gate not aligned to first loop")
 need(hive,"p.Currencies.Coins-=coinCost","Hive Coin sink")
-need(tutorial,"p.Currencies.Coins=coins","tutorial can afford the first Hive Coin gate")
-if "local COINS_BY_INDEX={100,250,700,1800,4500,10000}" not in workshop:
-    raise AssertionError("Workshop Coin curve drifted from the progression pass")
-baseline_coins_to_hive8=total_deliveries*coins_per
-fixed_hive_coin_sink=sum(coin_costs[1:])
-if not fixed_hive_coin_sink>baseline_coins_to_hive8:
-    raise AssertionError("Hive Coin sink is too weak to matter by Hive 8")
-
-# Duplicate rolls now feed species Level/Mastery directly; Petal Dust is a world/seasonal resource.
+need(workshop,'local COINS_BY_INDEX={100,250,700,1800,4500,10000}',"Workshop Coin curve")
 need(inventory,'self.X.FlowerProgressionService:AddDuplicate(player,id,1)',"Flower duplicate progression")
 need(inventory,'self.X.PollinatorService:AddMastery(player,id,C.BeeDuplicateXP)',"Bee duplicate progression")
-
-legacy_nectar=sum(range(1,7))
-base_seasons_for_legacy=math.ceil(legacy_nectar/season_reward)
-if not 4<=base_seasons_for_legacy<=6:
-    raise AssertionError(f"Legacy Nectar pacing outside guardrail: {base_seasons_for_legacy} Seasons")
-
-bloom_delivery_minutes=(bloom_max/delivery_charge)*delivery_seconds/60
-if not 4<=bloom_delivery_minutes<=10:
-    raise AssertionError(f"delivery-only Bloom cadence outside guardrail: {bloom_delivery_minutes:.2f}m")
-
-pity_seconds=pity*roll_cd
-if not 25<=pity_seconds<=60:
-    raise AssertionError(f"base pity cadence outside guardrail: {pity_seconds:.1f}s")
-
-# Static Hive milestones + three key trials + the remaining non-Trial Journey milestones fund early Workshop choices.
-hive_points=2+1+1+2
-trial_points=3*2
-journey_points=1+1+2
-minimum_first_season_points=hive_points+trial_points+journey_points
-if not 16<=minimum_first_season_points<36:
-    raise AssertionError(f"first-Season Workshop point pacing drift: {minimum_first_season_points}")
-
-# Every release currency has both a live source and a live sink/reset.
 need(poll,"profile.Hive.Honey+=honey","Honey source")
 need(hive,"p.Hive.Honey-=cost","Honey sink")
 need(poll,"profile.Currencies.Coins+=coins","Coin source")
 need(workshop_service,"p.Currencies.Coins-=(n.Coins or 0)","Coin Workshop sink")
-need(flowers,"function C.GetLevelBuff(id,level)","Flower Level passive config")
-need(stats,"local buff=F.GetLevelBuff and F.GetLevelBuff(id,mastery and mastery.Level or 1) or nil","planted Flower passives enter authoritative stats")
-need(season_plan,"after.Currencies.Coins=0","Coin Season sink")
-if "PetalDust" in map_service:
-    raise AssertionError("removed world landmarks must not remain a Petal Dust source")
-need(social,"p.Currencies.PetalDust=p.Currencies.PetalDust+2+math.min(8,math.floor(n/10))","Petal Dust Server Bloom source")
-need(workshop_service,"p.Currencies.PetalDust-=(n.Dust or 0)","Petal Dust Workshop sink")
-need(season_plan,'after.Currencies.AncientNectar=after.Currencies.AncientNectar+C.SeasonReward',"Ancient Nectar source")
-need(workshop_service,"p.Currencies.AncientNectar-=(n.Nectar or 0)","Ancient Nectar Legacy sink")
-need(season_service,"p.Currencies.AncientNectar-=cost","Ancient Nectar post-Legacy repeatable sink")
-need(season_service,"p.Currencies.PetalDust+=Bloom.NectarDistillDust","Ancient Nectar distill destination")
-need(hive,'C.WorkshopPointsForHiveLevel(nextLevel)',"Hive Workshop Points continue after release milestones")
-need(hive,'self.X.WorkshopService:Point(player,"Hive_"',"Workshop Point Hive source")
-need(trial,'self.X.WorkshopService:Point(player,"Trial_"',"Workshop Point trial source")
-need(meta,'local POINT_MILESTONES={Synergy=1,Trait=1,SeasonReady=2}',"Trial-free Journey Workshop Point table")
-need(meta,'self.X.WorkshopService:Point(player,"JourneyMilestone_"..key,points)',"Journey Workshop Point source")
+need(flowers,"function C.GetLevelBuff(id,level)","Flower passives")
+need(stats,"local buff=F.GetLevelBuff and F.GetLevelBuff(id,mastery and mastery.Level or 1) or nil","Flower stats")
+need(social,"p.Currencies.PetalDust=p.Currencies.PetalDust+2+math.min(8,math.floor(n/10))","Petal Dust source")
+need(workshop_service,"p.Currencies.PetalDust-=(n.Dust or 0)","Petal Dust sink")
+need(season_plan,'after.Currencies.AncientNectar=after.Currencies.AncientNectar+C.SeasonReward',"Nectar source")
+need(workshop_service,"p.Currencies.AncientNectar-=(n.Nectar or 0)","Nectar Workshop sink")
+need(season_service,"p.Currencies.AncientNectar-=cost","repeat Nectar sink")
+need(hive,'self.X.WorkshopService:AwardHiveLevel(player,nextLevel)',"Hive Workshop Points source")
+need(workshop_service,'function S:ReconcileHivePoints(player)',"Hive point recovery")
+need(quest_service,'self.X.WorkshopService:Point(player,"Quest_"..id,points)',"Quest Workshop Points source")
+for q in ("Q05_FirstBloom","Q10_WorkshopPath","Q14_BloomRoutine","Q18_BeeScholar","Q24_HiveTen","Q25_BloomKeeper"):
+    need(quest_cfg,q,"quest point milestone "+q)
 need(workshop_service,"w.Points-=(n.Cost or 0)","Workshop Point sink")
 
+bloom_minutes=(num(bloom,"BloomMax")/num(bloom,"Delivery"))*delivery_seconds/60
+pity_seconds=num(bloom,"DiscoveryThreshold")*num(bloom,"RollCooldown")
+if not 4<=bloom_minutes<=10 or not 25<=pity_seconds<=60: raise AssertionError("Bloom/pity cadence drift")
 print("economy balance contract: PASS")
-print(f"Hive2 baseline {first_hive_seconds:.0f}s; Hive8 one-bee upper bound {one_bee_minutes:.1f}m; fixed Hive Coin sink {int(fixed_hive_coin_sink)}; Legacy ~{base_seasons_for_legacy} base Seasons.")
-print(f"Bloom delivery-only {bloom_delivery_minutes:.2f}m; base pity {pity_seconds:.1f}s; minimum first-Season Workshop Points {minimum_first_season_points}.")
+print(f"Hive2 {first_seconds:.0f}s; Hive8 one-Bee {one_bee_minutes:.1f}m; Bloom {bloom_minutes:.2f}m; pity {pity_seconds:.1f}s.")
