@@ -4,13 +4,14 @@ local Flowers=require(RS.Config.FlowersConfig)
 local Bees=require(RS.Config.BeesConfig)
 local Icons=require(RS.Config.IconsConfig)
 local Rarity=require(RS.Config.RarityConfig)
+local GardenSynergy=require(RS.Config.GardenSynergyConfig)
 local Theme=require(RS.Config.UIThemeConfig)
 
 local C=Theme.Colors
 local InventoryV2={}
 
-local CATEGORY_ORDER={"Flowers","Bees","Seeds","Resources","Special"}
-local CATEGORY_TITLES={Flowers="FLOWERS",Bees="BEES",Seeds="SEEDS",Resources="RESOURCES",Special="SPECIAL"}
+local CATEGORY_ORDER={"Flowers","Bees","Resources","Special"}
+local CATEGORY_TITLES={Flowers="FLOWERS",Bees="BEES",Resources="RESOURCES",Special="SPECIAL"}
 local SORT_ORDER={"Rarity","Name","Count"}
 local SORT_LABELS={Rarity="RARITY  ˅",Name="NAME  ˅",Count="COUNT  ˅"}
 local FILTER_ORDER={"All","Favorite","Protected","Available"}
@@ -59,18 +60,6 @@ local function resourceIcon(id)
  return icon
 end
 
-local function firstFreeGardenSlot(profile)
- local garden=profile and profile.Garden
- if type(garden)~="table" then return nil end
- local slots=garden.Slots or {}
- local unlocked=tonumber(garden.UnlockedSlots) or #slots
- for i=1,unlocked do
-  local slot=slots[i]
-  if type(slot)~="table" or not slot.SpeciesId or slot.SpeciesId=="" then return i end
- end
- return nil
-end
-
 local function findEquippedSlot(slots,id)
  for i,v in pairs(slots or {}) do
   if v==id then return tonumber(i) end
@@ -114,7 +103,7 @@ local function traitEquipPreview(item,inventory)
 end
 
 local function buildItems(profile,inventory)
- local out={Flowers={},Bees={},Seeds={},Resources={},Special={}}
+ local out={Flowers={},Bees={},Resources={},Special={}}
  for _,entry in ipairs(inventory.Flowers or {}) do
   local cfg=Flowers.Species[entry.Id]
   if cfg then
@@ -125,12 +114,6 @@ local function buildItems(profile,inventory)
     Icon=flowerIcon(entry.Id),Odds=entry.Odds or "1/—",
    }
    table.insert(out.Flowers,item)
-   if item.Free>0 then
-    local seed=cloneTable(item)
-    seed.Kind="Seed"
-    seed.Count=item.Free
-    table.insert(out.Seeds,seed)
-   end
   end
  end
 
@@ -151,7 +134,7 @@ local function buildItems(profile,inventory)
  local resources={
   {Id="Coins",DisplayName="Coins",Count=currencies.Coins or 0,Description="Main currency for progression and upgrades."},
   {Id="Honey",DisplayName="Honey",Count=(profile.Hive and profile.Hive.Honey) or 0,Description="Honey delivered to the hive by your bees."},
-  {Id="PetalDust",DisplayName="Petal Dust",Count=currencies.PetalDust or 0,Description="A duplicate resource used for Mastery and upgrades."},
+  {Id="PetalDust",DisplayName="Petal Dust",Count=currencies.PetalDust or 0,Description="A world and seasonal resource used by progression systems and Workshop upgrades."},
   {Id="AncientNectar",DisplayName="Ancient Nectar",Count=currencies.AncientNectar or 0,Description="Permanent seasonal currency for Legacy progression and post-Legacy distillation.",DistillUnlocked=distill.Unlocked==true,CanDistill=distill.CanDistill==true,DistillCost=distill.Cost or 1,DistillDust=distill.Dust or 0},
  }
  for _,entry in ipairs(resources) do
@@ -190,8 +173,8 @@ local function matchesFilter(item,filter)
  if filter=="Favorite" then return item.Favorite==true end
  if filter=="Protected" then return item.Protected==true end
  if filter=="Available" then
-  if item.Kind=="Flower" or item.Kind=="Seed" then return (item.Free or 0)>0 end
-  if item.Kind=="Bee" then return (item.Count or 0)>(item.Equipped or 0) end
+  if item.Kind=="Flower" then return (item.Planted or 0)==0 end
+  if item.Kind=="Bee" then return (item.Equipped or 0)==0 end
  end
  return true
 end
@@ -299,12 +282,6 @@ function InventoryV2.Render(controller,profile,uiState)
  if not table.find(SORT_ORDER,state.Sort) then state.Sort="Rarity" end
  if not table.find(FILTER_ORDER,state.Filter) then state.Filter="All" end
  state.Selected=state.Selected or {}
- local plantSlot=tonumber(controller.InventoryPlantSlot)
- if plantSlot and (plantSlot%1~=0 or plantSlot<1) then
-  controller.InventoryPlantSlot=nil
-  plantSlot=nil
- end
-
  local all=buildItems(profile,inventory)
  local shellRoot=prototype:Clone()
  shellRoot.Name="InventoryV2Runtime"
@@ -337,7 +314,6 @@ function InventoryV2.Render(controller,profile,uiState)
  local counts={
   Flowers={#all.Flowers,totalFlowers},
   Bees={#all.Bees,totalBees},
-  Seeds={#all.Seeds,totalFlowers},
   Resources={#all.Resources,#all.Resources},
   Special={#all.Special,3},
  }
@@ -373,7 +349,7 @@ function InventoryV2.Render(controller,profile,uiState)
   state.Sort=cycle(SORT_ORDER,state.Sort)
   rerender()
  end)
- local filterAllowed=state.Category=="Flowers" or state.Category=="Seeds"
+ local filterAllowed=state.Category=="Flowers"
  filterButton.Visible=filterAllowed
  filterButton.Text=FILTER_LABELS[state.Filter] or FILTER_LABELS.All
  filterButton.Activated:Connect(function()
@@ -382,9 +358,6 @@ function InventoryV2.Render(controller,profile,uiState)
  end)
 
  sectionTitle.Text=CATEGORY_TITLES[state.Category] or string.upper(state.Category)
- if plantSlot and state.Category=="Flowers" then
-  sectionTitle.Text="FLOWERS  •  GARDEN SLOT "..tostring(plantSlot)
- end
 
  local function drawDetails(item)
   if not item then
@@ -397,7 +370,7 @@ function InventoryV2.Render(controller,profile,uiState)
   if itemName and itemName:IsA("TextLabel") then itemName.Text=item.DisplayName end
   local fav=details:FindFirstChild("Favorite")
   if fav and fav:IsA("TextLabel") then
-   fav.Visible=item.Kind=="Flower" or item.Kind=="Seed"
+   fav.Visible=item.Kind=="Flower"
    fav.Text=item.Favorite and "★" or "☆"
   end
   local badge=details:FindFirstChild("RarityBadge")
@@ -414,17 +387,18 @@ function InventoryV2.Render(controller,profile,uiState)
    local glow=preview:FindFirstChild("PreviewGlow")
    if glow and glow:IsA("Frame") then glow.BackgroundColor3=color end
    local tag=preview:FindFirstChild("Tag")
-   if tag and tag:IsA("TextLabel") then tag.Text=state.Category=="Seeds" and "SEED" or string.upper(item.Kind) end
+   if tag and tag:IsA("TextLabel") then tag.Text=string.upper(item.Kind) end
   end
 
   local description=details:FindFirstChild("Description")
   if description and description:IsA("TextLabel") then
-   if item.Kind=="Flower" or item.Kind=="Seed" then
-    if plantSlot then
-     description.Text=item.DisplayName.." • "..item.Rarity..". Choose an available copy for Garden Slot "..tostring(plantSlot).."."
-    else
-     description.Text=item.DisplayName.." • "..item.Rarity.." • 1/N: "..tostring(item.Odds or "1/—")..". Duplicate rolls increase this Flower species Level."
+   if item.Kind=="Flower" then
+    local synergyId=uiState.Garden and uiState.Garden.ActiveSynergy or ""
+    local synergyName="None"
+    for _,recipe in ipairs(GardenSynergy.Recipes or {}) do
+     if recipe.Id==synergyId then synergyName=recipe.Name or recipe.Id break end
     end
+    description.Text=item.DisplayName.." • "..item.Rarity.." • 1/N: "..tostring(item.Odds or "1/—").." • Level "..tostring(item.Mastery.Level or 1).." • Current Synergy: "..synergyName..". Duplicate rolls increase this Flower species Level."
    elseif item.Kind=="Bee" then
     local ability=Bees.GetAbilityDescription(item.Id)
     local passive=Bees.GetPassiveDescription(item.Id)
@@ -448,7 +422,7 @@ function InventoryV2.Render(controller,profile,uiState)
    local masteryLevel=stats:FindFirstChild("MasteryLevel")
    local masteryTrack=stats:FindFirstChild("MasteryTrack")
    local masteryXP=stats:FindFirstChild("MasteryXP")
-   if item.Kind=="Flower" or item.Kind=="Seed" then
+   if item.Kind=="Flower" then
     if ownedLabel then ownedLabel.Text="Obtained" end
     if ownedValue then ownedValue.Text=tostring(item.Obtained or 1) end
     if freeLabel then freeLabel.Text="Garden" end
@@ -495,23 +469,14 @@ function InventoryV2.Render(controller,profile,uiState)
   local dissolve=details:FindFirstChild("DissolveButton")
   local mastery=details:FindFirstChild("MasteryButton")
 
-  if item.Kind=="Flower" or item.Kind=="Seed" then
-   if plantSlot then
-    local canPlant=(item.Free or 0)>0
-    setButton(plant,true,canPlant and ("PLANT IN SLOT "..tostring(plantSlot)) or "NO FREE COPY",canPlant,function()
-     controller.LastSeed=item.Id
-     controller.PendingPlantFlowerId=item.Id
-     controller:Send("Plant",plantSlot,item.Id)
-    end)
-   else
-    local slot=firstFreeGardenSlot(profile)
-    local canPrepare=(item.Free or 0)>0 and slot~=nil
-    setButton(plant,true,canPrepare and "PLANT AT GARDEN" or ((item.Free or 0)<=0 and "NO FREE COPY" or "NO FREE PLOT"),canPrepare,function()
-     controller.LastSeed=item.Id
-     controller:Close()
-     controller:Toast("Flower selected. Go to an unlocked garden pad and use its Plant prompt.")
-    end)
-   end
+  if item.Kind=="Flower" then
+   local planted=(item.Planted or 0)>0
+   local label=planted and "EDIT / REMOVE IN GARDEN" or "PLANT IN GARDEN"
+   setButton(plant,true,label,true,function()
+    controller.LastSeed=item.Id
+    controller:Close()
+    controller:Toast("Flower selected. Use an unlocked Garden pad to open the Garden editor.")
+   end)
    setButton(favorite,true,item.Favorite and "★  REMOVE FAVORITE" or "★  FAVORITE",true,function() controller:Send("Flag",item.Id,"FavoriteFlowers") end)
    setButton(protect,true,item.Protected and "◆  UNPROTECT" or "◆  PROTECT",true,function() controller:Send("Flag",item.Id,"LockedFlowers") end)
    setButton(dissolve,false)
