@@ -5,9 +5,10 @@ ROOT=Path(__file__).resolve().parents[2]
 model=json.loads((ROOT/'src/StarterGui/BloomUI.model.json').read_text(encoding='utf-8'))
 TARGETS=['ObjectiveCard','CurrencyHUD','MenuDock','RollHUD','VerticalRoulette','RollButton','ActiveBoostsHUD']
 VIEWPORTS=[(1920,1080),(1366,768),(1280,720)]
-NO_OVERLAP=[('ObjectiveCard','VerticalRoulette'),('CurrencyHUD','MenuDock'),('RollHUD','RollButton'),('ActiveBoostsHUD','RollButton'),('ActiveBoostsHUD','RollHUD'),('MenuDock','RollButton'),('MenuDock','RollHUD')]
+NO_OVERLAP=[('ObjectiveCard','VerticalRoulette'),('CurrencyHUD','MenuDock'),('RollHUD','RollButton'),('ActiveBoostsHUD','RollButton'),('ActiveBoostsHUD','RollHUD')]
 DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Index','Dock_Workshop','Dock_Trials','Dock_Settings']
 MIN_HIT=44
+EXPANDED_DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Index','Dock_Workshop','Dock_Trials','Dock_Settings']
 
 def children(node): return node.get('Children',[]) or []
 def find(node,name):
@@ -47,6 +48,25 @@ safe=find(model,'SafeRoot')
 if not safe: raise SystemExit('FAIL SafeRoot missing')
 direct={child.get('Name'):child for child in children(safe)}
 failed=[]
+dock_model=direct.get('MenuDock')
+if dock_model:
+    dp=dock_model.get('Properties',{})
+    dock_w=axis(udim2(dp,'Size',[[0,0],[0,0]])[0],1920)
+    by_name={c.get('Name'):c for c in children(dock_model)}
+    workshop=by_name.get('Dock_Workshop')
+    if workshop:
+        wr=rect(workshop,dock_w,75)
+        workshop_center=wr[0]+wr[2]/2
+        if abs(workshop_center-dock_w/2)>.01:
+            failed.append('Dock_Workshop is not centered in expanded MenuDock')
+    for name in EXPANDED_DOCK_BUTTONS:
+        node=by_name.get(name)
+        if not node:
+            failed.append(f'{name}: missing from expandable MenuDock')
+        elif rect(node,dock_w,75)[2] != 75 or rect(node,dock_w,75)[3] != 75:
+            failed.append(f'{name}: must match 75x75 RollButton size')
+    if by_name.get('Dock_SeedSatchel') and by_name['Dock_SeedSatchel'].get('Properties',{}).get('BackgroundTransparency') != 1:
+        failed.append('Dock_SeedSatchel background must be fully transparent')
 for w,h in VIEWPORTS:
     print(f'VIEWPORT {w}x{h}')
     rects={}
