@@ -15,6 +15,21 @@ local DROP_WEIGHTS={
  VoidLotus=200,
  StarBloom=40,
  EmberDahlia=20,
+ Bluebell=95000,
+ HoneyPoppy=70000,
+ MintDaisy=55000,
+ AmberCrocus=32000,
+ RainIris=24000,
+ VelvetPeony=18000,
+ GlassTulip=8000,
+ AuroraLily=6000,
+ SapphireMoss=4500,
+ DreamOrchid=1800,
+ EchoFern=1200,
+ SolarLotus=750,
+ CometRose=180,
+ NebulaDahlia=80,
+ CrownBloom=8,
 }
 
 local POLLINATION_EFFECTS={
@@ -39,6 +54,21 @@ local LEVEL_BUFFS={
  VoidLotus={Stat="PollinatorYieldMultiplier",Label="Pollination Yield",Base=.032,PerLevel=.0028,Cap=.34},
  StarBloom={Stat="LuckMultiplier",Label="Luck",Base=.050,PerLevel=.0030,Cap=.40},
  EmberDahlia={Stat="CoinMultiplier",Label="Coins",Base=.050,PerLevel=.0030,Cap=.40},
+ Bluebell={Stat="FlowerGrowthMultiplier",Label="Flower Growth",Base=.010,PerLevel=.0014,Cap=.16},
+ HoneyPoppy={Stat="HiveHoneyMultiplier",Label="Hive Honey",Base=.012,PerLevel=.0015,Cap=.18},
+ MintDaisy={Stat="PollinatorTravelSpeedMultiplier",Label="Bee Speed",Base=.010,PerLevel=.0014,Cap=.16},
+ AmberCrocus={Stat="CoinMultiplier",Label="Coins",Base=.014,PerLevel=.0016,Cap=.20},
+ RainIris={Stat="PollinatorYieldMultiplier",Label="Pollination Yield",Base=.015,PerLevel=.0017,Cap=.21},
+ VelvetPeony={Stat="LuckMultiplier",Label="Luck",Base=.014,PerLevel=.0016,Cap=.20},
+ GlassTulip={Stat="PollinatorPowerMultiplier",Label="Bee Power",Base=.018,PerLevel=.0018,Cap=.24},
+ AuroraLily={Stat="LuckMultiplier",Label="Luck",Base=.020,PerLevel=.0020,Cap=.25},
+ SapphireMoss={Stat="AbilityCooldownMultiplier",Label="Ability Cooldown",Base=.015,PerLevel=.0017,Cap=.22,Inverse=true},
+ DreamOrchid={Stat="FlowerGrowthMultiplier",Label="Flower Growth",Base=.022,PerLevel=.0022,Cap=.28},
+ EchoFern={Stat="HiveHoneyMultiplier",Label="Hive Honey",Base=.024,PerLevel=.0022,Cap=.30},
+ SolarLotus={Stat="PollinatorYieldMultiplier",Label="Pollination Yield",Base=.026,PerLevel=.0024,Cap=.32},
+ CometRose={Stat="LuckMultiplier",Label="Luck",Base=.035,PerLevel=.0027,Cap=.36},
+ NebulaDahlia={Stat="CoinMultiplier",Label="Coins",Base=.040,PerLevel=.0028,Cap=.38},
+ CrownBloom={Stat="LuckMultiplier",Label="Luck",Base=.060,PerLevel=.0032,Cap=.42},
 }
 
 local function species(id:string,name:string,rarity:string,shape:string,color:Color3,yield:number,sectors:{string},accent:Color3?)
@@ -70,6 +100,21 @@ species("Nightshade","Nightshade","Legendary","Nightshade",Color3.fromRGB(105,55
 species("VoidLotus","Void Lotus","Legendary","VoidLotus",Color3.fromRGB(80,40,115),.90,{"TwilightGrove"},Color3.fromRGB(220,120,255))
 species("StarBloom","Star Bloom","Mythic","StarBloom",Color3.fromRGB(255,210,105),1.05,{"TwilightGrove"},Color3.fromRGB(255,248,195))
 species("EmberDahlia","Ember Dahlia","Mythic","EmberDahlia",Color3.fromRGB(255,95,65),1.15,{"TwilightGrove"},Color3.fromRGB(255,190,105))
+species("Bluebell","Bluebell","Common","Daisy",Color3.fromRGB(102,160,255),.22,{"StarterOrchard"},Color3.fromRGB(180,215,255))
+species("HoneyPoppy","Honey Poppy","Common","Tulip",Color3.fromRGB(255,173,59),.24,{"StarterOrchard"},Color3.fromRGB(255,225,125))
+species("MintDaisy","Mint Daisy","Common","Daisy",Color3.fromRGB(118,225,181),.23,{"StarterOrchard"},Color3.fromRGB(205,255,232))
+species("AmberCrocus","Amber Crocus","Uncommon","Tulip",Color3.fromRGB(235,159,42),.34,{"StarterOrchard"},Color3.fromRGB(255,220,118))
+species("RainIris","Rain Iris","Uncommon","FrostLily",Color3.fromRGB(86,170,238),.38,{"StarterOrchard"},Color3.fromRGB(181,224,255))
+species("VelvetPeony","Velvet Peony","Uncommon","PrismBloom",Color3.fromRGB(205,87,153),.40,{"StarterOrchard"},Color3.fromRGB(255,174,218))
+species("GlassTulip","Glass Tulip","Rare","CrystalRose",Color3.fromRGB(145,230,241),.50,{"CrystalGreenhouse"},Color3.fromRGB(226,255,255))
+species("AuroraLily","Aurora Lily","Rare","FrostLily",Color3.fromRGB(109,215,189),.54,{"CrystalGreenhouse"},Color3.fromRGB(217,255,244))
+species("SapphireMoss","Sapphire Moss","Rare","Clover",Color3.fromRGB(59,113,215),.56,{"CrystalGreenhouse"},Color3.fromRGB(143,190,255))
+species("DreamOrchid","Dream Orchid","Epic","MoonOrchid",Color3.fromRGB(177,112,229),.68,{"CrystalGreenhouse"},Color3.fromRGB(235,192,255))
+species("EchoFern","Echo Fern","Epic","Clover",Color3.fromRGB(68,177,151),.70,{"CrystalGreenhouse"},Color3.fromRGB(147,242,213))
+species("SolarLotus","Solar Lotus","Epic","VoidLotus",Color3.fromRGB(255,193,63),.74,{"TwilightGrove"},Color3.fromRGB(255,239,155))
+species("CometRose","Comet Rose","Legendary","CrystalRose",Color3.fromRGB(255,116,183),.90,{"TwilightGrove"},Color3.fromRGB(255,204,230))
+species("NebulaDahlia","Nebula Dahlia","Legendary","EmberDahlia",Color3.fromRGB(136,75,217),.96,{"TwilightGrove"},Color3.fromRGB(211,166,255))
+species("CrownBloom","Crown Bloom","Mythic","StarBloom",Color3.fromRGB(255,222,102),1.20,{"TwilightGrove"},Color3.fromRGB(255,249,193))
 
 local function initializeDerived()
  for id,flower in pairs(C.Species) do
