@@ -624,21 +624,21 @@
       "group": "[Garden]",
       "title": "Stage 1 · Rebuild Garden capacity from 0 to 7 slots",
       "detail": "New profiles start with 0 Garden slots, tutorial unlocks the first, later slots come from static Hive milestones only, and max capacity is 7.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-garden-flower-levels",
       "group": "[Garden]",
       "title": "Stage 2 · Convert Flower duplicates into species-wide levels",
       "detail": "Duplicate Flower rolls automatically advance that Flower species. Remove planted-instance progression as the source of permanent Flower level and migrate current slot/copy progress safely.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-garden-synergy-engine",
       "group": "[Garden]",
       "title": "Stage 3 · Implement strongest-valid Synergy hierarchy",
       "detail": "Recipes support exact Flowers and per-Flower level requirements. Only the strongest valid Flower Synergy is active; weaker nested matches do not stack and fallback happens automatically.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-garden-discovery",
@@ -666,21 +666,21 @@
       "group": "[Bees]",
       "title": "Stage 1 · Convert Bee duplicates into species Mastery",
       "detail": "First Bee unlocks the species. Later copies become Mastery progress and obtained count instead of inventory quantities or dismantle stock.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-bees-mastery",
       "group": "[Bees]",
       "title": "Stage 2 · Rebalance species-wide Bee Mastery",
       "detail": "Move primary Mastery progression away from routine pollination. Define duplicate-driven levels, stat upgrades, ability upgrades and later customization hooks.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-bees-equip",
       "group": "[Bees]",
       "title": "Stage 3 · Rework Bee equipment around owned species",
       "detail": "Manual Equip/Unequip stays, but equipment must no longer depend on duplicate copy counts. Keep server validation and slot limits.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-bees-traits",
@@ -694,28 +694,28 @@
       "group": "[Bees]",
       "title": "Stage 5 · Add Trait delta preview to Bee details",
       "detail": "Before Equip, show how active Trait counts/tiers change, alongside 1/N, Mastery, Traits and ability.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-hive-quests",
       "group": "[Hive]",
       "title": "Stage 1 · Add meaningful Hive Quest requirements",
       "detail": "Hive upgrades require Honey plus cross-system goals such as discoveries, Mastery, activities or other progression checks instead of Honey alone.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-hive-milestones",
       "group": "[Hive]",
       "title": "Stage 2 · Define static Hive milestone rewards",
       "detail": "Create a fixed reward table shared by all players for Garden slots, Bee slots, Workshop Points and later stat bonuses.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-hive-capacity",
       "group": "[Hive]",
       "title": "Stage 3 · Move slot progression fully to Hive milestones",
       "detail": "Remove Workshop-based Garden/Bee capacity dependencies. Reach all 7 Garden slots around 30% overall progression and preserve existing players safely.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-roll-tutorial",
@@ -729,7 +729,7 @@
       "group": "[Roll]",
       "title": "Stage 2 · Add Effective Luck control",
       "detail": "Settings defaults to MAX. Player may enter a lower effective Roll Luck, clamped server-side to their real earned maximum without changing build/equipment stats.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-roll-timing",
@@ -820,21 +820,21 @@
       "group": "[Workshop]",
       "title": "Stage 1 · Align Workshop Point sources with Hive progression",
       "detail": "Workshop Points come from Hive/key milestones instead of being granted automatically every Hive level.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-workshop-nodes",
       "group": "[Workshop]",
       "title": "Stage 2 · Separate stat nodes from major feature nodes",
       "detail": "Ordinary nodes primarily improve stats; major nodes unlock meaningful mechanics or QoL. Keep the authored fullscreen branching hex tree.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-workshop-respec",
       "group": "[Workshop]",
       "title": "Stage 3 · Move RESET & REFUND to Biome transition",
       "detail": "Remove unrestricted normal respec from the intended final flow. Future Biome transition offers KEEP BUILD or RESET & REFUND.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-qa-migration",
