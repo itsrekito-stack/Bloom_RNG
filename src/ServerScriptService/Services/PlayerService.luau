@@ -260,7 +260,6 @@ function X:Start(data,services,names)
     self.PollinatorService:Tick(player,C.TickSeconds)
     self.GardenActivityService:Tick(player)
     if self.BoostService:Tick(player) then self:MarkStateDirty(player) end
-    if self.MetaProgressionService:Tick(player) then self:MarkStateDirty(player) end
     self.AnalyticsService:Tick(player,C.TickSeconds)
    end
    if sync>=C.SyncSeconds then self:Push(player) end

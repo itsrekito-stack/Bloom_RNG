@@ -65,7 +65,7 @@ end
 
 local Data=require(Services.DataService)
 local Player=require(Services.PlayerService)
-local names={"RemoteService","FlowerService","InventoryService","StatsService","BoostService","FlowerProgressionService","GardenSynergyService","GardenPlotService","HiveService","RollService","GardenActivityService","PollinatorService","MapService","WorkshopService","TutorialService","MetaProgressionService","QuestService","SeasonService","SocialService","AnalyticsService","UIStateService"}
+local names={"RemoteService","FlowerService","InventoryService","StatsService","BoostService","FlowerProgressionService","GardenSynergyService","GardenPlotService","HiveService","RollService","GardenActivityService","PollinatorService","MapService","WorkshopService","TutorialService","QuestService","SeasonService","SocialService","AnalyticsService","UIStateService"}
 local loaded={} for _,name in ipairs(names) do loaded[name]=require(Services[name]) end
 local ok,err=xpcall(function()
  require(script.Parent.Tests.ConfigValidation).Run()

@@ -15,9 +15,9 @@ function S:DistillNectar(player)
  p.Currencies.PetalDust+=Bloom.NectarDistillDust*E.Value(p,"ECONOMY_3","DustYield",1)
  return true
 end
-function S:Eligible(p) local completed=0 for _,id in ipairs(C.TrialIds) do if p.Quests.Trials[id] then completed+=1 end end return p.Hive.Level>=C.Hive and completed>=C.Trials and self.X.U.Count(p.FlowerCollection.DiscoveredFlowers)>=C.Flowers and self.X.U.Count(p.Pollinators.DiscoveredBees)>=C.Bees end
+function S:Eligible(p) return p.Hive.Level>=C.Hive and self.X.QuestService:ClaimedCount(p)>=C.Quests and self.X.U.Count(p.FlowerCollection.DiscoveredFlowers)>=C.Flowers and self.X.U.Count(p.Pollinators.DiscoveredBees)>=C.Bees end
 function S:Preview(player)
- local p=self.X:Profile(player) if not p then return end if not self:Eligible(p) then self.X:Send(player,"Message",string.format("Season: Hive %d, %d key trials, %d flowers, %d bees",C.Hive,C.Trials,C.Flowers,C.Bees)) return end
+ local p=self.X:Profile(player) if not p then return end if not self:Eligible(p) then self.X:Send(player,"Message",string.format("Season: Hive %d, %d quests, %d flowers, %d bees",C.Hive,C.Quests,C.Flowers,C.Bees)) return end
  local plan=Plan.BuildSeasonTurnPlan(p) local token=Http:GenerateGUID(false) self.Pending[player]={Token=token,Revision=self.X.Revisions[player],Expires=os.clock()+30,Confirm=0,Before=self.X.U.Copy(p)}
  self.X:Send(player,"SeasonPreview",{Token=token,Diff=plan.Diff,Keep=C.Keep,Reset=C.Reset})
 end
@@ -39,7 +39,6 @@ function S:Confirm(player,token)
  if self.X.DataService:GetProfile(player) and player.Parent==game:GetService("Players") then
   self.X.Temp[player]={}
   self.X.GardenActivityService:CancelGarden(player)
-  self.X.BuildTrialService:Remove(player)
   self.X.PollinatorService:Remove(player)
   self.X.GardenPlotService:Build(player)
   self.X:Send(player,"Ceremony",{Kind="Season",Text="New Season"})
