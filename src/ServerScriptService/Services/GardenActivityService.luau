@@ -95,10 +95,6 @@ function S:Collect(player,id,index,phase)
 
   local socialOK,socialErr=xpcall(function() self.X.SocialService:Contribute(player,2) end,debug.traceback)
   if not socialOK then warn("[Bloom] Activity social reward error",kind,socialErr) end
-  for _,bee in pairs(p.Pollinators.EquippedBeeSlots) do
-   local masteryOK,masteryErr=xpcall(function() self.X.PollinatorService:AddMastery(player,bee,1,1) end,debug.traceback)
-   if not masteryOK then warn("[Bloom] Activity mastery reward error",kind,bee,masteryErr) end
-  end
  end
  local pushOK,pushErr=xpcall(function() self:Push(player) end,debug.traceback)
  if not pushOK then warn("[Bloom] Activity list push error",pushErr) end
