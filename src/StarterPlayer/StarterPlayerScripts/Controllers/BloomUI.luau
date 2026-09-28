@@ -20,6 +20,7 @@ local NumberFormatter=require(RS.Shared.NumberFormatter)
 local WorkshopEffects=require(RS.Shared.WorkshopEffects)
 local InventoryV2=require(script.Parent.InventoryV2Controller)
 local GardenEditor=require(script.Parent.GardenEditorController)
+local IndexV1=require(script.Parent.IndexController)
 local QuestsV2=require(script.Parent.QuestsController)
 local SettingsV2=require(script.Parent.SettingsController)
 
@@ -29,12 +30,13 @@ local CLIENT_BUILD="plant-inventory-flow-2026-09-26"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
-local MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Trials="QuestsV2",Settings="SettingsV2"}
+local MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Index="IndexV1",Trials="QuestsV2",Settings="SettingsV2"}
 local MENU_REFRESH_ACTIONS={
  Setting="Settings",
  ResetSettings="Settings",
  EquipBee="SeedSatchel",
  GardenEdit="Garden",
+ IndexViewed="Index",
  Flag="SeedSatchel",
  WorkshopBuy="Workshop",
  Trial="Trials",
@@ -43,6 +45,7 @@ local MENU_REFRESH_ACTIONS={
 local MENU_NAMES={
  SeedSatchel="Inventory",
  Garden="Garden",
+ Index="Index",
  Workshop="Workshop",
  Trials="Quests",
  Settings="Settings",
@@ -53,6 +56,7 @@ local MENU_NAMES={
 local MENU_HINTS={
  SeedSatchel="Flowers, bees, resources, and keepsakes",
  Garden="Arrange your seven Flower slots and inspect the active Synergy",
+ Index="Discovered Flowers, Bees, Synergies, and Traits",
  Workshop="Permanent upgrades and progression branches",
  Trials="Tasks, progress & rewards",
  Settings="Game & UI preferences",
@@ -296,6 +300,14 @@ function UI:IsWorkshopExclusive()
  return self.WorkshopFocus==true and self.Menu=="Workshop"
 end
 
+function UI:IsIndexExclusive()
+ return self.IndexFocus==true and self.Menu=="Index"
+end
+
+function UI:IsFullscreenExclusive()
+ return self:IsWorkshopExclusive() or self:IsIndexExclusive()
+end
+
 function UI:WorkshopHUDObjects()
  return {
   self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.RollHUD,self.Roll,self.RouletteViewport,
@@ -353,8 +365,58 @@ function UI:SetWorkshopFocus(active)
  end
 end
 
+function UI:CaptureIndexHUDVisibility()
+ if self.IndexHUDVisibility then return end
+ local snapshot={}
+ for _,gui in ipairs(self:WorkshopHUDObjects()) do
+  if gui and gui:IsA("GuiObject") then snapshot[gui]=gui.Visible end
+ end
+ self.IndexHUDVisibility=snapshot
+end
+
+function UI:RestoreIndexHUDVisibility()
+ local snapshot=self.IndexHUDVisibility
+ self.IndexHUDVisibility=nil
+ if not snapshot then return end
+ for gui,visible in pairs(snapshot) do
+  if gui and gui.Parent and gui:IsA("GuiObject") then gui.Visible=visible end
+ end
+end
+
+function UI:ApplyIndexFocusVisibility()
+ local exclusive=self:IsIndexExclusive()
+ if self.BoostHUD then self.BoostHUD:SetSuppressed(exclusive or self:IsWorkshopExclusive()) end
+ if self.TraitHUD then self.TraitHUD:SetSuppressed(exclusive or self:IsWorkshopExclusive()) end
+ if not exclusive then return end
+ for _,gui in ipairs(self:WorkshopHUDObjects()) do
+  if gui and gui:IsA("GuiObject") then gui.Visible=false end
+ end
+end
+
+function UI:SetIndexFocus(active)
+ active=active==true
+ if active==self.IndexFocus then
+  self:ApplyIndexFocusVisibility()
+  return
+ end
+ if active then
+  self:CaptureIndexHUDVisibility()
+  self.IndexFocus=true
+  self.Auto=false
+  self:StopRouletteAnimation()
+  self.ToastUntil=nil
+  self:ApplyIndexFocusVisibility()
+ else
+  self.IndexFocus=false
+  self:RestoreIndexHUDVisibility()
+  if self.BoostHUD then self.BoostHUD:SetSuppressed(self:IsWorkshopExclusive()) end
+  if self.TraitHUD then self.TraitHUD:SetSuppressed(self:IsWorkshopExclusive()) end
+  if self.State then self:Render() end
+ end
+end
+
 function UI:Toast(text)
- if self:IsWorkshopExclusive() then return end
+ if self:IsFullscreenExclusive() then return end
  self.ToastLabel.Text=tostring(text or "")
  self.ToastRoot.Visible=true
  self.ToastUntil=os.clock()+4
@@ -640,7 +702,7 @@ function UI:ClearPanel()
 end
 
 function UI:GetMenuScale()
- if self.Menu=="Workshop" then return 1 end
+ if self.Menu=="Workshop" or self.Menu=="Index" then return 1 end
  local settings=self.State and self.State.Profile and self.State.Profile.Settings
  return math.clamp(tonumber(settings and settings.UIScale) or 1,.8,1.15)
 end
@@ -659,6 +721,7 @@ function UI:Close()
  self:DisconnectWorkshopPan()
  self.ReplayIndex=nil
  local wasWorkshop=self.Menu=="Workshop"
+ local wasIndex=self.Menu=="Index"
  local serverMenuOpen=self.MenuServerOpen==true
  if wasWorkshop then
   self.WorkshopRuntime=nil
@@ -673,14 +736,16 @@ function UI:Close()
  self.MenuServerOpen=false
  self:SetPanelVisible(false)
  if wasWorkshop then self:SetWorkshopFocus(false) end
+ if wasIndex then self:SetIndexFocus(false) end
  if serverMenuOpen then self:Send("Menu",false) end
 end
 
 function UI:Open(name,arg,options)
  if self:IsWorkshopExclusive() and name~="Workshop" then return end
+ if self:IsIndexExclusive() and name~="Index" then return end
  if self.Menu==name and arg==nil then self:Close() return end
  if not self.State then return end
- if name~="Settings" and name~="Season" and name~="Cards" and name~="Replay" and not self.State.Profile.Tutorial.FeatureUnlocks[name] then return end
+ if name~="Settings" and name~="Season" and name~="Cards" and name~="Replay" and name~="Index" and not self.State.Profile.Tutorial.FeatureUnlocks[name] then return end
 
  local silentMenu=type(options)=="table" and options.SilentMenu==true
  if silentMenu and self.MenuServerOpen then
@@ -694,9 +759,10 @@ function UI:Open(name,arg,options)
  self.MenuRefreshRequested=false
  self:SetPanelVisible(true)
  if name=="Workshop" then self:SetWorkshopFocus(true) end
+ if name=="Index" then self:SetIndexFocus(true) end
  self:RenderMenu()
 
- local announcesMenu=name~="Season" and name~="Cards" and name~="Replay"
+ local announcesMenu=name~="Season" and name~="Cards" and name~="Replay" and name~="Index"
  if announcesMenu and not silentMenu then
   self:Send("Menu",name)
   self.MenuServerOpen=true
@@ -704,6 +770,7 @@ function UI:Open(name,arg,options)
   self.MenuServerOpen=false
  end
  self:ApplyWorkshopFocusVisibility()
+ self:ApplyIndexFocusVisibility()
 end
 
 function UI:OpenPlantInventory(slot)
@@ -730,21 +797,23 @@ function UI:RenderMenu(preserveInteraction)
  local renderer=self.MenuRenderer or MENU_RENDERERS[name] or name
  self.MenuLayoutOrder=0
  local workshop=renderer=="Workshop"
+ local index=renderer=="IndexV1"
+ local fullscreen=workshop or index
  local reuseWorkshop=workshop and self.WorkshopRuntime and self.WorkshopRuntime.Parent==self.Content
  if not reuseWorkshop then self:ClearPanel() end
  self.PanelTitle.Text=MENU_NAMES[name] or name
  self.PanelSubtitle.Text=MENU_HINTS[name] or ""
 
  if self.PanelHeader then
-  self.PanelHeader.Size=workshop and UDim2.new(1,0,0,0) or UDim2.new(1,0,0,54)
-  self.PanelHeader.BackgroundTransparency=workshop and 1 or .05
-  self.PanelHeader.ZIndex=workshop and 118 or 51
+  self.PanelHeader.Size=fullscreen and UDim2.new(1,0,0,0) or UDim2.new(1,0,0,54)
+  self.PanelHeader.BackgroundTransparency=fullscreen and 1 or .05
+  self.PanelHeader.ZIndex=fullscreen and 118 or 51
  end
- self.PanelTitle.Visible=not workshop
- self.PanelSubtitle.Visible=not workshop
+ self.PanelTitle.Visible=not fullscreen
+ self.PanelSubtitle.Visible=not fullscreen
  if self.PanelHeaderIcon then
-  self.PanelHeaderIcon.Visible=not workshop
-  if not workshop then
+  self.PanelHeaderIcon.Visible=not fullscreen
+  if not fullscreen then
    local kit=self.StateKits and self.StateKits:FindFirstChild(name.."Kit")
    local kitIcon=kit and kit:FindFirstChild("KitHeader") and kit.KitHeader:FindFirstChild("StateIcon")
    local headerImage=(kitIcon and kitIcon:IsA("ImageLabel") and kitIcon.Image) or Icons.Get("Menus",name)
@@ -756,17 +825,17 @@ function UI:RenderMenu(preserveInteraction)
    self.PanelHeaderIcon.Image=headerImage
   end
  end
- if self.PanelHeaderAccent then self.PanelHeaderAccent.Visible=not workshop end
+ if self.PanelHeaderAccent then self.PanelHeaderAccent.Visible=not fullscreen end
  if self.PanelClose then
   self.PanelClose.Visible=true
-  self.PanelClose.Position=workshop and UDim2.new(1,-48,0,12) or UDim2.new(1,-44,0,10)
-  self.PanelClose.ZIndex=workshop and 120 or 53
+  self.PanelClose.Position=fullscreen and UDim2.new(1,-48,0,12) or UDim2.new(1,-44,0,10)
+  self.PanelClose.ZIndex=fullscreen and 120 or 53
  end
 
  -- Bloom UI Studio previews Inventory v2 on a 1220x660 MainPanel.
  -- Mirror that authored canvas at runtime instead of inheriting the generic
  -- 600x420 menu size. Narrower desktop screens are capped to the viewport.
- if not workshop then
+ if not fullscreen then
   local safeSize=self.SafeRoot and self.SafeRoot.AbsoluteSize or Vector2.new(1366,768)
   local safeW=safeSize.X>100 and safeSize.X or 1366
   local safeH=safeSize.Y>100 and safeSize.Y or 768
@@ -797,9 +866,9 @@ function UI:RenderMenu(preserveInteraction)
   self.Content.ScrollBarThickness=4
  end
 
- if not workshop and not preserveInteraction then self.Content.CanvasPosition=Vector2.new() end
+ if not fullscreen and not preserveInteraction then self.Content.CanvasPosition=Vector2.new() end
 
- if workshop then
+ if fullscreen then
   -- Workshop is intentionally chrome-free: only the close button floats above the map.
   self.Panel.AnchorPoint=Vector2.new(.5,.5)
   self.Panel.Position=UDim2.fromScale(.5,.5)
@@ -829,6 +898,13 @@ function UI:RenderMenu(preserveInteraction)
   self.Content.ScrollingEnabled=false
   self.Content.ScrollBarThickness=0
   GardenEditor.Render(self,p,ui)
+
+ elseif renderer=="IndexV1" then
+  self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
+  self.Content.CanvasSize=UDim2.fromOffset(0,0)
+  self.Content.ScrollingEnabled=false
+  self.Content.ScrollBarThickness=0
+  IndexV1.Render(self,p,ui)
 
  elseif renderer=="SettingsV2" then
   self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
@@ -1258,6 +1334,7 @@ function UI:Render()
   self.TraitHUD:Update(traits,self.State.Revision)
  end
  self:ApplyWorkshopFocusVisibility()
+ self:ApplyIndexFocusVisibility()
 end
 
 function UI:RollNow(automatic)
