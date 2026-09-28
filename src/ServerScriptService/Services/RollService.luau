@@ -30,7 +30,7 @@ end
 local function tutorialRollAllowed(profile)
  local step=T.Steps[profile.Tutorial.Step]
  if not step then return true end
- return step.Id=="FirstFlowerRoll" or step.Id=="FirstBeeRoll" or step.Id=="NormalRoll"
+ return step.Id=="FirstFlowerRoll" or step.Id=="FirstBeeRoll" or step.Id=="BloomRoll" or step.Id=="NormalRoll"
 end
 
 function S:Odds(player)
