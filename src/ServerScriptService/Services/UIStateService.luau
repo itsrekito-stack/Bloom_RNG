@@ -260,37 +260,26 @@ function S:Map(player,profile)
 end
 
 function S:Trials(player,profile)
- local current=self.X.MapService:Sector(player)
  local list={}
  for id,cfg in pairs(Trials) do
-  local unlocked=profile.World.UnlockedSectors[cfg.Sector]==true
-  local location=Locations.Sectors[cfg.Sector]
-  local startPos=location and self.X.Origin+location.Center+Vector3.new(0,2,30) or nil
-  local nearShrine=startPos~=nil and self.X.U.Near(player,startPos,14)
   local reason=nil
   if self.X.BuildTrialService.Active[player] then reason="TRIAL_RUNNING"
   elseif not profile.Tutorial.FeatureUnlocks.Trials then reason="TRIAL_LOCKED"
   elseif cfg.Advanced and not Effects.Feature(profile,"LEGACY_4","AdvancedTrials") then reason="ADVANCED_TRIAL_LOCKED"
-  elseif not unlocked then reason="SECTOR_LOCKED"
-  elseif current~=cfg.Sector then reason="WRONG_SECTOR"
-  elseif not nearShrine then reason="TOO_FAR"
   end
   local startHint
   if reason=="TRIAL_RUNNING" then startHint="Finish the active trial first"
-  elseif reason=="TRIAL_LOCKED" then startHint="Unlock Build Trials through progression"
+  elseif reason=="TRIAL_LOCKED" then startHint="Unlock Trials through Hive progression"
   elseif reason=="ADVANCED_TRIAL_LOCKED" then startHint="Unlock Advanced Trials in the Workshop"
-  elseif reason=="SECTOR_LOCKED" then startHint="Unlock "..(location and location.Name or cfg.Sector).." at its world gate first"
-  elseif reason=="WRONG_SECTOR" then startHint="Travel to "..(location and location.Name or cfg.Sector).." and find its Garden Trials shrine"
-  elseif reason=="TOO_FAR" then startHint="Go to the Garden Trials shrine in "..(location and location.Name or cfg.Sector)
-  else startHint="At shrine — ready to start" end
+  else startHint="Ready to start from Quests" end
   table.insert(list,{
    Id=id,
    Name=cfg.Name,
-   Sector=cfg.Sector,
+   Sector="Center",
    Advanced=cfg.Advanced==true,
    Completed=profile.Quests.Trials[id]==true,
    CanStart=reason==nil,
-   NearShrine=nearShrine,
+   NearShrine=true,
    Reason=reason,
    ReasonText=reason and self:ReasonText(reason) or nil,
    StartHint=startHint,
@@ -300,10 +289,7 @@ function S:Trials(player,profile)
    RewardText=(profile.Quests.Trials[id] and "Repeat • 5 Coins" or (cfg.Advanced and "First clear • 3 Workshop Points" or "First clear • 2 Workshop Points")),
   })
  end
- table.sort(list,function(a,b)
-  if a.Sector==b.Sector then return a.Name<b.Name end
-  return a.Sector<b.Sector
- end)
+ table.sort(list,function(a,b) return a.Name<b.Name end)
 
  local active=self.X.BuildTrialService.Active[player]
  local activePublic=nil
@@ -318,7 +304,6 @@ function S:Trials(player,profile)
  end
  return {Items=list,Active=activePublic}
 end
-
 local function sortedFlowerIds()
  local ids={} for id in pairs(Flowers.Species) do table.insert(ids,id) end
  table.sort(ids,function(a,b)
