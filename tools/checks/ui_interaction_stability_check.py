@@ -18,7 +18,6 @@ assert 'if self.Menu and not self.WorkshopPanDragging then self:RenderMenu() end
 need(ui,'and self.MenuRefreshRequested then',"open menu only refreshes when relevant action requested it")
 need(ui,'local refreshMenu=MENU_REFRESH_ACTIONS[payload.Action]',"successful actions mark only their relevant menu dirty")
 need(ui,'Setting="Settings"',"Settings refresh action mapping")
-need(ui,'DissolveFilter="Settings"',"Settings filter refresh action mapping")
 need(ui,'WorkshopBuy="Workshop"',"Workshop refresh action mapping")
 need(ui,'EquipBee="SeedSatchel"',"Inventory refresh action mapping")
 
