@@ -1782,7 +1782,8 @@ end
 local REQUIRED_AUTHORED_UI={
  "ObjectiveCard","CurrencyHUD","MenuDock","RollHUD","VerticalRoulette","TutorialGuideBanner",
  "TutorialSpotlight","TutorialCallout","TutorialScreenArrow",
- "Toast","ModalShade","MainPanel","RewardReveal","ActiveBoostsHUD","ActiveBoostTooltip","WorldUIPrototypes",
+ "Toast","ModalShade","MainPanel","RewardReveal","ActiveBoostsHUD","ActiveBoostTooltip",
+ "TraitHUD","TraitTooltip","TraitTierPopup","WorldUIPrototypes",
 }
 local RETIRED_MENU_GUI={"Dock_FieldGuide","Dock_Map","FieldGuideKit","MapKit"}
 
@@ -1793,6 +1794,14 @@ local function validateBloomGui(gui)
  local missing={}
  for _,name in ipairs(REQUIRED_AUTHORED_UI) do
   if not root:FindFirstChild(name) then table.insert(missing,name) end
+ end
+ local panel=root:FindFirstChild("MainPanel")
+ if panel then
+  for _,name in ipairs({"InventoryPrototype","WorkshopTemplate","QuestsPrototype","IndexPrototype"}) do
+   if not panel:FindFirstChild(name) then table.insert(missing,"MainPanel/"..name) end
+  end
+  local stateKits=panel:FindFirstChild("StateKits")
+  if not stateKits or not stateKits:FindFirstChild("GardenKit") then table.insert(missing,"MainPanel/StateKits/GardenKit") end
  end
  for _,name in ipairs(RETIRED_MENU_GUI) do
   if root:FindFirstChild(name,true) then table.insert(missing,"retired:"..name) end
