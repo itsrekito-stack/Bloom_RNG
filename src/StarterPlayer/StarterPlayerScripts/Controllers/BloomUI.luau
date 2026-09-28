@@ -1290,7 +1290,7 @@ function UI:ApplyMenuDockLayout(expanded)
  if self.IsMobileLayout then
   local safeSize=self.SafeRoot and self.SafeRoot.AbsoluteSize or Vector2.new(700,700)
   local width=math.max(320,safeSize.X)
-  local scale=math.min(1,math.max(.68,(width-16)/495))
+  local scale=math.min(1,math.max(.58,(width-16)/495))
   if dockScale then dockScale.Scale=scale end
   self.Dock.AnchorPoint=Vector2.new(.5,1)
   self.Dock.Position=UDim2.new(.5,expanded and -42 or math.floor(109*scale+.5),1,expanded and -14 or -94)
