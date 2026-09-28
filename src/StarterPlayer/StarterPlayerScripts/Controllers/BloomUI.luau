@@ -26,7 +26,7 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="garden-menu-single-tutorial-rolls-2026-09-28"
+local CLIENT_BUILD="tutorial-bloom-indicator-v9-2026-09-28"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
@@ -1252,7 +1252,7 @@ function UI:TutorialRollState()
  if not tutorial or tutorial.Skipped==true then return false,true,nil end
  local step=T.Steps[tonumber(tutorial.Step) or 1]
  if not step then return false,true,nil end
- local allowed=step.Id=="FirstFlowerRoll" or step.Id=="FirstBeeRoll" or step.Id=="NormalRoll"
+ local allowed=step.Id=="FirstFlowerRoll" or step.Id=="FirstBeeRoll" or step.Id=="BloomRoll" or step.Id=="NormalRoll"
  return true,allowed,step
 end
 
@@ -1434,13 +1434,14 @@ function UI:Render()
  if self.Auto and not self.RouletteRunning and not self.RouletteLanding then self:StartRouletteAnimation() end
 
  local bloomMax=math.max(1,tonumber(BloomConfig.BloomMax) or 100)
- local pityMax=math.max(1,math.floor(tonumber(BloomConfig.DiscoveryThreshold) or 30))
  local charge=math.clamp(tonumber(p.RollState.BloomCharge) or 0,0,bloomMax)
- local pity=math.clamp(math.floor(tonumber(p.RollState.DiscoveryPity) or 0),0,pityMax)
  local bloomPercent=charge/bloomMax*100
- self.MeterLabel.Text=string.format("BLOOM  %.0f%%     •     DISCOVERY  %d/%d",bloomPercent,pity,pityMax)..(p.WorkshopV5.Nodes.ROLL_4 and pity>=pityMax-1 and "  •  PITY READY" or "")
+ local bloomTutorialStep=T.Steps[self.ReplayIndex or p.Tutorial.Step]
+ local bloomTutorialActive=bloomTutorialStep and (bloomTutorialStep.Id=="FillBloom" or bloomTutorialStep.Id=="BloomRoll") or false
+ self.MeterLabel.Text=string.format("BLOOM  %.0f%%",bloomPercent)..(p.RollState.SpecialRollReady and "  •  READY" or "")
  self.BloomFill.Size=UDim2.fromScale(charge/bloomMax,1)
- self.MeterArea.Visible=rollUnlocked and (p.Tutorial.Step>=(T.IndexById.Delivery or 8) or p.Tutorial.Skipped)
+ self.MeterArea.Visible=rollUnlocked and (p.Tutorial.Skipped or p.Tutorial.Step>=(T.IndexById.FillBloom or math.huge) or bloomTutorialActive)
+ if self.BloomTutorialIndicator then self.BloomTutorialIndicator.Visible=bloomTutorialActive end
 
  self:RefreshMenuDock()
  if not self:IsWorkshopExclusive() then
@@ -1883,6 +1884,7 @@ function UI:BindStaticUI()
  self.RouletteRewardSound=Instance.new("Sound") self.RouletteRewardSound.Name="RewardSound" self.RouletteRewardSound.SoundId=RollAudio.RewardSound self.RouletteRewardSound.Volume=RollAudio.RewardVolume self.RouletteRewardSound.Parent=self.RouletteViewport
  self.MeterArea=self.RollHUD:WaitForChild("MeterArea")
  self.MeterLabel=self.MeterArea:WaitForChild("MeterLabel")
+ self.BloomTutorialIndicator=self.MeterArea:WaitForChild("TutorialIndicator")
  self.BloomTrack=self.MeterArea:WaitForChild("BloomTrack")
  self.BloomFill=self.BloomTrack:WaitForChild("BloomFill")
  self.Roll=root:FindFirstChild("RollButton") or root:WaitForChild("TutorialRollButton")
