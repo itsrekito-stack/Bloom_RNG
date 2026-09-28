@@ -89,7 +89,7 @@ root_size=root.get("Properties",{}).get("Size",{}).get("UDim2")
 if root_size != [[0,168],[0,82]]:
     raise AssertionError(f"ActiveBoostsHUD authored compact size regressed: {root_size}")
 boost_list=nodes.get("BoostList")
-layout=nodes.get("UIListLayout")
+layout=next((child for child in boost_list.get("Children",[]) if child.get("Name")=="UIListLayout"),None) if boost_list else None
 value=next((child for child in template.get("Children",[]) if child.get("Name")=="Value"),None)
 icon=next((child for child in template.get("Children",[]) if child.get("Name")=="Icon"),None)
 if not boost_list or boost_list.get("Properties",{}).get("ScrollingDirection")!="X":
