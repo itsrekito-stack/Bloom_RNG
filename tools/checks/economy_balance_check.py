@@ -103,7 +103,7 @@ need(hive,"p.Hive.Honey-=cost","Honey sink")
 need(poll,"profile.Currencies.Coins+=coins","Coin source")
 need(workshop_service,"p.Currencies.Coins-=(n.Coins or 0)","Coin Workshop sink")
 need(flowers,"function C.GetLevelBuff(id,level)","Flower Level passive config")
-need(stats,"local buff=F.GetLevelBuff(id,mastery and mastery.Level or 1)","planted Flower passives enter authoritative stats")
+need(stats,"local buff=F.GetLevelBuff and F.GetLevelBuff(id,mastery and mastery.Level or 1) or nil","planted Flower passives enter authoritative stats")
 need(season_plan,"after.Currencies.Coins=0","Coin Season sink")
 if "PetalDust" in map_service:
     raise AssertionError("removed world landmarks must not remain a Petal Dust source")
