@@ -74,7 +74,8 @@ need(hud,'local expandedWidth=math.clamp(contentWidth,168,maxWidth)',"compact bo
 need(hud,'self.ExpandedSize=UDim2.fromOffset(expandedWidth,82)',"compact expanded geometry")
 need(hud,'self.Root.Position=UDim2.new(0,12,1,-14)',"bottom-left compact placement")
 need(hud,'self:ApplyResponsiveLayout(safeWidth)',"boost count triggers responsive resize")
-need(journey,'Reward: +20% Roll Luck for 60s',"Solar Bloom reward explained before completion")
+need(journey,'function S:IsSolarBloomStep()',"Journey guide compatibility stub")
+need(journey,'return false',"removed Solar Bloom Journey step stays disabled")
 
 root=nodes.get("ActiveBoostsHUD")
 tooltip=nodes.get("ActiveBoostTooltip")
@@ -114,4 +115,4 @@ if not {"ValueCorner","ValueStroke"}<=value_children:
     raise AssertionError("Boost value badge decoration missing")
 
 print("active boosts contract: PASS")
-print("Solar Bloom reward, Bee aggregate sources, active abilities, authored HUD, hover tooltip, and server authority verified.")
+print("Activity boosts, Server Bloom one-roll luck, Bee aggregate sources, active abilities, authored HUD, hover tooltip, and server authority verified.")
