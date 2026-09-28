@@ -1,7 +1,6 @@
 local RS=game:GetService("ReplicatedStorage")
 local TweenService=game:GetService("TweenService")
 local T=require(RS.Config.TutorialConfig)
-local L=require(RS.Config.LocationsConfig)
 local Theme=require(RS.Config.UIThemeConfig)
 
 local C=Theme.Colors
@@ -317,7 +316,7 @@ function S:Update()
  local step=T.Steps[ui.ReplayIndex or p.Tutorial.Step]
 
  if not ui.ReplayIndex and step then
-  if (step.Id=="BeeWork" or step.Id=="PollenSpark" or step.Id=="SunnyVisit") and ui.Menu then
+  if step.Id=="PollenSpark" and ui.Menu then
    ui:Close({SuppressInventoryReturn=true})
   end
  end
@@ -474,19 +473,18 @@ function S:Update()
  end
 
  if step.Target=="WorkshopNode" then
+  if ui.Menu~="Workshop" then
+   local button=ui.DockButtons.Workshop
+   if button and button.Visible then ui.Dock.Visible=true end
+   if self:PlaceScreenTarget(button,"OPEN WORKSHOP",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+   return
+  end
   local runtime=ui.WorkshopRuntime
   local node=runtime and runtime:FindFirstChild("Node_"..tostring(step.NodeId or "ROLL_1"),true)
   if node and node:IsA("GuiObject") and node.Visible then
    if self:PlaceScreenTarget(node,"BUY "..tostring(step.NodeId or "ROLL_1"),step.Helper) then self.LastMissingKey=nil return end
   end
-  local world=workspace:FindFirstChild("BloomWorld")
-  local workshop=world and world:FindFirstChild("Workshop")
-  if workshop then
-   self:SetWorldTarget(workshop,"WORKSHOP","Open the Workshop to continue.")
-   self.LastMissingKey=nil
-  else
-   self:Missing(step)
-  end
+  self:Missing(step)
   return
  end
 
