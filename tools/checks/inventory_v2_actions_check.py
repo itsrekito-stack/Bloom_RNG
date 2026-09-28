@@ -45,15 +45,17 @@ if 'controller:Send("DissolveBee",item.Id,1)' in client:
 if 'controller:Send("FlowerUpgrade",item.Id)' in client:
     raise AssertionError("manual Flower Dust upgrade returned to Inventory V2")
 
-need(bloom,'function UI:OpenPlantInventory(slot)',"Plant picker entry point")
-need(bloom,'state.Category="Flowers"',"Plant picker opens Flowers")
-need(bloom,'state.Filter="Available"',"Plant picker shows available species")
-need(bloom,'self:Open("SeedSatchel",{PlantSlot=slot},{SilentMenu=true})',"Plant picker reuses Inventory")
-need(bloom,'local inventoryOpen=self.MenuRenderer=="InventoryV2" and self.Menu~=nil',"Inventory state suppresses Roll")
-need(bloom,'self.Roll.Visible=rollUnlocked and not inventoryOpen',"Roll button hidden while Inventory is open")
-need(garden,'self.X.U.Near(player,pos,C.InteractionDistance)',"world Plant remains server proximity gated")
-need(garden,'self.X.InventoryService:Available(p,id)<1',"Plant ownership validation")
-need(garden,'return false,"ALREADY_PLANTED"',"same Flower cannot be planted twice")
+need(bloom,'function UI:OpenPlantInventory(slot)',"Garden editor entry point")
+need(bloom,'self:Open("Garden",{Slot=slot},{SilentMenu=true})',"Plant picker opens dedicated Garden editor")
+need(bloom,'GardenEditor.Render(self,p,ui)',"Garden editor renderer")
+need(bloom,'local inventoryOpen=self.MenuRenderer=="InventoryV2" and self.Menu~=nil',"Inventory state tracked")
+need(bloom,'local gardenOpen=self.MenuRenderer=="GardenV1" and self.Menu~=nil',"Garden state tracked")
+need(bloom,'local rollSuppressed=inventoryOpen or gardenOpen',"Roll suppression combines Inventory and Garden")
+need(bloom,'self.Roll.Visible=rollUnlocked and not rollSuppressed',"Roll button hidden while work menus are open")
+need(garden,'self.X.U.Near(player,pos,C.InteractionDistance)',"legacy direct Plant remains proximity gated")
+need(garden,'function S:GardenEdit(player,i,id)',"server Garden editor mutation path")
+need(garden,'(self.EditorSessions[player] or 0)<workspace:GetServerTimeNow()',"Garden editor session validation")
+need(garden,'(p.FlowerCollection.OwnedSeedCopies[id] or 0)<1',"Garden editor species ownership validation")
 
 for text,label in [
  ('elseif action=="Plant" then return self.GardenPlotService:Plant(player,a,b)',"Plant server route"),
