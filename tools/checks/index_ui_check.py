@@ -67,7 +67,7 @@ for text,label in [
     ('beeDetail(item)',"Bee details"),
     ('synergyDetail(item)',"Synergy details"),
     ('traitDetail(item)',"Trait details"),
-    ('item.Level or 1',"Flower Level detail"),
+    ('tonumber(item.Level) or 1',"Flower Level detail"),
     ('item.Obtained or 1',"Bee obtained detail"),
     ('item.Mastery',"Bee Mastery detail"),
     ('item.LevelRequirements',"Synergy level requirements"),
