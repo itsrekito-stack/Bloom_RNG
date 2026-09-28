@@ -1470,6 +1470,37 @@ function UI:FindRouletteTarget(payload)
  self.RouletteVisualPool=pool return #pool
 end
 
+function UI:SetRareRollFocus(active,rarity)
+ if active then
+  if self.Menu or self.RareRollVisibility then return false end
+  local snapshot={}
+  for _,gui in ipairs({self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.RollHUD,self.Roll,self.Guide,self.ToastRoot}) do
+   if gui and gui:IsA("GuiObject") then snapshot[gui]=gui.Visible gui.Visible=false end
+  end
+  self.RareRollVisibility=snapshot
+  if self.BoostHUD then self.BoostHUD:SetSuppressed(true) end
+  if self.ModalShade then
+   local colors={
+    Legendary=Color3.fromRGB(255,190,70),
+    Mythic=Color3.fromRGB(180,95,255),
+    Celestial=Color3.fromRGB(215,245,255),
+   }
+   self.ModalShade.BackgroundColor3=colors[rarity] or Color3.fromRGB(25,40,60)
+   self.ModalShade.BackgroundTransparency=.68
+   self.ModalShade.Visible=true
+  end
+  return true
+ end
+ local snapshot=self.RareRollVisibility
+ self.RareRollVisibility=nil
+ if snapshot then
+  for gui,visible in pairs(snapshot) do if gui and gui.Parent then gui.Visible=visible end end
+ end
+ if self.ModalShade and not self.Menu then self.ModalShade.Visible=false end
+ if self.BoostHUD then self.BoostHUD:SetSuppressed(self:IsWorkshopExclusive()) end
+ return snapshot~=nil
+end
+
 function UI:AnimateRouletteResult(revealScale)
  revealScale=math.max(.1,tonumber(revealScale) or 1)
  local slot=self.RouletteSlots and self.RouletteSlots.Current if not slot then return end
@@ -1522,11 +1553,18 @@ function UI:ResolveRouletteReward(payload)
    local speedScale=quick and .55 or 1
    local remaining=math.max(0,((RollAudio.MinimumVisualSpin or 0)*revealScale*speedScale)-(os.clock()-visualStart))
    if remaining>0 then task.wait(remaining) end
+   local rank=R.Rank[payload.Rarity] or 0
+   local rare=rank>=(R.Rank.Legendary or 5)
+   local focused=rare and self:SetRareRollFocus(true,payload.Rarity) or false
    self:PlayRouletteRewardSound()
-   self:AnimateRouletteResult(revealScale)
-   task.wait(RollAudio.ResultHold*revealScale*speedScale)
+   self:AnimateRouletteResult(revealScale*(rare and 1.18 or 1))
+   task.wait(rare and 1.15 or RollAudio.ResultHold*revealScale*speedScale)
+   if focused then self:SetRareRollFocus(false,payload.Rarity) end
   end
-  if generation~=self.RouletteGeneration then return end
+  if generation~=self.RouletteGeneration then
+   self:SetRareRollFocus(false,payload.Rarity)
+   return
+  end
   self.RouletteLanding=false
   -- Normal roll rewards are shown only by the roulette itself.
   -- RewardReveal is reserved for non-roll ceremonies.
