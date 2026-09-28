@@ -13,6 +13,7 @@ const state={
  health:null,
  rojo:null,
  planner:null,
+ plannerShowCompleted:localStorage.getItem("roflowPlannerShowCompleted")!=="0",
  runtimeGate:null,
  updateChecked:false,
  updateLastChecked:0,
@@ -111,10 +112,12 @@ function plannerTaskMarkup(task,compact=false){
  </label>`;
 }
 function groupedPlannerMarkup(tasks){
+ const all=tasks||[];
+ const visible=state.plannerShowCompleted?all:all.filter(task=>!task.done);
  const groups=[];const byGroup=new Map();
- for(const task of tasks||[]){if(!byGroup.has(task.group)){byGroup.set(task.group,[]);groups.push(task.group)}byGroup.get(task.group).push(task)}
+ for(const task of visible){if(!byGroup.has(task.group)){byGroup.set(task.group,[]);groups.push(task.group)}byGroup.get(task.group).push(task)}
  return groups.map(group=>{
-  const list=byGroup.get(group),counts=plannerCounts(list);
+  const list=byGroup.get(group),counts=plannerCounts(all.filter(task=>task.group===group));
   return `<section class="planner-group"><div class="planner-group-head"><strong>${escapeHtml(group)}</strong><span>${counts.done}/${counts.total}</span></div><div class="planner-group-tasks">${list.map(task=>plannerTaskMarkup(task)).join("")}</div></section>`;
  }).join("");
 }
@@ -136,8 +139,14 @@ function renderPlanner(planner){
  $("#plannerBadge").textContent=`${today.done}/${today.total}`;
  $("#todayProgressText").textContent=`${today.done} / ${today.total}`;$("#todayPercent").textContent=today.percent+"%";$("#todayProgressBar").style.width=today.percent+"%";
  $("#releaseProgressText").textContent=`${release.done} / ${release.total}`;$("#releasePercent").textContent=release.percent+"%";$("#releaseProgressBar").style.width=release.percent+"%";
- $("#todayTaskList").innerHTML=groupedPlannerMarkup(planner.today)||'<div class="empty-state">No tasks for today.</div>';
- $("#roadmapTaskList").innerHTML=groupedPlannerMarkup(planner.roadmap)||'<div class="empty-state">Roadmap is empty.</div>';
+ const completedToggle=$("#plannerCompletedToggle");
+ if(completedToggle){
+  completedToggle.textContent=state.plannerShowCompleted?"Hide completed":"Show completed";
+  completedToggle.setAttribute("aria-pressed",state.plannerShowCompleted?"true":"false");
+  completedToggle.classList.toggle("active",!state.plannerShowCompleted);
+ }
+ $("#todayTaskList").innerHTML=groupedPlannerMarkup(planner.today)||(state.plannerShowCompleted?'<div class="empty-state">No tasks for today.</div>':'<div class="empty-state">No open tasks. Completed tasks are hidden.</div>');
+ $("#roadmapTaskList").innerHTML=groupedPlannerMarkup(planner.roadmap)||(state.plannerShowCompleted?'<div class="empty-state">Roadmap is empty.</div>':'<div class="empty-state">No open roadmap tasks. Completed tasks are hidden.</div>');
  $("#todayPreviewTitle").textContent="Today’s Focus · "+(planner.todayDate||"");
  $("#todayPreviewCount").textContent=`${today.done}/${today.total}`;
  const preview=[...(planner.today||[]).filter(task=>!task.done),...(planner.today||[]).filter(task=>task.done)].slice(0,5);
@@ -586,6 +595,11 @@ $("#reloadChangesBtn").onclick=loadChanges;
 $("#changesCheckpointBtn").onclick=()=>createCheckpoint("Checkpoint from Changes review").catch(error=>log("Checkpoint failed: "+error));
 $("#commitBtn").onclick=commitChanges;
 $("#commitMessage").addEventListener("keydown",event=>{if(event.key==="Enter")commitChanges()});
+$("#plannerCompletedToggle").onclick=()=>{
+ state.plannerShowCompleted=!state.plannerShowCompleted;
+ localStorage.setItem("roflowPlannerShowCompleted",state.plannerShowCompleted?"1":"0");
+ if(state.planner)renderPlanner(state.planner);
+};
 $("#reloadTasksBtn").onclick=refreshTasks;
 $("#refreshRojoBtn").onclick=refreshRojo;
 $("#refreshRuntimeProbeBtn").onclick=()=>refreshRuntimeProbe(false);
