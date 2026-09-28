@@ -32,14 +32,9 @@ local MENU_RENDERERS={SeedSatchel="InventoryV2",Trials="QuestsV2",Settings="Sett
 local MENU_REFRESH_ACTIONS={
  Setting="Settings",
  ResetSettings="Settings",
- DissolveFilter="Settings",
  EquipBee="SeedSatchel",
- Dissolve="SeedSatchel",
- DissolveBee="SeedSatchel",
- FlowerUpgrade="SeedSatchel",
  Flag="SeedSatchel",
  WorkshopBuy="Workshop",
- Respec="Workshop",
  Trial="Trials",
 }
 
