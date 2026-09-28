@@ -304,6 +304,12 @@ function InventoryV2.Render(controller,profile,uiState)
  local filterButton=browser:WaitForChild("FilterButton")
  local sectionTitle=browser:WaitForChild("SectionTitle")
  local sectionCount=browser:WaitForChild("SectionCount")
+ local indexButton=categories:FindFirstChild("IndexButton")
+ if indexButton and indexButton:IsA("TextButton") then
+  indexButton.Activated:Connect(function()
+   controller:Open("Index",nil,{SilentMenu=true})
+  end)
+ end
 
  for _,child in ipairs(grid:GetChildren()) do
   if child:IsA("GuiButton") or child.Name=="_EmptyState" then child:Destroy() end
