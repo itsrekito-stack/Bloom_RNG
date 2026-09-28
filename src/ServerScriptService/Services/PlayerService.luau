@@ -128,6 +128,7 @@ function X:Request(player,action,a,b,c)
  elseif action=="Skip" then self.TutorialService:Skip(player) return true
  elseif action=="Replay" then self.TutorialService:Replay(player) return true
  elseif action=="StudioTutorialReset" then return self:ResetStudioTutorial(player)
+ elseif action=="IndexViewed" then return self.UIStateService:MarkIndexRead(p,a,b)
  elseif action=="SaveSettings" then
   local result=self.DataService:SaveProfile(player,false)
   if result and result.Committed then
@@ -160,6 +161,7 @@ function X:Request(player,action,a,b,c)
    MusicVolume={0,1},
    SFXVolume={0,1},
    UIScale={.8,1.15},
+   EffectiveLuck={0,1000000},
   }
   local limits=numericLimits[a]
   if limits then
