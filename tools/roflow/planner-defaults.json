@@ -610,14 +610,14 @@
       "group": "[Foundation]",
       "title": "Stage 1 · Migrate profile schema to the new vision model",
       "detail": "Add migration-safe persistent state for species-wide Flower progression, Bee obtained/mastery stats, Index discovery/read state and Effective Luck. Preserve existing player value and round-trip old profiles safely.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-foundation-contracts",
       "group": "[Foundation]",
       "title": "Stage 2 · Define authoritative progression contracts",
       "detail": "Make ownership, discovery, obtained-count, Mastery, Garden slot state and settings responsibilities explicit so Inventory, Index, Garden, Roll and Hive all read the same server-authoritative data.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-garden-capacity",
@@ -722,7 +722,7 @@
       "group": "[Roll]",
       "title": "Stage 1 · Rewrite onboarding Roll sequence",
       "detail": "Tutorial flow becomes first Garden slot → Flower-only guaranteed Roll → Bee-only guaranteed Roll → normal mixed RNG. Remove the direct starter Bee grant path.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-roll-luck",
@@ -750,7 +750,7 @@
       "group": "[Inventory]",
       "title": "Stage 1 · Rebuild Inventory data for the new progression model",
       "detail": "Inventory reads species ownership, 1/N odds, Flower Level, Bee Mastery, Traits and equipment state without relying on obsolete copy-based assumptions.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-inventory-cards",
@@ -841,14 +841,14 @@
       "group": "[QA]",
       "title": "Stage 1 · Add deterministic migration coverage",
       "detail": "Test old-profile migration for Flower copies/levels, Bee duplicates/Mastery, Garden slots, tutorial state, Effective Luck and Index read state with no silent value loss.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-qa-fresh",
       "group": "[QA]",
       "title": "Stage 2 · Verify fresh-profile progression reachability",
       "detail": "Prove 0-slot start, first Flower, first Bee, Hive milestones, Garden capacity and early Workshop access remain reachable and balanced.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-qa-ui",
