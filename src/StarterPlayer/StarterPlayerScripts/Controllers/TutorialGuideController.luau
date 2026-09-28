@@ -317,7 +317,7 @@ function S:Update()
  local step=T.Steps[ui.ReplayIndex or p.Tutorial.Step]
 
  if not ui.ReplayIndex and step then
-  if (step.Id=="PollenSpark" or step.Id=="SunnyVisit") and ui.Menu then
+  if (step.Id=="BeeWork" or step.Id=="PollenSpark" or step.Id=="SunnyVisit") and ui.Menu then
    ui:Close({SuppressInventoryReturn=true})
   end
  end
