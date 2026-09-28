@@ -668,8 +668,6 @@ function UI:Close()
  self.MenuRenderer=nil
  self.MenuArg=nil
  self.MenuRefreshRequested=false
- self.InventoryPlantSlot=nil
- self.PendingPlantFlowerId=nil
  self.MenuServerOpen=false
  self:SetPanelVisible(false)
  if wasWorkshop then self:SetWorkshopFocus(false) end
@@ -714,8 +712,7 @@ function UI:OpenPlantInventory(slot)
  end
  self.GardenEditorState=self.GardenEditorState or {SelectedFlowerId=nil,SelectedSlot=nil}
  self.GardenEditorState.SelectedSlot=slot
- local p=self.State and self.State.Profile
- if p and WorkshopEffects.Feature(p,"GARDEN_3","RepeatPlant") and self.LastSeed then
+ if self.LastSeed then
   self.GardenEditorState.SelectedFlowerId=self.LastSeed
  end
  self:Open("Garden",{Slot=slot},{SilentMenu=true})
@@ -1942,15 +1939,10 @@ function UI:Start()
     end
    end
    if relevant and payload.OK then
-    if payload.Action=="Plant" and self.InventoryPlantSlot and self.MenuRenderer=="InventoryV2" then
-     self:Close()
-    else
-     local refreshMenu=MENU_REFRESH_ACTIONS[payload.Action]
-     if refreshMenu and self.Menu==refreshMenu then self.MenuRefreshRequested=true end
-    end
+    local refreshMenu=MENU_REFRESH_ACTIONS[payload.Action]
+    if refreshMenu and self.Menu==refreshMenu then self.MenuRefreshRequested=true end
    end
    if relevant and not payload.OK then
-    if payload.Action=="Plant" then self.PendingPlantFlowerId=nil end
     if payload.Action=="Roll" and self.Auto and rollSession==(self.RollSession or 0) then self:SetAutoRolling(false) end
     local silentActivity=payload.Action=="Activity" and (
      payload.Reason=="STALE_ACTIVITY"
