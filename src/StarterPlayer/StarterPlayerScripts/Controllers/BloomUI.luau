@@ -26,12 +26,12 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="menu-dock-over-modal-roll-visibility-2026-09-28"
+local CLIENT_BUILD="garden-menu-single-tutorial-rolls-2026-09-28"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
 local MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Index="IndexV1",Trials="QuestsV2",Settings="SettingsV2"}
-local RETURN_TO_INVENTORY={Workshop=true,Index=true,Trials=true,Settings=true}
+local RETURN_TO_INVENTORY={Garden=true,Workshop=true,Index=true,Trials=true,Settings=true}
 local MENU_DOCK_CONTEXT={SeedSatchel=true,Index=true,Workshop=true,Trials=true,Settings=true,Garden=true}
 local MENU_REFRESH_ACTIONS={
  Setting="Settings",
@@ -56,7 +56,7 @@ local MENU_NAMES={
  Cards="Season Cards",
 }
 local MENU_HINTS={
- SeedSatchel="Flowers, bees, resources, and keepsakes",
+ SeedSatchel="Bees, resources, and keepsakes",
  Garden="Arrange your seven Flower slots and inspect the active Synergy",
  Index="Discovered Flowers, Bees, Synergies, and Traits",
  Workshop="Permanent upgrades and progression branches",
@@ -791,7 +791,7 @@ function UI:Open(name,arg,options)
  self:ApplyIndexFocusVisibility()
 end
 
-function UI:OpenPlantInventory(slot)
+function UI:OpenGardenMenu(slot)
  slot=tonumber(slot)
  if not slot or slot%1~=0 or slot<1 then
   self:Toast("This garden slot is unavailable.")
@@ -1246,17 +1246,39 @@ function UI:ApplySafeArea()
  self:ApplyResponsiveLayout(math.max(320,safeW),math.max(360,safeH))
 end
 
+function UI:TutorialRollState()
+ local p=self.State and self.State.Profile
+ local tutorial=p and p.Tutorial
+ if not tutorial or tutorial.Skipped==true then return false,true,nil end
+ local step=T.Steps[tonumber(tutorial.Step) or 1]
+ if not step then return false,true,nil end
+ local allowed=step.Id=="FirstFlowerRoll" or step.Id=="FirstBeeRoll" or step.Id=="NormalRoll"
+ return true,allowed,step
+end
+
 function UI:RefreshRollHUDVisibility()
  if not self.State or not self.State.Profile or not self.Roll or not self.RollHUD or not self.RouletteViewport then return false end
  local p=self.State.Profile
- local rollStep=T.IndexById.Roll or math.huge
- local rollUnlocked=p.Tutorial.FeatureUnlocks.Roll==true
-  or p.Tutorial.Skipped==true
-  or (tonumber(p.Tutorial.Step) or 1)>=rollStep
+ local rollUnlocked=p.Tutorial.FeatureUnlocks.Roll==true or p.Tutorial.Skipped==true
+ local tutorialActive,tutorialAllowed=self:TutorialRollState()
  local visible=rollUnlocked and self.Menu==nil
+ local enabled=visible and (not tutorialActive or tutorialAllowed) and not self.Pending
+
  self.RollHUD.Visible=visible
  self.Roll.Visible=visible
- self.RouletteViewport.Visible=visible and (self.Auto or self.RouletteRunning or self.RouletteLanding)
+ self.Roll.Active=enabled
+ self.Roll.Selectable=enabled
+ if self.RollIcon then
+  self.RollIcon.ImageColor3=enabled and C.White or C.Muted
+  self.RollIcon.ImageTransparency=enabled and 0 or .48
+ end
+ if self.RollTutorialLock then
+  self.RollTutorialLock.Visible=visible and tutorialActive and not tutorialAllowed
+  self.RollTutorialLock.Text="COMPLETE THE TUTORIAL TO ROLL AGAIN"
+ end
+
+ local spinning=self.RouletteRunning or self.RouletteLanding
+ self.RouletteViewport.Visible=visible and (self.RouletteLanding or ((not tutorialActive or tutorialAllowed) and (self.Auto or spinning)))
  return rollUnlocked
 end
 
@@ -1268,14 +1290,14 @@ function UI:ApplyMenuDockLayout(expanded)
  if self.IsMobileLayout then
   local safeSize=self.SafeRoot and self.SafeRoot.AbsoluteSize or Vector2.new(700,700)
   local width=math.max(320,safeSize.X)
-  local scale=math.min(1,math.max(.68,(width-16)/415))
+  local scale=math.min(1,math.max(.68,(width-16)/495))
   if dockScale then dockScale.Scale=scale end
   self.Dock.AnchorPoint=Vector2.new(.5,1)
-  self.Dock.Position=UDim2.new(.5,expanded and 0 or math.floor(69*scale+.5),1,expanded and -14 or -94)
+  self.Dock.Position=UDim2.new(.5,expanded and -42 or math.floor(109*scale+.5),1,expanded and -14 or -94)
  else
   if dockScale then dockScale.Scale=1 end
   self.Dock.AnchorPoint=Vector2.new(.5,1)
-  self.Dock.Position=UDim2.new(.5,expanded and 0 or 69,1,-14)
+  self.Dock.Position=UDim2.new(.5,expanded and -42 or 109,1,-14)
  end
 end
 
@@ -1297,6 +1319,7 @@ function UI:RefreshMenuDock()
 
  local dockUnlocked={
   SeedSatchel=inventoryUnlocked,
+  Garden=p.Tutorial.FeatureUnlocks.Garden==true,
   Index=inventoryUnlocked,
   Workshop=p.Tutorial.FeatureUnlocks.Workshop==true,
   Trials=p.Tutorial.FeatureUnlocks.Trials==true,
@@ -1624,6 +1647,25 @@ end
 
 function UI:SetAutoRolling(enabled)
  if enabled and (not self.State or self.State.Profile.Tutorial.FeatureUnlocks.Roll~=true) then return end
+ local tutorialActive,tutorialAllowed=self:TutorialRollState()
+ if tutorialActive then
+  self.Auto=false
+  if enabled and not tutorialAllowed then
+   self:Toast("Complete the tutorial to roll again")
+   self:RefreshRollHUDVisibility()
+   return
+  end
+  if enabled then
+   self.RollSession=(self.RollSession or 0)+1
+   self:StartRouletteAnimation()
+   task.defer(function() self:RollNow(false) end)
+  else
+   self:StopRouletteAnimation()
+  end
+  self:RefreshRollHUDVisibility()
+  return
+ end
+
  local nextAuto=enabled==true
  if self.Auto~=nextAuto then self.RollSession=(self.RollSession or 0)+1 end
  self.Auto=nextAuto
@@ -1631,7 +1673,6 @@ function UI:SetAutoRolling(enabled)
   self:StartRouletteAnimation()
   task.defer(function() self:RollNow(true) end)
  else
-  -- Second click is a hard visual stop: cancel the reel and hide it immediately.
   self:StopRouletteAnimation()
  end
  if self.State then self:Render() end
@@ -1776,7 +1817,7 @@ function UI:BindStaticUI()
  self.DockLayout=self.Dock:FindFirstChildOfClass("UIListLayout")
  self.DockButtons={}
  self.DockTooltips={}
- for _,name in ipairs({"SeedSatchel","Index","Workshop","Trials","Settings"}) do
+ for _,name in ipairs({"SeedSatchel","Garden","Index","Workshop","Trials","Settings"}) do
   local button=self.Dock:WaitForChild("Dock_"..name)
   local tip=button:WaitForChild("Tooltip")
   tip.Text=MENU_NAMES[name] or name
@@ -1845,6 +1886,7 @@ function UI:BindStaticUI()
  self.RollStroke=self.Roll:FindFirstChildOfClass("UIStroke")
  self.RollIcon=self.Roll:WaitForChild("Icon")
  self.RollStatusDot=self.Roll:FindFirstChild("StatusDot")
+ self.RollTutorialLock=self.Roll:WaitForChild("TutorialLockLabel")
  self.Roll.Activated:Connect(function() self:SetAutoRolling(not self.Auto) end)
  self.Roll.MouseEnter:Connect(function()
   if not self.Roll.Visible then return end
@@ -2179,7 +2221,7 @@ function UI:Start()
   elseif kind=="Reward" then
    self.NextRoll=os.clock()+payload.Cooldown
    self:ResolveRouletteReward(payload)
-  elseif kind=="PlantPicker" then self:OpenPlantInventory(payload)
+  elseif kind=="PlantPicker" then self:Open("Garden",{Slot=payload})
   elseif kind=="Activities" then
    self.Activities:Update(payload)
    if self.MenuRenderer=="QuestsV2" then self:RenderMenu(true) end
