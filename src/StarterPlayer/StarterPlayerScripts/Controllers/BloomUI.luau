@@ -19,6 +19,7 @@ local BloomConfig=require(RS.Config.BloomConfig)
 local NumberFormatter=require(RS.Shared.NumberFormatter)
 local WorkshopEffects=require(RS.Shared.WorkshopEffects)
 local InventoryV2=require(script.Parent.InventoryV2Controller)
+local GardenEditor=require(script.Parent.GardenEditorController)
 local QuestsV2=require(script.Parent.QuestsController)
 local SettingsV2=require(script.Parent.SettingsController)
 
@@ -28,11 +29,12 @@ local CLIENT_BUILD="plant-inventory-flow-2026-09-26"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
-local MENU_RENDERERS={SeedSatchel="InventoryV2",Trials="QuestsV2",Settings="SettingsV2"}
+local MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Trials="QuestsV2",Settings="SettingsV2"}
 local MENU_REFRESH_ACTIONS={
  Setting="Settings",
  ResetSettings="Settings",
  EquipBee="SeedSatchel",
+ GardenEdit="Garden",
  Flag="SeedSatchel",
  WorkshopBuy="Workshop",
  Trial="Trials",
@@ -40,6 +42,7 @@ local MENU_REFRESH_ACTIONS={
 
 local MENU_NAMES={
  SeedSatchel="Inventory",
+ Garden="Garden",
  Workshop="Workshop",
  Trials="Quests",
  Settings="Settings",
@@ -48,7 +51,8 @@ local MENU_NAMES={
  Cards="Season Cards",
 }
 local MENU_HINTS={
- SeedSatchel="Flowers, seeds, bees, resources, and keepsakes",
+ SeedSatchel="Flowers, bees, resources, and keepsakes",
+ Garden="Arrange your seven Flower slots and inspect the active Synergy",
  Workshop="Permanent upgrades and progression branches",
  Trials="Tasks, progress & rewards",
  Settings="Game & UI preferences",
@@ -708,23 +712,13 @@ function UI:OpenPlantInventory(slot)
   self:Toast("This garden slot is unavailable.")
   return
  end
- local state=self.InventoryV2State
- if type(state)~="table" then
-  state={Category="Flowers",Search="",Sort="Rarity",Filter="Available",Selected={}}
-  self.InventoryV2State=state
- else
-  state.Category="Flowers"
-  state.Search=""
-  state.Filter="Available"
-  state.Selected=state.Selected or {}
- end
+ self.GardenEditorState=self.GardenEditorState or {SelectedFlowerId=nil,SelectedSlot=nil}
+ self.GardenEditorState.SelectedSlot=slot
  local p=self.State and self.State.Profile
  if p and WorkshopEffects.Feature(p,"GARDEN_3","RepeatPlant") and self.LastSeed then
-  state.Selected.Flowers=self.LastSeed
+  self.GardenEditorState.SelectedFlowerId=self.LastSeed
  end
- self.InventoryPlantSlot=slot
- self.PendingPlantFlowerId=nil
- self:Open("SeedSatchel",{PlantSlot=slot},{SilentMenu=true})
+ self:Open("Garden",{Slot=slot},{SilentMenu=true})
 end
 
 function UI:RenderMenu(preserveInteraction)
@@ -784,6 +778,8 @@ function UI:RenderMenu(preserveInteraction)
    self.Panel.Size=UDim2.fromOffset(math.max(300,safeW-16),math.max(300,safeH-108))
   elseif renderer=="InventoryV2" then
    self.Panel.Size=UDim2.fromOffset(math.min(1220,math.max(700,safeW-24)),math.min(660,math.max(500,safeH-24)))
+  elseif renderer=="GardenV1" then
+   self.Panel.Size=UDim2.fromOffset(math.min(1040,math.max(760,safeW-36)),math.min(620,math.max(500,safeH-40)))
   elseif renderer=="SettingsV2" then
    self.Panel.Size=UDim2.fromOffset(math.min(920,math.max(720,safeW-64)),math.min(570,math.max(500,safeH-72)))
   elseif renderer=="QuestsV2" then
@@ -826,6 +822,13 @@ function UI:RenderMenu(preserveInteraction)
   self.Content.ScrollingEnabled=false
   self.Content.ScrollBarThickness=0
   InventoryV2.Render(self,p,ui)
+
+ elseif renderer=="GardenV1" then
+  self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
+  self.Content.CanvasSize=UDim2.fromOffset(0,0)
+  self.Content.ScrollingEnabled=false
+  self.Content.ScrollBarThickness=0
+  GardenEditor.Render(self,p,ui)
 
  elseif renderer=="SettingsV2" then
   self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
@@ -1203,9 +1206,11 @@ function UI:Render()
  local rollStep=T.IndexById.Roll or math.huge
  local rollUnlocked=p.Tutorial.FeatureUnlocks.Roll==true or p.Tutorial.Skipped==true or (tonumber(p.Tutorial.Step) or 1)>=rollStep
  local inventoryOpen=self.MenuRenderer=="InventoryV2" and self.Menu~=nil
- self.RollHUD.Visible=rollUnlocked and not inventoryOpen
- self.Roll.Visible=rollUnlocked and not inventoryOpen
- self.RouletteViewport.Visible=rollUnlocked and not inventoryOpen and (self.Auto or self.RouletteRunning or self.RouletteLanding)
+ local gardenOpen=self.MenuRenderer=="GardenV1" and self.Menu~=nil
+ local rollSuppressed=inventoryOpen or gardenOpen
+ self.RollHUD.Visible=rollUnlocked and not rollSuppressed
+ self.Roll.Visible=rollUnlocked and not rollSuppressed
+ self.RouletteViewport.Visible=rollUnlocked and not rollSuppressed and (self.Auto or self.RouletteRunning or self.RouletteLanding)
  if not rollUnlocked and (self.Auto or self.RouletteRunning or self.RouletteLanding) then
   self.Auto=false
   self:StopRouletteAnimation()
