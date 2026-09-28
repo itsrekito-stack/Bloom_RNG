@@ -148,33 +148,11 @@ test('expired lease is never resurrected by an old save',function() scenario(fun
 end) end)
 os.clock=oldClock;os.time=oldTime;game=oldGame
 
-local function respecFixture()
- local p=Schema.CreateDefault();p.WorkshopV5.Nodes={GARDEN_1=true,BEES_1=true};p.Garden.UnlockedSlots=4
- p.Garden.Slots[4]={};p.Tutorial.FeatureUnlocks.Workshop=true
- local s=require(node('ServerScriptService/Services/WorkshopService'))
- s:Init({Profile=function() return p end,GardenPlotService={RefreshCapacity=function() p.Garden.UnlockedSlots=require(rs.Shared.GardenRules).FlowerCapacity(p) end},
- GardenSynergyService={Recalculate=function() end},TutorialService={Refresh=function() end}})
- return p,s
-end
-test('respec with empty overflow preserves ownership and valid slots',function()
- local p,s=respecFixture();local copies=U.Copy(p.FlowerCollection.OwnedSeedCopies)
- assert(s:Respec({}));assert(p.Garden.UnlockedSlots==0 and equal(copies,p.FlowerCollection.OwnedSeedCopies))
- assert(Schema.Prepare(p))
-end)
-test('respec occupied overflow rejects atomically before refunds',function()
- local p,s=respecFixture();p.Garden.Slots[4]={SpeciesId='Daisy',Level=1,XP=0,Mutation='',TotalPollination=0}
- p.FlowerCollection.OwnedSeedCopies.Daisy=2
- local before=U.Copy(p);local ok,reason=s:Respec({});assert(not ok and reason=='RESPEC_GARDEN_OCCUPIED' and equal(before,p))
-end)
-test('respec progressed mutated overflow rejects without state loss',function()
- local p,s=respecFixture();p.Garden.Slots[4]={SpeciesId='Daisy',Level=12,XP=30,Mutation='Radiant',TotalPollination=80}
- p.FlowerCollection.OwnedSeedCopies.Daisy=2
- local before=U.Copy(p);assert(not s:Respec({}));assert(equal(before,p))
-end)
-test('respec overflow bee unequips without destroying bee ownership',function()
- local p,s=respecFixture();p.Pollinators.BeeInventory.WorkerBee=2;p.Pollinators.EquippedBeeSlots={'WorkerBee','WorkerBee'}
- assert(s:Respec({}));assert(p.Pollinators.BeeInventory.WorkerBee==2 and p.Pollinators.EquippedBeeSlots[1]=='WorkerBee' and not p.Pollinators.EquippedBeeSlots[2])
- assert(Schema.Prepare(p));assert(p.Pollinators.BeeInventory.WorkerBee==1 and p.Pollinators.BeeObtained.WorkerBee==2)
+test('normal Workshop respec is disabled without mutation',function()
+ local p=Schema.CreateDefault();p.Tutorial.FeatureUnlocks.Workshop=true;p.WorkshopV5.Nodes={ROLL_1=true};p.WorkshopV5.Points=3;p.Currencies.Coins=100
+ local s=require(node('ServerScriptService/Services/WorkshopService'));s:Init({Profile=function() return p end})
+ local before=U.Copy(p);local ok,reason=s:Respec({})
+ assert(not ok and reason=='ACTION_UNAVAILABLE' and equal(before,p))
 end)
 test('schema negative active values repair and retain original diagnostic values',function()
  local p=Schema.CreateDefault();p.Currencies.Coins=-5;p.Hive.Honey=-20;p.WorkshopV5.Points=-3;p.FlowerCollection.OwnedSeedCopies.Tulip=-9
