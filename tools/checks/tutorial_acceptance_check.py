@@ -24,11 +24,11 @@ remote=read("src/ServerScriptService/Services/RemoteService.luau")
 ui_state=read("src/ServerScriptService/Services/UIStateService.luau")
 
 ids=re.findall(r'\{Id="([^"]+)"',config)
-expected=["GardenSlot","FirstFlowerRoll","Plant","FirstBeeRoll","EquipBee","BeeWork","NormalRoll","Inventory","InventoryExplain","PollenSpark","HiveUpgrade","WorkshopVisit","WorkshopPurchase","Synergy","SunnyVisit","Quests"]
+expected=["GardenSlot","FirstFlowerRoll","Plant","FirstBeeRoll","EquipBee","BeeWork","FillBloom","BloomRoll","NormalRoll","Inventory","InventoryExplain","PollenSpark","HiveUpgrade","WorkshopVisit","WorkshopPurchase","Synergy","SunnyVisit","Quests"]
 assert ids==expected, f"unexpected tutorial sequence: {ids}"
-assert 'Version=8' in config and len(ids)==16
+assert 'Version=9' in config and len(ids)==18
 
-for forbidden in ("Trait","BloomRoll","WorldActivity","TutorialActivity","Deliveries","Delivery"):
+for forbidden in ("Trait","WorldActivity","TutorialActivity","Deliveries","Delivery"):
     assert f'Event="{forbidden}"' not in config, f"random/slow mandatory step returned: {forbidden}"
 
 need(config,'Target="Hive"',"Hive targets authored")
@@ -36,12 +36,13 @@ need(config,'Target="Roll"',"Roll targets authored")
 need(config,'Target="GardenEditorSlot",Slot=1,FlowerId="Daisy"',"first Garden menu planting target")
 need(config,'Target="TutorialToken"',"tutorial checkpoint target")
 need(config,'Target="InventoryStats"',"Inventory explanation target")
+need(config,'Target="BloomMeter"',"Bloom meter tutorial target")
 need(config,'Target="QuestsButton"',"Quests handoff target")
 need(config,'Target="WorkshopNode",NodeId="ROLL_1"',"first Workshop node target")
 need(config,'Target="GardenEditorSlot",Slot=2,PartnerSlot=1,FlowerId="Tulip"',"Synergy Garden menu target")
 
 targets=set(re.findall(r'Target="([^"]+)"',config))
-screen={"Roll","SeedSatchel","InventoryStats","GardenEditorSlot","WorkshopNode","QuestsButton"}
+screen={"Roll","SeedSatchel","InventoryStats","GardenEditorSlot","BloomMeter","WorkshopNode","QuestsButton"}
 world={"Hive","Bee","TutorialToken","Workshop"}
 sectors=set(re.findall(r'(SunnyOrchard|CrystalGreenhouse|TwilightGrove)=\{',locations))
 unknown=targets-screen-world-sectors
@@ -51,6 +52,7 @@ for token in (
     'if step.Target=="Roll" then',
     'if step.Target=="SeedSatchel" then',
     'if step.Target=="InventoryStats" then',
+    'if step.Target=="BloomMeter" then',
     'if step.Target=="GardenEditorSlot" then',
     'if step.Target=="QuestsButton" then',
     'if step.Target=="WorkshopNode" then',
@@ -84,6 +86,9 @@ need(player,'self.TutorialService:RecordEvent(player,event)',"events route throu
 need(service,'while T.Steps[t.Step] and t.Events[completionKey(T.Steps[t.Step])] do t.Step+=1 end',"ordered progression")
 need(hive,'self.X.U.Near(player,hivePosition,C.InteractionDistance)',"Hive interaction server distance validation")
 need(service,'self.X.GardenActivityService:EnsureTutorialSpark(player)',"guaranteed Pollen Spark")
+need(service,'step.Id=="FillBloom" and not t.Events.TutorialAssistBloom',"Bloom tutorial fast-charge assist")
+need(service,'Bloom.BloomMax-deliveryCharge',"Bloom tutorial stops one delivery short")
+need(service,'self.X:Emit(player,"BloomReady",1)',"Bloom meter completion event")
 need(service,'p.Hive.Honey=need',"tutorial Hive assist")
 need(service,'p.WorkshopV5.Points=math.max(p.WorkshopV5.Points,node.Cost or 0)',"first Workshop node assist")
 need(service,'self.X.InventoryService:Grant(player,"FlowerSeed","Tulip")',"Synergy partner uses normal species grant")
@@ -115,9 +120,15 @@ need(roll,'if not kind then return pool,total end',"normal mixed pool restored a
 need(features,'Roll={Step=2}',"Roll unlock timing")
 need(features,'Garden={Event="FirstGardenSlot"}',"Garden menu unlock timing")
 need(roll,'if not tutorialRollAllowed(p) then return false,"TUTORIAL_ROLL_LOCKED" end',"tutorial Roll locked between one-shot steps")
+need(roll,'step.Id=="BloomRoll"',"Bloom Roll is an allowed one-shot tutorial Roll")
+need(roll,'self.X:Emit(player,"BloomRoll",1)',"Bloom Roll completion event")
 need(roll,'if T.Steps[p.Tutorial.Step] and automatic then return false,"TUTORIAL_SINGLE_ROLL" end',"tutorial Auto Roll rejected")
 need(bloom,'COMPLETE THE TUTORIAL TO ROLL AGAIN',"disabled tutorial Roll copy")
-need(bloom,'step.Id=="FirstFlowerRoll" or step.Id=="FirstBeeRoll" or step.Id=="NormalRoll"',"client one-shot Roll allowlist")
+need(bloom,'step.Id=="FirstFlowerRoll" or step.Id=="FirstBeeRoll" or step.Id=="BloomRoll" or step.Id=="NormalRoll"',"client one-shot Roll allowlist")
+need(bloom,'self.BloomTutorialIndicator.Visible=bloomTutorialActive',"persistent Bloom tutorial indicator")
+need(bloom,'self.MeterLabel.Text=string.format("BLOOM  %.0f%%",bloomPercent)',"Bloom meter copy without Discovery")
+if 'DISCOVERY  %d/%d' in bloom:
+    raise AssertionError("Bloom HUD must not show Discovery n/n")
 
 need(activity,'function S:EnsureTutorialSpark(player)',"tutorial checkpoint factory")
 need(activity,'Tutorial=tutorial==true',"tutorial activity ownership")
@@ -126,7 +137,7 @@ need(activity_client,'self.UI:Send("Activity",id,item.Index,"Reach")',"checkpoin
 assert "ProximityPrompt" not in activity_client, "activity client must not require E"
 
 need(default,'SchemaVersion=6',"new profile schema")
-need(default,'Tutorial={Version=8,Step=1,FeatureUnlocks={},Events={}}',"new profile tutorial version")
+need(default,'Tutorial={Version=9,Step=1,FeatureUnlocks={},Events={}}',"new profile tutorial version")
 need(default,'UnlockedSlots=0',"fresh profile starts before first Garden slot")
 need(default,'OwnedSeedCopies={}',"fresh profile has no direct starter Flower")
 need(default,'BeeInventory={}',"fresh profile has no direct starter Bee")
@@ -172,4 +183,4 @@ for path in (
         if path.endswith("TutorialConfig.luau") and stale in text:
             raise AssertionError(f"{path} contains stale tutorial token {stale}")
 
-print("PASS tutorial acceptance: v8 uses Garden-only planting, explicit Bee equip, working Bee runtime, and one-shot tutorial Rolls.")
+print("PASS tutorial acceptance: v9 adds persistent Bloom guidance, Bloom Roll onboarding, explicit Bee equip, and one-shot tutorial Rolls.")
