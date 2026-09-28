@@ -172,9 +172,7 @@ function X:Request(player,action,a,b,c)
    end
   end
   local tutorialStep=T.Steps[p.Tutorial.Step]
-  if a=="SeedSatchel" and tutorialStep and tutorialStep.Id=="Inventory" then
-   self:Emit(player,"SatchelOpen",1)
-  elseif a=="Trials" and tutorialStep and tutorialStep.Id=="Quests" then
+  if a=="Trials" and tutorialStep and tutorialStep.Id=="Quests" then
    self:Emit(player,"QuestsOpen",1)
   end
   return true
