@@ -31,3 +31,14 @@
 - Luck Flowers form an intentional progression line: Clover → Prism Bloom → Moon Orchid → Star Bloom. Other Flowers improve growth, yield, speed, Honey, power, cooldown or Coins.
 - Active Boosts is interaction-stable: authoritative refreshes diff existing badges instead of rebuilding them, preserving horizontal scroll and hover state. Bloom and Server Bloom visually highlight the panel on the exact affected Roll.
 - Hive progression is exposed through the authored Hive Road menu, including current resource progress, the next Workshop Point reward, and nearby Hive levels.
+
+
+## 2026-09-29 content + quest progression pass
+
+- Content breadth is now 27 Flowers and 28 Bees: this pass adds 15 new Flowers and 15 new Bees.
+- Every Bee, including all 15 additions, has a permanent Luck passive and participates in the existing Bee Trait system.
+- Every new Flower has a level-scaling planted passive and the new Flower set is integrated into 15 additional Garden Synergies (32 total).
+- Trials are retired from runtime/UI. The progression menu is Quests with 25 sequential, server-authoritative objectives and explicit claim rewards.
+- Quest objectives deliberately mix Rolls, Hive deliveries, Activities, Bloom Rolls, discoveries, Garden Synergies, Bee Mastery, Hive levels and Workshop purchases so progress is not tied to one loop.
+- Hive Workshop Point grants use season-scoped idempotent source keys. On join, existing profiles reconcile any missing Hive-level point sources before state is pushed.
+- Equip Synergy is server-authoritative: it computes the highest attainable Trait breakpoint from owned Bees and capacity, applies the matching loadout, recalculates the Trait state, then verifies the Tier actually activated.
