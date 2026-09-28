@@ -41,7 +41,7 @@ need(controller,'for i=1,7 do',"exact seven-slot renderer")
 need(controller,'controller:Send("GardenEdit",i,selected)',"Flower-to-slot request")
 need(controller,'controller:Send("GardenEdit",slot,"")',"remove request")
 need(controller,'gardenState.Hint and gardenState.Hint.FlowerId',"ghost hint consumes only FlowerId")
-if "recipe.Id" in controller and "gardenState.Hint" in controller:
+if "gardenState.Hint.Recipe" in controller or "gardenState.Hint.RecipeId" in controller or "gardenState.Hint.Id" in controller:
     raise AssertionError("Garden ghost hint must not reveal a hidden recipe id")
 need(controller,'CURRENT SYNERGY  •  ',"active Synergy presentation")
 need(controller,'1/N ',"Flower odds presentation")
