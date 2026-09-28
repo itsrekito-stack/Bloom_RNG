@@ -1,22 +1,8 @@
 local RS=game:GetService("ReplicatedStorage")
 local C=require(RS.Config.BloomConfig)
-local Locations=require(RS.Config.LocationsConfig)
 local Bees=require(RS.Config.BeesConfig)
 
 local S={}
-
-local function nextReadyLocation(profile)
- for _,id in ipairs(Locations.Order) do
-  local cfg=Locations.Sectors[id]
-  if not profile.World.UnlockedSectors[id]
-   and profile.Hive.Level>=cfg.Hive
-   and (not cfg.Requires or profile.World.UnlockedSectors[cfg.Requires])
-  then
-   return id,cfg
-  end
- end
- return nil,nil
-end
 
 function S:Init(x)
  self.X=x
@@ -111,8 +97,6 @@ function S:Interact(player)
  self.X:Emit(player,"HiveUpgrade",1)
  self.X:Send(player,"Ceremony",{Kind="Hive",Text="Hive level "..p.Hive.Level})
 
- local _,location=nextReadyLocation(p)
- if location then self.X:Send(player,"Message",location.Name.." gate is ready to unlock") end
  return true
 end
 
