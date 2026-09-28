@@ -6,7 +6,7 @@ model=json.loads((ROOT/'src/StarterGui/BloomUI.model.json').read_text(encoding='
 TARGETS=['ObjectiveCard','CurrencyHUD','MenuDock','RollHUD','VerticalRoulette','RollButton','ActiveBoostsHUD']
 VIEWPORTS=[(1920,1080),(1366,768),(1280,720)]
 NO_OVERLAP=[('ObjectiveCard','VerticalRoulette'),('CurrencyHUD','MenuDock'),('RollHUD','RollButton'),('ActiveBoostsHUD','RollButton'),('ActiveBoostsHUD','RollHUD')]
-DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Workshop','Dock_Trials','Dock_Settings']
+DOCK_BUTTONS=['Dock_SeedSatchel']
 MIN_HIT=44
 
 def children(node): return node.get('Children',[]) or []
