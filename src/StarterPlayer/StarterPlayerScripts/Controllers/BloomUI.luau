@@ -1210,9 +1210,10 @@ function UI:Render()
 
  local rollStep=T.IndexById.Roll or math.huge
  local rollUnlocked=p.Tutorial.FeatureUnlocks.Roll==true or p.Tutorial.Skipped==true or (tonumber(p.Tutorial.Step) or 1)>=rollStep
- self.RollHUD.Visible=rollUnlocked
- self.Roll.Visible=rollUnlocked
- self.RouletteViewport.Visible=rollUnlocked and (self.Auto or self.RouletteRunning or self.RouletteLanding)
+ local inventoryOpen=self.MenuRenderer=="InventoryV2" and self.Menu~=nil
+ self.RollHUD.Visible=rollUnlocked and not inventoryOpen
+ self.Roll.Visible=rollUnlocked and not inventoryOpen
+ self.RouletteViewport.Visible=rollUnlocked and not inventoryOpen and (self.Auto or self.RouletteRunning or self.RouletteLanding)
  if not rollUnlocked and (self.Auto or self.RouletteRunning or self.RouletteLanding) then
   self.Auto=false
   self:StopRouletteAnimation()
