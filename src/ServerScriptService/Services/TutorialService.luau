@@ -50,22 +50,13 @@ function S:LegacyStepComplete(p,step)
   for _,id in pairs(p.Pollinators.EquippedBeeSlots or {}) do if type(id)=="string" and id~="" then return true end end
   return false
  end
- if step.Id=="BeeWork" then return (events.Work or 0)>0 end
  if step.Id=="FillBloom" then return (events.BloomReady or 0)>0 or p.RollState.SpecialRollReady==true or (tonumber(p.RollState.BloomCharge) or 0)>=Bloom.BloomMax end
  if step.Id=="BloomRoll" then return (events.BloomRoll or 0)>0 end
- if step.Id=="NormalRoll" then
-  return (events.TutorialNormalRoll or 0)>0
-   or (tonumber(p.RollState.TotalRolls) or 0)>=3
-   or (events.PollenSpark or 0)>0
- end
- if step.Id=="Inventory" then return (events.SatchelOpen or 0)>0 end
  if step.Id=="InventoryExplain" then return (events.InventoryReviewed or 0)>0 or (events.SatchelOpen or 0)>0 end
  if step.Id=="PollenSpark" then return (events.PollenSpark or 0)>0 end
  if step.Id=="HiveUpgrade" then return p.Hive.Level>=2 or (events.HiveUpgrade or 0)>0 end
- if step.Id=="WorkshopVisit" then return (events.WorkshopVisit or 0)>0 end
  if step.Id=="WorkshopPurchase" then return next(p.WorkshopV5.Nodes)~=nil or (events.WorkshopPurchase or 0)>0 end
  if step.Id=="Synergy" then return (events.Synergy or 0)>0 or next(p.GardenSynergies.Discovered or {})~=nil end
- if step.Id=="SunnyVisit" then return (events.SunnyVisit or 0)>0 end
  if step.Id=="Quests" then return (events.QuestsOpen or 0)>0 end
  return (events[step.Event] or 0)>0
 end
@@ -201,9 +192,7 @@ function S:Tick(player)
   return true
  elseif step.Id=="PollenSpark" then
   self.X.GardenActivityService:EnsureTutorialSpark(player)
- elseif step.Id=="SunnyVisit" and self.X.MapService:Sector(player)=="SunnyOrchard" then
-  self.X:Emit(player,"SunnyVisit",1)
-  return true
+
  end
  return false
 end
