@@ -59,31 +59,18 @@ function S:AddFlowerXP(player,i,amount)
  local slot=p.Garden.Slots[i]
  local flower=slot and slot.SpeciesId and F.Species[slot.SpeciesId]
  if not flower then return false end
- local growth=flower.GrowthProfile or {XPPerLevel=C.FlowerLevelXP,MaxLevel=C.MasteryCap,ScalePerLevel=.025}
- local xpPerLevel=math.max(1,tonumber(growth.XPPerLevel) or C.FlowerLevelXP)
- local maxLevel=math.max(1,math.floor(tonumber(growth.MaxLevel) or C.MasteryCap))
- local level=math.clamp(math.floor(tonumber(slot.Level) or 1),1,maxLevel)
- local xp=math.max(0,tonumber(slot.XP) or 0)+amount
- while level<maxLevel do
-  local need=level*xpPerLevel
-  if xp<need then break end
-  xp-=need
-  level+=1
- end
- if level>=maxLevel then xp=math.min(xp,level*xpPerLevel) end
- slot.Level=level
- slot.XP=xp
+ local mastery=self.X.FlowerProgressionService:State(p,slot.SpeciesId)
+ local growth=flower.GrowthProfile or {ScalePerLevel=.025}
  slot.TotalPollination=math.max(0,tonumber(slot.TotalPollination) or 0)+amount
- self.X.FlowerProgressionService:Add(player,slot.SpeciesId,amount)
 
  local plot=self.Plots[player]
  local model=plot and plot.Flowers[i]
  if model then
-  model:ScaleTo(flowerVisualScale(level,growth))
+  model:ScaleTo(flowerVisualScale(mastery.Level,growth))
   local levelText=model:FindFirstChild("LevelText",true)
   local fill=model:FindFirstChild("ProgressFill",true)
-  if levelText then levelText.Text=flower.DisplayName.." • LV."..level end
-  if fill then fill.Size=UDim2.fromScale(level>=maxLevel and 1 or math.clamp(xp/math.max(1,level*xpPerLevel),0,1),1) end
+  if levelText then levelText.Text=flower.DisplayName.." • LV."..mastery.Level end
+  if fill then fill.Size=UDim2.fromScale(mastery.Level>=C.MasteryCap and 1 or math.clamp(mastery.XP/math.max(1,mastery.Level*C.MasteryXP),0,1),1) end
  end
  return true
 end
@@ -176,9 +163,14 @@ function S:Build(player)
    local f=slot and F.Species[slot.SpeciesId]
    if f then
     local growth=f.GrowthProfile or {}
+    local mastery=self.X.FlowerProgressionService:State(p,slot.SpeciesId)
     local flower=self.X.FlowerService.Build(i,f,pos)
     flower.Parent=content
-    flower:ScaleTo(flowerVisualScale(slot.Level or 1,growth))
+    flower:ScaleTo(flowerVisualScale(mastery.Level,growth))
+    local levelText=flower:FindFirstChild("LevelText",true)
+    local fill=flower:FindFirstChild("ProgressFill",true)
+    if levelText then levelText.Text=f.DisplayName.." • LV."..mastery.Level end
+    if fill then fill.Size=UDim2.fromScale(mastery.Level>=C.MasteryCap and 1 or math.clamp(mastery.XP/math.max(1,mastery.Level*C.MasteryXP),0,1),1) end
     plot.Flowers[i]=flower
    end
   end
@@ -200,12 +192,16 @@ function S:Plant(player,i,id)
  if id~="" and (type(id)~="string" or not F.Exists(id)) then return false,"INVALID_ITEM" end
  local old=p.Garden.Slots[i]
  if old.SpeciesId==id then return true end
- if Rules.HasProgress(old) then return false,"GARDEN_PROGRESS_PROTECTED" end
- if id~="" and self.X.InventoryService:Available(p,id)<1 then return false,"NO_FREE_COPY" end
+ if id~="" then
+  for slotIndex,existing in ipairs(p.Garden.Slots) do
+   if slotIndex~=i and existing.SpeciesId==id then return false,"ALREADY_PLANTED" end
+  end
+  if self.X.InventoryService:Available(p,id)<1 then return false,"NO_FREE_COPY" end
+ end
 
  local slot={}
  if id~="" then
-  slot={SpeciesId=id,Level=1,XP=0,TotalPollination=0,Mutation=""}
+  slot={SpeciesId=id,TotalPollination=0,Mutation=""}
   local mutation=self.X.Temp[player].SeedMutation
   if mutation and mutation.Id==id then
    slot.Mutation=mutation.Mutation
