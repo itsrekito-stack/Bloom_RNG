@@ -81,7 +81,7 @@ need(state,'Hint=Effects.Feature(profile,"GARDEN_5","PatternHints") and self.X.G
 need(bloom,'Garden="GardenV1"',"Garden renderer id")
 need(bloom,'GardenEditor.Render(self,p,ui)',"Garden renderer dispatch")
 need(bloom,'Garden="GardenV1"',"Garden menu renderer")
-need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Hive","Index","Workshop","Trials","Settings"}) do',"Garden/Hive dock authored binding")
+need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Hive","Index","Workshop","Quests","Settings"}) do',"Garden/Hive dock authored binding")
 need(bloom,'local controlsVisible=rollUnlocked and self.Menu==nil',"Roll controls hide whenever a menu is open")
 need(bloom,'self.RouletteViewport.Visible=rollUnlocked and',"roulette stays beneath the Garden menu")
 
