@@ -409,7 +409,7 @@ fn default_roadmap_tasks() -> Vec<PlannerTask> {
         planner_task("release-garden","4 · Core Progression","Finalize Garden progression and synergies","Verified and hardened: config-driven capacity, protected replacement, centralized flower XP/level carry-over, mutation/synergy paths and dissolve ownership invariants.",true),
         planner_task("release-bees","4 · Core Progression","Finalize Bee traits, abilities and equipment","Implemented: declared trait/passive bonuses and release-bee active abilities now execute server-side; stale unequipped states are pruned and equipment ownership remains validated.",true),
         planner_task("release-bee-mastery","4 · Core Progression","Give Bee Mastery a clear player-facing reward","Implemented: 10-level server-authoritative mastery ladder, runtime bonuses, XP multipliers, Inventory V2 progress and level-up feedback.",true),
-        planner_task("release-hive-locations","4 · Core Progression","Finalize Hive and location progression","Implemented: Hive 1→8 uses config costs and current world prompt feedback; location unlocks are ordered Sunny → Crystal → Twilight with server proximity/Hive/prerequisite gates.",true),
+        planner_task("release-hive-locations","4 · Core Progression","Finalize Hive and location progression","Implemented: Hive 1→8 keeps hand-tuned costs, Hive 9+ continues on the endless cost curve and keeps awarding Workshop Points; world interactions remain server-authoritative.",true),
         planner_task("release-workshop-tree","4 · Core Progression","Finalize the Workshop progression tree","Implemented: 42 effect-backed nodes span Hive 1–5, parent/cost gates are server-authoritative, Legacy remains permanent and both respec/Season refunds follow configured node costs.",true),
         planner_task("release-quests-trials","4 · Core Progression","Finish quests, activities and trials","Implemented: 3 base Season trials + 5 LEGACY_4-gated advanced trials, server-owned expiry/shrine checks, bounded activity tokens and persistent/repeat rewards are covered by CI.",true),
         planner_task("release-season","4 · Core Progression","Finish Season / Legacy loop","Implemented: revision-bound two-step Season transaction, config-driven reset, capped Legacy Bee memory, transient trial/activity cleanup, Ancient Nectar/keepsakes and retained-card behavior are covered by CI.",true),
@@ -907,14 +907,13 @@ fn is_required_runtime_ui_child(value: &Value) -> bool {
                 | "AbilityDescription"
                 | "UsedBadge"
                 | "GhostBadge"
-                | "MenuNav"
                 | "CurrencyHelp"
-                | "Nav_Inventory"
-                | "Nav_Garden"
-                | "Nav_Index"
-                | "Nav_Workshop"
-                | "Nav_Quests"
-                | "Nav_Settings"
+                | "Dock_SeedSatchel"
+                | "Dock_Garden"
+                | "Dock_Index"
+                | "Dock_Workshop"
+                | "Dock_Trials"
+                | "Dock_Settings"
                 | "TutorialSpotlight"
                 | "TutorialCallout"
                 | "TutorialScreenArrow"

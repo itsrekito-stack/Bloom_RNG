@@ -15,7 +15,7 @@ spec.loader.exec_module(module)
 
 required={"ActiveBoostsHUD","ActiveBoostTooltip"}
 boost_required={"MinimizeButton","LuckBadge","ScrollLeft","ScrollRight"}
-additional_required={"TraitFilterPanel","TraitFilterList","TraitChipTemplate","UnequipAllButton","EquippedBadge","InventoryHoverScale","BeeSummary","PassiveRowTemplate","AbilityDescription","UsedBadge","GhostBadge","MenuNav","CurrencyHelp","Nav_Inventory","Nav_Garden","Nav_Index","Nav_Workshop","Nav_Quests","Nav_Settings"}
+additional_required={"TraitFilterPanel","TraitFilterList","TraitChipTemplate","UnequipAllButton","EquippedBadge","InventoryHoverScale","BeeSummary","PassiveRowTemplate","AbilityDescription","UsedBadge","GhostBadge","MenuDock","CurrencyHelp","Dock_SeedSatchel","Dock_Garden","Dock_Index","Dock_Workshop","Dock_Trials","Dock_Settings"}
 workshop_required={
     "WorkshopTemplate","WorkshopBody","TreePanel","TreeCanvas","PanMap",
     "NodeTooltip","WorkshopCurrencyBar","WorkshopPoints","WorkshopCoins","WorkshopPetalDust","WorkshopAncientNectar",
@@ -41,6 +41,14 @@ remote_hud=node("ActiveBoostsHUD",[node("MinimizeButton"),node("LuckBadge"),node
 merged_hud=module.merge_remote_changes(base_hud,local_hud,remote_hud)
 nested_names={x.get("Name") for x in merged_hud["Children"]}
 assert {"MinimizeButton","LuckBadge","ScrollLeft","ScrollRight"}<=nested_names, "required boost controls were lost by Python AI-sync merge"
+
+dock_names={"Dock_SeedSatchel","Dock_Garden","Dock_Index","Dock_Workshop","Dock_Trials","Dock_Settings"}
+base_dock=node("MenuDock",[node(name) for name in sorted(dock_names)])
+local_dock=node("MenuDock",[])
+remote_dock=node("MenuDock",[node(name) for name in sorted(dock_names)])
+merged_dock=module.merge_remote_changes(base_dock,local_dock,remote_dock)
+merged_dock_names={x.get("Name") for x in merged_dock["Children"]}
+assert dock_names<=merged_dock_names, "stale local UI state swallowed shared bottom-dock navigation"
 
 # Regression for the Studio failure seen after Workshop V2 landed: local UI Studio state
 # may still contain WorkshopBody without the newly required tooltip/currency overlay.
