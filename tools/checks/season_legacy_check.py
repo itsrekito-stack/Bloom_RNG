@@ -21,13 +21,13 @@ need(cfg,'TrialIds={"MeadowCircuit","SwiftRoute","CrystalTriangle"}',"Season bas
 
 # Eligibility is fully server-derived.
 need(service,'p.Hive.Level>=C.Hive',"Hive eligibility")
-need(service,'p.World.UnlockedSectors.SunnyOrchard',"Sunny eligibility")
-need(service,'p.World.UnlockedSectors.CrystalGreenhouse',"Crystal eligibility")
-need(service,'p.World.UnlockedSectors.TwilightGrove',"Twilight eligibility")
 need(service,'completed>=C.Trials',"trial eligibility")
 need(service,'self.X.U.Count(p.FlowerCollection.DiscoveredFlowers)>=C.Flowers',"flower eligibility")
 need(service,'self.X.U.Count(p.Pollinators.DiscoveredBees)>=C.Bees',"bee eligibility")
-need(service,'string.format("Season: Hive %d, all sectors, %d key trials, %d flowers, %d bees",C.Hive,C.Trials,C.Flowers,C.Bees)',"config-driven requirement copy")
+need(service,'string.format("Season: Hive %d, %d key trials, %d flowers, %d bees",C.Hive,C.Trials,C.Flowers,C.Bees)',"config-driven requirement copy")
+for stale in ("SunnyOrchard","CrystalGreenhouse","TwilightGrove"):
+    if stale in service:
+        raise AssertionError(f"Season eligibility still requires removed location: {stale}")
 
 # Preview/confirm is a revision-bound two-step transaction.
 need(service,'local token=Http:GenerateGUID(false)',"preview token")
