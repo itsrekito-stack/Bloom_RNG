@@ -5,7 +5,7 @@ local C=require(RS.Config.BloomConfig)
 local T=require(RS.Config.TutorialConfig)
 local Rules=require(RS.Shared.GardenRules)
 
-local S={Plots={},Used={}}
+local S={Plots={},Used={},EditorSessions={}}
 local FLOWER_SCALE_CAP=.55
 
 local function horizontalCylinder(part,material)
@@ -154,8 +154,11 @@ function S:Build(player)
   pad:SetAttribute("SlotId",i)
 
   if unlocked then
-   self.X:Prompt(pad,"Plant / replace",function(who)
-    if who==player then self.X:Send(player,"PlantPicker",i) end
+   self.X:Prompt(pad,"Edit Garden",function(who)
+    if who==player then
+     self.EditorSessions[player]=workspace:GetServerTimeNow()+300
+     self.X:Send(player,"PlantPicker",i)
+    end
    end)
 
    local slot=p.Garden.Slots[i]
@@ -216,6 +219,51 @@ function S:Plant(player,i,id)
  return true
 end
 
+function S:GardenEdit(player,i,id)
+ local p=self.X:Profile(player)
+ if not p then return false,"PROFILE_LOADING" end
+ if (self.EditorSessions[player] or 0)<workspace:GetServerTimeNow() then return false,"ACTION_UNAVAILABLE" end
+ if not self.X.U.Integer(i,p.Garden.UnlockedSlots) then return false,"INVALID_SLOT" end
+ local tutorialStep=T.Steps[p.Tutorial.Step]
+ if tutorialStep and tutorialStep.Id=="Plant" and i~=(tutorialStep.Slot or 1) then return false,"TUTORIAL_TARGET" end
+ if tutorialStep and tutorialStep.Id=="Synergy" and (i~=(tutorialStep.Slot or 2) or id~="Tulip") then return false,"TUTORIAL_TARGET" end
+ if id~="" and (type(id)~="string" or not F.Exists(id)) then return false,"INVALID_ITEM" end
+ local old=p.Garden.Slots[i]
+ if old.SpeciesId==id then return true end
+
+ local sourceIndex=nil
+ if id~="" then
+  if (p.FlowerCollection.OwnedSeedCopies[id] or 0)<1 then return false,"NOT_OWNED" end
+  for slotIndex,existing in ipairs(p.Garden.Slots) do
+   if slotIndex~=i and existing.SpeciesId==id then sourceIndex=slotIndex break end
+  end
+ end
+
+ local slot={}
+ if id~="" then
+  if sourceIndex then
+   local source=p.Garden.Slots[sourceIndex]
+   slot={SpeciesId=id,TotalPollination=tonumber(source.TotalPollination) or 0,Mutation=source.Mutation or ""}
+   p.Garden.Slots[sourceIndex]={}
+  else
+   slot={SpeciesId=id,TotalPollination=0,Mutation=""}
+   local mutation=self.X.Temp[player].SeedMutation
+   if mutation and mutation.Id==id then
+    slot.Mutation=mutation.Mutation
+    self.X.Temp[player].SeedMutation=nil
+   end
+  end
+ end
+
+ p.Garden.Slots[i]=slot
+ p.Garden.Revision+=1
+ self.EditorSessions[player]=workspace:GetServerTimeNow()+300
+ self.X.GardenActivityService:CancelGarden(player)
+ self:Build(player)
+ if id~="" then self.X:Emit(player,"Plant",1) end
+ return true
+end
+
 function S:RefreshCapacity(player)
  local p=self.X:Profile(player)
  if not p then return false,"PROFILE_LOADING" end
@@ -227,6 +275,7 @@ function S:RefreshCapacity(player)
 end
 
 function S:Remove(player)
+ self.EditorSessions[player]=nil
  local plot=self.Plots[player]
  if plot then
   self.Used[plot.Index]=nil
