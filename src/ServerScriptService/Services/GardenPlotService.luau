@@ -23,6 +23,17 @@ function S:Init(x)
  self.X=x
 end
 
+function S:OpenEditor(player)
+ local p=self.X:Profile(player)
+ if not p or not p.Tutorial.FeatureUnlocks.Garden then return false,"LOCKED" end
+ self.EditorSessions[player]=workspace:GetServerTimeNow()+600
+ return true
+end
+
+function S:CloseEditor(player)
+ self.EditorSessions[player]=nil
+end
+
 function S:Position(player,slot)
  local plot=self.Plots[player]
  return plot and plot.Origin+G.Position(slot)
@@ -154,12 +165,10 @@ function S:Build(player)
   pad:SetAttribute("SlotId",i)
 
   if unlocked then
-   self.X:Prompt(pad,"Edit Garden",function(who)
-    if who==player then
-     self.EditorSessions[player]=workspace:GetServerTimeNow()+300
-     self.X:Send(player,"PlantPicker",i)
-    end
+   self.X:Prompt(pad,"Open Garden",function(who)
+    if who==player then self.X:Send(player,"Open","Garden") end
    end)
+
 
    local slot=p.Garden.Slots[i]
    local f=slot and F.Species[slot.SpeciesId]
@@ -222,6 +231,8 @@ end
 function S:GardenEdit(player,i,id)
  local p=self.X:Profile(player)
  if not p then return false,"PROFILE_LOADING" end
+ local temp=self.X.Temp[player]
+ if not temp or temp.MenuOpen~=true or temp.MenuName~="Garden" then return false,"MENU_REQUIRED" end
  if (self.EditorSessions[player] or 0)<workspace:GetServerTimeNow() then return false,"ACTION_UNAVAILABLE" end
  if not self.X.U.Integer(i,p.Garden.UnlockedSlots) then return false,"INVALID_SLOT" end
  local tutorialStep=T.Steps[p.Tutorial.Step]
@@ -275,6 +286,7 @@ function S:RefreshCapacity(player)
 end
 
 function S:Remove(player)
+ self.EditorSessions[player]=nil
  self.EditorSessions[player]=nil
  local plot=self.Plots[player]
  if plot then
