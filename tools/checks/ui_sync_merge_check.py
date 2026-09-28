@@ -73,7 +73,7 @@ safe=next(x for x in MODEL["Children"] if x.get("Name")=="SafeRoot")
 model_names={x.get("Name") for x in safe.get("Children",[])}
 assert required<=model_names, f"remote authored model missing required boost nodes: {sorted(required-model_names)}"
 boost_root=next(x for x in safe.get("Children",[]) if x.get("Name")=="ActiveBoostsHUD")
-boost_child_names={x.get("Name") for x in boost_root.get("Children",[])}
+boost_child_names={x.get("Name") for x in walk(boost_root)}
 assert boost_required<=boost_child_names, f"remote authored boost HUD missing controls: {sorted(boost_required-boost_child_names)}"
 missing_additional=sorted(name for name in additional_required if name not in all_nodes)
 assert not missing_additional, f"remote authored model missing new runtime controls: {missing_additional}"
