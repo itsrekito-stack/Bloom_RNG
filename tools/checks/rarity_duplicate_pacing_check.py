@@ -111,10 +111,13 @@ if protected_bees<season_bees:
 need(roll,'math.min(C.DiscoveryThreshold,p.RollState.DiscoveryPity+1)',"bounded pity counter")
 need(roll,'p.RollState.DiscoveryPity=new and 0 or',"pity resets only on discovery")
 
-# Duplicate flowers have an explicit sink, but the last/placed copy remains protected.
-need(inventory,'if self:Available(p,id)<n then return false,"NO_FREE_COPY" end',"planted/free-copy protection")
-need(inventory,'if (f.OwnedSeedCopies[id] or 0)-n<1 then return false,"LAST_COPY" end',"last-copy protection")
-need(inventory,'p.Currencies.PetalDust+=n*C.DustPerCopy',"duplicate flower sink")
+# Duplicates now advance species progression instead of creating disposable stock.
+need(inventory,'f.ObtainedFlowers[id]=(f.ObtainedFlowers[id] or 0)+1',"Flower obtained count")
+need(inventory,'self.X.FlowerProgressionService:AddDuplicate(player,id,1)',"duplicate Flower advances Level")
+need(inventory,'pollinators.BeeObtained[id]=(pollinators.BeeObtained[id] or 0)+1',"Bee obtained count")
+need(inventory,'self.X.PollinatorService:AddMastery(player,id,C.BeeDuplicateXP)',"duplicate Bee advances Mastery")
+need(inventory,'f.OwnedSeedCopies[id]=1',"Flower species ownership does not stack copies")
+need(inventory,'pollinators.BeeInventory[id]=1',"Bee species ownership does not stack copies")
 
 # Player-facing copy must not promise a guaranteed endgame discovery.
 need(ui,'"  •  PITY READY"',"truthful pity HUD copy")
