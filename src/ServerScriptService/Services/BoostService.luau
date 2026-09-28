@@ -1,6 +1,8 @@
 local RS=game:GetService("ReplicatedStorage")
 
 local Bees=require(RS.Config.BeesConfig)
+local Flowers=require(RS.Config.FlowersConfig)
+local C=require(RS.Config.BloomConfig)
 local Activities=require(RS.Config.ActivityConfig)
 local E=require(RS.Shared.WorkshopEffects)
 
@@ -213,6 +215,26 @@ function S:Snapshot(player,profile)
      end
     end
    end
+   local mastery=Bees.GetMasteryState(p.Pollinators.BeeMastery[beeId])
+   local masteryLuck=tonumber(mastery.LuckMultiplier) or 1
+   if masteryLuck>1.0001 then
+    source(buckets,"Luck","Bee Mastery",bee.DisplayName.." • Lv."..tostring(mastery.Level),multiplierText(masteryLuck,false),"Bee Mastery permanently improves this equipped Bee's roll luck.",nil)
+   end
+  end
+ end
+
+ for _,slot in ipairs(p.Garden.Slots or {}) do
+  local id=slot.SpeciesId
+  local flower=type(id)=="string" and Flowers.GetSpecies(id) or nil
+  if flower then
+   local mastery=p.FlowerCollection.FlowerMastery[id]
+   local level=math.max(1,math.floor(tonumber(mastery and mastery.Level) or 1))
+   local buff=Flowers.GetLevelBuff(id,level)
+   local stat=buff and BEE_STAT_MAP[buff.Stat]
+   local meta=stat and META[stat]
+   if buff and stat and meta then
+    source(buckets,stat,"Flowers",flower.DisplayName.." • Lv."..tostring(level),multiplierText(buff.Multiplier,meta.Inverse),"Planted Flower passive. Raise its Flower Level to strengthen this bonus.",nil)
+   end
   end
  end
 
@@ -291,6 +313,10 @@ function S:Snapshot(player,profile)
  end
 
  local rareWeight=1
+ if p.RollState.SpecialRollReady then
+  rareWeight*=C.SpecialRareMultiplier
+  source(buckets,"RareWeight","Bloom","Bloom Ready",multiplierText(C.SpecialRareMultiplier,false),"Your next Bloom Roll boosts Rare+ weight and undiscovered rewards.",nil)
+ end
  if temp.Eclipse then
   local eclipse=1.5*E.Value(p,"EXPLORATION_5","EclipseWeight",1)
   rareWeight*=eclipse

@@ -1,5 +1,5 @@
 local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.BloomConfig) local S={Buckets={},StateRequests={}}
-local NO_ARGS={Ready=true,Skip=true,Replay=true,StudioTutorialReset=true,SeasonCancel=true,DistillNectar=true,SaveSettings=true,ResetSettings=true,UnequipAllBees=true}
+local NO_ARGS={Ready=true,Skip=true,Replay=true,StudioTutorialReset=true,SeasonCancel=true,DistillNectar=true,SaveSettings=true,ResetSettings=true,UnequipAllBees=true,HiveUpgrade=true}
 local ACTIVITY_PHASE={Reach=true}
 local function finite(v) return type(v)=="number" and v==v and math.abs(v)~=math.huge end
 local function integer(v,min,max) return finite(v) and v%1==0 and v>=min and v<=max end
@@ -31,7 +31,7 @@ function S:Validate(action,a,b,c)
   local slotOK=integer(b,1,C.MaxBeeSlots)
   local valid=idOK and c==nil and (unequip and slotOK or (b==nil or slotOK))
   return valid,valid and nil or"INVALID_VALUE"
- elseif action=="WorkshopBuy" or action=="Trial" or action=="SeasonConfirm" or action=="Card" then
+ elseif action=="WorkshopBuy" or action=="Trial" or action=="SeasonConfirm" or action=="Card" or action=="EquipSynergy" then
   return short(a,64,false) and b==nil and c==nil,(short(a,64,false) and b==nil and c==nil) and nil or"INVALID_VALUE"
  elseif action=="Flag" then
   return short(a,64,false) and short(b,32,false) and c==nil,(short(a,64,false) and short(b,32,false) and c==nil) and nil or"INVALID_VALUE"

@@ -59,12 +59,19 @@ need(workshop,"local HIVE_BY_INDEX={1,2,3,4,5,5}","Workshop depth reaches Hive5"
 need(hive,"C.WorkshopPointsForHiveLevel(nextLevel)","Workshop points continue after Hive 8")
 growth=num(bloom,"EndlessHiveCostGrowth")
 round_to=num(bloom,"EndlessHiveCostRound")
+coin_growth=num(bloom,"EndlessHiveCoinGrowth")
+coin_round=num(bloom,"EndlessHiveCoinRound")
 endless_points=num(bloom,"EndlessHivePointsPerLevel")
 if not 1.2<=growth<=1.5: raise AssertionError(f"endless Hive growth drift: {growth}")
 if round_to<1: raise AssertionError("endless Hive rounding invalid")
+if not 1.5<=coin_growth<=1.9 or coin_round<1: raise AssertionError("endless Hive Coin curve invalid")
 if endless_points<1: raise AssertionError("Hive 9+ must keep awarding Workshop Points")
 hive9=round(costs[-1]*growth/round_to)*round_to
 if hive9<=costs[-1]: raise AssertionError("Hive 9 cost must exceed Hive 8")
+coin_costs=[float(x) for x in re.findall(r'[0-9.]+',re.search(r'HiveCoinCosts=\{([^}]*)\}',bloom).group(1))]
+hive12=coin_costs[-1]
+for _ in range(4): hive12=round(hive12*coin_growth/coin_round)*coin_round
+if hive12<40000: raise AssertionError(f"Hive 12 Coin sink is too weak: {hive12}")
 
 need(season,"Hive=8","Season Hive gate");need(season,"Flowers=8","Season Flower breadth");need(season,"Bees=5","Season Bee breadth");need(season,"Trials=3","Season trial breadth")
 
@@ -75,8 +82,10 @@ for bee_id,passive in bee_entries:
     m=re.search(r'LuckMultiplier=([0-9.]+)',passive)
     if not m: raise AssertionError(f"{bee_id} does not contribute Roll Luck")
     bee_luck.append(float(m.group(1)))
-if not bee_luck or min(bee_luck)<1.02 or max(bee_luck)>1.30:
+if not bee_luck or min(bee_luck)<1.03 or max(bee_luck)>1.35:
     raise AssertionError(f"Bee Luck curve out of bounds: {bee_luck}")
+if "LuckMultiplier=luck" not in bees or "Luck=.01" not in bees:
+    raise AssertionError("Bee Mastery must continue Luck progression beyond base Bee passives")
 block=bees.split("C.BeeMastery={",1)[1].split("\nC.Traits=",1)[0]
 xp=[int(x) for x in re.findall(r'\d+',re.search(r'XPPerLevel=\{([^}]*)\}',block).group(1))]
 duplicate_xp=num(bloom,"BeeDuplicateXP")

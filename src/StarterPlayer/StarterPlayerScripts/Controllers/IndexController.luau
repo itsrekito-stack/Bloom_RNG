@@ -9,7 +9,7 @@ local C=Theme.Colors
 local Index={}
 
 local CATEGORY_ORDER={"Flowers","Bees","Synergies","Traits"}
-local CATEGORY_TITLES={Flowers="FLOWERS",Bees="BEES",Synergies="SYNERGIES",Traits="TRAITS"}
+local CATEGORY_TITLES={Flowers="FLOWERS",Bees="BEES",Synergies="FLOWER SYNERGIES",Traits="BEE SYNERGIES"}
 
 local STAT_LABELS={
  FlowerGrowthMultiplier="Flower Growth",
@@ -94,7 +94,10 @@ local function traitName(id)
 end
 
 local function flowerDetail(item)
- local body="Level • "..tostring(item.Level or 1).."\n\nFlower entry\n\nDuplicate rolls increase this Flower species Level."
+ local level=math.max(1,math.floor(tonumber(item.Level) or 1))
+ local current=Flowers.FormatLevelBuff(item.Id,level)
+ local nextBuff=level<100 and Flowers.FormatLevelBuff(item.Id,level+1) or "MAX"
+ local body="Level • "..tostring(level).."\n\nPlanted passive • "..current.."\nNext Level • "..nextBuff.."\n\nDuplicate rolls and pollination increase Flower Level, making this passive stronger."
  return tostring(item.Odds or "1/—"),body
 end
 
@@ -136,8 +139,6 @@ local function traitDetail(item)
  for tier,bp in ipairs(item.Breakpoints or {}) do
   thresholds[#thresholds+1]="Tier "..tostring(tier).." • "..tostring(bp.Count or 0).." Bees • "..bonusText(bp.Bonus)
  end
- local members={}
- for _,id in ipairs(item.BeeIds or {}) do members[#members+1]=beeName(id) end
  local biome={}
  for key,value in pairs(item.BiomeModifiers or {}) do biome[#biome+1]=tostring(key).." • "..tostring(value) end
  table.sort(biome)
@@ -147,8 +148,8 @@ local function traitDetail(item)
   "Tier thresholds",
   #thresholds>0 and table.concat(thresholds,"\n") or "None",
   "",
-  "Member Bees",
-  #members>0 and table.concat(members,", ") or "None",
+  "Matching Bees",
+  "Shown as icons above. Equip a matching loadout directly from this entry.",
   "",
   "Biome modifiers",
   #biome>0 and table.concat(biome,"\n") or "None in the current release",
@@ -214,7 +215,11 @@ function Index.Render(controller,profile,uiState)
  local detailIcon=detail:WaitForChild("DetailIcon")
  local detailName=detail:WaitForChild("DetailName")
  local detailMeta=detail:WaitForChild("DetailMeta")
- local detailBody=detail:WaitForChild("DetailScroll"):WaitForChild("DetailBody")
+ local detailScroll=detail:WaitForChild("DetailScroll")
+ local detailBody=detailScroll:WaitForChild("DetailBody")
+ local traitBeeStrip=detail:WaitForChild("TraitBeeStrip")
+ local traitBeeIconTemplate=traitBeeStrip:WaitForChild("TraitBeeIconTemplate")
+ local equipSynergyButton=detail:WaitForChild("EquipSynergyButton")
 
  local function rerender()
   if controller.MenuRenderer=="IndexV1" then controller:RenderMenu(true) end
@@ -320,6 +325,50 @@ function Index.Render(controller,profile,uiState)
   local meta,body=detailsFor(category,selectedItem)
   detailMeta.Text=meta
   detailBody.Text=body
+
+  for _,child in ipairs(traitBeeStrip:GetChildren()) do
+   if child:GetAttribute("IndexRuntime") then child:Destroy() end
+  end
+  local traitMode=category=="Traits"
+  traitBeeStrip.Visible=traitMode
+  equipSynergyButton.Visible=traitMode
+
+  if traitMode then
+   for order,beeId in ipairs(selectedItem.BeeIds or {}) do
+    local icon=traitBeeIconTemplate:Clone()
+    icon.Name="TraitBee_"..tostring(beeId)
+    icon.Visible=true
+    icon.LayoutOrder=order
+    icon.Image=Icons.GetBeeIcon(beeId)
+    icon:SetAttribute("IndexRuntime",true)
+    icon.Parent=traitBeeStrip
+   end
+   local tier=math.max(0,math.floor(tonumber(selectedItem.ActiveTier) or 0))
+   local canEquip=selectedItem.CanEquip==true
+   equipSynergyButton.Active=canEquip
+   equipSynergyButton.Selectable=canEquip
+   equipSynergyButton.Text=tier>0 and ("RE-EQUIP SYNERGY  •  TIER "..tostring(tier)) or (canEquip and "EQUIP SYNERGY" or "MORE MATCHING BEES REQUIRED")
+   equipSynergyButton.TextTransparency=canEquip and 0 or .45
+   equipSynergyButton.BackgroundTransparency=canEquip and .02 or .18
+   local stroke=equipSynergyButton:FindFirstChildOfClass("UIStroke")
+   if stroke then
+    stroke.Color=canEquip and C.Blue or C.BorderSoft
+    stroke.Transparency=canEquip and .08 or .55
+   end
+   if not equipSynergyButton:GetAttribute("IndexEquipBound") then
+    equipSynergyButton:SetAttribute("IndexEquipBound",true)
+    equipSynergyButton.Activated:Connect(function()
+     local current=controller.IndexState and controller.IndexState.Selected and controller.IndexState.Selected.Traits
+     if current and equipSynergyButton.Active then controller:Send("EquipSynergy",current) end
+    end)
+   end
+   detailScroll.Position=UDim2.fromOffset(16,218)
+   detailScroll.Size=UDim2.new(1,-32,1,-234)
+  else
+   detailScroll.Position=UDim2.fromOffset(16,104)
+   detailScroll.Size=UDim2.new(1,-32,1,-120)
+  end
+
   local lines=1
   for _ in string.gmatch(body,"\n") do lines+=1 end
   detailBody.Size=UDim2.new(1,-8,0,math.max(260,lines*20+80))

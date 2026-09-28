@@ -30,7 +30,10 @@ if not costs_match: raise AssertionError("HiveCosts missing")
 costs=[int(float(x)) for x in re.findall(r'[0-9.]+',costs_match.group(1))]
 if len(costs)<8 or costs[1]<=0: raise AssertionError(f"Hive ladder invalid: {costs}")
 
-need(hive,'local cost=C.HiveUpgradeCost(nextLevel)',"endless Hive cost")
+need(hive,'local cost=C.HiveUpgradeCost(nextLevel)',"endless Hive Honey cost")
+need(hive,'local coinCost=C.HiveCoinCost(nextLevel)',"endless Hive Coin cost")
+need(hive,'p.Currencies.Coins-=coinCost',"Hive consumes Coins as a second progression resource")
+need(hive,'function S:UpgradeFromMenu(player)',"Hive menu upgrade route")
 need(hive,'p.Hive.Honey-=cost',"server spend")
 need(hive,'p.Hive.Level=nextLevel',"server Hive upgrade")
 need(hive,'C.WorkshopPointsForHiveLevel(nextLevel)',"endless Hive point schedule")

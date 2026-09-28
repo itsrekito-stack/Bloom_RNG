@@ -21,3 +21,13 @@
 - Hive 9+ grants 1 Workshop Point per level. Existing milestone rewards at 2/4/6/8 are unchanged.
 - Every equipped Bee now contributes Roll Luck. Common Bees start at +2–3%; specialist/rarer Bees scale through +28%, while Arcane trait breakpoints are +15% / +35%.
 - Early Hive 2/4/6/8 pacing is intentionally unchanged; the new curve only extends progression after the release ladder.
+
+## 2026-09-28 progression extension pass
+
+- Hive upgrades now consume both Honey and Coins. The fixed Coin ladder reaches 6,000 Coins at Hive 8, then grows by 1.70× per level (rounded to 100). Hive 12 is roughly a 50K-Coin upgrade, so stored Coins remain relevant.
+- Workshop Coin costs now use a real six-step sink curve: 100 / 250 / 700 / 1,800 / 4,500 / 10,000 per branch.
+- Every Bee provides Roll Luck. Bee Mastery now adds another long-form Luck track, reaching +10% at Mastery 10 before multiplication with that Bee's passive.
+- Every planted Flower provides a species-specific passive. The passive scales with Flower Level and is capped per species; leveling an existing Flower therefore remains useful even during a dry streak for new discoveries.
+- Luck Flowers form an intentional progression line: Clover → Prism Bloom → Moon Orchid → Star Bloom. Other Flowers improve growth, yield, speed, Honey, power, cooldown or Coins.
+- Active Boosts is interaction-stable: authoritative refreshes diff existing badges instead of rebuilding them, preserving horizontal scroll and hover state. Bloom and Server Bloom visually highlight the panel on the exact affected Roll.
+- Hive progression is exposed through the authored Hive Road menu, including current resource progress, the next Workshop Point reward, and nearby Hive levels.

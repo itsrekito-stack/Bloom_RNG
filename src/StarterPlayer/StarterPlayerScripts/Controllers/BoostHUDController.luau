@@ -5,7 +5,7 @@ local Icons=require(RS.Config.IconsConfig)
 local Theme=require(RS.Config.UIThemeConfig)
 
 local C=Theme.Colors
-local S={Badges={},ItemsByBadge={},Minimized=false,Suppressed=false,ItemCount=0}
+local S={Badges={},BadgesById={},ItemsByBadge={},Minimized=false,Suppressed=false,ItemCount=0}
 
 local function cloneData(value)
  if type(value)~="table" then return value end
@@ -82,6 +82,14 @@ function S:Init(ui)
  self.ItemCount=0
  self.Hovered=nil
  self.ItemsByBadge={}
+ self.BadgesById={}
+ self.RootStroke=self.Root:FindFirstChildOfClass("UIStroke")
+ if self.RootStroke then
+  self.RootStrokeBaseColor=self.RootStroke.Color
+  self.RootStrokeBaseThickness=self.RootStroke.Thickness
+  self.RootStrokeBaseTransparency=self.RootStroke.Transparency
+ end
+ self.RollHighlightUntil=0
  self.Root.Visible=true
  self.Tooltip.Visible=false
 
@@ -157,6 +165,7 @@ function S:Clear()
   if badge and badge.Parent then badge:Destroy() end
  end
  table.clear(self.Badges)
+ table.clear(self.BadgesById)
  table.clear(self.ItemsByBadge)
 end
 
@@ -232,6 +241,27 @@ function S:BindBadge(badge,item)
  end)
 end
 
+local function hydrateTimedItem(raw)
+ local item=cloneData(raw)
+ if item.Remaining then item._ExpiresAt=os.clock()+math.max(0,tonumber(item.Remaining) or 0) end
+ for _,entry in ipairs(item.Sources or {}) do
+  if entry.Remaining then entry._ExpiresAt=os.clock()+math.max(0,tonumber(entry.Remaining) or 0) end
+ end
+ return item
+end
+
+function S:UpdateBadge(badge,item,layoutOrder)
+ badge.LayoutOrder=layoutOrder
+ badge.Visible=true
+ local icon=badge:FindFirstChild("Icon")
+ local value=badge:FindFirstChild("Value")
+ if icon and icon:IsA("ImageLabel") then icon.Image=self:Icon(item) end
+ if value and value:IsA("TextLabel") then value.Text=tostring(item.ValueText or "") end
+ badge:SetAttribute("BoostId",tostring(item.Id or ""))
+ self.ItemsByBadge[badge]=item
+ self:BindBadge(badge,item)
+end
+
 function S:Update(payload,revision)
  local signature=payloadSignature(payload)
  if signature==self.LastSignature then
@@ -241,11 +271,12 @@ function S:Update(payload,revision)
  end
  self.LastSignature=signature
  self.LastRevision=revision
- self:Clear()
 
+ local canvasPosition=self.List.CanvasPosition
  local items=payload and payload.Items or {}
- local luck=cloneData(payload and payload.Luck or {Id="Luck",Label="Luck",ValueText="0%",Total=1,Sources={}})
+ local luck=hydrateTimedItem(payload and payload.Luck or {Id="Luck",Label="Luck",ValueText="0%",Total=1,Sources={}})
  self.ItemCount=#items+1
+
  local luckValue=self.LuckBadge:FindFirstChild("Value")
  local luckIcon=self.LuckBadge:FindFirstChild("Icon")
  if luckValue and luckValue:IsA("TextLabel") then luckValue.Text=tostring(luck.ValueText or "0%") end
@@ -253,39 +284,81 @@ function S:Update(payload,revision)
  self.LuckBadge.Visible=true
  self.LuckBadge.LayoutOrder=0
  self.LuckBadge:SetAttribute("BoostId","Luck")
+ self.ItemsByBadge[self.LuckBadge]=luck
  self:BindBadge(self.LuckBadge,luck)
+
+ local desired={}
+ local ordered={}
+ for index,raw in ipairs(items) do
+  local item=hydrateTimedItem(raw)
+  local id=tostring(item.Id or index)
+  desired[id]=true
+  local badge=self.BadgesById[id]
+  if not badge or not badge.Parent then
+   badge=self.Template:Clone()
+   badge.Name="Boost_"..id
+   badge:SetAttribute("RuntimeBoost",true)
+   badge.Parent=self.List
+   self.BadgesById[id]=badge
+  end
+  self:UpdateBadge(badge,item,index)
+  ordered[#ordered+1]=badge
+ end
+
+ for id,badge in pairs(self.BadgesById) do
+  if not desired[id] then
+   if self.Hovered and self.Hovered.Badge==badge then
+    self.Hovered=nil
+    self.Tooltip.Visible=false
+   end
+   self.ItemsByBadge[badge]=nil
+   self.BadgesById[id]=nil
+   if badge and badge.Parent then badge:Destroy() end
+  end
+ end
+ self.Badges=ordered
+
+ if self.Hovered and self.Hovered.Badge and self.Hovered.Badge.Parent then
+  local current=self.ItemsByBadge[self.Hovered.Badge]
+  if current then
+   self.Hovered.Item=current
+   self:PlaceTooltip(self.Hovered.Badge,current)
+  end
+ end
+
  local safeWidth=self.UI.SafeRoot and self.UI.SafeRoot.AbsoluteSize.X or self.ViewportWidth or 1366
  self:ApplyResponsiveLayout(safeWidth)
  self:SetSuppressed(self.UI:IsWorkshopExclusive())
- self:SetMinimized(self.Minimized,false)
+ self.List.CanvasPosition=canvasPosition
+ task.defer(function()
+  if not self.List or not self.List.Parent then return end
+  local maxX=math.max(0,self.List.AbsoluteCanvasSize.X-self.List.AbsoluteWindowSize.X)
+  self.List.CanvasPosition=Vector2.new(math.clamp(canvasPosition.X,0,maxX),0)
+ end)
+end
 
- for index,raw in ipairs(items) do
-  local item=cloneData(raw)
-  if item.Remaining then item._ExpiresAt=os.clock()+math.max(0,tonumber(item.Remaining) or 0) end
-  for _,entry in ipairs(item.Sources or {}) do
-   if entry.Remaining then entry._ExpiresAt=os.clock()+math.max(0,tonumber(entry.Remaining) or 0) end
-  end
-
-  local badge=self.Template:Clone()
-  badge.Name="Boost_"..tostring(item.Id or index)
-  badge.LayoutOrder=index
-  badge.Visible=true
-  badge.Parent=self.List
-  badge:SetAttribute("RuntimeBoost",true)
-
-  local icon=badge:FindFirstChild("Icon")
-  local value=badge:FindFirstChild("Value")
-  if icon and icon:IsA("ImageLabel") then icon.Image=self:Icon(item) end
-  if value and value:IsA("TextLabel") then value.Text=tostring(item.ValueText or "") end
-
-  badge:SetAttribute("BoostId",tostring(item.Id or ""))
-  self.ItemsByBadge[badge]=item
-  self:BindBadge(badge,item)
-  table.insert(self.Badges,badge)
+function S:FlashRollBoost(payload)
+ if type(payload)~="table" or (payload.IsSpecialRoll~=true and payload.ServerBloomLuck~=true) then return end
+ self.RollHighlightUntil=os.clock()+1.35
+ local color=payload.ServerBloomLuck and C.Blue or C.Gold
+ if self.RootStroke then
+  TweenService:Create(self.RootStroke,TweenInfo.new(Theme.Motion.Fast),{Color=color,Thickness=2.6,Transparency=0}):Play()
  end
+ TweenService:Create(self.Root,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelHover}):Play()
 end
 
 function S:Tick()
+ if self.RollHighlightUntil and self.RollHighlightUntil>0 and os.clock()>=self.RollHighlightUntil then
+  self.RollHighlightUntil=0
+  if self.RootStroke then
+   TweenService:Create(self.RootStroke,TweenInfo.new(Theme.Motion.Fast),{
+    Color=self.RootStrokeBaseColor or C.Border,
+    Thickness=self.RootStrokeBaseThickness or 1.25,
+    Transparency=self.RootStrokeBaseTransparency or .18,
+   }):Play()
+  end
+  TweenService:Create(self.Root,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.Panel}):Play()
+ end
  for _,badge in ipairs(self.Badges) do
   local item=self.ItemsByBadge[badge]
   if badge.Parent and item and item._ExpiresAt then

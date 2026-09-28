@@ -22,23 +22,26 @@ local WorkshopEffects=require(RS.Shared.WorkshopEffects)
 local InventoryV2=require(script.Parent.InventoryV2Controller)
 local GardenEditor=require(script.Parent.GardenEditorController)
 local IndexV1=require(script.Parent.IndexController)
+local HiveV1=require(script.Parent.HiveController)
 local QuestsV2=require(script.Parent.QuestsController)
 local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="endless-hive-index-rarity-dock-v12-2026-09-28"
+local CLIENT_BUILD="flower-buffs-hive-road-stable-boosts-v13-2026-09-28"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
-local MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Index="IndexV1",Trials="QuestsV2",Settings="SettingsV2"}
-local MENU_DOCK_CONTEXT={SeedSatchel=true,Index=true,Workshop=true,Trials=true,Settings=true,Garden=true}
+local MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Hive="HiveV1",Index="IndexV1",Trials="QuestsV2",Settings="SettingsV2"}
+local MENU_DOCK_CONTEXT={SeedSatchel=true,Garden=true,Hive=true,Index=true,Workshop=true,Trials=true,Settings=true}
 local MENU_REFRESH_ACTIONS={
  Setting="Settings",
  ResetSettings="Settings",
  EquipBee="SeedSatchel",
  UnequipAllBees="SeedSatchel",
  GardenEdit="Garden",
+ HiveUpgrade="Hive",
+ EquipSynergy="Index",
  IndexViewed="Index",
  Flag="SeedSatchel",
  WorkshopBuy="Workshop",
@@ -48,6 +51,7 @@ local MENU_REFRESH_ACTIONS={
 local MENU_NAMES={
  SeedSatchel="Inventory",
  Garden="Garden",
+ Hive="Hive",
  Index="Index",
  Workshop="Workshop",
  Trials="Quests",
@@ -59,6 +63,7 @@ local MENU_NAMES={
 local MENU_HINTS={
  SeedSatchel="Bees, resources, and keepsakes",
  Garden="Arrange your seven Flower slots and inspect the active Synergy",
+ Hive="Level your Hive, spend resources, and earn Workshop Points",
  Index="Discovered Flowers, Bees, Synergies, and Traits",
  Workshop="Permanent upgrades and progression branches",
  Trials="Tasks, progress & rewards",
@@ -764,7 +769,7 @@ function UI:Open(name,arg,options)
  if self:IsIndexExclusive() and name~="Index" then return end
  if self.Menu==name and arg==nil then self:Close() return end
  if not self.State then return end
- if name~="Settings" and name~="Season" and name~="Cards" and name~="Replay" and name~="Index" and not self.State.Profile.Tutorial.FeatureUnlocks[name] then return end
+ if name~="Settings" and name~="Season" and name~="Cards" and name~="Replay" and name~="Index" and name~="Hive" and not self.State.Profile.Tutorial.FeatureUnlocks[name] then return end
 
  local silentMenu=type(options)=="table" and options.SilentMenu==true
  if silentMenu and self.MenuServerOpen then
@@ -870,6 +875,8 @@ function UI:RenderMenu(preserveInteraction)
    self.Panel.Size=UDim2.fromOffset(math.min(1220,math.max(700,safeW-24)),math.min(660,math.max(500,safeH-24)))
   elseif renderer=="GardenV1" then
    self.Panel.Size=UDim2.fromOffset(math.min(1040,math.max(760,safeW-36)),math.min(620,math.max(500,safeH-40)))
+  elseif renderer=="HiveV1" then
+   self.Panel.Size=UDim2.fromOffset(math.min(920,math.max(720,safeW-56)),math.min(590,math.max(500,safeH-54)))
   elseif renderer=="SettingsV2" then
    self.Panel.Size=UDim2.fromOffset(math.min(920,math.max(720,safeW-64)),math.min(570,math.max(500,safeH-72)))
   elseif renderer=="QuestsV2" then
@@ -919,6 +926,13 @@ function UI:RenderMenu(preserveInteraction)
   self.Content.ScrollingEnabled=false
   self.Content.ScrollBarThickness=0
   GardenEditor.Render(self,p,ui)
+
+ elseif renderer=="HiveV1" then
+  self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
+  self.Content.CanvasSize=UDim2.fromOffset(0,0)
+  self.Content.ScrollingEnabled=false
+  self.Content.ScrollBarThickness=0
+  HiveV1.Render(self,p,ui)
 
  elseif renderer=="IndexV1" then
   self.Content.AutomaticCanvasSize=Enum.AutomaticSize.None
@@ -1293,14 +1307,14 @@ function UI:ApplyMenuDockLayout(expanded)
  if self.IsMobileLayout then
   local safeSize=self.SafeRoot and self.SafeRoot.AbsoluteSize or Vector2.new(700,700)
   local width=math.max(320,safeSize.X)
-  local scale=math.min(1,math.max(.58,(width-16)/495))
+  local scale=math.min(1,math.max(.52,(width-16)/579))
   if dockScale then dockScale.Scale=scale end
   self.Dock.AnchorPoint=Vector2.new(.5,1)
-  self.Dock.Position=UDim2.new(.5,expanded and -42 or math.floor(109*scale+.5),1,expanded and -14 or -94)
+  self.Dock.Position=UDim2.new(.5,expanded and -84 or math.floor(151*scale+.5),1,expanded and -14 or -94)
  else
   if dockScale then dockScale.Scale=1 end
   self.Dock.AnchorPoint=Vector2.new(.5,1)
-  self.Dock.Position=UDim2.new(.5,expanded and -42 or 109,1,-14)
+  self.Dock.Position=UDim2.new(.5,expanded and -84 or 151,1,-14)
  end
 end
 
@@ -1323,6 +1337,7 @@ function UI:RefreshMenuDock()
  local dockUnlocked={
   SeedSatchel=inventoryUnlocked,
   Garden=p.Tutorial.FeatureUnlocks.Garden==true,
+  Hive=inventoryUnlocked,
   Index=inventoryUnlocked,
   Workshop=p.Tutorial.FeatureUnlocks.Workshop==true,
   Trials=p.Tutorial.FeatureUnlocks.Trials==true,
@@ -1830,6 +1845,9 @@ end
 
 function UI:ResolveRouletteReward(payload)
  if type(payload)~="table" or self.RouletteLanding then return end
+ if self.BoostHUD and (payload.IsSpecialRoll==true or payload.ServerBloomLuck==true) then
+  self.BoostHUD:FlashRollBoost(payload)
+ end
  local requestId=payload.RequestId
  local requestSession=requestId and self.RollRequestSessions[requestId] or self.PendingRollSession
  if requestSession~=nil and requestSession~=(self.RollSession or 0) then return end
@@ -1923,7 +1941,7 @@ function UI:BindStaticUI()
  self.DockLayout=self.Dock:FindFirstChildOfClass("UIListLayout")
  self.DockButtons={}
  self.DockTooltips={}
- for _,name in ipairs({"SeedSatchel","Garden","Index","Workshop","Trials","Settings"}) do
+ for _,name in ipairs({"SeedSatchel","Garden","Hive","Index","Workshop","Trials","Settings"}) do
   local button=self.Dock:WaitForChild("Dock_"..name)
   local tip=button:WaitForChild("Tooltip")
   tip.Text=MENU_NAMES[name] or name
@@ -2089,6 +2107,20 @@ local function validateBloomGui(gui)
      if not stateKits.GardenKit:FindFirstChild(name,true) then table.insert(missing,"MainPanel/StateKits/GardenKit/"..name) end
     end
    end
+   if not stateKits or not stateKits:FindFirstChild("HiveKit") then
+    table.insert(missing,"MainPanel/StateKits/HiveKit")
+   else
+    for _,name in ipairs({"HiveShell","ProgressTrack","RoadList","RoadNodeTemplate","UpgradeButton"}) do
+     if not stateKits.HiveKit:FindFirstChild(name,true) then table.insert(missing,"MainPanel/StateKits/HiveKit/"..name) end
+    end
+   end
+   local indexPrototype=panel:FindFirstChild("IndexPrototype")
+   if indexPrototype then
+    for _,name in ipairs({"TraitBeeStrip","TraitBeeIconTemplate","EquipSynergyButton"}) do
+     if not indexPrototype:FindFirstChild(name,true) then table.insert(missing,"IndexPrototype/"..name) end
+    end
+   end
+   if not root:FindFirstChild("Dock_Hive",true) then table.insert(missing,"MenuDock/Dock_Hive") end
  end
  for _,name in ipairs(RETIRED_MENU_GUI) do
   if root:FindFirstChild(name,true) then table.insert(missing,"retired:"..name) end

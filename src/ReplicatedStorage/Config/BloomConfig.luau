@@ -32,11 +32,14 @@ local C={
  RemoteBurst=12,
  RemoteRate=6,
  HiveCosts={0,40,100,220,450,850,1500,2500},
+ HiveCoinCosts={0,60,180,450,1000,2000,3500,6000},
  GardenSlotHiveMilestones={2,3,4,5,6,7},
  BeeSlotHiveMilestones={2,3,4,5,6,7,8},
  WorkshopPointHiveMilestones={[2]=2,[4]=1,[6]=1,[8]=2},
  EndlessHiveCostGrowth=1.35,
  EndlessHiveCostRound=50,
+ EndlessHiveCoinGrowth=1.70,
+ EndlessHiveCoinRound=100,
  EndlessHivePointsPerLevel=1,
  HiveQuestRequirements={
   [2]={Discoveries=2},
@@ -78,6 +81,18 @@ function C.HiveUpgradeCost(nextLevel)
  local base=C.HiveCosts[#C.HiveCosts] or 2500
  local growth=math.max(1,tonumber(C.EndlessHiveCostGrowth) or 1.35)
  local roundTo=math.max(1,math.floor(tonumber(C.EndlessHiveCostRound) or 50))
+ local raw=base*(growth^extra)
+ return math.max(base,math.floor(raw/roundTo+.5)*roundTo)
+end
+
+function C.HiveCoinCost(nextLevel)
+ local level=math.max(2,math.floor(tonumber(nextLevel) or 2))
+ local fixed=C.HiveCoinCosts[level]
+ if fixed then return fixed end
+ local extra=level-#C.HiveCoinCosts
+ local base=C.HiveCoinCosts[#C.HiveCoinCosts] or 6000
+ local growth=math.max(1,tonumber(C.EndlessHiveCoinGrowth) or 1.70)
+ local roundTo=math.max(1,math.floor(tonumber(C.EndlessHiveCoinRound) or 100))
  local raw=base*(growth^extra)
  return math.max(base,math.floor(raw/roundTo+.5)*roundTo)
 end

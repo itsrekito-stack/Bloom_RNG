@@ -20,6 +20,7 @@ local names={
 -- The final two nodes share Hive 5 so complete branches are available before
 -- the Hive 8 Season Turn requirement.
 local HIVE_BY_INDEX={1,2,3,4,5,5}
+local COINS_BY_INDEX={100,250,700,1800,4500,10000}
 
 C.Nodes.CORE={Id="CORE",Name="Bloom Core",Cost=0,Branch="CORE",Index=0,IconKey="Core"}
 
@@ -32,7 +33,7 @@ for b,branch in ipairs(C.Branches) do
    Branch=branch,
    Index=i,
    Cost=1,
-   Coins=i*30,
+   Coins=COINS_BY_INDEX[i] or 0,
    Dust=(branch=="ECONOMY" or branch=="BLOOM") and i*3 or 0,
    Nectar=branch=="LEGACY" and i or 0,
    Parent=i==1 and "CORE" or branch.."_"..(i-1),

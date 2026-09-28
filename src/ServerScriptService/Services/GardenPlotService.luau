@@ -47,8 +47,10 @@ end
 function S:HivePromptText(p)
  if self.X and self.X.HiveService then return self.X.HiveService:PromptText(p) end
  if (p.Tutorial.Events.FirstGardenSlot or 0)==0 and not p.Tutorial.Skipped then return "Unlock Garden Slot 1" end
- local cost=C.HiveUpgradeCost(p.Hive.Level+1)
- return "Upgrade Hive • "..math.floor(cost).." Honey"
+ local nextLevel=p.Hive.Level+1
+ local cost=C.HiveUpgradeCost(nextLevel)
+ local coins=C.HiveCoinCost(nextLevel)
+ return "Upgrade Hive • "..math.floor(cost).." Honey • "..math.floor(coins).." Coins"
 end
 
 function S:RefreshHivePrompt(player)

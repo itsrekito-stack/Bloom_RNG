@@ -116,7 +116,8 @@ function S.Render(controller,profile,uiState)
   local icon=card:FindFirstChild("Icon",true)
   if icon and icon:IsA("ImageLabel") then icon.Image=iconFor(entry.Id) end
   setText(card,"Name",entry.DisplayName or entry.Id)
-  setText(card,"Meta","1/N "..tostring(entry.Odds or "1/—").."  •  Lv. "..tostring(entry.Mastery and entry.Mastery.Level or 1))
+  local level=tonumber(entry.Mastery and entry.Mastery.Level) or 1
+  setText(card,"Meta",tostring(entry.Odds or "1/—").."  •  Lv. "..tostring(level))
   local usedSlot=usedById[entry.Id]
   local usedBadge=card:FindFirstChild("UsedBadge")
   if usedBadge and usedBadge:IsA("TextLabel") then
@@ -201,7 +202,8 @@ function S.Render(controller,profile,uiState)
  if selectedLabel and selectedLabel:IsA("TextLabel") then
   local id=state.SelectedFlowerId
   local cfg=id and Flowers.Species[id]
-  selectedLabel.Text=cfg and ("SELECTED  •  "..cfg.DisplayName) or "SELECT A FLOWER, THEN A SLOT"
+  local mastery=id and masteryFor(inventory,id) or {Level=1}
+  selectedLabel.Text=cfg and ("SELECTED  •  "..cfg.DisplayName.."  •  "..Flowers.FormatLevelBuff(id,mastery.Level)) or "SELECT A FLOWER, THEN A SLOT"
  end
 
  local active=synergyById(gardenState.ActiveSynergy)

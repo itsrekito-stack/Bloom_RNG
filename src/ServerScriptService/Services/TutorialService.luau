@@ -121,8 +121,11 @@ function S:Assist(player,p)
  elseif step.Id=="PollenSpark" then
   self.X.GardenActivityService:EnsureTutorialSpark(player)
  elseif step.Id=="HiveUpgrade" and not t.Events.TutorialAssistHive then
-  local need=Bloom.HiveCosts[p.Hive.Level+1]
+  local nextLevel=p.Hive.Level+1
+  local need=Bloom.HiveUpgradeCost(nextLevel)
+  local coins=Bloom.HiveCoinCost(nextLevel)
   if need and p.Hive.Honey<need then p.Hive.Honey=need end
+  if coins and p.Currencies.Coins<coins then p.Currencies.Coins=coins end
   t.Events.TutorialAssistHive=1
   self.X.GardenPlotService:RefreshHivePrompt(player)
   self.X:MarkStateDirty(player)

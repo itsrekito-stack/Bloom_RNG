@@ -71,7 +71,8 @@ need(hive,"function S:QuestStatus(profile,nextLevel)","Hive quest validation")
 for key in ("Discoveries","Synergies","BeeMasteryLevel","Activities","Trials"):
     need(bloom,key+"=","Hive quest table covers "+key)
 need(hive,"if not questReady then","Hive upgrade blocks incomplete quest")
-need(bloom,"function C.HiveUpgradeCost(nextLevel)","endless Hive cost function")
+need(bloom,"function C.HiveUpgradeCost(nextLevel)","endless Hive Honey cost function")
+need(bloom,"function C.HiveCoinCost(nextLevel)","endless Hive Coin cost function")
 need(bloom,"function C.WorkshopPointsForHiveLevel(level)","endless Hive point function")
 need(hive,"C.WorkshopPointsForHiveLevel(nextLevel)","Hive points continue after release milestones")
 need(meta,'local POINT_MILESTONES={Synergy=1,Trait=1,SeasonReady=2}',"Journey point milestone table without Trial gate")
@@ -86,6 +87,7 @@ coins=deliveries*coins_per
 if deliveries!=10 or coins<30:
     raise AssertionError(f"early Hive pacing drift: {deliveries} deliveries / {coins} Coins")
 need(tutorial_service,"p.Hive.Honey=need","tutorial cannot stall on Hive 2 Honey")
+need(tutorial_service,"p.Currencies.Coins=coins","tutorial cannot stall on Hive 2 Coins")
 need(tutorial_service,"p.WorkshopV5.Points=math.max(p.WorkshopV5.Points,node.Cost or 0)","tutorial guarantees first Workshop point")
 
 need(locations,"Order={}","removed location list stays empty")

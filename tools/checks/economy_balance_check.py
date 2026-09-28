@@ -13,6 +13,9 @@ def need(src,text,label):
 
 bloom=read("src/ReplicatedStorage/Config/BloomConfig.luau")
 workshop=read("src/ReplicatedStorage/Config/WorkshopConfig.luau")
+flowers=read("src/ReplicatedStorage/Config/FlowersConfig.luau")
+stats=read("src/ServerScriptService/Services/StatsService.luau")
+tutorial=read("src/ServerScriptService/Services/TutorialService.luau")
 poll=read("src/ServerScriptService/Services/PollinatorService.luau")
 hive=read("src/ServerScriptService/Services/HiveService.luau")
 inventory=read("src/ServerScriptService/Services/InventoryService.luau")
@@ -54,15 +57,20 @@ if not 120<=one_bee_minutes<=260:
     raise AssertionError(f"Hive 8 one-bee upper-bound pacing outside guardrail: {one_bee_minutes:.1f}m")
 
 coins_before_hive2=first_deliveries*coins_per
-first_workshop_coin_cost=30
-if not first_workshop_coin_cost<=coins_before_hive2<=first_workshop_coin_cost*4:
-    raise AssertionError(f"first Workshop affordability drift: {coins_before_hive2} Coins before Hive 2")
-
-nonlegacy_workshop_coins=sum(i*30 for i in range(1,7))*6
+coin_costs=[float(x) for x in re.findall(r'[0-9.]+',re.search(r'HiveCoinCosts=\{([^}]*)\}',bloom).group(1))]
+if len(coin_costs)!=8 or coin_costs[0]!=0 or any(coin_costs[i]>=coin_costs[i+1] for i in range(1,len(coin_costs)-1)):
+    raise AssertionError(f"unexpected Hive Coin ladder: {coin_costs}")
+if coin_costs[1]!=coins_before_hive2:
+    raise AssertionError(f"Hive 2 Coin cost should match the first natural delivery loop: {coin_costs[1]} vs {coins_before_hive2}")
+need(bloom,"function C.HiveCoinCost(nextLevel)","endless Hive Coin curve")
+need(hive,"p.Currencies.Coins-=coinCost","Hive Coin sink")
+need(tutorial,"p.Currencies.Coins=coins","tutorial can afford the first Hive Coin gate")
+if "local COINS_BY_INDEX={100,250,700,1800,4500,10000}" not in workshop:
+    raise AssertionError("Workshop Coin curve drifted from the progression pass")
 baseline_coins_to_hive8=total_deliveries*coins_per
-ratio=baseline_coins_to_hive8/nonlegacy_workshop_coins
-if not 1.4<=ratio<=3.5:
-    raise AssertionError(f"Coin source/sink ratio outside guardrail: {ratio:.2f}x")
+fixed_hive_coin_sink=sum(coin_costs[1:])
+if not fixed_hive_coin_sink>baseline_coins_to_hive8:
+    raise AssertionError("Hive Coin sink is too weak to matter by Hive 8")
 
 # Duplicate rolls now feed species Level/Mastery directly; Petal Dust is a world/seasonal resource.
 need(inventory,'self.X.FlowerProgressionService:AddDuplicate(player,id,1)',"Flower duplicate progression")
@@ -94,6 +102,8 @@ need(poll,"profile.Hive.Honey+=honey","Honey source")
 need(hive,"p.Hive.Honey-=cost","Honey sink")
 need(poll,"profile.Currencies.Coins+=coins","Coin source")
 need(workshop_service,"p.Currencies.Coins-=(n.Coins or 0)","Coin Workshop sink")
+need(flowers,"function C.GetLevelBuff(id:string,level:number?)","Flower Level passive config")
+need(stats,"local buff=F.GetLevelBuff(id,mastery and mastery.Level or 1)","planted Flower passives enter authoritative stats")
 need(season_plan,"after.Currencies.Coins=0","Coin Season sink")
 if "PetalDust" in map_service:
     raise AssertionError("removed world landmarks must not remain a Petal Dust source")
@@ -111,5 +121,5 @@ need(meta,'self.X.WorkshopService:Point(player,"JourneyMilestone_"..key,points)'
 need(workshop_service,"w.Points-=(n.Cost or 0)","Workshop Point sink")
 
 print("economy balance contract: PASS")
-print(f"Hive2 baseline {first_hive_seconds:.0f}s; Hive8 one-bee upper bound {one_bee_minutes:.1f}m; Coin coverage {ratio:.2f}x seasonal Workshop; Legacy ~{base_seasons_for_legacy} base Seasons.")
+print(f"Hive2 baseline {first_hive_seconds:.0f}s; Hive8 one-bee upper bound {one_bee_minutes:.1f}m; fixed Hive Coin sink {int(fixed_hive_coin_sink)}; Legacy ~{base_seasons_for_legacy} base Seasons.")
 print(f"Bloom delivery-only {bloom_delivery_minutes:.2f}m; base pity {pity_seconds:.1f}s; minimum first-Season Workshop Points {minimum_first_season_points}.")

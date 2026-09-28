@@ -6,10 +6,10 @@ model=json.loads((ROOT/'src/StarterGui/BloomUI.model.json').read_text(encoding='
 TARGETS=['ObjectiveCard','CurrencyHUD','QuestTrackerHUD','MenuDock','RollHUD','VerticalRoulette','RollButton','ActiveBoostsHUD']
 VIEWPORTS=[(1920,1080),(1366,768),(1280,720)]
 NO_OVERLAP=[('ObjectiveCard','VerticalRoulette'),('CurrencyHUD','QuestTrackerHUD'),('QuestTrackerHUD','MenuDock'),('CurrencyHUD','MenuDock'),('RollHUD','RollButton'),('ActiveBoostsHUD','RollButton'),('ActiveBoostsHUD','RollHUD')]
-DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Garden','Dock_Index','Dock_Workshop','Dock_Trials','Dock_Settings']
+DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Garden','Dock_Hive','Dock_Index','Dock_Workshop','Dock_Trials','Dock_Settings']
 MIN_HIT=44
 MENU_DOCK_MIN_Z=130
-EXPANDED_DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Garden','Dock_Index','Dock_Workshop','Dock_Trials','Dock_Settings']
+EXPANDED_DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Garden','Dock_Hive','Dock_Index','Dock_Workshop','Dock_Trials','Dock_Settings']
 
 def children(node): return node.get('Children',[]) or []
 def find(node,name):
@@ -65,9 +65,9 @@ if dock_model:
     if workshop:
         wr=rect(workshop,dock_w,75)
         workshop_center=wr[0]+wr[2]/2
-        # Runtime positions the 495px dock at X=-42 so Workshop stays screen-centered.
-        if abs((workshop_center-dock_w/2)-42)>.01:
-            failed.append('Dock_Workshop expanded center offset must stay exactly +42px inside MenuDock')
+        # Runtime positions the 579px dock at X=-84 so Workshop stays screen-centered.
+        if abs((workshop_center-dock_w/2)-84)>.01:
+            failed.append('Dock_Workshop expanded center offset must stay exactly +84px inside MenuDock')
     for name in EXPANDED_DOCK_BUTTONS:
         node=by_name.get(name)
         if not node:

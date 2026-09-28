@@ -26,7 +26,7 @@ def find(node,name):
 
 proto=find(model,"IndexPrototype")
 if not proto: raise AssertionError("IndexPrototype missing")
-for name in ["TopBar","CategoryNav","CatalogPanel","CatalogGrid","IndexCardTemplate","DetailsPanel","DetailContent","DetailScroll","DetailBody"]:
+for name in ["TopBar","CategoryNav","CatalogPanel","CatalogGrid","IndexCardTemplate","DetailsPanel","DetailContent","DetailScroll","DetailBody","TraitBeeStrip","TraitBeeIconTemplate","EquipSynergyButton"]:
     if not find(proto,name): raise AssertionError(f"Index authored node missing: {name}")
 for category in ["Flowers","Bees","Synergies","Traits"]:
     if not find(proto,"Category_"+category): raise AssertionError(f"Index category missing: {category}")
@@ -74,6 +74,9 @@ for text,label in [
     ('item.Effect',"Synergy effect"),
     ('item.Breakpoints',"Trait tier thresholds"),
     ('item.BeeIds',"Trait member Bees"),
+    ('Flowers.FormatLevelBuff(item.Id,level)',"Flower level-scaled passive detail"),
+    ('traitBeeIconTemplate:Clone()',"Trait Bees rendered as icons"),
+    ('controller:Send("EquipSynergy",current)',"Equip Synergy action"),
     ('item.BiomeModifiers',"Trait biome modifiers"),
 ]:
     need(controller,text,label)
@@ -92,7 +95,7 @@ for text,label in [
     ('IndexViewed="Index"',"read-state refresh mapping"),
 ]:
     need(bloom,text,label)
-need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Index","Workshop","Trials","Settings"}) do',"Index opens from the authored bottom dock")
+need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Hive","Index","Workshop","Trials","Settings"}) do',"Index opens from the authored bottom dock")
 if 'controller:Open("Index"' in inventory:
     raise AssertionError("Inventory must not carry a second disconnected Index entry point")
 need(player,'elseif action=="IndexViewed" then return self.UIStateService:MarkIndexRead(p,a,b)',"IndexViewed server route")
@@ -113,6 +116,9 @@ index_blob=str(model)
 if "Petal Dust: earn from Server Bloom" not in index_blob or "Ancient Nectar: earn by completing Seasons" not in index_blob:
     raise AssertionError("Index currency acquisition guidance missing")
 need(remote,'elseif action=="IndexViewed" then',"IndexViewed schema")
+need(remote,'or action=="EquipSynergy" then',"EquipSynergy schema")
+need(player,'elseif action=="EquipSynergy" then return self.InventoryService:EquipTraitSynergy(player,a)',"EquipSynergy server route")
+need(state,'CanEquip=canEquip',"trait equip authority projected")
 
 # UI Studio exposes the authored fullscreen shell.
 need(editor_html,'data-ui-state="index"',"Index UI Studio state")

@@ -26,6 +26,21 @@ local POLLINATION_EFFECTS={
  EmberDahlia="Pulse",
 }
 
+local LEVEL_BUFFS={
+ Daisy={Stat="FlowerGrowthMultiplier",Label="Flower Growth",Base=.012,PerLevel=.0018,Cap=.20},
+ Tulip={Stat="PollinatorYieldMultiplier",Label="Pollination Yield",Base=.012,PerLevel=.0018,Cap=.20},
+ Sunflower={Stat="PollinatorTravelSpeedMultiplier",Label="Bee Speed",Base=.012,PerLevel=.0016,Cap=.18},
+ Clover={Stat="LuckMultiplier",Label="Luck",Base=.015,PerLevel=.0018,Cap=.22},
+ CrystalRose={Stat="HiveHoneyMultiplier",Label="Hive Honey",Base=.018,PerLevel=.0022,Cap=.25},
+ FrostLily={Stat="AbilityCooldownMultiplier",Label="Ability Cooldown",Base=.010,PerLevel=.0015,Cap=.18,Inverse=true},
+ PrismBloom={Stat="LuckMultiplier",Label="Luck",Base=.025,PerLevel=.0022,Cap=.28},
+ MoonOrchid={Stat="LuckMultiplier",Label="Luck",Base=.035,PerLevel=.0026,Cap=.34},
+ Nightshade={Stat="PollinatorPowerMultiplier",Label="Bee Power",Base=.030,PerLevel=.0026,Cap=.32},
+ VoidLotus={Stat="PollinatorYieldMultiplier",Label="Pollination Yield",Base=.032,PerLevel=.0028,Cap=.34},
+ StarBloom={Stat="LuckMultiplier",Label="Luck",Base=.050,PerLevel=.0030,Cap=.40},
+ EmberDahlia={Stat="CoinMultiplier",Label="Coins",Base=.050,PerLevel=.0030,Cap=.40},
+}
+
 local function species(id:string,name:string,rarity:string,shape:string,color:Color3,yield:number,sectors:{string},accent:Color3?)
  local allowedSectors={}
  for _,sector in ipairs(sectors) do
@@ -89,6 +104,24 @@ end
 
 function C.Exists(id:string):boolean
  return C.Species[id]~=nil
+end
+
+function C.GetLevelBuff(id:string,level:number?):any
+ local cfg=LEVEL_BUFFS[id]
+ if not cfg then return nil end
+ local lv=math.clamp(math.floor(tonumber(level) or 1),1,Bloom.MasteryCap)
+ local bonus=math.min(tonumber(cfg.Cap) or 1,(tonumber(cfg.Base) or 0)+(lv-1)*(tonumber(cfg.PerLevel) or 0))
+ local inverse=cfg.Inverse==true
+ local multiplier=inverse and math.max(.05,1-bonus) or 1+bonus
+ return {Stat=cfg.Stat,Label=cfg.Label,Level=lv,Bonus=bonus,Multiplier=multiplier,Inverse=inverse}
+end
+
+function C.FormatLevelBuff(id:string,level:number?):string
+ local buff=C.GetLevelBuff(id,level)
+ if not buff then return "No passive bonus" end
+ local pct=math.floor((tonumber(buff.Bonus) or 0)*1000+.5)/10
+ local value=(pct%1==0) and tostring(math.floor(pct)) or string.format("%.1f",pct)
+ return (buff.Inverse and "-" or "+")..value.."% "..tostring(buff.Label)
 end
 
 return C

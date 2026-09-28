@@ -15,7 +15,7 @@ spec.loader.exec_module(module)
 
 required={"ActiveBoostsHUD","ActiveBoostTooltip"}
 boost_required={"MinimizeButton","LuckBadge","ScrollLeft","ScrollRight"}
-additional_required={"TraitFilterPanel","TraitFilterList","TraitChipTemplate","UnequipAllButton","EquippedBadge","InventoryHoverScale","BeeSummary","PassiveRowTemplate","AbilityDescription","UsedBadge","GhostBadge","MenuDock","CurrencyHelp","Dock_SeedSatchel","Dock_Garden","Dock_Index","Dock_Workshop","Dock_Trials","Dock_Settings"}
+additional_required={"TraitFilterPanel","TraitFilterList","TraitChipTemplate","UnequipAllButton","EquippedBadge","InventoryHoverScale","BeeSummary","PassiveRowTemplate","AbilityDescription","UsedBadge","GhostBadge","MenuDock","CurrencyHelp","Dock_SeedSatchel","Dock_Garden","Dock_Hive","Dock_Index","Dock_Workshop","Dock_Trials","Dock_Settings","HiveKit","HiveShell","RoadList","RoadNodeTemplate","UpgradeButton","TraitBeeStrip","TraitBeeIconTemplate","EquipSynergyButton"}
 workshop_required={
     "WorkshopTemplate","WorkshopBody","TreePanel","TreeCanvas","PanMap",
     "NodeTooltip","WorkshopCurrencyBar","WorkshopPoints","WorkshopCoins","WorkshopPetalDust","WorkshopAncientNectar",
@@ -42,7 +42,7 @@ merged_hud=module.merge_remote_changes(base_hud,local_hud,remote_hud)
 nested_names={x.get("Name") for x in merged_hud["Children"]}
 assert {"MinimizeButton","LuckBadge","ScrollLeft","ScrollRight"}<=nested_names, "required boost controls were lost by Python AI-sync merge"
 
-dock_names={"Dock_SeedSatchel","Dock_Garden","Dock_Index","Dock_Workshop","Dock_Trials","Dock_Settings"}
+dock_names={"Dock_SeedSatchel","Dock_Garden","Dock_Hive","Dock_Index","Dock_Workshop","Dock_Trials","Dock_Settings"}
 base_dock=node("MenuDock",[node(name) for name in sorted(dock_names)])
 local_dock=node("MenuDock",[])
 remote_dock=node("MenuDock",[node(name) for name in sorted(dock_names)])

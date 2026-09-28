@@ -71,7 +71,9 @@ for required in [
     "TraitFilterPanel","TraitFilterList","TraitChipTemplate","UnequipAllButton","EquippedBadge","InventoryHoverScale",
     "BeeSummary","PassiveRowTemplate","AbilityDescription",
     "LuckBadge","ScrollLeft","ScrollRight","UsedBadge","GhostBadge","CurrencyHelp",
-    "MenuDock","Dock_SeedSatchel","Dock_Garden","Dock_Index","Dock_Workshop","Dock_Trials","Dock_Settings",
+    "MenuDock","Dock_SeedSatchel","Dock_Garden","Dock_Hive","Dock_Index","Dock_Workshop","Dock_Trials","Dock_Settings",
+    "HiveKit","HiveShell","RoadList","RoadNodeTemplate","UpgradeButton",
+    "TraitBeeStrip","TraitBeeIconTemplate","EquipSynergyButton",
 ]:
     assert required in nodes, f"authored BloomUI node missing: {required}"
 
@@ -131,7 +133,7 @@ for required in ["Background","Card","ProgressTrack","ProgressFill","Status","De
 need(loading,'RF:WaitForChild("BloomLoadingTemplate",10)',"loading authored model binding")
 assert 'Instance.new("ScreenGui")' not in loading
 
-states=["gameplay","inventory_v2","workshop","trials","settings","season","replay","cards","reward","toast","tutorial","boosts","world_ui","loading"]
+states=["gameplay","inventory_v2","index","garden","hive","workshop","trials","settings","season","replay","cards","reward","toast","tutorial","boosts","world_ui","loading"]
 for state in states:
     assert f'data-ui-state="{state}"' in editor_html, f"UI STATE button missing: {state}"
 for retired in ("fieldguide","map","plant"):
@@ -141,6 +143,7 @@ need(editor,'state.activeUiState=null',"empty workspace state")
 need(editor,'if(!state.activeUiState){',"empty Explorer state")
 need(editor,'world_ui:"World UI"', "World UI state title")
 need(editor,'world_ui:"WorldUIPrototypes"', "World UI authored focus")
+need(editor,'hive:"HiveKit"', "Hive authored focus")
 need(editor,'"QuestTrackerHUD"', "Quest tracker gameplay preview")
 assert "MOCK PREVIEW · NOT RUNTIME" not in editor
 assert '<div class="preview-menu-generic">' not in editor

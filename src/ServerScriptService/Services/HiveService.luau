@@ -49,17 +49,20 @@ function S:PromptText(profile)
  end
  local nextLevel=profile.Hive.Level+1
  local cost=C.HiveUpgradeCost(nextLevel)
+ local coinCost=C.HiveCoinCost(nextLevel)
  local ready=self:QuestStatus(profile,nextLevel)
  return ready
-  and ("Upgrade Hive • "..math.floor(cost).." Honey")
+  and ("Upgrade Hive • "..math.floor(cost).." Honey • "..math.floor(coinCost).." Coins")
   or ("Hive "..nextLevel.." Quest Required")
 end
 
-function S:Interact(player)
+function S:Upgrade(player,requireDistance)
  local p=self.X:Profile(player)
  if not p then return false,"PROFILE_LOADING" end
- local hivePosition=self.X.GardenPlotService:HivePosition(player)
- if not hivePosition or not self.X.U.Near(player,hivePosition,C.InteractionDistance) then return false,"TOO_FAR" end
+ if requireDistance then
+  local hivePosition=self.X.GardenPlotService:HivePosition(player)
+  if not hivePosition or not self.X.U.Near(player,hivePosition,C.InteractionDistance) then return false,"TOO_FAR" end
+ end
 
  if (p.Tutorial.Events.FirstGardenSlot or 0)==0 and not p.Tutorial.Skipped then
   self.X:Emit(player,"FirstGardenSlot",1)
@@ -70,6 +73,7 @@ function S:Interact(player)
 
  local nextLevel=p.Hive.Level+1
  local cost=C.HiveUpgradeCost(nextLevel)
+ local coinCost=C.HiveCoinCost(nextLevel)
  local questReady,questText=self:QuestStatus(p,nextLevel)
  if not questReady then
   self.X:Send(player,"Message","Hive "..nextLevel.." quest • "..questText)
@@ -80,8 +84,13 @@ function S:Interact(player)
   self.X:Send(player,"Message",string.format("Hive %d needs %d Honey • %d / %d",nextLevel,cost,math.floor(p.Hive.Honey),cost))
   return false,"HONEY_REQUIRED"
  end
+ if p.Currencies.Coins<coinCost then
+  self.X:Send(player,"Message",string.format("Hive %d needs %d Coins • %d / %d",nextLevel,coinCost,math.floor(p.Currencies.Coins),coinCost))
+  return false,"COINS_REQUIRED"
+ end
 
  p.Hive.Honey-=cost
+ p.Currencies.Coins-=coinCost
  p.Hive.Level=nextLevel
 
  local points=C.WorkshopPointsForHiveLevel(nextLevel)
@@ -92,6 +101,16 @@ function S:Interact(player)
  self.X:Send(player,"Ceremony",{Kind="Hive",Text="Hive level "..p.Hive.Level})
 
  return true
+end
+
+function S:Interact(player)
+ return self:Upgrade(player,true)
+end
+
+function S:UpgradeFromMenu(player)
+ local temp=self.X.Temp[player]
+ if not temp or temp.MenuOpen~=true or temp.MenuName~="Hive" then return false,"MENU_REQUIRED" end
+ return self:Upgrade(player,false)
 end
 
 return S

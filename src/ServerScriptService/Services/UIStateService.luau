@@ -46,6 +46,9 @@ local REASONS={
  OWNED="Upgrade already purchased",
  PARENT_REQUIRED="Purchase the previous node first",
  HIVE_REQUIRED="A higher Hive level is required",
+ HIVE_QUEST_REQUIRED="Complete the Hive quest first",
+ HONEY_REQUIRED="Not enough Honey",
+ SYNERGY_UNAVAILABLE="You do not own enough matching Bees for this synergy",
  SEASON_REQUIRED="This branch unlocks after your first Season",
  POINTS_REQUIRED="Not enough Workshop Points",
  COINS_REQUIRED="Not enough Coins",
@@ -366,11 +369,16 @@ function S:Index(player,profile)
  end
  local traitIds={} for id in pairs(Bees.Traits) do table.insert(traitIds,id) end
  table.sort(traitIds,function(a,b)return tostring(Bees.Traits[a].Name)<tostring(Bees.Traits[b].Name)end)
+ local traitCounts=Bees.GetTraitCounts(profile.Pollinators.EquippedBeeSlots)
+ local traitStates={} for _,state in ipairs(Bees.GetTraitState(profile.Pollinators.EquippedBeeSlots)) do traitStates[state.Id]=state end
  local traits={}
  for slot,id in ipairs(traitIds) do
   if traitDiscovered(profile,id) then
    local cfg=Bees.Traits[id]
-   traits[#traits+1]={Slot=slot,Unlocked=true,Id=id,Name=cfg.Name,Description=cfg.Description,Breakpoints=self.X.U.Copy(cfg.Breakpoints or {}),BeeIds=Bees.GetTraitBees(id),BiomeModifiers={},New=read.Traits[id]~=true}
+   local ownedMatching=0 for _,beeId in ipairs(Bees.GetTraitBees(id)) do if (tonumber(profile.Pollinators.BeeInventory[beeId]) or 0)>0 then ownedMatching+=1 end end
+   local canEquip=false for _,bp in ipairs(cfg.Breakpoints or {}) do if ownedMatching>=bp.Count and self.X.StatsService:BeeCapacity(profile)>=bp.Count then canEquip=true end end
+   local active=traitStates[id]
+   traits[#traits+1]={Slot=slot,Unlocked=true,Id=id,Name=cfg.Name,Description=cfg.Description,Breakpoints=self.X.U.Copy(cfg.Breakpoints or {}),BeeIds=Bees.GetTraitBees(id),BiomeModifiers={},EquippedCount=traitCounts[id] or 0,ActiveTier=active and active.Tier or 0,CanEquip=canEquip,New=read.Traits[id]~=true}
   else
    traits[#traits+1]={Slot=slot,Unlocked=false}
   end
@@ -395,6 +403,37 @@ function S:MarkIndexRead(profile,category,id)
  if not allowed then return false,"NOT_DISCOVERED" end
  read[category][id]=true
  return true
+end
+
+function S:Hive(profile)
+ local level=math.max(1,math.floor(tonumber(profile.Hive.Level) or 1))
+ local nextLevel=level+1
+ local honeyCost=Bloom.HiveUpgradeCost(nextLevel)
+ local coinCost=Bloom.HiveCoinCost(nextLevel)
+ local questReady,questText,current,target=self.X.HiveService:QuestStatus(profile,nextLevel)
+ local honey=math.max(0,tonumber(profile.Hive.Honey) or 0)
+ local coins=math.max(0,tonumber(profile.Currencies.Coins) or 0)
+ local resourceProgress=math.min(1,math.min(honey/math.max(1,honeyCost),coins/math.max(1,coinCost)))
+ local road={}
+ for roadLevel=math.max(1,level-2),level+6 do
+  road[#road+1]={
+   Level=roadLevel,
+   State=roadLevel<level and "OWNED" or (roadLevel==level and "CURRENT" or (roadLevel==nextLevel and "NEXT" or "FUTURE")),
+   HoneyCost=roadLevel>1 and Bloom.HiveUpgradeCost(roadLevel) or 0,
+   CoinCost=roadLevel>1 and Bloom.HiveCoinCost(roadLevel) or 0,
+   WorkshopPoints=Bloom.WorkshopPointsForHiveLevel(roadLevel),
+  }
+ end
+ local reason=nil
+ if not questReady then reason="HIVE_QUEST_REQUIRED"
+ elseif honey<honeyCost then reason="HONEY_REQUIRED"
+ elseif coins<coinCost then reason="COINS_REQUIRED" end
+ return {
+  Level=level,NextLevel=nextLevel,Honey=honey,Coins=coins,HoneyCost=honeyCost,CoinCost=coinCost,
+  Progress=resourceProgress,QuestReady=questReady,QuestText=questText,QuestCurrent=current,QuestTarget=target,
+  CanUpgrade=reason==nil,Reason=reason,ReasonText=reason and self:ReasonText(reason) or nil,
+  NextWorkshopPoints=Bloom.WorkshopPointsForHiveLevel(nextLevel),Road=road,
+ }
 end
 
 function S:Settings(profile)
@@ -426,6 +465,7 @@ function S:Snapshot(player)
   Version=1,
   Inventory=self:Inventory(player,profile),
   Workshop=self:Workshop(player,profile),
+  Hive=self:Hive(profile),
   Map=self:Map(player,profile),
   Trials=self:Trials(player,profile),
   Settings=self:Settings(profile),

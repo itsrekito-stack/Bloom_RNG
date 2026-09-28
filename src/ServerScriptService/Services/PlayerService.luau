@@ -121,6 +121,8 @@ function X:Request(player,action,a,b,c)
  elseif action=="GardenEdit" then return self.GardenPlotService:GardenEdit(player,a,b)
  elseif action=="EquipBee" then return self.InventoryService:EquipBee(player,a,b)
  elseif action=="UnequipAllBees" then return self.InventoryService:UnequipAllBees(player)
+ elseif action=="EquipSynergy" then return self.InventoryService:EquipTraitSynergy(player,a)
+ elseif action=="HiveUpgrade" then return self.HiveService:UpgradeFromMenu(player)
  elseif action=="Flag" then
   if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end
   if not p.FlowerCollection.DiscoveredFlowers[a] then return false,"NOT_DISCOVERED" end
@@ -161,7 +163,7 @@ function X:Request(player,action,a,b,c)
    return true
   end
   if type(a)~="string" then return false,"INVALID_ACTION" end
-  if a~="Settings" and not p.Tutorial.FeatureUnlocks[a] then return false,"LOCKED" end
+  if a~="Settings" and a~="Hive" and not p.Tutorial.FeatureUnlocks[a] then return false,"LOCKED" end
   self.Temp[player].MenuOpen=true
   self.Temp[player].MenuName=a
   if a=="Garden" then

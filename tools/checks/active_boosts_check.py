@@ -41,6 +41,7 @@ need(social,'Text="Server Bloom • x100 Luck next Roll"',"Server Bloom reward c
 need(boosts,'if (tonumber(temp.ServerBloomLuckRolls) or 0)>0 then effective*=100 end',"Server Bloom x100 authoritative luck")
 need(boosts,'function S:ConsumeServerBloomRoll(player)',"Server Bloom one-roll consumption")
 need(boosts,'source(buckets,"Luck","Server","Server Bloom","×100"',"Server Bloom active boost source")
+need(boosts,'source(buckets,"RareWeight","Bloom","Bloom Ready"',"Bloom-ready boost source")
 need(roll,'self.X.BoostService:ConsumeServerBloomRoll(player)',"successful Roll consumes Server Bloom luck")
 need(boosts,'for beeId,count in pairs(equippedCounts) do',"duplicate equipped bees aggregated by source")
 need(boosts,'local _,activeTraits=Bees.GetTraitBonuses(p.Pollinators.EquippedBeeSlots)',"bee trait sources included")
@@ -63,6 +64,12 @@ assert 'table.insert(lines,tostring(item.Description))' not in hud, "boost toolt
 assert 'table.insert(lines,"  "..tostring(entry.Description))' not in hud, "boost tooltip must not show long source descriptions"
 need(hud,'local height=math.clamp(58+math.max(1,sourceCount)*20,78,180)',"compact tooltip height")
 need(hud,'self.ItemsByBadge[badge]=item',"runtime boost timer data retained")
+need(hud,'local canvasPosition=self.List.CanvasPosition',"boost scroll position preserved across state refresh")
+need(hud,'self.BadgesById[id]',"boost badges are diff-updated instead of rebuilt")
+need(hud,'function S:FlashRollBoost(payload)',"Bloom/server Bloom exact-roll highlight")
+need(ui,'self.BoostHUD:FlashRollBoost(payload)',"roulette forwards exact boosted roll to Active Boosts highlight")
+update_block=hud[hud.index("function S:Update(payload,revision)"):hud.index("function S:FlashRollBoost(payload)")]
+assert "self:Clear()" not in update_block, "Active Boosts must not destroy/recreate the list on every payload change"
 need(hud,'TweenService:Create(scale',"boost hover scale feedback")
 need(hud,'function S:SetMinimized(minimized,animate)',"boost HUD minimize state")
 need(hud,'self.Toggle.Activated:Connect',"authored minimize button binding")
