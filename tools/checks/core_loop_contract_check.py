@@ -47,7 +47,7 @@ checks=[
  (player,'elseif action=="Roll" then return self.RollService:Roll',"remote Roll route remains server-owned"),
  (player,'elseif action=="Plant" then return self.GardenPlotService:Plant',"remote Plant route remains server-owned"),
  (ui_state,'Inventory=self:Inventory(player,profile)',"snapshot exposes Inventory"),
- (ui_state,'Garden={ActiveSynergy=profile.Garden.ActiveSynergy or "",Hint=self.X.GardenSynergyService:Hint(profile)}',"snapshot exposes Garden state without hidden recipe data"),
+ (ui_state,'Garden={ActiveSynergy=profile.Garden.ActiveSynergy or "",Hint=Effects.Feature(profile,"GARDEN_5","PatternHints") and self.X.GardenSynergyService:Hint(profile) or nil}',"snapshot exposes gated Garden hint without hidden recipe data"),
 ]
 
 for src,needle,label in checks: need(src,needle,label)
