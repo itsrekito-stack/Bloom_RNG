@@ -203,9 +203,6 @@ function X:Loaded(player)
  if self.Temp[player] then return end local p=self:Profile(player) if not p then return end player:SetAttribute("BloomGameplayReady",false) self.Temp[player]={} self.Revisions[player]=0 self.StateRevisions[player]=0 self.LastPushedStateRevision[player]=-1
  local leader=Instance.new("Folder") leader.Name="leaderstats" leader.Parent=player for _,name in ipairs({"Coins","Hive"}) do local v=Instance.new("IntValue") v.Name=name v.Parent=leader end
  self.GardenPlotService:Build(player)
- local hasStarterBee=(tonumber(p.Pollinators.BeeInventory.WorkerBee) or 0)>0
- p.StarterBeeGranted=hasStarterBee
- if hasStarterBee then p.Tutorial.Events.StarterBee=math.max(1,p.Tutorial.Events.StarterBee or 0) end
  self.GardenPlotService:RefreshHivePrompt(player)
  local function spawn() task.delay(.3,function() if not self:Profile(player) then return end local char=player.Character local root=char and char:FindFirstChild("HumanoidRootPart") if root then root.CFrame=CFrame.new(self.GardenPlotService:HivePosition(player)+Vector3.new(0,4,8)) end end) end
  self.Connections[player]=player.CharacterAdded:Connect(spawn)
