@@ -14,7 +14,7 @@ state=read("src/ServerScriptService/Services/UIStateService.luau")
 bloom=read("src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau")
 
 for text,label in [
- ('CATEGORY_ORDER={"Flowers","Bees","Seeds","Resources","Special"}',"category coverage"),
+ ('CATEGORY_ORDER={"Flowers","Bees","Resources","Special"}',"category coverage"),
  ('SORT_ORDER={"Rarity","Name","Count"}',"sort modes"),
  ('FILTER_ORDER={"All","Favorite","Protected","Available"}',"filter modes"),
  ('local function filteredItems(source,search,filter,sortMode)',"search/filter/sort pipeline"),
@@ -29,9 +29,10 @@ for text,label in [
  ('controller:Send("Flag",item.Id,"LockedFlowers")',"Protect action"),
  ('controller:Send("EquipBee","",equippedSlot)',"Bee unequip action"),
  ('controller:Send("EquipBee",item.Id,slot)',"Bee equip action"),
- ('controller.LastSeed=item.Id',"Plant selection handoff"),
- ('controller:Send("Plant",plantSlot,item.Id)',"Inventory Plant request"),
- ('"PLANT IN SLOT "..tostring(plantSlot)',"target Garden slot action"),
+ ('controller.LastSeed=item.Id',"Garden selection handoff"),
+ ('"PLANT IN GARDEN"',"unplanted Flower Garden action"),
+ ('"EDIT / REMOVE IN GARDEN"',"planted Flower Garden action"),
+ ('"Use an unlocked Garden pad to open the Garden editor."',"physical Garden handoff copy"),
  ('traitEquipPreview(item,inventory)',"Trait delta preview"),
  ('item.Odds or "1/—"',"1/N presentation"),
  ('item.Obtained or 1',"obtained count presentation"),
@@ -82,4 +83,4 @@ for text,label in [
     need(state,text,label)
 
 print("inventory-v2 action contract: PASS")
-print("Inventory uses species ownership, 1/N, duplicate progression, manual Bee equip and guarded Garden handoff; obsolete dismantle/manual mastery actions are hidden.")
+print("Inventory uses species ownership, 1/N, duplicate progression, manual Bee equip and a dedicated physical Garden handoff; obsolete copy-based Seed flows are removed.")
