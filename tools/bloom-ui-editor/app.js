@@ -17,7 +17,7 @@ const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 const LOADING_TARGET="src/ReplicatedFirst/BloomLoadingTemplate.model.json";
 function lastGoodModelKey(){return state?.targetPath===LOADING_TARGET?"BloomUIStudioLastGoodModelLoading":"BloomUIStudioLastGoodModel"}
 const UI_STATE_TITLES={
- gameplay:"HUD",inventory_v2:"Inventory",workshop:"Workshop",trials:"Quests",
+ gameplay:"HUD",inventory_v2:"Inventory",garden:"Garden",workshop:"Workshop",trials:"Quests",
  settings:"Settings",season:"Season",replay:"Tutorial Replay",cards:"Cards",
  reward:"Reward",toast:"Toast",tutorial:"Tutorial Guidance",boosts:"Active Boosts",world_ui:"World UI",loading:"Loading Screen"
 };
@@ -346,9 +346,10 @@ const MOCK_PREVIEW_DATA={
  }
 };
 
-const MENU_PREVIEW_SCENES=new Set(["inventory_v2","workshop","trials","settings","season","replay","cards"]);
+const MENU_PREVIEW_SCENES=new Set(["inventory_v2","garden","workshop","trials","settings","season","replay","cards"]);
 const PREVIEW_META={
- inventory_v2:{title:"Inventory",subtitle:"Flowers, seeds, bees, resources, and keepsakes"},
+ inventory_v2:{title:"Inventory",subtitle:"Flowers, bees, resources, and keepsakes"},
+ garden:{title:"Garden",subtitle:"Arrange seven Flower slots and inspect the active Synergy"},
  workshop:{title:"Workshop",subtitle:"Permanent upgrades and progression branches"},
  trials:{title:"Quests",subtitle:"Tasks, progress & rewards"},
  settings:{title:"Settings",subtitle:"Game & UI preferences"},
@@ -388,7 +389,7 @@ async function switchUiModel(path,key){
 }
 function stateFocusName(scene){
  return {
-  gameplay:"SafeRoot",inventory_v2:"InventoryPrototype",workshop:"WorkshopTemplate",
+  gameplay:"SafeRoot",inventory_v2:"InventoryPrototype",garden:"GardenKit",workshop:"WorkshopTemplate",
   trials:"QuestsPrototype",settings:"SettingsKit",
   season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit",
   reward:"RewardReveal",toast:"Toast",tutorial:"TutorialGuideBanner",boosts:"ActiveBoostsHUD",
@@ -400,7 +401,7 @@ const FRAGMENT_ROOT_BASES=[
  "PrimaryAction","IconButton","TabButton","CurrencyPill","StatusBadge","ProgressBar","Tooltip","ModalHeader"
 ];
 const DELETABLE_MENU_BASES=[
- "InventoryPrototype","WorkshopTemplate","QuestsPrototype","SettingsKit",
+ "InventoryPrototype","WorkshopTemplate","QuestsPrototype","GardenKit","SettingsKit",
  "SeasonKit","ReplayKit","CardsKit"
 ];
 function nameMatchesBase(name,base){
@@ -493,7 +494,7 @@ function previewVisible(n){
  if(name==="StateKits")return MENU_PREVIEW_SCENES.has(scene)&&scene!=="inventory_v2"&&scene!=="workshop"&&scene!=="trials";
  if(p==="StateKits"){
   const wanted={
-   settings:"SettingsKit",season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit"
+   garden:"GardenKit",settings:"SettingsKit",season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit"
   }[scene];
   return name===wanted;
  }
@@ -535,6 +536,7 @@ function previewImage(n,parentNode){
  const name=n.Name||"",p=parentNode?.Name||parentName(n);
  if(name==="RewardIcon"&&scene==="reward")return "rbxthumb://type=Asset&id=117046422836136&w=420&h=420";
  if(name==="HeaderIcon"&&scene==="inventory_v2")return "rbxthumb://type=Asset&id=102678620554602&w=420&h=420";
+ if(name==="HeaderIcon"&&scene==="garden")return "rbxthumb://type=Asset&id=117046422836136&w=420&h=420";
  if(name==="Icon"&&MOCK_PREVIEW_DATA.roulette[p]&&scene==="gameplay")return MOCK_PREVIEW_DATA.roulette[p].image;
  return null;
 }
@@ -544,6 +546,7 @@ function previewSize(n){
  if(n.Name==="MainPanel"&&scene==="workshop")return [[1,0],[1,0]];
  if(n.Name==="Header"&&scene==="workshop")return [[1,0],[0,0]];
  if(n.Name==="MainPanel"&&scene==="inventory_v2")return [[0,1220],[0,660]];
+ if(n.Name==="MainPanel"&&scene==="garden")return [[0,1040],[0,620]];
  if(n.Name==="MainPanel"&&MENU_PREVIEW_SCENES.has(scene))return [[0,600],[0,420]];
  if(n.Name==="ObjectiveProgressFill"&&scene==="gameplay")return [[.38,0],[1,0]];
  if(n.Name==="BloomFill"&&scene==="gameplay")return [[.38,0],[1,0]];
