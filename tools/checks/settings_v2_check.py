@@ -10,6 +10,7 @@ def need(src,text,label):
 bloom=read("src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau")
 settings=read("src/StarterPlayer/StarterPlayerScripts/Controllers/SettingsController.luau")
 player=read("src/ServerScriptService/Services/PlayerService.luau")
+data_service=read("src/ServerScriptService/Services/DataService.luau")
 remote=read("src/ServerScriptService/Services/RemoteService.luau")
 defaults=read("src/ServerScriptService/Data/DefaultProfile.luau")
 tutorial=read("src/StarterPlayer/StarterPlayerScripts/Controllers/TutorialGuideController.luau")
@@ -30,6 +31,7 @@ for name in [
     "TutorialsToggle","RewardPopupsToggle","MusicVolumeSlider","SfxVolumeSlider","MuteAllToggle",
     "AutoRollToggle","QuickRollToggle","RarityColorsToggle","CompactHudToggle","BloomToggle",
     "LowEffectsToggle","UiScaleSlider","EffectiveLuckInput","OpenMenuKeybind","RollKeybind","ResetButton","ApplyButton","SaveButton",
+    "ResetProgressWarning","FullResetButton",
 ]:
     if not find(kit,name): raise AssertionError(f"SettingsKit authored node missing: {name}")
 
@@ -58,12 +60,16 @@ for text,label in [
     ('ui:Send("Setting","EffectiveLuck",value)',"Effective Luck server commit"),
     ('raw=="MAX"',"Effective Luck MAX sentinel"),
     ('object:IsA("BloomEffect")',"Bloom effect binding"),
+    ('ui:Send("FullReset","RESET_ALL_PROGRESS")',"full reset confirmed request"),
+    ('CONFIRM FULL RESET',"full reset second-click confirmation"),
 ]:
     need(settings,text,label)
 
 for text,label in [
     ('SaveSettings=true,ResetSettings=true',"no-arg remote validation"),
     ('or short(b,16,false)',"string setting remote validation"),
+    ('action=="FullReset"',"full reset remote route"),
+    ('a=="RESET_ALL_PROGRESS"',"full reset confirmation token"),
 ]:
     need(remote,text,label)
 
@@ -78,8 +84,18 @@ for text,label in [
     ('a=="EffectiveLuck" and b~=0 and b<1',"Effective Luck minimum validation"),
     ('a=="OpenMenuKey" or a=="RollKey"',"keybind allowlist"),
     ('TutorialsEnabled=true,RewardPopups=true,QuickRoll=true,ShowRarityColors=true,CompactHUD=true',"new boolean settings allowlist"),
+    ('function X:FullReset(player)',"full reset server action"),
+    ('self.DataService:ResetProfile(player)',"full reset persistence transaction"),
+    ('self:RebuildFreshRuntime(player)',"full reset runtime rebuild"),
 ]:
     need(player,text,label)
+
+for text,label in [
+    ('function Service:ResetProfile(player)',"DataService full reset transaction"),
+    ('Schema.CreateDefault()',"full reset creates a clean default profile"),
+    ('self:CommitProfile(player,fresh,transactionId)',"full reset commits before runtime rebuild"),
+]:
+    need(data_service,text,label)
 
 for text,label in [
     ('Language="English"',"language default"),
@@ -106,8 +122,11 @@ if input_node.get("ClassName")!="TextBox":
 if input_node.get("Properties",{}).get("Text")!="MAX":
     raise AssertionError("EffectiveLuckInput authored default must display MAX")
 reset_node=find(kit,"StudioTutorialResetButton")
-if reset_node and "V5" not in reset_node.get("Properties",{}).get("Text",""):
+if reset_node and "V6" not in reset_node.get("Properties",{}).get("Text",""):
     raise AssertionError("Studio tutorial reset copy is stale")
+full_reset=find(kit,"FullResetButton")
+if full_reset.get("Properties",{}).get("Text")!="RESET ALL PROGRESS":
+    raise AssertionError("FullResetButton authored copy is wrong")
 
 need(tutorial,'p.Settings and p.Settings.TutorialsEnabled==false',"tutorial visibility preference")
 need(bloom,'self.State.Profile.Settings.RewardPopups~=false',"reward popup preference")
