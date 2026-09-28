@@ -334,7 +334,92 @@ Bees комбинируются в **Traits как в TFT**.
 
 ---
 
-## 8. Final design principles captured by this Q&A
+
+## 8. Index
+
+### Q59. Как должен быть устроен Index?
+**Answer:** **D.** Index — большая энциклопедия по игре, но неоткрытый контент максимально скрыт.
+
+Категории:
+- Flowers
+- Bees
+- Synergies
+- Traits
+
+Неоткрытые записи не раскрывают рецепт, форму или подробности.
+
+### Q60. Что показывает уже открытая Bee?
+**Answer:** **D.**
+- icon + name
+- 1/N
+- Mastery
+- obtained count
+- Traits
+- ability
+- short lore / description
+
+### Q61. Что показывает уже открытый Flower?
+**Answer:** **A.**
+- icon
+- name
+- 1/N
+- Level
+
+Без списка всех Synergies и без лишней энциклопедической перегрузки.
+
+### Q62. Что показывает уже открытая Synergy?
+**Answer:** **D.**
+- name + icon
+- exact Flower composition
+- per-Flower level requirements
+- effect
+- tier / combination strength
+
+После открытия Synergy полностью изучаема.
+
+### Q63. Что показывает уже открытый Trait?
+**Answer:** **D.**
+- icon + name
+- tier thresholds
+- full effect of each tier
+- all member Bees
+- biome modifier information
+- short lore / description
+
+### Q64. Как показывается прогресс заполнения Index?
+**Answer:** **B.** Отдельный progress по категориям, например:
+- Flowers 80%
+- Bees 55%
+- Synergies 18%
+- Traits 70%
+
+Один общий процент не нужен.
+
+### Q65. Даёт ли Index награды за заполнение?
+**Answer:** **A. Нет.** Index — информационная и коллекционная система, а не источник обязательных stat rewards.
+
+### Q66. Как выглядят неоткрытые записи?
+**Answer:** **C.** Пустой слот с lock icon. Без silhouette и без подсказки формы предмета.
+
+### Q67. Что происходит при первом открытии записи?
+**Answer:** **B.** На новой записи появляется небольшой `NEW` badge, который исчезает после первого просмотра.
+
+### Q68. Как открывается Index?
+**Answer:** **B.** Fullscreen, почти как Workshop. Обычный HUD уходит на второй план.
+
+### Q69. Где находятся категории?
+**Answer:** **B.** Постоянное вертикальное меню слева.
+
+### Q70. Как выглядит каталог выбранной категории?
+**Answer:** **A.** Плотная сетка маленьких карточек, чтобы одновременно помещалось много записей.
+
+### Q71. Как открываются подробности выбранной записи?
+**Answer:** **A.** В правой detail-панели без выхода из сетки.
+
+---
+
+
+## 9. Final design principles captured by this Q&A
 
 ### Roll
 - Roll — главный эмоциональный вход в игру.
