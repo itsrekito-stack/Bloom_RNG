@@ -65,7 +65,8 @@ for key in ("Discoveries","Synergies","BeeMasteryLevel","Activities","Trials"):
     need(bloom,key+"=","Hive quest table covers "+key)
 need(hive,"if not questReady then","Hive upgrade blocks incomplete quest")
 need(hive,"C.WorkshopPointHiveMilestones[nextLevel] or 0","static Hive milestone points")
-need(meta,'WorkshopService:Point(player,"Journey_"..q.JourneyStep,1)',"key Journey milestones can award Workshop Points")
+need(meta,'local POINT_MILESTONES={WorkshopVisit=1,Synergy=1,Trait=1,Trial=2,SeasonReady=2}',"Journey point milestone table")
+need(meta,'self.X.WorkshopService:Point(player,"JourneyMilestone_"..key,points)',"key Journey milestones award Workshop Points through one-time sources")
 
 honey_per=number(bloom,"HoneyPerDelivery")
 coins_per=number(bloom,"CoinsPerDelivery")
