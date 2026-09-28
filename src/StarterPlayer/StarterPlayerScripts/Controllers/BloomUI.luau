@@ -1424,7 +1424,10 @@ function UI:Render()
   if self.RollStroke then self.RollStroke.Color=special and C.Gold or C.Blue end
   self.RollIcon.Image=Icons.GetActionIcon("Roll")
  end
- self.RollIcon.ImageColor3=C.White
+ local tutorialActive,tutorialAllowed=self:TutorialRollState()
+ local rollVisualEnabled=not tutorialActive or tutorialAllowed
+ self.RollIcon.ImageColor3=rollVisualEnabled and C.White or C.Muted
+ self.RollIcon.ImageTransparency=rollVisualEnabled and 0 or .48
  if self.RollStatusDot then
   self.RollStatusDot.BackgroundColor3=self.Auto and C.Green or C.Faint
  end
