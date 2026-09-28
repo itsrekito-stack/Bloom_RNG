@@ -92,6 +92,8 @@ function S:Roll(player,automatic,requestId)
   self.X:Emit(player,"TutorialFlowerRoll",1)
  elseif tutorialStep and tutorialStep.Id=="FirstBeeRoll" and item.Kind=="Bee" then
   self.X:Emit(player,"TutorialBeeRoll",1)
+ elseif tutorialStep and tutorialStep.Id=="NormalRoll" then
+  self.X:Emit(player,"TutorialNormalRoll",1)
  end
 
  self.X:Emit(player,"Roll",1)
