@@ -317,7 +317,7 @@ function S:Update()
  local step=T.Steps[ui.ReplayIndex or p.Tutorial.Step]
 
  if not ui.ReplayIndex and step then
-  if (step.Id=="PollenSpark" or step.Id=="Synergy" or step.Id=="SunnyVisit") and ui.Menu then
+  if (step.Id=="PollenSpark" or step.Id=="SunnyVisit") and ui.Menu then
    ui:Close({SuppressInventoryReturn=true})
   end
  end
@@ -379,6 +379,46 @@ function S:Update()
   local stats=runtime and runtime:FindFirstChild("StatsCard",true)
   if stats and stats:IsA("GuiObject") and stats.Visible then
    if self:PlaceScreenTarget(stats,"OWNED • AVAILABLE • MASTERY",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+  else
+   self:Missing(step)
+  end
+  return
+ end
+
+ if step.Target=="GardenEditorSlot" then
+  if ui.Menu~="Garden" then
+   local garden=ui.DockButtons.Garden
+   if not garden or not garden.Visible then
+    local inventory=ui.DockButtons.SeedSatchel
+    if inventory and inventory.Visible then
+     ui.Dock.Visible=true
+     if self:PlaceScreenTarget(inventory,"OPEN INVENTORY","Open Inventory to reveal the menu row, then choose Garden.") then self.LastMissingKey=nil else self:Missing(step) end
+    else
+     self:Missing(step)
+    end
+    return
+   end
+   ui.Dock.Visible=true
+   if self:PlaceScreenTarget(garden,"OPEN GARDEN",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+   return
+  end
+
+  local runtime=ui.Content and ui.Content:FindFirstChild("GardenRuntime",true)
+  local flowerId=tostring(step.FlowerId or "")
+  local selected=ui.GardenEditorState and ui.GardenEditorState.SelectedFlowerId
+  if flowerId~="" and selected~=flowerId then
+   local flowerCard=runtime and runtime:FindFirstChild("Flower_"..flowerId,true)
+   if flowerCard and flowerCard:IsA("GuiObject") and flowerCard.Visible then
+    if self:PlaceScreenTarget(flowerCard,"SELECT "..string.upper(flowerId),step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+   else
+    self:Missing(step)
+   end
+   return
+  end
+
+  local slot=runtime and runtime:FindFirstChild("Slot"..tostring(step.Slot or 1),true)
+  if slot and slot:IsA("GuiObject") and slot.Visible then
+   if self:PlaceScreenTarget(slot,"PLANT HERE",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
   else
    self:Missing(step)
   end
