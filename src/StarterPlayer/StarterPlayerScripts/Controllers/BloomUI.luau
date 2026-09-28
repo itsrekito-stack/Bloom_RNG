@@ -28,7 +28,7 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="flower-buffs-hive-road-stable-boosts-v13-2026-09-28"
+local CLIENT_BUILD="bloom-roll-roulette-highlight-v14-2026-09-29"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
@@ -1567,6 +1567,8 @@ function UI:RollNow(automatic)
  self.PendingRollRequest=requestId
  self.PendingRollSession=self.RollSession or 0
  self.RollRequestSessions[requestId]=self.PendingRollSession
+ local bloomRoll=self.State.Profile.RollState.SpecialRollReady==true
+ if bloomRoll then self:SetRouletteBloomHighlight(true,requestId) end
  local stale=requestId-64
  if stale>0 then self.RollRequestSessions[stale]=nil end
  self:Send("Roll",automatic==true,requestId)
@@ -1719,7 +1721,53 @@ function UI:StepRoulette(duration,generation)
  return true
 end
 
+function UI:SetRouletteBloomHighlight(active,requestId)
+ if not self.RouletteViewport or not self.RouletteBloomBase then return end
+ local base=self.RouletteBloomBase
+ if active then
+  if requestId~=nil then self.RouletteBloomRequest=requestId end
+  local bloomColor=C.Gold
+  TweenService:Create(self.RouletteViewport,TweenInfo.new(Theme.Motion.Fast),{
+   BackgroundColor3=base.BackgroundColor3:Lerp(bloomColor,.16),
+   BackgroundTransparency=math.max(0,base.BackgroundTransparency-.04),
+  }):Play()
+  if self.RouletteStroke then
+   TweenService:Create(self.RouletteStroke,TweenInfo.new(Theme.Motion.Fast),{Color=bloomColor,Thickness=3,Transparency=0}):Play()
+  end
+  if self.RouletteTopAccent then
+   TweenService:Create(self.RouletteTopAccent,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=bloomColor,BackgroundTransparency=.02}):Play()
+  end
+  if self.RouletteCurrentMarker then
+   TweenService:Create(self.RouletteCurrentMarker,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=bloomColor,BackgroundTransparency=.78}):Play()
+  end
+  if self.RouletteCurrentMarkerStroke then
+   TweenService:Create(self.RouletteCurrentMarkerStroke,TweenInfo.new(Theme.Motion.Fast),{Color=bloomColor,Thickness=2.4,Transparency=0}):Play()
+  end
+  return
+ end
+ if requestId~=nil and self.RouletteBloomRequest~=nil and requestId~=self.RouletteBloomRequest then return end
+ self.RouletteBloomRequest=nil
+ TweenService:Create(self.RouletteViewport,TweenInfo.new(Theme.Motion.Fast),{
+  BackgroundColor3=base.BackgroundColor3,
+  BackgroundTransparency=base.BackgroundTransparency,
+ }):Play()
+ if self.RouletteStroke then
+  TweenService:Create(self.RouletteStroke,TweenInfo.new(Theme.Motion.Fast),{Color=base.StrokeColor,Thickness=base.StrokeThickness,Transparency=base.StrokeTransparency}):Play()
+ end
+ if self.RouletteTopAccent then
+  TweenService:Create(self.RouletteTopAccent,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=base.AccentColor,BackgroundTransparency=base.AccentTransparency}):Play()
+ end
+ if self.RouletteCurrentMarker then
+  TweenService:Create(self.RouletteCurrentMarker,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=base.MarkerColor,BackgroundTransparency=base.MarkerTransparency}):Play()
+ end
+ if self.RouletteCurrentMarkerStroke then
+  TweenService:Create(self.RouletteCurrentMarkerStroke,TweenInfo.new(Theme.Motion.Fast),{Color=base.MarkerStrokeColor,Thickness=base.MarkerStrokeThickness,Transparency=base.MarkerStrokeTransparency}):Play()
+ end
+end
+
 function UI:StartRouletteAnimation()
+ local bloomReady=self.State and self.State.Profile and self.State.Profile.RollState.SpecialRollReady==true
+ if bloomReady and self.RouletteBloomRequest==nil then self:SetRouletteBloomHighlight(true,nil) end
  if self.RouletteRunning or self.RouletteLanding or not self.RouletteStrip then return end
  self.RouletteRunning=true
  if self.RouletteViewport then self.RouletteViewport.Visible=true end
@@ -1735,6 +1783,7 @@ function UI:StartRouletteAnimation()
 end
 
 function UI:StopRouletteAnimation()
+ self:SetRouletteBloomHighlight(false)
  self.RouletteRunning=false
  self.RouletteLanding=false
  self.RouletteGeneration=self.RouletteGeneration+1
@@ -1845,17 +1894,24 @@ end
 
 function UI:ResolveRouletteReward(payload)
  if type(payload)~="table" or self.RouletteLanding then return end
- if self.BoostHUD and (payload.IsSpecialRoll==true or payload.ServerBloomLuck==true) then
-  self.BoostHUD:FlashRollBoost(payload)
- end
  local requestId=payload.RequestId
  local requestSession=requestId and self.RollRequestSessions[requestId] or self.PendingRollSession
- if requestSession~=nil and requestSession~=(self.RollSession or 0) then return end
+ if requestSession~=nil and requestSession~=(self.RollSession or 0) then
+  self:SetRouletteBloomHighlight(false,requestId)
+  return
+ end
+ if payload.IsSpecialRoll==true then
+  -- The Bloom highlight belongs to this exact roulette request and lasts until its result hold ends.
+  self:SetRouletteBloomHighlight(true,requestId)
+ elseif self.RouletteBloomRequest==requestId then
+  self:SetRouletteBloomHighlight(false,requestId)
+ end
 
  -- A server reward can arrive after the player pressed STOP.
  -- The item is already granted server-side; do not resurrect the roulette
  -- and do not show a separate RewardReveal card.
  if not self.Auto and not self.RouletteRunning then
+  self:SetRouletteBloomHighlight(false,requestId)
   if self.RouletteViewport then self.RouletteViewport.Visible=false end
   return
  end
@@ -1890,8 +1946,12 @@ function UI:ResolveRouletteReward(payload)
    task.wait(rare and 1.15 or RollAudio.ResultHold*revealScale*speedScale)
    if focused then self:SetRareRollFocus(false,payload.Rarity) end
   end
-  if generation~=self.RouletteGeneration then return end
+  if generation~=self.RouletteGeneration then
+   self:SetRouletteBloomHighlight(false,requestId)
+   return
+  end
   self.RouletteLanding=false
+  self:SetRouletteBloomHighlight(false,requestId)
   -- Normal roll rewards are shown only by the roulette itself.
   -- RewardReveal is reserved for non-roll ceremonies.
   if self.Auto then
@@ -1976,6 +2036,24 @@ function UI:BindStaticUI()
  self.RollHUD=root:WaitForChild("RollHUD")
  self.RouletteViewport=root:WaitForChild("VerticalRoulette")
  self.RouletteViewport.Visible=false
+ self.RouletteStroke=self.RouletteViewport:FindFirstChildOfClass("UIStroke")
+ self.RouletteTopAccent=self.RouletteViewport:FindFirstChild("TopAccent")
+ self.RouletteCurrentMarker=self.RouletteViewport:FindFirstChild("CurrentMarker")
+ self.RouletteCurrentMarkerStroke=self.RouletteCurrentMarker and self.RouletteCurrentMarker:FindFirstChildOfClass("UIStroke")
+ self.RouletteBloomBase={
+  BackgroundColor3=self.RouletteViewport.BackgroundColor3,
+  BackgroundTransparency=self.RouletteViewport.BackgroundTransparency,
+  StrokeColor=self.RouletteStroke and self.RouletteStroke.Color or C.Border,
+  StrokeThickness=self.RouletteStroke and self.RouletteStroke.Thickness or 1.5,
+  StrokeTransparency=self.RouletteStroke and self.RouletteStroke.Transparency or .28,
+  AccentColor=self.RouletteTopAccent and self.RouletteTopAccent.BackgroundColor3 or C.Blue,
+  AccentTransparency=self.RouletteTopAccent and self.RouletteTopAccent.BackgroundTransparency or .28,
+  MarkerColor=self.RouletteCurrentMarker and self.RouletteCurrentMarker.BackgroundColor3 or C.Gold,
+  MarkerTransparency=self.RouletteCurrentMarker and self.RouletteCurrentMarker.BackgroundTransparency or .92,
+  MarkerStrokeColor=self.RouletteCurrentMarkerStroke and self.RouletteCurrentMarkerStroke.Color or C.Gold,
+  MarkerStrokeThickness=self.RouletteCurrentMarkerStroke and self.RouletteCurrentMarkerStroke.Thickness or 1.7,
+  MarkerStrokeTransparency=self.RouletteCurrentMarkerStroke and self.RouletteCurrentMarkerStroke.Transparency or .04,
+ }
 
  -- Remove any pre-refactor roulette that may still exist in a stale Studio place.
  -- The only supported reel is SafeRoot/VerticalRoulette.
@@ -2356,6 +2434,7 @@ function UI:Start()
      self.PendingRollRequest=nil
      self.PendingRollSession=nil
      self.NextRoll=math.max(self.NextRoll,os.clock()+.2)
+     if not payload.OK then self:SetRouletteBloomHighlight(false,requestId) end
      if self.State then self:Render() end
     end
    end

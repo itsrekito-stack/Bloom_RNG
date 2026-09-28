@@ -66,9 +66,9 @@ need(hud,'local height=math.clamp(58+math.max(1,sourceCount)*20,78,180)',"compac
 need(hud,'self.ItemsByBadge[badge]=item',"runtime boost timer data retained")
 need(hud,'local canvasPosition=self.List.CanvasPosition',"boost scroll position preserved across state refresh")
 need(hud,'self.BadgesById[id]',"boost badges are diff-updated instead of rebuilt")
-need(hud,'function S:FlashRollBoost(payload)',"Bloom/server Bloom exact-roll highlight")
-need(ui,'self.BoostHUD:FlashRollBoost(payload)',"roulette forwards exact boosted roll to Active Boosts highlight")
-update_block=hud[hud.index("function S:Update(payload,revision)"):hud.index("function S:FlashRollBoost(payload)")]
+assert 'function S:FlashRollBoost(payload)' not in hud, "Active Boosts must not flash for Bloom rolls"
+assert 'self.BoostHUD:FlashRollBoost(payload)' not in ui, "Bloom roll highlight belongs to the roulette, not Active Boosts"
+update_block=hud[hud.index("function S:Update(payload,revision)"):hud.index("function S:Tick()")]
 assert "self:Clear()" not in update_block, "Active Boosts must not destroy/recreate the list on every payload change"
 need(hud,'TweenService:Create(scale',"boost hover scale feedback")
 need(hud,'function S:SetMinimized(minimized,animate)',"boost HUD minimize state")
@@ -137,4 +137,4 @@ if not {"ValueCorner","ValueStroke"}<=value_children:
     raise AssertionError("Boost value badge decoration missing")
 
 print("active boosts contract: PASS")
-print("Activity boosts, Server Bloom one-roll luck, Bee aggregate sources, active abilities, authored HUD, hover tooltip, and server authority verified.")
+print("Activity boosts, Server Bloom one-roll luck, Bee aggregate sources, authored HUD, hover tooltip, and no roulette-roll flash on Active Boosts verified.")

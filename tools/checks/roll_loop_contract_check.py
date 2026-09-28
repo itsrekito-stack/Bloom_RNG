@@ -38,6 +38,14 @@ need(ui,'RollPool.FormatOddsNumber(odds)',"roulette uses shared rounded odds")
 need(ui,'function UI:PrepareRouletteLandingTarget(targetIndex,stepCount)',"landing target prepared without reel jump")
 need(ui,'self:PrepareRouletteLandingTarget(target,#steps)',"settle sequence prepositions reward")
 need(ui,'function UI:StepRoulette(duration,generation)',"roulette step is sequential only")
+need(ui,'function UI:SetRouletteBloomHighlight(active,requestId)',"Bloom highlight is owned by roulette")
+need(ui,'self.State.Profile.RollState.SpecialRollReady==true',"client recognizes the exact Bloom-ready request")
+need(ui,'if bloomRoll then self:SetRouletteBloomHighlight(true,requestId) end',"Bloom highlight begins with that roll request")
+need(ui,'if payload.IsSpecialRoll==true then',"server result confirms the Bloom roll")
+need(ui,'self:SetRouletteBloomHighlight(false,requestId)',"Bloom highlight ends with the correlated roll lifecycle")
+need(ui,'self.RouletteStroke=self.RouletteViewport:FindFirstChildOfClass("UIStroke")',"authored roulette outer stroke is highlighted")
+need(ui,'self.RouletteTopAccent=self.RouletteViewport:FindFirstChild("TopAccent")',"authored roulette accent is highlighted")
+assert 'self.BoostHUD:FlashRollBoost(payload)' not in ui, "Bloom roll must not flash Active Boosts"
 assert 'self.RouletteCursor=((targetIndex-2)%#pool)+1' not in ui, "roulette must not jump the cursor before landing"
 need(ui,'local controlsVisible=rollUnlocked and self.Menu==nil',"menus hide roll controls only")
 need(ui,'self.RouletteViewport.Visible=rollUnlocked and',"roulette remains below open menus")
@@ -45,4 +53,4 @@ assert 'if payload.Action=="Roll" and self.Auto' not in ui, "server roll rejecti
 need(ui,'Normal roll rewards are shown only by the roulette itself.',"normal roll has no duplicate RewardReveal")
 
 print("roll / bloom / pity contract: PASS")
-print("Server reward selection, pity guarantee, Bloom consumption and roulette landing are correlated.")
+print("Server reward selection, pity guarantee, Bloom consumption, request-correlated roulette landing, and full-roll Bloom highlighting are correlated.")

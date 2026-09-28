@@ -83,14 +83,6 @@ function S:Init(ui)
  self.Hovered=nil
  self.ItemsByBadge={}
  self.BadgesById={}
- self.RootBaseColor=self.Root.BackgroundColor3
- self.RootStroke=self.Root:FindFirstChildOfClass("UIStroke")
- if self.RootStroke then
-  self.RootStrokeBaseColor=self.RootStroke.Color
-  self.RootStrokeBaseThickness=self.RootStroke.Thickness
-  self.RootStrokeBaseTransparency=self.RootStroke.Transparency
- end
- self.RollHighlightUntil=0
  self.Root.Visible=true
  self.Tooltip.Visible=false
 
@@ -339,28 +331,7 @@ function S:Update(payload,revision)
  end)
 end
 
-function S:FlashRollBoost(payload)
- if type(payload)~="table" or (payload.IsSpecialRoll~=true and payload.ServerBloomLuck~=true) then return end
- self.RollHighlightUntil=os.clock()+1.35
- local color=payload.ServerBloomLuck and C.Blue or C.Gold
- if self.RootStroke then
-  TweenService:Create(self.RootStroke,TweenInfo.new(Theme.Motion.Fast),{Color=color,Thickness=2.6,Transparency=0}):Play()
- end
- TweenService:Create(self.Root,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelHover}):Play()
-end
-
 function S:Tick()
- if self.RollHighlightUntil and self.RollHighlightUntil>0 and os.clock()>=self.RollHighlightUntil then
-  self.RollHighlightUntil=0
-  if self.RootStroke then
-   TweenService:Create(self.RootStroke,TweenInfo.new(Theme.Motion.Fast),{
-    Color=self.RootStrokeBaseColor or C.Border,
-    Thickness=self.RootStrokeBaseThickness or 1.25,
-    Transparency=self.RootStrokeBaseTransparency or .18,
-   }):Play()
-  end
-  TweenService:Create(self.Root,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=self.RootBaseColor or C.Panel}):Play()
- end
  for _,badge in ipairs(self.Badges) do
   local item=self.ItemsByBadge[badge]
   if badge.Parent and item and item._ExpiresAt then
