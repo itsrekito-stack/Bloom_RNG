@@ -102,15 +102,6 @@ function X:Request(player,action,a,b,c)
  elseif action=="Roll" then return self.RollService:Roll(player,a==true,b)
  elseif action=="Plant" then return self.GardenPlotService:Plant(player,a,b)
  elseif action=="EquipBee" then return self.InventoryService:EquipBee(player,a,b)
- elseif action=="Dissolve" then
-  if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end
-  return self.InventoryService:Dissolve(player,a,b)
- elseif action=="DissolveBee" then
-  if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end
-  return self.InventoryService:DissolveBee(player,a,b)
- elseif action=="FlowerUpgrade" then
-  if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end
-  return self.FlowerProgressionService:Upgrade(player,a)
  elseif action=="Flag" then
   if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end
   if not p.FlowerCollection.DiscoveredFlowers[a] then return false,"NOT_DISCOVERED" end
@@ -184,17 +175,10 @@ function X:Request(player,action,a,b,c)
   local booleanSettings={
    TutorialsEnabled=true,RewardPopups=true,QuickRoll=true,ShowRarityColors=true,CompactHUD=true,
    BloomEnabled=true,MuteAll=true,ReducedEffects=true,ShowOtherPollinators=true,
-   HideOtherPlayersTokens=true,RareFeed=true,AutoDissolve=true,
+   HideOtherPlayersTokens=true,RareFeed=true,
   }
   if not booleanSettings[a] or type(b)~="boolean" then return false,"INVALID_SETTING" end
-  if a=="AutoDissolve" and not p.WorkshopV5.Nodes.ECONOMY_1 then return false,"AUTO_DISSOLVE_LOCKED" end
   p.Settings[a]=b
-  return true
- elseif action=="DissolveFilter" then
-  local R=require(RS.Config.RarityConfig)
-  if not p.WorkshopV5.Nodes.ECONOMY_2 then return false,"FILTER_LOCKED" end
-  if type(a)~="string" or not R.Rank[a] then return false,"INVALID_VALUE" end
-  p.Settings.DissolveRarities[a]=not p.Settings.DissolveRarities[a]
   return true
  end
  return false,"INVALID_ACTION"
