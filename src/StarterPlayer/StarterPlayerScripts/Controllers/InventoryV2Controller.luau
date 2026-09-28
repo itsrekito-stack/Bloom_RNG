@@ -310,6 +310,24 @@ function InventoryV2.Render(controller,profile,uiState)
    controller:Open("Index",nil,{SilentMenu=true})
   end)
  end
+ local featureUnlocks=profile.Tutorial and profile.Tutorial.FeatureUnlocks or {}
+ for _,link in ipairs({
+  {Name="Workshop",Menu="Workshop",Unlocked=featureUnlocks.Workshop==true},
+  {Name="Quests",Menu="Trials",Unlocked=featureUnlocks.Trials==true},
+  {Name="Settings",Menu="Settings",Unlocked=true},
+ }) do
+  local button=categories:FindFirstChild(link.Name.."Button")
+  if button and button:IsA("TextButton") then
+   button.Visible=true
+   button.Active=link.Unlocked
+   button.AutoButtonColor=false
+   button.TextTransparency=link.Unlocked and 0 or .5
+   button.BackgroundTransparency=link.Unlocked and .03 or .22
+   button.Activated:Connect(function()
+    if link.Unlocked then controller:Open(link.Menu) end
+   end)
+  end
+ end
 
  for _,child in ipairs(grid:GetChildren()) do
   if child:IsA("GuiButton") or child.Name=="_EmptyState" then child:Destroy() end
