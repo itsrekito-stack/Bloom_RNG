@@ -34,8 +34,9 @@ function S:StartTrial(player,id)
   Revision=p.Garden.Revision,
  }
 
- if id=="SwiftRoute" then
-  local offered=self.X.GardenActivityService:Offer(player,"PollenTrail",pos,cfg.Sector,nil,true)
+ if id=="SwiftRoute" or id=="CrystalTriangle" then
+  local kind=id=="SwiftRoute" and "PollenTrail" or "CrystalResonance"
+  local offered=self.X.GardenActivityService:Offer(player,kind,pos,nil,nil,true)
   if not offered then
    self.Active[player]=nil
    return false,"ACTIVITY_UNAVAILABLE"
@@ -93,7 +94,7 @@ function S:Event(player,event,n)
  elseif a.Id=="SignatureBloom" then
   yes=synergies.AstralGarden~=nil
  elseif a.Id=="TwilightPulse" then
-  yes=yes and (a.Counts.Firefly or 0)>=5 and self.X.SocialService:IsEclipse(player)
+  yes=yes
  elseif a.Id=="MinimalGarden" then
   local count=0
   for _,slot in ipairs(p.Garden.Slots) do
