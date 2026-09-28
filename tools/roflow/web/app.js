@@ -116,9 +116,22 @@ function groupedPlannerMarkup(tasks){
  const visible=state.plannerShowCompleted?all:all.filter(task=>!task.done);
  const groups=[];const byGroup=new Map();
  for(const task of visible){if(!byGroup.has(task.group)){byGroup.set(task.group,[]);groups.push(task.group)}byGroup.get(task.group).push(task)}
+ groups.sort((a,b)=>{
+  const ag=/^\[.+\]$/.test(a),bg=/^\[.+\]$/.test(b);
+  if(ag!==bg)return ag?-1:1;
+  return 0;
+ });
  return groups.map(group=>{
   const list=byGroup.get(group),counts=plannerCounts(all.filter(task=>task.group===group));
-  return `<section class="planner-group"><div class="planner-group-head"><strong>${escapeHtml(group)}</strong><span>${counts.done}/${counts.total}</span></div><div class="planner-group-tasks">${list.map(task=>plannerTaskMarkup(task)).join("")}</div></section>`;
+  const goal=/^\[.+\]$/.test(group);
+  return `<section class="planner-group ${goal?"planner-goal":""}">
+   <div class="planner-group-head">
+    <div class="planner-group-title"><strong>${escapeHtml(group)}</strong><small>${goal?`${counts.percent}% completed · ${counts.done}/${counts.total} stages`:`${counts.done}/${counts.total} tasks`}</small></div>
+    <span class="planner-group-percent">${counts.percent}%</span>
+   </div>
+   <div class="planner-group-meter" aria-hidden="true"><span style="width:${counts.percent}%"></span></div>
+   <div class="planner-group-tasks">${list.map(task=>plannerTaskMarkup(task)).join("")}</div>
+  </section>`;
  }).join("");
 }
 function bindPlannerCheckboxes(){
