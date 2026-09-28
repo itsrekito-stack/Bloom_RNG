@@ -44,7 +44,8 @@ need(controller,'gardenState.Hint and gardenState.Hint.FlowerId',"ghost hint con
 if "gardenState.Hint.Recipe" in controller or "gardenState.Hint.RecipeId" in controller or "gardenState.Hint.Id" in controller:
     raise AssertionError("Garden ghost hint must not reveal a hidden recipe id")
 need(controller,'CURRENT SYNERGY  •  ',"active Synergy presentation")
-need(controller,'1/N ',"Flower odds presentation")
+need(controller,'tostring(entry.Odds or "1/—")',"real Flower odds presentation")
+if '"1/N "' in controller: raise AssertionError("Garden must not prepend fake 1/N text to real Flower odds")
 need(controller,'Lv. ',"Flower level presentation")
 need(controller,'local ghost=i==7 and not open',"seventh slot ghost state")
 need(controller,'name.Text=not open and (ghost and "GHOST SLOT" or "LOCKED")',"seventh slot ghost copy")
@@ -80,14 +81,14 @@ need(state,'Hint=Effects.Feature(profile,"GARDEN_5","PatternHints") and self.X.G
 need(bloom,'Garden="GardenV1"',"Garden renderer id")
 need(bloom,'GardenEditor.Render(self,p,ui)',"Garden renderer dispatch")
 need(bloom,'Garden="GardenV1"',"Garden menu renderer")
-need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Index","Workshop","Trials","Settings"}) do',"Garden dock authored binding")
+need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Hive","Index","Workshop","Trials","Settings"}) do',"Garden/Hive dock authored binding")
 need(bloom,'local controlsVisible=rollUnlocked and self.Menu==nil',"Roll controls hide whenever a menu is open")
 need(bloom,'self.RouletteViewport.Visible=rollUnlocked and',"roulette stays beneath the Garden menu")
 
 need(editor_html,'data-ui-state="garden"',"Garden UI Studio state")
 need(editor,'garden:"Garden"',"Garden UI Studio title")
 need(editor,'garden:"GardenKit"',"Garden UI Studio focus")
-need(editor,'garden:"GardenKit",settings:"SettingsKit"',"Garden StateKit preview mapping")
+need(editor,'garden:"GardenKit",hive:"HiveKit",settings:"SettingsKit"',"Garden/Hive StateKit preview mapping")
 need(editor,'scene==="garden")return [[0,1040],[0,620]]',"Garden Studio preview geometry")
 
 print("garden editor contract: PASS")
