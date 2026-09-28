@@ -45,6 +45,11 @@ function S:LegacyStepComplete(p,step)
  if step.Id=="FirstFlowerRoll" then return (events.TutorialFlowerRoll or 0)>0 or (events.SeedReward or 0)>0 or hasFlower(p) end
  if step.Id=="Plant" then return (events.Plant or 0)>0 or hasPlanted(p) end
  if step.Id=="FirstBeeRoll" then return (events.TutorialBeeRoll or 0)>0 or (events.StarterBee or 0)>0 or hasBee(p) end
+ if step.Id=="EquipBee" then
+  if (events.EquipBee or 0)>0 then return true end
+  for _,id in pairs(p.Pollinators.EquippedBeeSlots or {}) do if type(id)=="string" and id~="" then return true end end
+  return false
+ end
  if step.Id=="BeeWork" then return (events.Work or 0)>0 end
  if step.Id=="NormalRoll" then
   return (events.TutorialNormalRoll or 0)>0
