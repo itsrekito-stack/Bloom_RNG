@@ -24,11 +24,11 @@ remote=read("src/ServerScriptService/Services/RemoteService.luau")
 ui_state=read("src/ServerScriptService/Services/UIStateService.luau")
 
 ids=re.findall(r'\{Id="([^"]+)"',config)
-expected=["HiveIntro","GardenSlot","FirstFlowerRoll","Plant","FirstBeeRoll","BeeWork","PollenSpark","Inventory","InventoryExplain","Delivery","HiveUpgrade","WorkshopVisit","WorkshopPurchase","Synergy","SunnyVisit"]
+expected=["GardenSlot","FirstFlowerRoll","Plant","FirstBeeRoll","BeeWork","NormalRoll","Inventory","InventoryExplain","PollenSpark","HiveUpgrade","WorkshopVisit","WorkshopPurchase","Synergy","SunnyVisit","Quests"]
 assert ids==expected, f"unexpected tutorial sequence: {ids}"
-assert 'Version=5' in config and len(ids)==15
+assert 'Version=6' in config and len(ids)==15
 
-for forbidden in ("Trait","BloomRoll","WorldActivity","TutorialActivity","Deliveries"):
+for forbidden in ("Trait","BloomRoll","WorldActivity","TutorialActivity","Deliveries","Delivery"):
     assert f'Event="{forbidden}"' not in config, f"random/slow mandatory step returned: {forbidden}"
 
 need(config,'Target="Hive"',"Hive targets authored")
@@ -36,11 +36,12 @@ need(config,'Target="Roll"',"Roll targets authored")
 need(config,'Target="GardenSlot",Slot=1',"first Garden planting target")
 need(config,'Target="TutorialToken"',"tutorial checkpoint target")
 need(config,'Target="InventoryStats"',"Inventory explanation target")
+need(config,'Target="QuestsButton"',"Quests handoff target")
 need(config,'Target="WorkshopNode",NodeId="ROLL_1"',"first Workshop node target")
 need(config,'Target="SynergySlot",Slot=2',"Synergy target")
 
 targets=set(re.findall(r'Target="([^"]+)"',config))
-screen={"Roll","SeedSatchel","InventoryStats","WorkshopNode"}
+screen={"Roll","SeedSatchel","InventoryStats","WorkshopNode","QuestsButton"}
 world={"Hive","Bee","TutorialToken","GardenSlot","SynergySlot","Workshop"}
 sectors=set(re.findall(r'(SunnyOrchard|CrystalGreenhouse|TwilightGrove)=\{',locations))
 unknown=targets-screen-world-sectors
@@ -50,6 +51,7 @@ for token in (
     'if step.Target=="Roll" then',
     'if step.Target=="SeedSatchel" then',
     'if step.Target=="InventoryStats" then',
+    'if step.Target=="QuestsButton" then',
     'if step.Target=="WorkshopNode" then',
     'if target=="Hive" then',
     'elseif target=="Bee" then',
@@ -73,8 +75,8 @@ need(guide,'ui.Activities:Target("Tutorial")',"checkpoint pointer")
 need(guide,'ui.Bees:Target(true)',"local Bee pointer")
 need(guide,'runtime and runtime:FindFirstChild("StatsCard",true)',"Inventory stats pointer")
 need(guide,'function S:SetSynergyPartner(primary,partner)',"Synergy partner guidance")
-need(guide,'if step.Id=="Delivery" and ui.Menu=="SeedSatchel" then ui:Close() end',"Inventory handoff")
-need(guide,'if step.Id=="Synergy" and ui.Menu=="Workshop" then ui:Close() end',"Workshop handoff")
+need(guide,'step.Id=="PollenSpark" or step.Id=="Synergy" or step.Id=="SunnyVisit"',"world-step menu handoff")
+need(guide,'ui:Close({SuppressInventoryReturn=true})',"world-step menu closes without bouncing back to Inventory")
 
 need(service,'local function completionKey(step)',"step completion persistence")
 need(service,'if not step or step.Event~=event then return false end',"future event rejection")
@@ -96,7 +98,8 @@ need(roll,'item.Kind=="Bee" and item.Id=="WorkerBee"',"first Bee is deterministi
 need(roll,'self.X.InventoryService:EquipBee(player,item.Id,1)',"first Bee auto-equips")
 need(roll,'self.X:Emit(player,"TutorialFlowerRoll",1)',"Flower tutorial event")
 need(roll,'self.X:Emit(player,"TutorialBeeRoll",1)',"Bee tutorial event")
-need(features,'Roll={Step=3}',"Roll unlock timing")
+need(roll,'self.X:Emit(player,"TutorialNormalRoll",1)',"normal RNG handoff event")
+need(features,'Roll={Step=2}',"Roll unlock timing")
 
 need(activity,'function S:EnsureTutorialSpark(player)',"tutorial checkpoint factory")
 need(activity,'Tutorial=tutorial==true',"tutorial activity ownership")
@@ -105,7 +108,7 @@ need(activity_client,'self.UI:Send("Activity",id,item.Index,"Reach")',"checkpoin
 assert "ProximityPrompt" not in activity_client, "activity client must not require E"
 
 need(default,'SchemaVersion=6',"new profile schema")
-need(default,'Tutorial={Version=5,Step=1,FeatureUnlocks={},Events={}}',"new profile tutorial version")
+need(default,'Tutorial={Version=6,Step=1,FeatureUnlocks={},Events={}}',"new profile tutorial version")
 need(default,'UnlockedSlots=0',"fresh profile starts before first Garden slot")
 need(default,'OwnedSeedCopies={}',"fresh profile has no direct starter Flower")
 need(default,'BeeInventory={}',"fresh profile has no direct starter Bee")
@@ -128,6 +131,8 @@ need(settings,'ui:Send("StudioTutorialReset")',"Studio reset request")
 
 need(player,'tutorialStep and tutorialStep.Id=="InventoryExplain"',"Inventory review server validation")
 need(player,'self.Temp[player].MenuName=a',"server tracks open menu")
+need(player,'tutorialStep and tutorialStep.Id=="Quests"',"Quests tutorial open is step-scoped")
+need(player,'self:Emit(player,"QuestsOpen",1)',"Quests tutorial completion event")
 need(bloom,'function UI:OpenPlantInventory(slot)',"Plant picker Garden handoff")
 need(bloom,'self:Open("Garden",{Slot=slot},{SilentMenu=true})',"Plant picker opens authored Garden editor without synthetic Menu completion")
 need(bloom,'elseif kind=="PlantPicker" then self:OpenPlantInventory(payload)',"PlantPicker event opens Garden editor")
@@ -147,4 +152,4 @@ for path in (
         if path.endswith("TutorialConfig.luau") and stale in text:
             raise AssertionError(f"{path} contains stale tutorial token {stale}")
 
-print("PASS tutorial acceptance: v5 starts at zero Garden slots, guarantees Flower then Bee, and remains server-authoritative.")
+print("PASS tutorial acceptance: v6 follows Q&A goal — first slot, Flower Roll, Bee Roll, normal RNG, core progression systems, then Quests.")
