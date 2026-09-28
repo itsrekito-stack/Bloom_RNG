@@ -2,16 +2,14 @@ local Bloom=require(script.Parent.BloomConfig)
 
 local C={
  Recipes={
-  {Id="MeadowPair",Kind="Pair",Species={"Daisy","Tulip"}},
-  {Id="GoldenPair",Kind="Pair",Species={"Sunflower","Clover"}},
-  {Id="MeadowFamily",Kind="Family",Tag="Meadow",Count=3},
-  {Id="CrystalTriangle",Kind="Pattern",Tag="Crystal",Slots={1,2,6}},
-  {Id="MeadowLine",Kind="Pattern",Tag="Meadow",Slots={1,2,3}},
-  {Id="MeadowRing",Kind="Pattern",Tag="Meadow",Slots={1,2,3,4,5,6,7,8}},
-  {Id="TwilightOpposite",Kind="Pattern",Tag="Twilight",Slots={1,5}},
-  {Id="MeadowSwarm",Kind="Bee",Tag="Meadow",Trait="Meadow",Count=2},
-  {Id="CrystalResonance",Kind="Biome",Tag="Crystal",Biome="CrystalGreenhouse"},
-  {Id="AstralGarden",Kind="Signature",Species={"StarBloom","MoonOrchid","VoidLotus","EmberDahlia"}},
+  {Id="MeadowPair",Name="Meadow Pair",Strength=10,Tier=1,Species={"Daisy","Tulip"},Levels={Daisy=1,Tulip=1},Effect={FlowerGrowthMultiplier=1.08}},
+  {Id="GoldenPair",Name="Golden Pair",Strength=12,Tier=1,Species={"Sunflower","Clover"},Levels={Sunflower=1,Clover=1},Effect={CoinMultiplier=1.08}},
+  {Id="MeadowFamily",Name="Meadow Family",Strength=20,Tier=2,Species={"Daisy","Tulip","Sunflower"},Levels={Daisy=2,Tulip=2,Sunflower=2},Effect={FlowerGrowthMultiplier=1.16}},
+  {Id="MeadowLine",Name="Meadow Line",Strength=26,Tier=2,Species={"Daisy","Tulip","Sunflower","Clover"},Levels={Daisy=2,Tulip=2,Sunflower=2,Clover=2},Effect={FlowerGrowthMultiplier=1.18,CoinMultiplier=1.08}},
+  {Id="CrystalTriangle",Name="Crystal Triangle",Strength=34,Tier=3,Species={"CrystalRose","FrostLily","PrismBloom"},Levels={CrystalRose=3,FrostLily=3,PrismBloom=2},Effect={LuckMultiplier=1.10,FlowerGrowthMultiplier=1.12}},
+  {Id="TwilightOpposite",Name="Twilight Pair",Strength=42,Tier=4,Species={"Nightshade","VoidLotus"},Levels={Nightshade=4,VoidLotus=4},Effect={PollinatorPowerMultiplier=1.14,CoinMultiplier=1.12}},
+  {Id="MeadowRing",Name="Sevenfold Garden",Strength=50,Tier=5,Species={"Daisy","Tulip","Sunflower","Clover","CrystalRose","FrostLily","PrismBloom"},Levels={Daisy=3,Tulip=3,Sunflower=3,Clover=3,CrystalRose=3,FrostLily=3,PrismBloom=3},Effect={FlowerGrowthMultiplier=1.25,PollinatorYieldMultiplier=1.12}},
+  {Id="AstralGarden",Name="Astral Garden",Strength=60,Tier=6,Species={"StarBloom","MoonOrchid","VoidLotus","EmberDahlia"},Levels={StarBloom=5,MoonOrchid=5,VoidLotus=5,EmberDahlia=5},Effect={LuckMultiplier=1.18,PollinatorYieldMultiplier=1.18,PollinatorPowerMultiplier=1.15}},
  },
  Layout={
   Radius=8.1,
@@ -19,6 +17,13 @@ local C={
   HiveOffset=Vector3.new(13.9,2.07,0),
  }
 }
+
+C.ById={}
+for _,recipe in ipairs(C.Recipes) do C.ById[recipe.Id]=recipe end
+
+function C.Get(id)
+ return C.ById[id]
+end
 
 function C.Position(i)
  if type(i)~="number" or i%1~=0 or i<1 or i>Bloom.MaxFlowerSlots then return Vector3.zero end
