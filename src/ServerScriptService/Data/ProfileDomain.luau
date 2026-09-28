@@ -77,8 +77,17 @@ function D.Apply(p)
  map(p,w.ClaimedSources,"WorkshopV5.ClaimedSources",nil,"flag")
  local f=p.FlowerCollection
  map(p,f.OwnedSeedCopies,"FlowerCollection.OwnedSeedCopies",F.Species,"count")
+ map(p,f.ObtainedFlowers,"FlowerCollection.ObtainedFlowers",F.Species,"count")
  for _,key in ipairs({"DiscoveredFlowers","LockedFlowers","FavoriteFlowers"}) do map(p,f[key],"FlowerCollection."..key,F.Species,"flag") end
- for id,count in pairs(f.OwnedSeedCopies) do if count>0 then f.DiscoveredFlowers[id]=true end end
+ for id,count in pairs(f.OwnedSeedCopies) do
+  if count>0 then
+   if count>1 then D.Archive(p,"FlowerCollection.OwnedSeedCopies",id,count) end
+   f.OwnedSeedCopies[id]=1
+   f.ObtainedFlowers[id]=math.max(tonumber(f.ObtainedFlowers[id]) or 0,count)
+   f.DiscoveredFlowers[id]=true
+  else f.OwnedSeedCopies[id]=nil end
+ end
+ for id in pairs(f.DiscoveredFlowers) do f.ObtainedFlowers[id]=math.max(1,tonumber(f.ObtainedFlowers[id]) or 0) end
  for id,m in pairs(f.FlowerMastery) do
   if not F.Species[id] then D.Archive(p,"FlowerCollection.FlowerMastery",id,m);f.FlowerMastery[id]=nil
   else
@@ -89,8 +98,17 @@ function D.Apply(p)
  end
  local b=p.Pollinators
  map(p,b.BeeInventory,"Pollinators.BeeInventory",B.Bees,"count")
+ map(p,b.BeeObtained,"Pollinators.BeeObtained",B.Bees,"count")
  map(p,b.DiscoveredBees,"Pollinators.DiscoveredBees",B.Bees,"flag")
- for id,count in pairs(b.BeeInventory) do if count>0 then b.DiscoveredBees[id]=true end end
+ for id,count in pairs(b.BeeInventory) do
+  if count>0 then
+   if count>1 then D.Archive(p,"Pollinators.BeeInventory",id,count) end
+   b.BeeInventory[id]=1
+   b.BeeObtained[id]=math.max(tonumber(b.BeeObtained[id]) or 0,count)
+   b.DiscoveredBees[id]=true
+  else b.BeeInventory[id]=nil end
+ end
+ for id in pairs(b.DiscoveredBees) do b.BeeObtained[id]=math.max(1,tonumber(b.BeeObtained[id]) or 0) end
  for id,m in pairs(b.BeeMastery) do
   if type(m)=="table" and B.Bees[id] then
    D.Archive(p,"Pollinators.BeeMastery",id,m)
@@ -119,23 +137,27 @@ function D.Apply(p)
    if i>capacity then error("GARDEN_CAPACITY_CONFLICT:"..i) end
    if type(slot.SpeciesId)~="string" or not F.Species[slot.SpeciesId] then error("UNKNOWN_PLANTED_FLOWER:"..i) end
    local id=slot.SpeciesId
-   planted[id]=(planted[id] or 0)+1
-   if planted[id]>(f.OwnedSeedCopies[id] or 0) then error("GARDEN_OWNERSHIP_CONFLICT:"..i) end
-   number(p,slot,"Level","Garden.Slots."..i,1,true,C.MasteryCap);slot.Level=math.max(1,slot.Level)
-   fields(p,slot,"Garden.Slots."..i,{"XP","TotalPollination"},false)
+   if planted[id] then error("DUPLICATE_GARDEN_SPECIES:"..id) end
+   planted[id]=true
+   if (f.OwnedSeedCopies[id] or 0)<1 then error("GARDEN_OWNERSHIP_CONFLICT:"..i) end
+   fields(p,slot,"Garden.Slots."..i,{"TotalPollination"},false)
+   if slot.Level~=nil then D.Archive(p,"Garden.LegacySlotProgress",i..".Level",slot.Level);slot.Level=nil end
+   if slot.XP~=nil then D.Archive(p,"Garden.LegacySlotProgress",i..".XP",slot.XP);slot.XP=nil end
    if slot.Mutation==nil then slot.Mutation="" elseif type(slot.Mutation)~="string" then error("INVALID_MUTATION:"..i) end
-   -- Unknown mutation strings/extra slot metadata are retained, not erased.
   end
   slots[i]=slot
  end
  p.Garden.Slots=slots;p.Garden.UnlockedSlots=capacity
  number(p,p.Garden,"Revision","Garden",0,true)
+ if type(p.Garden.ActiveSynergy)~="string" or (p.Garden.ActiveSynergy~="" and not SYNERGY_IDS[p.Garden.ActiveSynergy]) then
+  D.Archive(p,"Garden","ActiveSynergy",p.Garden.ActiveSynergy);p.Garden.ActiveSynergy=""
+ end
  local equipped,used={},{}
  local beeCapacity=Rules.BeeCapacity(p)
  for i=1,beeCapacity do
   local id=b.EquippedBeeSlots[i] or b.EquippedBeeSlots[tostring(i)]
-  if type(id)=="string" and B.Bees[id] and (used[id] or 0)<(b.BeeInventory[id] or 0) then
-   equipped[i]=id;used[id]=(used[id] or 0)+1
+  if type(id)=="string" and B.Bees[id] and (b.BeeInventory[id] or 0)>0 and not used[id] then
+   equipped[i]=id;used[id]=true
   end
  end
  for key,id in pairs(b.EquippedBeeSlots) do
