@@ -144,7 +144,12 @@ function X:Request(player,action,a,b,c)
   if a~="Settings" and not p.Tutorial.FeatureUnlocks[a] then return false,"LOCKED" end
   self.Temp[player].MenuOpen=true
   self.Temp[player].MenuName=a
-  if a=="SeedSatchel" then self:Emit(player,"SatchelOpen",1) end
+  local tutorialStep=T.Steps[p.Tutorial.Step]
+  if a=="SeedSatchel" then
+   self:Emit(player,"SatchelOpen",1)
+  elseif a=="Trials" and tutorialStep and tutorialStep.Id=="Quests" then
+   self:Emit(player,"QuestsOpen",1)
+  end
   return true
  elseif action=="Setting" then
   local numericLimits={
