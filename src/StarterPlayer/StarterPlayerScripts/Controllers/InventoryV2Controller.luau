@@ -10,8 +10,8 @@ local Theme=require(RS.Config.UIThemeConfig)
 local C=Theme.Colors
 local InventoryV2={}
 
-local CATEGORY_ORDER={"Flowers","Bees","Resources","Special"}
-local CATEGORY_TITLES={Flowers="FLOWERS",Bees="BEES",Resources="RESOURCES",Special="SPECIAL"}
+local CATEGORY_ORDER={"Bees","Resources","Special"}
+local CATEGORY_TITLES={Bees="BEES",Resources="RESOURCES",Special="SPECIAL"}
 local SORT_ORDER={"Rarity","Name","Count"}
 local SORT_LABELS={Rarity="RARITY  ˅",Name="NAME  ˅",Count="COUNT  ˅"}
 local FILTER_ORDER={"All","Favorite","Protected","Available"}
@@ -103,20 +103,7 @@ local function traitEquipPreview(item,inventory)
 end
 
 local function buildItems(profile,inventory)
- local out={Flowers={},Bees={},Resources={},Special={}}
- for _,entry in ipairs(inventory.Flowers or {}) do
-  local cfg=Flowers.Species[entry.Id]
-  if cfg then
-   local item={
-    Kind="Flower",Id=entry.Id,DisplayName=entry.DisplayName or cfg.DisplayName,Rarity=entry.Rarity or cfg.Rarity,
-    Count=entry.Count or 0,Obtained=entry.Obtained or entry.Count or 0,Free=entry.Free or 0,Planted=entry.Planted or 0,Mastery=entry.Mastery or {Level=1,XP=0,NextXP=25},
-    Favorite=entry.Favorite==true,Protected=entry.Protected==true,CanDissolve=entry.CanDissolve==true,CanUpgrade=entry.CanUpgrade==true,
-    Icon=flowerIcon(entry.Id),Odds=entry.Odds or "1/—",
-   }
-   table.insert(out.Flowers,item)
-  end
- end
-
+ local out={Bees={},Resources={},Special={}}
  for _,entry in ipairs(inventory.Bees or {}) do
   local cfg=Bees.Get(entry.Id)
   if cfg then
@@ -275,10 +262,10 @@ function InventoryV2.Render(controller,profile,uiState)
 
  local state=controller.InventoryV2State
  if type(state)~="table" then
-  state={Category="Flowers",Search="",Sort="Rarity",Filter="All",Selected={}}
+  state={Category="Bees",Search="",Sort="Rarity",Filter="All",Selected={}}
   controller.InventoryV2State=state
  end
- if not table.find(CATEGORY_ORDER,state.Category) then state.Category="Flowers" end
+ if not table.find(CATEGORY_ORDER,state.Category) then state.Category="Bees" end
  if not table.find(SORT_ORDER,state.Sort) then state.Sort="Rarity" end
  if not table.find(FILTER_ORDER,state.Filter) then state.Filter="All" end
  state.Selected=state.Selected or {}
@@ -308,10 +295,8 @@ function InventoryV2.Render(controller,profile,uiState)
   if child:IsA("GuiButton") or child.Name=="_EmptyState" then child:Destroy() end
  end
 
- local totalFlowers=countMap(Flowers.Species)
  local totalBees=countMap(Bees.GetAll())
  local counts={
-  Flowers={#all.Flowers,totalFlowers},
   Bees={#all.Bees,totalBees},
   Resources={#all.Resources,#all.Resources},
   Special={#all.Special,3},
@@ -348,8 +333,8 @@ function InventoryV2.Render(controller,profile,uiState)
   state.Sort=cycle(SORT_ORDER,state.Sort)
   rerender()
  end)
- local filterAllowed=state.Category=="Flowers"
- filterButton.Visible=filterAllowed
+ local filterAllowed=false
+ filterButton.Visible=false
  filterButton.Text=FILTER_LABELS[state.Filter] or FILTER_LABELS.All
  filterButton.Activated:Connect(function()
   state.Filter=cycle(FILTER_ORDER,state.Filter)
@@ -468,21 +453,7 @@ function InventoryV2.Render(controller,profile,uiState)
   local dissolve=details:FindFirstChild("DissolveButton")
   local mastery=details:FindFirstChild("MasteryButton")
 
-  if item.Kind=="Flower" then
-   local planted=(item.Planted or 0)>0
-   local label=planted and "EDIT / REMOVE IN GARDEN" or "PLANT IN GARDEN"
-   setButton(plant,true,label,true,function()
-    controller.LastSeed=item.Id
-    controller.GardenEditorState=controller.GardenEditorState or {SelectedFlowerId=nil,SelectedSlot=nil}
-    controller.GardenEditorState.SelectedFlowerId=item.Id
-    controller:Close()
-    controller:Toast("Flower selected. Use an unlocked Garden pad to open the Garden editor.")
-   end)
-   setButton(favorite,true,item.Favorite and "★  REMOVE FAVORITE" or "★  FAVORITE",true,function() controller:Send("Flag",item.Id,"FavoriteFlowers") end)
-   setButton(protect,true,item.Protected and "◆  UNPROTECT" or "◆  PROTECT",true,function() controller:Send("Flag",item.Id,"LockedFlowers") end)
-   setButton(dissolve,false)
-   setButton(mastery,false)
-  elseif item.Kind=="Bee" then
+  if item.Kind=="Bee" then
    local slots=inventory.EquippedBeeSlots or (profile.Pollinators and profile.Pollinators.EquippedBeeSlots) or {}
    local equippedSlot=findEquippedSlot(slots,item.Id)
    if equippedSlot then
