@@ -1,7 +1,7 @@
 return {
- SchemaVersion=6,
+ SchemaVersion=7,
  Currencies={Coins=0,PetalDust=0,AncientNectar=0},
- Migrations={BloomReworkV1=true,GameVisionV1=true,JourneyNoTrialV1=true},
+ Migrations={BloomReworkV1=true,GameVisionV1=true,JourneyNoTrialV1=true,TrialsRemovedV1=true},
  RollState={TotalRolls=0,BloomCharge=0,DiscoveryPity=0,SpecialRollReady=false},
  FlowerCollection={OwnedSeedCopies={},ObtainedFlowers={},DiscoveredFlowers={},FlowerMastery={},LockedFlowers={},FavoriteFlowers={}},
  Garden={UnlockedSlots=0,Slots={{},{},{},{},{},{},{}},Revision=0,ActiveSynergy=""},
@@ -12,7 +12,7 @@ return {
  World={UnlockedSectors={Center=true},LandmarkDiscoveries={},EventStats={}},
  Season={Count=0,ActiveCard="",Keepsakes={},CompletedGoals={}},
  Tutorial={Version=10,Step=1,FeatureUnlocks={},Events={}},
- Quests={JourneyStep=1,Claimed={},Trials={}},
+ Quests={JourneyStep=1,Claimed={}},
  Settings={Language="English",TutorialsEnabled=true,RewardPopups=true,QuickRoll=false,ShowRarityColors=true,CompactHUD=false,BloomEnabled=true,MuteAll=false,MusicVolume=.5,SFXVolume=.5,UIScale=1,OpenMenuKey="M",RollKey="R",ReducedEffects=false,ShowOtherPollinators=true,HideOtherPlayersTokens=true,RareFeed=true,TokenSoundVolume=.5,AutoDissolve=false,DissolveRarities={},EffectiveLuck=0},
  Index={Read={Flowers={},Bees={},Synergies={},Traits={}}},
  Telemetry={Once={},Counters={}},

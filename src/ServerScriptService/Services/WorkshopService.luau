@@ -1,5 +1,6 @@
 local RS=game:GetService("ReplicatedStorage")
 local C=require(RS.Config.WorkshopConfig)
+local Bloom=require(RS.Config.BloomConfig)
 local T=require(RS.Config.TutorialConfig)
 local E=require(RS.Shared.WorkshopEffects)
 local S={}
@@ -17,6 +18,40 @@ function S:Point(player,key,amount)
  w.Points=w.Points+amount
  if w.Nodes.ECONOMY_4 then p.Currencies.Coins=p.Currencies.Coins+E.Value(p,"ECONOMY_4","MilestoneCoins",0) end
  return true
+end
+
+function S:AwardHiveLevel(player,level)
+ local p=self.X:Profile(player)
+ if not p then return 0,"PROFILE_LOADING" end
+ level=math.max(2,math.floor(tonumber(level) or 2))
+ local points=Bloom.WorkshopPointsForHiveLevel(level)
+ if points<=0 then return 0 end
+ local ok,reason=self:Point(player,"HiveLevel_"..tostring(level),points)
+ return ok and points or 0,reason
+end
+
+function S:ReconcileHivePoints(player)
+ local p=self.X:Profile(player)
+ if not p then return 0 end
+ local expected=0
+ for level=2,math.max(1,math.floor(tonumber(p.Hive.Level) or 1)) do
+  expected+=Bloom.WorkshopPointsForHiveLevel(level)
+ end
+ local spent=0
+ for id in pairs(p.WorkshopV5.Nodes or {}) do
+  local node=C.Nodes[id]
+  if node then spent+=math.max(0,tonumber(node.Cost) or 0) end
+ end
+ local observed=math.max(0,tonumber(p.WorkshopV5.Points) or 0)+spent
+ local deficit=math.max(0,expected-observed)
+ if deficit>0 then
+  p.WorkshopV5.Points+=deficit
+  warn("[Workshop] restored missing Hive Workshop Points player="..tostring(player.Name).." +"..tostring(deficit))
+ end
+ for level=2,math.max(1,math.floor(tonumber(p.Hive.Level) or 1)) do
+  if Bloom.WorkshopPointsForHiveLevel(level)>0 then p.WorkshopV5.ClaimedSources["HiveLevel_"..tostring(level)]=true end
+ end
+ return deficit
 end
 
 function S:Buy(player,id)

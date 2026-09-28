@@ -35,9 +35,9 @@ function S:QuestStatus(profile,nextLevel)
   return total>=rule.Activities,string.format("Complete %d Activities • %d/%d",rule.Activities,total,rule.Activities),total,rule.Activities
  end
 
- if rule.Trials then
-  local total=self.X.U.Count(profile.Quests.Trials)
-  return total>=rule.Trials,string.format("Complete %d Trial • %d/%d",rule.Trials,total,rule.Trials),total,rule.Trials
+ if rule.Quests then
+  local total=self.X.QuestService:ClaimedCount(profile)
+  return total>=rule.Quests,string.format("Complete %d Quests • %d/%d",rule.Quests,total,rule.Quests),total,rule.Quests
  end
 
  return true,"Quest complete",1,1
@@ -93,8 +93,8 @@ function S:Upgrade(player,requireDistance)
  p.Currencies.Coins-=coinCost
  p.Hive.Level=nextLevel
 
- local points=C.WorkshopPointsForHiveLevel(nextLevel)
- if points>0 then self.X.WorkshopService:Point(player,"Hive_"..p.Season.Count.."_"..nextLevel,points) end
+ local points=self.X.WorkshopService:AwardHiveLevel(player,nextLevel)
+ if points>0 then self.X:Send(player,"Message","Hive "..tostring(nextLevel).." • +"..tostring(points).." Workshop Point"..(points==1 and "" or "s")) end
 
  self.X.GardenPlotService:RefreshCapacity(player)
  self.X:Emit(player,"HiveUpgrade",1)

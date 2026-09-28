@@ -116,8 +116,6 @@ end
 function S:EquipTraitSynergy(player,traitId)
  local p=self.X:Profile(player)
  if not p then return false,"PROFILE_LOADING" end
- local temp=self.X.Temp[player]
- if not temp or temp.MenuOpen~=true or temp.MenuName~="Index" then return false,"MENU_REQUIRED" end
  local trait=B.GetTrait(traitId)
  if not trait then return false,"INVALID_ITEM" end
  local capacity=self.X.StatsService:BeeCapacity(p)
@@ -125,49 +123,44 @@ function S:EquipTraitSynergy(player,traitId)
 
  local candidates={}
  for _,beeId in ipairs(B.GetTraitBees(traitId)) do
-  if (tonumber(p.Pollinators.BeeInventory[beeId]) or 0)>0 then table.insert(candidates,beeId) end
+  if (tonumber(p.Pollinators.BeeInventory[beeId]) or 0)>0 then candidates[#candidates+1]=beeId end
  end
  table.sort(candidates,function(a,b)
   local ra,rb=beeRank(a),beeRank(b)
-  if ra==rb then
-   local aa,bb=B.Get(a),B.Get(b)
-   return (aa and aa.SortOrder or 999)>(bb and bb.SortOrder or 999)
-  end
+  if ra==rb then return (B.Get(a).SortOrder or 999)>(B.Get(b).SortOrder or 999) end
   return ra>rb
  end)
 
- local reachable=false
+ local target=0
  for _,bp in ipairs(trait.Breakpoints or {}) do
-  if #candidates>=bp.Count and capacity>=bp.Count then reachable=true end
+  local need=math.floor(tonumber(bp.Count) or 0)
+  if need<=#candidates and need<=capacity then target=math.max(target,need) end
  end
- if not reachable then return false,"SYNERGY_UNAVAILABLE" end
+ if target<1 then return false,"SYNERGY_UNAVAILABLE" end
 
- local slots={}
- local chosen={}
- for _,beeId in ipairs(candidates) do
-  if #slots>=capacity then break end
-  slots[#slots+1]=beeId
-  chosen[beeId]=true
+ local slots,chosen={},{}
+ for i=1,target do slots[#slots+1]=candidates[i] chosen[candidates[i]]=true end
+ local fillers={}
+ for beeId,count in pairs(p.Pollinators.BeeInventory or {}) do
+  if (tonumber(count) or 0)>0 and not chosen[beeId] and B.Exists(beeId) then fillers[#fillers+1]=beeId end
  end
- for i=1,capacity do
-  if #slots>=capacity then break end
-  local beeId=p.Pollinators.EquippedBeeSlots[i]
-  if type(beeId)=="string" and not chosen[beeId] and (tonumber(p.Pollinators.BeeInventory[beeId]) or 0)>0 then
-   slots[#slots+1]=beeId
-   chosen[beeId]=true
-  end
- end
+ table.sort(fillers,function(a,b)
+  local ra,rb=beeRank(a),beeRank(b)
+  if ra==rb then return (B.Get(a).SortOrder or 999)>(B.Get(b).SortOrder or 999) end
+  return ra>rb
+ end)
+ for _,beeId in ipairs(fillers) do if #slots>=capacity then break end slots[#slots+1]=beeId end
 
- p.Pollinators.EquippedBeeSlots={}
+ table.clear(p.Pollinators.EquippedBeeSlots)
  for i,beeId in ipairs(slots) do p.Pollinators.EquippedBeeSlots[i]=beeId end
  self.X.PollinatorService:Remove(player)
+ self.X.GardenSynergyService:Recalculate(player)
  self.X:Emit(player,"EquipBee",1)
  self.X:Emit(player,"Trait",1)
  local state
- for _,entry in ipairs(B.GetTraitState(p.Pollinators.EquippedBeeSlots)) do
-  if entry.Id==traitId then state=entry break end
- end
- self.X:Send(player,"Message",tostring(trait.Name).." synergy equipped"..(state and state.Tier>0 and (" • Tier "..tostring(state.Tier)) or ""))
+ for _,entry in ipairs(B.GetTraitState(p.Pollinators.EquippedBeeSlots)) do if entry.Id==traitId then state=entry break end end
+ if not state or state.Tier<1 then return false,"SYNERGY_UNAVAILABLE" end
+ self.X:Send(player,"Message",tostring(trait.Name).." synergy equipped • Tier "..tostring(state.Tier))
  return true
 end
 
