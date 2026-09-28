@@ -298,7 +298,7 @@ test('representative legacy profiles retain ownership and survive release rejoin
    assert(migrated.FlowerCollection.OwnedSeedCopies.Daisy==1 and migrated.FlowerCollection.ObtainedFlowers.Daisy>=2)
    assert(migrated.FlowerCollection.OwnedSeedCopies.Tulip==1 and migrated.FlowerCollection.ObtainedFlowers.Tulip>=1)
    assert(migrated.FlowerCollection.FlowerMastery.Daisy.Level>=5)
-   assert(migrated.World.UnlockedSectors.SunnyOrchard==true)
+   assert(migrated.World.UnlockedSectors.SunnyOrchard==nil and migrated.LegacyArchive.DomainV1['World.UnlockedSectors'].SunnyOrchard==true)
    assert(migrated.LegacyArchive.Preexisting=='keep')
   elseif fixture.Id==102 then
    assert(migrated.FlowerCollection.OwnedSeedCopies.EmberDahlia==1 and migrated.FlowerCollection.ObtainedFlowers.EmberDahlia>=1)
@@ -308,7 +308,7 @@ test('representative legacy profiles retain ownership and survive release rejoin
    assert(migrated.FlowerCollection.OwnedSeedCopies.CrystalRose==1 and migrated.FlowerCollection.ObtainedFlowers.CrystalRose>=2)
    assert(migrated.FlowerCollection.OwnedSeedCopies.PrismBloom==1 and migrated.FlowerCollection.ObtainedFlowers.PrismBloom>=1)
    assert(migrated.FlowerCollection.FlowerMastery.CrystalRose.Level>=7)
-   assert(migrated.World.UnlockedSectors.CrystalGreenhouse==true)
+   assert(migrated.World.UnlockedSectors.CrystalGreenhouse==nil and migrated.LegacyArchive.DomainV1['World.UnlockedSectors'].CrystalGreenhouse==true)
   end
   local before=U.Copy(migrated)
   assert(s:ReleaseProfile(p).Code=='SUCCESS')
