@@ -25,8 +25,12 @@ for name in ["TraitHUD","TraitList","TraitTemplate","TraitTooltip","TraitTierPop
     if not find(model,name): raise AssertionError(f"authored trait UI missing: {name}")
 
 template=find(model,"TraitTemplate")
-for name in ["IconBadge","TraitIcon","BeeStrip","BeeIconTemplate","Name","Tier","Progress","HighlightScale"]:
+for name in ["IconBadge","TraitIcon","Name","Tier","Progress","HighlightScale"]:
     if not find(template,name): raise AssertionError(f"TraitTemplate missing {name}")
+if find(template,"BeeStrip"): raise AssertionError("TraitTemplate must not show Bee icons persistently")
+tooltip=find(model,"TraitTooltip")
+for name in ["BeeStrip","BeeIconTemplate"]:
+    if not find(tooltip,name): raise AssertionError(f"TraitTooltip missing hover Bee UI: {name}")
 
 for text,label in [
     ('local function signature(traits,equippedSlots)',"stable trait + equipped Bee signature"),
@@ -34,6 +38,7 @@ for text,label in [
     ('if (tonumber(item.Count) or 0)>0 then visible[#visible+1]=item end',"only equipped-build traits shown"),
     ('progressText(item)',"n1/n2 presentation"),
     ('traitIcon(item.Id)',"Trait icon projection"),
+    ('local beeStrip=self.Tooltip:FindFirstChild("BeeStrip")',"Bee icons live in hover tooltip"),
     ('beeIcon(beeId)',"member Bee icon projection"),
     ('local isEquipped=equipped[beeId]==true',"equipped Bee visual state"),
     ('member.ImageTransparency=isEquipped and 0 or .42',"unequipped Bee dimming"),
