@@ -20,38 +20,42 @@ function S:Point(player,key,amount)
  return true
 end
 
+local function hivePointKeys(profile,level)
+ local season=math.max(0,math.floor(tonumber(profile.Season and profile.Season.Count) or 0))
+ return "HiveSeason_"..tostring(season).."_Level_"..tostring(level),"Hive_"..tostring(season).."_"..tostring(level)
+end
+
 function S:AwardHiveLevel(player,level)
  local p=self.X:Profile(player)
  if not p then return 0,"PROFILE_LOADING" end
  level=math.max(2,math.floor(tonumber(level) or 2))
  local points=Bloom.WorkshopPointsForHiveLevel(level)
  if points<=0 then return 0 end
- local ok,reason=self:Point(player,"HiveLevel_"..tostring(level),points)
+ local key,legacy=hivePointKeys(p,level)
+ if p.WorkshopV5.ClaimedSources[key] or p.WorkshopV5.ClaimedSources[legacy] then return 0,"OWNED" end
+ local ok,reason=self:Point(player,key,points)
  return ok and points or 0,reason
 end
 
 function S:ReconcileHivePoints(player)
  local p=self.X:Profile(player)
  if not p then return 0 end
- local expected=0
+ local restored=0
  for level=2,math.max(1,math.floor(tonumber(p.Hive.Level) or 1)) do
-  expected+=Bloom.WorkshopPointsForHiveLevel(level)
+  local points=Bloom.WorkshopPointsForHiveLevel(level)
+  if points>0 then
+   local key,legacy=hivePointKeys(p,level)
+   if not p.WorkshopV5.ClaimedSources[key] and not p.WorkshopV5.ClaimedSources[legacy] then
+    local ok=self:Point(player,key,points)
+    if ok then restored+=points end
+   end
+  end
  end
- local spent=0
- for id in pairs(p.WorkshopV5.Nodes or {}) do
-  local node=C.Nodes[id]
-  if node then spent+=math.max(0,tonumber(node.Cost) or 0) end
+ if restored>0 then
+  warn("[Workshop] restored missing Hive Workshop Points player="..tostring(player.Name).." +"..tostring(restored))
+  self.X:Send(player,"Message","Restored +"..tostring(restored).." missing Workshop Point"..(restored==1 and "" or "s").." from Hive progression")
  end
- local observed=math.max(0,tonumber(p.WorkshopV5.Points) or 0)+spent
- local deficit=math.max(0,expected-observed)
- if deficit>0 then
-  p.WorkshopV5.Points+=deficit
-  warn("[Workshop] restored missing Hive Workshop Points player="..tostring(player.Name).." +"..tostring(deficit))
- end
- for level=2,math.max(1,math.floor(tonumber(p.Hive.Level) or 1)) do
-  if Bloom.WorkshopPointsForHiveLevel(level)>0 then p.WorkshopV5.ClaimedSources["HiveLevel_"..tostring(level)]=true end
- end
- return deficit
+ return restored
 end
 
 function S:Buy(player,id)
