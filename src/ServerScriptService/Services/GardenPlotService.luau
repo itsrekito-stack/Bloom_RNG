@@ -268,7 +268,7 @@ function S:GardenEdit(player,i,id)
 
  p.Garden.Slots[i]=slot
  p.Garden.Revision+=1
- self.EditorSessions[player]=workspace:GetServerTimeNow()+300
+ self.EditorSessions[player]=workspace:GetServerTimeNow()+600
  self.X.GardenActivityService:CancelGarden(player)
  self:Build(player)
  if id~="" then self.X:Emit(player,"Plant",1) end
