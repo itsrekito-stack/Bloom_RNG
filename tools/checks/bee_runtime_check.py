@@ -54,9 +54,12 @@ need(poll,"rng:NextNumber()<C.AbilityTokenChance","ability token chance uses Blo
 need(poll,"while state.Elapsed>=C.DeliverySeconds and deliveryGuard<8 do","large-dt delivery catch-up is bounded")
 need(poll,'if type(index)~="number" or index>capacity or equipped~=state.Id then states[index]=nil end',"unequipped runtime state pruning")
 
-need(inventory,'if not self.X.U.Integer(slot,capacity) then return false,"INVALID_SLOT" end',"equipment slot authority")
+need(inventory,'if not self.X.U.Integer(slot,capacity) then return false,"INVALID_SLOT" end',"unequip slot authority")
 need(inventory,'if (p.Pollinators.BeeInventory[id] or 0)<1 then return false,"NOT_OWNED" end',"bee ownership authority")
-need(inventory,'if i~=slot and v==id then return false,"ALREADY_EQUIPPED" end',"one equipped slot per Bee species")
+need(inventory,'if v==id then return false,"ALREADY_EQUIPPED" end',"one equipped slot per Bee species")
+need(inventory,'local function chooseEquipSlot(p,id,capacity)',"server selects replacement slot when full")
+need(inventory,'if rank<newRank',"replacement only removes a lower-rarity Bee")
+need(inventory,'return false,"NO_LOWER_RARITY_BEE"',"equal-or-higher rarity loadout is protected")
 
 for field in [
     "WorkMultiplier","RewardMultiplier","HiveHoneyMultiplier","CriticalChanceBonus",
