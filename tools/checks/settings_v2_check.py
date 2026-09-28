@@ -122,7 +122,7 @@ if input_node.get("ClassName")!="TextBox":
 if input_node.get("Properties",{}).get("Text")!="MAX":
     raise AssertionError("EffectiveLuckInput authored default must display MAX")
 reset_node=find(kit,"StudioTutorialResetButton")
-if reset_node and "V7" not in reset_node.get("Properties",{}).get("Text",""):
+if reset_node and "V8" not in reset_node.get("Properties",{}).get("Text",""):
     raise AssertionError("Studio tutorial reset copy is stale")
 full_reset=find(kit,"FullResetButton")
 if full_reset.get("Properties",{}).get("Text")!="RESET ALL PROGRESS":
