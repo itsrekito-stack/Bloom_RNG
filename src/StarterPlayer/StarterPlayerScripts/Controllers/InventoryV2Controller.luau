@@ -304,27 +304,47 @@ function InventoryV2.Render(controller,profile,uiState)
  local filterButton=browser:WaitForChild("FilterButton")
  local sectionTitle=browser:WaitForChild("SectionTitle")
  local sectionCount=browser:WaitForChild("SectionCount")
- local indexButton=categories:FindFirstChild("IndexButton")
- if indexButton and indexButton:IsA("TextButton") then
-  indexButton.Activated:Connect(function()
-   controller:Open("Index",nil,{SilentMenu=true})
-  end)
- end
  local featureUnlocks=profile.Tutorial and profile.Tutorial.FeatureUnlocks or {}
  for _,link in ipairs({
-  {Name="Workshop",Menu="Workshop",Unlocked=featureUnlocks.Workshop==true},
-  {Name="Quests",Menu="Trials",Unlocked=featureUnlocks.Trials==true},
-  {Name="Settings",Menu="Settings",Unlocked=true},
+  {Name="Index",Menu="Index",Label="INDEX",Unlocked=true,Silent=true},
+  {Name="Workshop",Menu="Workshop",Label="WORKSHOP",Unlocked=featureUnlocks.Workshop==true},
+  {Name="Quests",Menu="Trials",Label="QUESTS",Unlocked=featureUnlocks.Trials==true},
+  {Name="Settings",Menu="Settings",Label="SETTINGS",Unlocked=true},
  }) do
   local button=categories:FindFirstChild(link.Name.."Button")
   if button and button:IsA("TextButton") then
+   local icon=button:FindFirstChild("Icon")
+   local tooltip=button:FindFirstChild("Tooltip")
    button.Visible=true
-   button.Active=link.Unlocked
+   button.Active=true
+   button.Selectable=link.Unlocked
    button.AutoButtonColor=false
-   button.TextTransparency=link.Unlocked and 0 or .5
-   button.BackgroundTransparency=link.Unlocked and .03 or .22
+   button.Text=""
+   button.TextTransparency=1
+   button.BackgroundTransparency=1
+   if icon and icon:IsA("ImageLabel") then
+    icon.ImageTransparency=link.Unlocked and 0 or .58
+    icon.ImageColor3=link.Unlocked and C.White or C.Muted
+   end
+   if tooltip and tooltip:IsA("TextLabel") then
+    tooltip.Text=link.Label..(link.Unlocked and "" or " • LOCKED")
+    tooltip.Visible=false
+   end
+   button.MouseEnter:Connect(function()
+    if tooltip then tooltip.Visible=true end
+    if link.Unlocked and icon then icon.ImageColor3=C.Blue end
+   end)
+   button.MouseLeave:Connect(function()
+    if tooltip then tooltip.Visible=false end
+    if icon then icon.ImageColor3=link.Unlocked and C.White or C.Muted end
+   end)
    button.Activated:Connect(function()
-    if link.Unlocked then controller:Open(link.Menu) end
+    if not link.Unlocked then return end
+    if link.Silent then
+     controller:Open(link.Menu,nil,{SilentMenu=true})
+    else
+     controller:Open(link.Menu)
+    end
    end)
   end
  end
