@@ -94,9 +94,8 @@ local function traitName(id)
 end
 
 local function flowerDetail(item)
- local meta="1/N "..tostring(item.Odds or "1/—").."  •  Level "..tostring(item.Level or 1)
- local body="Flower entry\n\nDuplicate rolls increase this Flower species Level."
- return meta,body
+ local body="Level • "..tostring(item.Level or 1).."\n\nFlower entry\n\nDuplicate rolls increase this Flower species Level."
+ return tostring(item.Odds or "1/—"),body
 end
 
 local function beeDetail(item)
@@ -106,13 +105,14 @@ local function beeDetail(item)
  local ability=item.Ability or {}
  local passive=Bees.GetPassiveDescription(item.Id)
  local body={
+  "Mastery Lv. "..tostring(mastery.Level or 1),
   "Obtained • "..tostring(item.Obtained or 1),
   "Traits • "..(#traits>0 and table.concat(traits,", ") or "None"),
   "Passive • "..tostring(passive),
   "Ability • "..tostring(ability.Name or "None"),
   tostring(ability.Description or "No ability description."),
  }
- return "1/N "..tostring(item.Odds or "1/—").."  •  Mastery Lv. "..tostring(mastery.Level or 1),table.concat(body,"\n\n")
+ return tostring(item.Odds or "1/—"),table.concat(body,"\n\n")
 end
 
 local function synergyDetail(item)
@@ -165,8 +165,8 @@ local function detailsFor(category,item)
 end
 
 local function cardMeta(category,item)
- if category=="Flowers" then return "LV "..tostring(item.Level or 1) end
- if category=="Bees" then return "M "..tostring(item.Mastery and item.Mastery.Level or 1) end
+ if category=="Flowers" then return tostring(item.Odds or "1/—") end
+ if category=="Bees" then return tostring(item.Odds or "1/—") end
  if category=="Synergies" then return "TIER "..tostring(item.Tier or 1) end
  if category=="Traits" then return tostring(#(item.Breakpoints or {})).." TIERS" end
  return ""
@@ -201,7 +201,6 @@ function Index.Render(controller,profile,uiState)
  root.Position=UDim2.fromScale(0,0)
  root.LayoutOrder=1
  root.Parent=controller.Content
- if controller.BindMenuNavigation then controller:BindMenuNavigation(root) end
 
  local nav=root:WaitForChild("CategoryNav")
  local catalog=root:WaitForChild("CatalogPanel")

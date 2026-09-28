@@ -71,7 +71,9 @@ need(hive,"function S:QuestStatus(profile,nextLevel)","Hive quest validation")
 for key in ("Discoveries","Synergies","BeeMasteryLevel","Activities","Trials"):
     need(bloom,key+"=","Hive quest table covers "+key)
 need(hive,"if not questReady then","Hive upgrade blocks incomplete quest")
-need(hive,"C.WorkshopPointHiveMilestones[nextLevel] or 0","static Hive milestone points")
+need(bloom,"function C.HiveUpgradeCost(nextLevel)","endless Hive cost function")
+need(bloom,"function C.WorkshopPointsForHiveLevel(level)","endless Hive point function")
+need(hive,"C.WorkshopPointsForHiveLevel(nextLevel)","Hive points continue after release milestones")
 need(meta,'local POINT_MILESTONES={Synergy=1,Trait=1,SeasonReady=2}',"Journey point milestone table without Trial gate")
 need(meta,'self.X.WorkshopService:Point(player,"JourneyMilestone_"..key,points)',"key Journey milestones award Workshop Points through one-time sources")
 

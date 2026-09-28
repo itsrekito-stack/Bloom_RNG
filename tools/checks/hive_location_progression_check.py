@@ -30,10 +30,12 @@ if not costs_match: raise AssertionError("HiveCosts missing")
 costs=[int(float(x)) for x in re.findall(r'[0-9.]+',costs_match.group(1))]
 if len(costs)<8 or costs[1]<=0: raise AssertionError(f"Hive ladder invalid: {costs}")
 
-need(hive,'local cost=C.HiveCosts[nextLevel]',"Hive cost")
+need(hive,'local cost=C.HiveUpgradeCost(nextLevel)',"endless Hive cost")
 need(hive,'p.Hive.Honey-=cost',"server spend")
 need(hive,'p.Hive.Level=nextLevel',"server Hive upgrade")
+need(hive,'C.WorkshopPointsForHiveLevel(nextLevel)',"endless Hive point schedule")
 need(hive,'self.X.WorkshopService:Point(player,"Hive_"',"Hive awards Workshop points")
+if "Hive MAX" in hive: raise AssertionError("HiveService still exposes a hard max")
 need(hive,'self.X.GardenPlotService:RefreshCapacity(player)',"Hive updates capacity")
 need(hive,'self.X:Emit(player,"FirstGardenSlot",1)',"first slot")
 need(hive,'self.X:Emit(player,"HiveUpgrade",1)',"Hive progression event")

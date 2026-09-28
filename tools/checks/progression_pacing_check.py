@@ -56,10 +56,27 @@ if not 25<=hive8_developed<=60:
 need(locations,"Order={}","removed location list stays empty")
 need(locations,"Sectors={}","removed location sectors stay empty")
 need(workshop,"local HIVE_BY_INDEX={1,2,3,4,5,5}","Workshop depth reaches Hive5")
-need(hive,"C.WorkshopPointHiveMilestones[nextLevel] or 0","Workshop points are milestone-based")
+need(hive,"C.WorkshopPointsForHiveLevel(nextLevel)","Workshop points continue after Hive 8")
+growth=num(bloom,"EndlessHiveCostGrowth")
+round_to=num(bloom,"EndlessHiveCostRound")
+endless_points=num(bloom,"EndlessHivePointsPerLevel")
+if not 1.2<=growth<=1.5: raise AssertionError(f"endless Hive growth drift: {growth}")
+if round_to<1: raise AssertionError("endless Hive rounding invalid")
+if endless_points<1: raise AssertionError("Hive 9+ must keep awarding Workshop Points")
+hive9=round(costs[-1]*growth/round_to)*round_to
+if hive9<=costs[-1]: raise AssertionError("Hive 9 cost must exceed Hive 8")
 
 need(season,"Hive=8","Season Hive gate");need(season,"Flowers=8","Season Flower breadth");need(season,"Bees=5","Season Bee breadth");need(season,"Trials=3","Season trial breadth")
 
+bee_block=bees.split("C.Bees={",1)[1].split("\nlocal Rarity=",1)[0]
+bee_entries=re.findall(r'^ ([A-Za-z0-9_]+)=\{.*?Passive=\{([^}]*)\}',bee_block,re.M)
+bee_luck=[]
+for bee_id,passive in bee_entries:
+    m=re.search(r'LuckMultiplier=([0-9.]+)',passive)
+    if not m: raise AssertionError(f"{bee_id} does not contribute Roll Luck")
+    bee_luck.append(float(m.group(1)))
+if not bee_luck or min(bee_luck)<1.02 or max(bee_luck)>1.30:
+    raise AssertionError(f"Bee Luck curve out of bounds: {bee_luck}")
 block=bees.split("C.BeeMastery={",1)[1].split("\nC.Traits=",1)[0]
 xp=[int(x) for x in re.findall(r'\d+',re.search(r'XPPerLevel=\{([^}]*)\}',block).group(1))]
 duplicate_xp=num(bloom,"BeeDuplicateXP")

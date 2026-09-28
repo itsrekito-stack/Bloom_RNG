@@ -405,10 +405,7 @@ end
 
 function S:QuestTracker(profile)
  local nextLevel=(tonumber(profile.Hive.Level) or 1)+1
- local cost=Bloom.HiveCosts[nextLevel]
- if not cost then
-  return {Hive={Title="Hive MAX",Text="All Hive upgrades complete",Current=1,Target=1,Complete=true,Level=profile.Hive.Level}}
- end
+ local cost=Bloom.HiveUpgradeCost(nextLevel)
  local ready,text,current,target=self.X.HiveService:QuestStatus(profile,nextLevel)
  local objective=tostring(text or "Hive quest")
  objective=objective:match("^(.-) •") or objective

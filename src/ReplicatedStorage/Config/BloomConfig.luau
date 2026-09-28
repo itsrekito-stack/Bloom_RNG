@@ -1,4 +1,4 @@
-return {
+local C={
  SchemaVersion=6,
  MaxFlowerSlots=7,
  StartingSlots=0,
@@ -35,6 +35,9 @@ return {
  GardenSlotHiveMilestones={2,3,4,5,6,7},
  BeeSlotHiveMilestones={2,3,4,5,6,7,8},
  WorkshopPointHiveMilestones={[2]=2,[4]=1,[6]=1,[8]=2},
+ EndlessHiveCostGrowth=1.35,
+ EndlessHiveCostRound=50,
+ EndlessHivePointsPerLevel=1,
  HiveQuestRequirements={
   [2]={Discoveries=2},
   [3]={Discoveries=4},
@@ -66,3 +69,25 @@ return {
  RollRhythmCooldown=1.2,
  OverclockCooldown=.8,
 }
+
+function C.HiveUpgradeCost(nextLevel)
+ local level=math.max(2,math.floor(tonumber(nextLevel) or 2))
+ local fixed=C.HiveCosts[level]
+ if fixed then return fixed end
+ local extra=level-#C.HiveCosts
+ local base=C.HiveCosts[#C.HiveCosts] or 2500
+ local growth=math.max(1,tonumber(C.EndlessHiveCostGrowth) or 1.35)
+ local roundTo=math.max(1,math.floor(tonumber(C.EndlessHiveCostRound) or 50))
+ local raw=base*(growth^extra)
+ return math.max(base,math.floor(raw/roundTo+.5)*roundTo)
+end
+
+function C.WorkshopPointsForHiveLevel(level)
+ local n=math.max(1,math.floor(tonumber(level) or 1))
+ local milestone=C.WorkshopPointHiveMilestones[n]
+ if milestone then return milestone end
+ if n>#C.HiveCosts then return math.max(0,math.floor(tonumber(C.EndlessHivePointsPerLevel) or 1)) end
+ return 0
+end
+
+return C

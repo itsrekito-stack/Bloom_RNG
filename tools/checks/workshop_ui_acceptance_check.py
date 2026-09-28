@@ -24,7 +24,7 @@ def one(name):
 
 for token in (
     'return self.WorkshopFocus==true and self.Menu=="Workshop"',
-    'self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.QuestTracker,self.RollHUD,self.Roll,',
+    'self.ObjectiveCard,self.CurrencyHUD,self.QuestTracker,self.RollHUD,self.Roll,',
     'if self:IsWorkshopExclusive() and name~="Workshop" then return end',
     'if name=="Workshop" then self:SetWorkshopFocus(true) end',
     'if wasWorkshop then self:SetWorkshopFocus(false) end',
@@ -32,9 +32,13 @@ for token in (
     need(ui,token,'fullscreen exclusivity')
 
 assert 'self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.QuestTracker,self.RollHUD,self.Roll,self.RouletteViewport' not in ui, "Workshop must leave roulette beneath fullscreen menu"
+hud_objects=ui[ui.index("function UI:WorkshopHUDObjects"):ui.index("function UI:CaptureWorkshopHUDVisibility")]
+assert "self.Dock" not in hud_objects, "fullscreen Workshop/Index must keep the shared bottom dock visible"
+workshop_template=one("WorkshopTemplate")
+assert workshop_template is not None
+assert not any(node.get("Name")=="MenuNav" for node in walk(workshop_template)), "Workshop must not carry a duplicate internal MenuNav"
 workshop_focus=ui[ui.index("function UI:SetWorkshopFocus"):ui.index("function UI:CaptureIndexHUDVisibility")]
 assert 'self:StopRouletteAnimation()' not in workshop_focus and 'self.Auto=false' not in workshop_focus, "opening Workshop must not stop auto-roll"
-need(ui,'self:BindMenuNavigation(shell)',"Workshop authored menu navigation binding")
 
 for token in (
     'input.UserInputType~=Enum.UserInputType.MouseButton1',

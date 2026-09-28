@@ -48,8 +48,7 @@ function S:PromptText(profile)
   return "Unlock Garden Slot 1"
  end
  local nextLevel=profile.Hive.Level+1
- local cost=C.HiveCosts[nextLevel]
- if not cost then return "Hive MAX" end
+ local cost=C.HiveUpgradeCost(nextLevel)
  local ready=self:QuestStatus(profile,nextLevel)
  return ready
   and ("Upgrade Hive • "..math.floor(cost).." Honey")
@@ -70,12 +69,7 @@ function S:Interact(player)
  end
 
  local nextLevel=p.Hive.Level+1
- local cost=C.HiveCosts[nextLevel]
- if not cost then
-  self.X:Send(player,"Message","Hive is at max level")
-  return false,"HIVE_MAX"
- end
-
+ local cost=C.HiveUpgradeCost(nextLevel)
  local questReady,questText=self:QuestStatus(p,nextLevel)
  if not questReady then
   self.X:Send(player,"Message","Hive "..nextLevel.." quest • "..questText)
@@ -90,7 +84,7 @@ function S:Interact(player)
  p.Hive.Honey-=cost
  p.Hive.Level=nextLevel
 
- local points=C.WorkshopPointHiveMilestones[nextLevel] or 0
+ local points=C.WorkshopPointsForHiveLevel(nextLevel)
  if points>0 then self.X.WorkshopService:Point(player,"Hive_"..p.Season.Count.."_"..nextLevel,points) end
 
  self.X.GardenPlotService:RefreshCapacity(player)

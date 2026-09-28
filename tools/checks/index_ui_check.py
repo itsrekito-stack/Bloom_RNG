@@ -96,10 +96,19 @@ need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Index","Workshop","Tri
 if 'controller:Open("Index"' in inventory:
     raise AssertionError("Inventory must not carry a second disconnected Index entry point")
 need(player,'elseif action=="IndexViewed" then return self.UIStateService:MarkIndexRead(p,a,b)',"IndexViewed server route")
-need(controller,'if controller.BindMenuNavigation then controller:BindMenuNavigation(root) end',"Index authored menu navigation binding")
-need(bloom,'function UI:BindMenuNavigation(root)',"shared menu navigation binder")
-for name in ("Nav_Inventory","Nav_Garden","Nav_Workshop","Nav_Quests","Nav_Settings"):
-    if not find(model,name): raise AssertionError(f"Index/menu navigation node missing: {name}")
+if find(proto,"MenuNav"): raise AssertionError("Index must use the shared bottom dock, not an internal MenuNav")
+if 'function UI:BindMenuNavigation(root)' in bloom: raise AssertionError("legacy internal menu navigation binder returned")
+hud=bloom[bloom.index("function UI:WorkshopHUDObjects"):bloom.index("function UI:CaptureWorkshopHUDVisibility")]
+if "self.Dock" in hud: raise AssertionError("fullscreen Index/Workshop must preserve the shared bottom dock")
+detail_meta=find(proto,"DetailMeta")
+card_meta=find(find(proto,"IndexCardTemplate"),"Meta")
+if not detail_meta or detail_meta["Properties"].get("TextSize",0)<18: raise AssertionError("selected 1/n is not visually dominant")
+if not card_meta or card_meta["Properties"].get("TextSize",0)<10: raise AssertionError("card 1/n is too small")
+if '"1/N "' in controller: raise AssertionError("Index must not prefix real odds with a fake 1/N label")
+need(controller,'return tostring(item.Odds or "1/—"),body',"selected Flower odds")
+need(controller,'return tostring(item.Odds or "1/—"),table.concat(body',"selected Bee odds")
+need(controller,'if category=="Flowers" then return tostring(item.Odds or "1/—") end',"Flower card odds")
+need(controller,'if category=="Bees" then return tostring(item.Odds or "1/—") end',"Bee card odds")
 index_blob=str(model)
 if "Petal Dust: earn from Server Bloom" not in index_blob or "Ancient Nectar: earn by completing Seasons" not in index_blob:
     raise AssertionError("Index currency acquisition guidance missing")

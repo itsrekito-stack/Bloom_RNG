@@ -14,3 +14,10 @@
 | Season Nectar | отсутствовал | 5, Legacy Scholar +2 | Endgame-only currency |
 
 Это записанные alpha-предложения и итоговые значения конфигов, не эмпирически подтверждённый баланс. 20-minute test и диапазон 15–40% остаются открытыми. Исходные per-bee Ability/Traits сохранены в BeesConfig, поведение automation переподключено к новой модели.
+
+## 2026-09-28 balance pass
+
+- Hive levels are no longer capped at 8. Levels 2–8 keep the existing hand-tuned Honey costs; level 9+ grows by 1.35× per level, rounded to 50 Honey.
+- Hive 9+ grants 1 Workshop Point per level. Existing milestone rewards at 2/4/6/8 are unchanged.
+- Every equipped Bee now contributes Roll Luck. Common Bees start at +2–3%; specialist/rarer Bees scale through +28%, while Arcane trait breakpoints are +15% / +35%.
+- Early Hive 2/4/6/8 pacing is intentionally unchanged; the new curve only extends progression after the release ladder.

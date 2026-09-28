@@ -27,7 +27,7 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="compact-traits-quest-tracker-server-bloom-v11-2026-09-28"
+local CLIENT_BUILD="endless-hive-index-rarity-dock-v12-2026-09-28"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
@@ -329,7 +329,7 @@ end
 
 function UI:WorkshopHUDObjects()
  return {
-  self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.QuestTracker,self.RollHUD,self.Roll,
+  self.ObjectiveCard,self.CurrencyHUD,self.QuestTracker,self.RollHUD,self.Roll,
   self.Guide,self.ToastRoot,self.Reveal,
  }
 end
@@ -962,7 +962,6 @@ function UI:RenderMenu(preserveInteraction)
    shell.LayoutOrder=1
    self.WorkshopRuntime=shell
    self.WorkshopZoomLabel=nil
-   self:BindMenuNavigation(shell)
    structure=workshopStructure(shell)
    if not structure then error("[BloomUI] WorkshopRuntime clone failed authored structure validation") end
   end
@@ -1311,30 +1310,6 @@ function UI:OpenDockMenu(name)
   self:Close()
  end
  self:Open(name)
-end
-
-function UI:BindMenuNavigation(root)
- if not root then return end
- local nav=root:FindFirstChild("MenuNav",true)
- if not nav then return end
- local targets={
-  Nav_Inventory="SeedSatchel",
-  Nav_Garden="Garden",
-  Nav_Index="Index",
-  Nav_Workshop="Workshop",
-  Nav_Quests="Trials",
-  Nav_Settings="Settings",
- }
- for buttonName,menuName in pairs(targets) do
-  local button=nav:FindFirstChild(buttonName)
-  if button and button:IsA("GuiButton") and not button:GetAttribute("BloomNavBound") then
-   button:SetAttribute("BloomNavBound",true)
-   hover(button,C.Panel,C.PanelHover)
-   button.Activated:Connect(function()
-    self:OpenDockMenu(menuName)
-   end)
-  end
- end
 end
 
 function UI:RefreshMenuDock()
@@ -2103,13 +2078,9 @@ local function validateBloomGui(gui)
     end
    end
    local workshopTemplate=panel:FindFirstChild("WorkshopTemplate")
-   if workshopTemplate then
-    for _,name in ipairs({"MenuNav","CurrencyHelp"}) do
-     if not workshopTemplate:FindFirstChild(name,true) then table.insert(missing,"WorkshopTemplate/"..name) end
-    end
+   if workshopTemplate and not workshopTemplate:FindFirstChild("CurrencyHelp",true) then
+    table.insert(missing,"WorkshopTemplate/CurrencyHelp")
    end
-   local indexPrototype=panel:FindFirstChild("IndexPrototype")
-   if indexPrototype and not indexPrototype:FindFirstChild("MenuNav",true) then table.insert(missing,"IndexPrototype/MenuNav") end
   local stateKits=panel:FindFirstChild("StateKits")
    if not stateKits or not stateKits:FindFirstChild("GardenKit") then
     table.insert(missing,"MainPanel/StateKits/GardenKit")
