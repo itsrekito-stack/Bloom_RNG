@@ -1252,7 +1252,7 @@ function UI:TutorialRollState()
  if not tutorial or tutorial.Skipped==true then return false,true,nil end
  local step=T.Steps[tonumber(tutorial.Step) or 1]
  if not step then return false,true,nil end
- local allowed=step.Id=="FirstFlowerRoll" or step.Id=="FirstBeeRoll" or step.Id=="BloomRoll" or step.Id=="NormalRoll"
+ local allowed=step.Id=="FirstFlowerRoll" or step.Id=="FirstBeeRoll" or step.Id=="BloomRoll"
  return true,allowed,step
 end
 
