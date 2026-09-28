@@ -73,7 +73,7 @@ for text,label in [
     ('item.LevelRequirements',"Synergy level requirements"),
     ('item.Effect',"Synergy effect"),
     ('item.Breakpoints',"Trait tier thresholds"),
-    ('item.BeeIds',"Trait member Bees"),
+    ('selectedItem.BeeIds',"Trait member Bees rendered as authored icons"),
     ('Flowers.FormatLevelBuff(item.Id,level)',"Flower level-scaled passive detail"),
     ('traitBeeIconTemplate:Clone()',"Trait Bees rendered as icons"),
     ('controller:Send("EquipSynergy",current)',"Equip Synergy action"),
