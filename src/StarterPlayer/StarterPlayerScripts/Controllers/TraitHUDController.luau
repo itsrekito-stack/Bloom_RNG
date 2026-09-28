@@ -172,11 +172,39 @@ function S:ShowTooltip(item)
  local description=self.Tooltip:FindFirstChild("Description")
  local thresholds=self.Tooltip:FindFirstChild("Thresholds")
  local bees=self.Tooltip:FindFirstChild("Bees")
+ local beeStrip=self.Tooltip:FindFirstChild("BeeStrip")
+ local beeTemplate=beeStrip and beeStrip:FindFirstChild("BeeIconTemplate")
  if title then title.Text=tostring(item.Name or item.Id or "TRAIT") end
  if progress then progress.Text=(tonumber(item.Tier) or 0)>0 and ("TIER "..tostring(item.Tier).."  •  "..progressText(item)) or ("BUILDING  •  "..progressText(item)) end
  if description then description.Text=tostring(item.Description or "") end
  if thresholds then thresholds.Text="Thresholds\n"..thresholdText(item) end
- if bees then bees.Text=beeNames(item) end
+ if bees then bees.Text="TRAIT BEES" end
+ if beeStrip and beeTemplate and beeTemplate:IsA("ImageLabel") then
+  for _,member in ipairs(beeStrip:GetChildren()) do
+   if member:GetAttribute("TraitBeeRuntime") then member:Destroy() end
+  end
+  local equipped=self.EquippedBees or {}
+  local color=item.Color
+  if typeof(color)~="Color3" then color=C.Blue end
+  for order,beeId in ipairs(item.BeeIds or {}) do
+   local member=beeTemplate:Clone()
+   member.Name="Bee_"..tostring(beeId)
+   member.LayoutOrder=order
+   member.Visible=true
+   member:SetAttribute("TraitBeeRuntime",true)
+   member.Image=beeIcon(beeId)
+   local isEquipped=equipped[beeId]==true
+   member.ImageColor3=isEquipped and C.White or Color3.fromRGB(105,112,120)
+   member.ImageTransparency=isEquipped and 0 or .42
+   member.BackgroundTransparency=isEquipped and .04 or .22
+   local memberStroke=member:FindFirstChildOfClass("UIStroke")
+   if memberStroke then
+    memberStroke.Color=isEquipped and color or C.BorderSoft
+    memberStroke.Transparency=isEquipped and .16 or .62
+   end
+   member.Parent=beeStrip
+  end
+ end
  self.Tooltip.Visible=true
 end
 
@@ -238,7 +266,6 @@ end
 
 function S:BuildRows(traits,tierUps,equippedSlots)
  self:ClearRows()
- local equipped=equippedSet(equippedSlots)
  local visible={}
  for _,item in ipairs(traits or {}) do
   if (tonumber(item.Count) or 0)>0 then visible[#visible+1]=item end
@@ -259,8 +286,6 @@ function S:BuildRows(traits,tierUps,equippedSlots)
   if typeof(color)~="Color3" then color=C.Blue end
   local badge=row:FindFirstChild("IconBadge")
   local icon=row:FindFirstChild("TraitIcon")
-  local beeStrip=row:FindFirstChild("BeeStrip")
-  local beeTemplate=beeStrip and beeStrip:FindFirstChild("BeeIconTemplate")
   local name=row:FindFirstChild("Name")
   local tier=row:FindFirstChild("Tier")
   local progress=row:FindFirstChild("Progress")
@@ -275,29 +300,6 @@ function S:BuildRows(traits,tierUps,equippedSlots)
    badge.Text=tostring(item.Short or string.sub(tostring(item.Name or "?"),1,1))
    badge.BackgroundColor3=color
    badge.Visible=not (icon and icon:IsA("ImageLabel"))
-  end
-  if beeStrip and beeTemplate and beeTemplate:IsA("ImageLabel") then
-   for _,member in ipairs(beeStrip:GetChildren()) do
-    if member:GetAttribute("TraitBeeRuntime") then member:Destroy() end
-   end
-   for beeOrder,beeId in ipairs(item.BeeIds or {}) do
-    local member=beeTemplate:Clone()
-    member.Name="Bee_"..tostring(beeId)
-    member.LayoutOrder=beeOrder
-    member.Visible=true
-    member:SetAttribute("TraitBeeRuntime",true)
-    member.Image=beeIcon(beeId)
-    local isEquipped=equipped[beeId]==true
-    member.ImageColor3=isEquipped and C.White or Color3.fromRGB(105,112,120)
-    member.ImageTransparency=isEquipped and 0 or .42
-    member.BackgroundTransparency=isEquipped and .04 or .22
-    local memberStroke=member:FindFirstChildOfClass("UIStroke")
-    if memberStroke then
-     memberStroke.Color=isEquipped and color or C.BorderSoft
-     memberStroke.Transparency=isEquipped and .16 or .62
-    end
-    member.Parent=beeStrip
-   end
   end
   if name and name:IsA("TextLabel") then name.Text=tostring(item.Name or item.Id) end
   if tier and tier:IsA("TextLabel") then
@@ -324,6 +326,7 @@ end
 function S:Update(traits,equippedSlots,revision)
  if not self.Root then return end
  self.LastRevision=revision
+ self.EquippedBees=equippedSet(equippedSlots)
  local nextSignature=signature(traits,equippedSlots)
  if nextSignature==self.LastSignature then
   self.Root.Visible=not self.Suppressed
