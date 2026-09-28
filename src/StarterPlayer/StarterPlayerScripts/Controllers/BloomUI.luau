@@ -26,7 +26,7 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="plant-inventory-flow-2026-09-26"
+local CLIENT_BUILD="bottom-menu-inventory-return-2026-09-28"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
@@ -1353,8 +1353,9 @@ function UI:Render()
   b:SetAttribute("BloomDockEnabled",enabled)
   local icon=b:FindFirstChild("Icon")
   if icon and icon:IsA("ImageLabel") then
+   local selected=self.Menu==name
    icon.ImageTransparency=enabled and 0 or .58
-   icon.ImageColor3=enabled and C.White or C.Muted
+   icon.ImageColor3=enabled and (selected and C.Blue or C.White) or C.Muted
   end
   local tip=self.DockTooltips[name]
   if tip then
@@ -1738,7 +1739,8 @@ function UI:BindStaticUI()
    tip.Visible=false
    if icon and icon:IsA("ImageLabel") then
     local enabled=button:GetAttribute("BloomDockEnabled")~=false
-    TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{ImageColor3=enabled and C.White or C.Muted}):Play()
+    local selected=self.Menu==name
+    TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{ImageColor3=enabled and (selected and C.Blue or C.White) or C.Muted}):Play()
    end
   end)
   button.Activated:Connect(function()
