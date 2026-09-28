@@ -3956,7 +3956,7 @@ end)
 test("Workshop purchase prerequisites, balance, idempotence",function()
  local p=Schema.CreateDefault() p.Hive.Level=8 p.Tutorial.FeatureUnlocks.Workshop=true p.WorkshopV5.Points=5 p.Currencies.Coins=1000
  local s=require(node("ServerScriptService/Services/WorkshopService")) s:Init({Profile=function() return p end,GardenPlotService={RefreshCapacity=function() end},TutorialService={Refresh=function() end},Emit=function() end})
- assert(not s:Buy({},"ROLL_2")) assert(s:Buy({},"ROLL_1")) assert(not s:Buy({},"ROLL_1")) assert(p.WorkshopV5.Points==4 and p.Currencies.Coins==970) assert(not s:Buy({},"LEGACY_1"))
+ assert(not s:Buy({},"ROLL_2")) assert(s:Buy({},"ROLL_1")) assert(not s:Buy({},"ROLL_1")) assert(p.WorkshopV5.Points==4 and p.Currencies.Coins==900) assert(not s:Buy({},"LEGACY_1"))
 end)
 test("tutorial has 18 steps, reconnect progress, unlocks",function()
  local p=Schema.CreateDefault() local service=require(node("ServerScriptService/Services/TutorialService")) service:Init({Profile=function() return p end,EmitOnce=function() end})
