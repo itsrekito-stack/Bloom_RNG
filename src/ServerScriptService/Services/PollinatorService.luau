@@ -33,26 +33,18 @@ function S:Init(x)
  self.X=x
 end
 
-function S:AddMastery(player,id,baseAmount,abilityMultiplier)
+function S:AddMastery(player,id,baseAmount)
  local p=self.X:Profile(player)
  local bee=type(id)=="string" and B.Get(id) or nil
  if not p or not bee then return false end
  local amount=tonumber(baseAmount) or 0
  if amount<=0 then return false end
-
  local before=B.GetMasteryState(p.Pollinators.BeeMastery[id])
  if before.IsMax then
   p.Pollinators.BeeMastery[id]=before.MaxXP
   return false
  end
-
- local stats=self.X.StatsService:Get(p)
- local gain=amount
-  *E.Value(p,"BEES_3","BeeXP",1)
-  *(stats.BeeMasteryXP or 1)
-  *(tonumber(abilityMultiplier) or 1)
- if gain<=0 then return false end
-
+ local gain=amount*E.Value(p,"BEES_3","BeeXP",1)
  local total=math.min(before.MaxXP,before.TotalXP+gain)
  p.Pollinators.BeeMastery[id]=total
  local after=B.GetMasteryState(total)
@@ -227,7 +219,6 @@ function S:Deliver(player,profile,temp,state,bee,mastery,stats,slots)
   player,profile,stats,mastery,1,tempRewardBonus(temp),
   rewardMultiplier,hiveMultiplier,criticalChanceBonus
  )
- self:AddMastery(player,bee.Id,1,active and (ability.BeeMasteryXPMultiplier or 1) or 1)
  self.X.RollService:Charge(player,C.Charge.Delivery*(profile.Season.ActiveCard=="SummerSwarm" and .75 or 1))
  self.X:Emit(player,"Delivery",1)
  self.X.SocialService:Contribute(player,1)
