@@ -11,8 +11,8 @@ local Steps={
  {Id="HiveUpgrade",Event="HiveUpgrade",Text="Upgrade your Hive.",Helper="Hive upgrades need Honey plus the current Hive Quest. Hive levels unlock more Garden and Bee slots.",Target="Hive"},
  {Id="WorkshopPurchase",Event="WorkshopPurchase",Text="Buy your first Workshop node.",Helper="Open Workshop from the bottom menu, then buy ROLL_1. Workshop upgrades are permanent.",Target="WorkshopNode",NodeId="ROLL_1"},
  {Id="Synergy",Event="Synergy",Text="Build your first Garden Synergy.",Helper="Open Garden, select the guaranteed Tulip and place it in Slot 2 beside Daisy. Only your strongest valid Synergy is active.",Target="GardenEditorSlot",Slot=2,PartnerSlot=1,FlowerId="Tulip"},
- {Id="Quests",Event="QuestsOpen",Text="Open Quests.",Helper="Hive Quests test discoveries, Synergies, Bee Mastery, Activities and Trials. Open Quests to see the goals that drive progression.",Target="QuestsButton"},
+ {Id="Quests",Event="QuestsOpen",Text="Open Quests.",Helper="Quests reward normal play: rolls, discoveries, Hive levels, Activities, Bloom Rolls, Bee Mastery and Workshop progress.",Target="QuestsButton"},
 }
 local IndexById={}
 for i,step in ipairs(Steps) do IndexById[step.Id]=i end
-return {Version=10,Steps=Steps,IndexById=IndexById}
+return {Version=11,Steps=Steps,IndexById=IndexById}

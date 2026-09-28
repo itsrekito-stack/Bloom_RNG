@@ -13,7 +13,7 @@ local names={
  ECONOMY={"Coin Sense","Honey Storage","Nectar Refining","Milestone Chest","Prosperity I","Prosperity II"},
  BLOOM={"Mutation Slot","Active Nectar","Rare Seed Rule","Charge Reserve","Mutation Study","Signature Rule"},
  EXPLORATION={"Event Radar","Route Bonus","Crystal Interaction","Wild Bloom Sense","Twilight Interaction","Wayfinder"},
- LEGACY={"Season Memory","Keepsake","Legacy Mutation","Advanced Trials","Third Memory","Season Scholar"},
+ LEGACY={"Season Memory","Keepsake","Legacy Mutation","Quest Bounty","Third Memory","Season Scholar"},
 }
 
 -- Six nodes should span the midgame instead of collapsing into Hive 1-3.

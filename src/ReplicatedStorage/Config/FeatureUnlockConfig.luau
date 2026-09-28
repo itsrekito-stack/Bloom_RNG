@@ -3,5 +3,5 @@ return {
  SeedSatchel={Event="TutorialFlowerRoll"},
  Garden={Event="FirstGardenSlot"},
  Workshop={Event="HiveUpgrade"},
- Trials={Event="HiveUpgrade"},
+ Quests={Event="HiveUpgrade"},
 }

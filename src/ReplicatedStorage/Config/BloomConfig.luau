@@ -1,5 +1,5 @@
 local C={
- SchemaVersion=6,
+ SchemaVersion=7,
  MaxFlowerSlots=7,
  StartingSlots=0,
  MaxBeeSlots=8,
@@ -48,7 +48,7 @@ local C={
   [5]={BeeMasteryLevel=2},
   [6]={Activities=3},
   [7]={Discoveries=10},
-  [8]={Trials=1},
+  [8]={Quests=6},
  },
  Charge={Delivery=2,Token=4,Nectar=6,World=12,Event=15},
  SeasonReward=5,
