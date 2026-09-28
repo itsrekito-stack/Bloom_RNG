@@ -67,12 +67,6 @@ local REASONS={
  NO_CHANGES="No upgrades available to reset",
 }
 
-local function masteryCost(profile,id)
- local mastery=profile.FlowerCollection.FlowerMastery[id] or {Level=1,XP=0}
- local discount=1-Effects.Value(profile,"ECONOMY_5","StudyDiscount",0)
- return math.ceil((mastery.Level or 1)*5*discount)
-end
-
 local function plantedCount(profile,id)
  local count=0
  for _,slot in ipairs(profile.Garden.Slots) do
@@ -417,8 +411,6 @@ end
 
 function S:Settings(profile)
  return {
-  AutoDissolveUnlocked=profile.WorkshopV5.Nodes.ECONOMY_1==true,
-  DissolveFiltersUnlocked=profile.WorkshopV5.Nodes.ECONOMY_2==true,
   EffectiveLuck=tonumber(profile.Settings.EffectiveLuck) or 0,
  }
 end
@@ -433,7 +425,7 @@ function S:Snapshot(player)
   Map=self:Map(player,profile),
   Trials=self:Trials(player,profile),
   Settings=self:Settings(profile),
-  Garden={ActiveSynergy=profile.Garden.ActiveSynergy or "",Hint=self.X.GardenSynergyService:Hint(profile)},
+  Garden={ActiveSynergy=profile.Garden.ActiveSynergy or "",Hint=Effects.Feature(profile,"GARDEN_5","PatternHints") and self.X.GardenSynergyService:Hint(profile) or nil},
   Index=self:Index(player,profile),
   Boosts=self.X.BoostService and self.X.BoostService:Snapshot(player,profile) or {Items={}},
  }
