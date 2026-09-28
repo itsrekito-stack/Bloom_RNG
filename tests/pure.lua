@@ -211,7 +211,7 @@ test("roll independent players, cooldown and one-time Bloom",function()
   U=U,
  }
  x.InventoryService=inv inv:Init(x) roll:Init(x)
- for _,p in pairs(profiles) do p.Tutorial.FeatureUnlocks.Roll=true end
+ for _,p in pairs(profiles) do p.Tutorial.FeatureUnlocks.Roll=true p.Tutorial.Step=99 end
  profiles[a].RollState.SpecialRollReady=true profiles[a].RollState.BloomCharge=100
  assert(roll:Roll(a,false)) assert(profiles[a].RollState.BloomCharge==0)
  assert(roll:Roll(b,false)) assert(not roll:Roll(a,false))
@@ -263,7 +263,7 @@ test("Workshop purchase prerequisites balance and idempotence",function()
  assert(not s:Buy({},"LEGACY_1"))
 end)
 
-test("tutorial v5 gates future events and completes ordered flow",function()
+test("tutorial v10 gates future events and completes ordered flow",function()
  local player={} local p=Schema.CreateDefault() local completed=0 local sparks=0
  local service=require(node("ServerScriptService/Services/TutorialService"))
  local x={
@@ -290,7 +290,7 @@ test("tutorial v5 gates future events and completes ordered flow",function()
   service:Refresh(player)
   assert(p.Tutorial.Step==i+1)
  end
- assert(p.Tutorial.Step==16 and completed==1 and sparks>0)
+ assert(p.Tutorial.Step==#T.Steps+1 and completed==1 and sparks>0)
  assert(p.Hive.Honey>=40 and p.WorkshopV5.Points>=1 and p.Currencies.Coins>=30)
  assert((p.FlowerCollection.OwnedSeedCopies.Tulip or 0)>=1)
 end)
@@ -312,16 +312,18 @@ test("tutorial rolls are flower-only then bee-only",function()
   GardenSynergyService={Recalculate=function() end},
   U=U,
  }
+ x.MarkStateDirty=function() end
  x.InventoryService=inv inv:Init(x) roll:Init(x)
+ local T=require(rs.Config.TutorialConfig)
  p.Tutorial.FeatureUnlocks.Roll=true
- p.Tutorial.Step=3
+ p.Tutorial.Step=T.IndexById.FirstFlowerRoll
  assert(roll:Roll(player,false))
  assert(rewards[1] and rewards[1].Kind=="FlowerSeed")
  roll.Last[player]=-100
- p.Tutorial.Step=5
+ p.Tutorial.Step=T.IndexById.FirstBeeRoll
  assert(roll:Roll(player,false))
  assert(rewards[2] and rewards[2].Kind=="Bee")
- assert(p.Pollinators.BeeInventory[rewards[2].Id]==1 and p.Pollinators.EquippedBeeSlots[1]==rewards[2].Id)
+ assert(p.Pollinators.BeeInventory[rewards[2].Id]==1 and p.Pollinators.EquippedBeeSlots[1]==nil)
 end)
 
 test("one-time point source and preservation of Nectar",function()
