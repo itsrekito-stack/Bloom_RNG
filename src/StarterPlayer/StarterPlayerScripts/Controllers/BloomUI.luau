@@ -26,7 +26,7 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="inventory-expand-centered-workshop-2026-09-28"
+local CLIENT_BUILD="inventory-roll-spacing-2026-09-28"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
@@ -1254,11 +1254,11 @@ function UI:ApplyMenuDockLayout(expanded)
   local scale=math.min(1,math.max(.68,(width-16)/415))
   if dockScale then dockScale.Scale=scale end
   self.Dock.AnchorPoint=Vector2.new(.5,1)
-  self.Dock.Position=UDim2.new(.5,expanded and 0 or math.floor(87*scale+.5),1,expanded and -14 or -94)
+  self.Dock.Position=UDim2.new(.5,expanded and 0 or math.floor(69*scale+.5),1,expanded and -14 or -94)
  else
   if dockScale then dockScale.Scale=1 end
   self.Dock.AnchorPoint=Vector2.new(.5,1)
-  self.Dock.Position=UDim2.new(.5,expanded and 0 or 87,1,-14)
+  self.Dock.Position=UDim2.new(.5,expanded and 0 or 69,1,-14)
  end
 end
 
