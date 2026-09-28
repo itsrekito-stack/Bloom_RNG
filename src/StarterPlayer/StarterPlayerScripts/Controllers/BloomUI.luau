@@ -803,7 +803,7 @@ function UI:OpenGardenMenu(slot)
  if not self.GardenEditorState.SelectedFlowerId and p and WorkshopEffects.Feature(p,"GARDEN_3","RepeatPlant") and self.LastSeed then
   self.GardenEditorState.SelectedFlowerId=self.LastSeed
  end
- self:Open("Garden",{Slot=slot},{SilentMenu=true})
+ self:Open("Garden",{Slot=slot})
 end
 
 function UI:RenderMenu(preserveInteraction)
