@@ -11,7 +11,7 @@ return {
  WorkshopV5={Points=0,Nodes={},LegacyNodes={},ClaimedSources={}},
  World={UnlockedSectors={Center=true},LandmarkDiscoveries={},EventStats={}},
  Season={Count=0,ActiveCard="",Keepsakes={},CompletedGoals={}},
- Tutorial={Version=8,Step=1,FeatureUnlocks={},Events={}},
+ Tutorial={Version=9,Step=1,FeatureUnlocks={},Events={}},
  Quests={JourneyStep=1,Claimed={},Trials={}},
  Settings={Language="English",TutorialsEnabled=true,RewardPopups=true,QuickRoll=false,ShowRarityColors=true,CompactHUD=false,BloomEnabled=true,MuteAll=false,MusicVolume=.5,SFXVolume=.5,UIScale=1,OpenMenuKey="M",RollKey="R",ReducedEffects=false,ShowOtherPollinators=true,HideOtherPlayersTokens=true,RareFeed=true,TokenSoundVolume=.5,AutoDissolve=false,DissolveRarities={},EffectiveLuck=0},
  Index={Read={Flowers={},Bees={},Synergies={},Traits={}}},
