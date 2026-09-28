@@ -30,7 +30,8 @@ if 'controller:Send("DissolveBee",item.Id,1)' in client:
     raise AssertionError("obsolete Bee dismantle UI returned")
 
 # Coins and Petal Dust remain sinks in the authored Workshop.
-need(workshop,"Coins=i*30","Workshop Coin costs scale by depth")
+need(workshop,"local COINS_BY_INDEX={100,250,700,1800,4500,10000}","Workshop Coin sink curve")
+need(workshop,"Coins=COINS_BY_INDEX[i] or 0","Workshop nodes consume depth Coin curve")
 need(workshop,'Dust=(branch=="ECONOMY" or branch=="BLOOM") and i*3 or 0',"Workshop Dust sink branches")
 need(workshop_service,"p.Currencies.Coins-=(n.Coins or 0)","Workshop Coin spend")
 need(workshop_service,"p.Currencies.PetalDust-=(n.Dust or 0)","Workshop Dust spend")
@@ -40,9 +41,10 @@ need(season_plan,"after.WorkshopV5.Points=after.WorkshopV5.Points+(node and node
 if "after.Currencies.PetalDust=0" in season_plan:
     raise AssertionError("Petal Dust must persist across Season Turn")
 
-seasonal_coin_sink=sum(i*30 for i in range(1,7))*6
+coin_curve=[100,250,700,1800,4500,10000]
+seasonal_coin_sink=sum(coin_curve)*6
 seasonal_dust_sink=sum(i*3 for i in range(1,7))*2
-if seasonal_coin_sink!=3780 or seasonal_dust_sink!=126:
+if seasonal_coin_sink!=104100 or seasonal_dust_sink!=126:
     raise AssertionError("Workshop sink arithmetic changed unexpectedly")
 
 # Ancient Nectar remains useful after permanent Legacy completion.
