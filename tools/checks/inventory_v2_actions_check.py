@@ -49,11 +49,13 @@ need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Index","Workshop","Tri
 need(bloom,'local visible=rollUnlocked and self.Menu==nil',"Roll hidden while menus are open")
 need(garden,'function S:GardenEdit(player,i,id)',"server Garden editor mutation path")
 need(garden,'temp.MenuOpen~=true or temp.MenuName~="Garden"',"Garden menu required for edits")
+if 'action=="Plant"' in player:
+    raise AssertionError("PlayerService must not expose legacy Plant action")
 need(garden,'(self.EditorSessions[player] or 0)<workspace:GetServerTimeNow()',"Garden editor session validation")
 need(garden,'(p.FlowerCollection.OwnedSeedCopies[id] or 0)<1',"Garden editor species ownership validation")
 
 for text,label in [
- ('elseif action=="Plant" then return false,"USE_GARDEN_MENU"',"legacy Plant request rejected"),
+
  ('elseif action=="EquipBee" then return self.InventoryService:EquipBee(player,a,b)',"Equip server route"),
  ('if b~="LockedFlowers" and b~="FavoriteFlowers" then return false,"INVALID_ACTION" end',"Flag field allowlist"),
 ]:
