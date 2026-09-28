@@ -5,6 +5,8 @@ local Steps={
  {Id="FirstBeeRoll",Event="TutorialBeeRoll",Text="Roll your first Bee.",Helper="This tutorial Roll contains only Bees. Your first Bee is guaranteed.",Target="Roll"},
  {Id="EquipBee",Event="EquipBee",Text="Equip your first Bee.",Helper="Open Inventory, choose Worker Bee, then press EQUIP. Equipped Bees automatically work in your Garden.",Target="InventoryBeeEquip",BeeId="WorkerBee"},
  {Id="BeeWork",Event="Work",Text="Bees work automatically.",Helper="Watch your equipped Bee fly to the planted Flower. Bee abilities activate automatically.",Target="Bee"},
+ {Id="FillBloom",Event="BloomReady",Text="Fill the Bloom Meter.",Helper="Your Bee charges Bloom while working. Watch the Bloom meter — the next delivery will finish it.",Target="BloomMeter"},
+ {Id="BloomRoll",Event="BloomRoll",Text="Use your Bloom Roll.",Helper="Bloom is full. Click Roll to spend it on a boosted Bloom Roll.",Target="Roll"},
  {Id="NormalRoll",Event="TutorialNormalRoll",Text="Now the real RNG begins.",Helper="Roll again. From now on, Flowers and Bees come from the normal reward pool.",Target="Roll"},
  {Id="Inventory",Event="SatchelOpen",Text="Open your Inventory.",Helper="Inventory stores Bees, resources and keepsakes. Flowers are managed only from Garden.",Target="SeedSatchel"},
  {Id="InventoryExplain",Event="InventoryReviewed",Text="Learn Bees and Traits.",Helper="Bee duplicates raise Mastery. Traits combine equipped Bees; hover a Trait to see its members. Flowers and planting live in Garden. Review this, then close Inventory.",Target="InventoryStats"},
@@ -18,4 +20,4 @@ local Steps={
 }
 local IndexById={}
 for i,step in ipairs(Steps) do IndexById[step.Id]=i end
-return {Version=8,Steps=Steps,IndexById=IndexById}
+return {Version=9,Steps=Steps,IndexById=IndexById}
