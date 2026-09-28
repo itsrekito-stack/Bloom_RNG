@@ -28,7 +28,6 @@ need(remote,'if not scalar(a) or not scalar(b) or not scalar(c) then return fals
 need(remote,'integer(b,1,2147483647)',"Roll request id bounds")
 need(remote,'integer(a,1,C.MaxFlowerSlots)',"Plant slot bounds")
 need(remote,'integer(b,1,C.MaxBeeSlots)',"Bee slot bounds")
-need(remote,'integer(b,1,10000)',"Dissolve quantity bounds")
 need(remote,'local ACTIVITY_PHASE={Reach=true}',"Activity checkpoint-only whitelist")
 need(remote,'ACTIVITY_PHASE[c]==true',"Activity phase whitelist")
 need(remote,'if knownRevision~=nil and not integer(knownRevision,0,2147483647)',"StateRequest revision validation")
@@ -44,7 +43,7 @@ need(activity,'if index~=o.Index then return false,"STALE_ACTIVITY" end',"stale 
 need(roll,'not p.Tutorial.FeatureUnlocks.Roll',"Roll progression lock")
 need(roll,'os.clock()-(self.Last[player] or -100)<cd',"Roll server cooldown")
 need(inventory,'(p.Pollinators.BeeInventory[id] or 0)<1',"Bee ownership validation")
-need(inventory,'self:Available(p,id)<n',"Dissolve free-copy validation")
+need(inventory,'if i~=slot and v==id then return false,"ALREADY_EQUIPPED" end',"Bee species uniqueness validation")
 need(garden,'self.X.U.Near(player,pos,C.InteractionDistance)',"Plant proximity validation")
 need(garden,'self.X.InventoryService:Available(p,id)<1',"Plant ownership validation")
 need(activity,'index~=o.Index',"Activity step-order validation")
@@ -60,4 +59,4 @@ need(season,'q.Revision~=self.X.Revisions[player] or not self.X.U.Equal(q.Before
 
 print("remote security contract: PASS")
 print(f"Validated routed actions: {len(actions)}")
-print("Server authority verified for roll, inventory, planting, activities, Workshop, trials and Season Turn.")
+print("Server authority verified for roll, species inventory/equipment, planting, activities, Workshop, trials and Season Turn.")
