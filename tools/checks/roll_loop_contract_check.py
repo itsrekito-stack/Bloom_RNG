@@ -30,7 +30,8 @@ need(inventory,'self.X.PollinatorService:AddMastery(player,id,C.BeeDuplicateXP)'
 need(remote,'integer(b,1,2147483647)',"roll request correlation id validated")
 need(ui,'local BloomConfig=require(RS.Config.BloomConfig)',"HUD reads roll thresholds from shared config")
 need(ui,'tonumber(BloomConfig.BloomMax)',"HUD Bloom meter uses configured max")
-need(ui,'tonumber(BloomConfig.DiscoveryThreshold)',"HUD pity meter uses configured threshold")
+if 'DISCOVERY' in ui or 'DiscoveryThreshold' in ui:
+    raise AssertionError("Discovery pity must stay hidden from the player-facing Bloom HUD")
 need(ui,'self:FindRouletteTarget(payload)',"roulette lands on server result")
 need(ui,'Normal roll rewards are shown only by the roulette itself.',"normal roll has no duplicate RewardReveal")
 
