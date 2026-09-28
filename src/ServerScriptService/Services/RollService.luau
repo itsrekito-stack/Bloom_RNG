@@ -27,6 +27,12 @@ local function tutorialPoolKind(profile)
  return nil
 end
 
+local function tutorialRollAllowed(profile)
+ local step=T.Steps[profile.Tutorial.Step]
+ if not step then return true end
+ return step.Id=="FirstFlowerRoll" or step.Id=="FirstBeeRoll" or step.Id=="NormalRoll"
+end
+
 function S:Odds(player)
  local p=self.X:Profile(player)
  if not p then return {} end
@@ -66,6 +72,8 @@ end
 function S:Roll(player,automatic,requestId)
  local p=self.X:Profile(player)
  if not p or not p.Tutorial.FeatureUnlocks.Roll then return false,"LOCKED" end
+ if not tutorialRollAllowed(p) then return false,"TUTORIAL_ROLL_LOCKED" end
+ if T.Steps[p.Tutorial.Step] and automatic then return false,"TUTORIAL_SINGLE_ROLL" end
 
  local cd=E.Value(p,"ROLL_6","RollCooldown",E.Value(p,"ROLL_5","RollCooldown",E.Value(p,"ROLL_1","RollCooldown",C.RollCooldown)))
  if os.clock()-(self.Last[player] or -100)<cd then return false,"COOLDOWN" end
