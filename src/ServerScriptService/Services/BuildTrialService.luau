@@ -1,7 +1,6 @@
 local RS=game:GetService("ReplicatedStorage")
 local C=require(RS.Config.BuildTrialConfig)
 local B=require(RS.Config.BeesConfig)
-local L=require(RS.Config.LocationsConfig)
 local E=require(RS.Shared.WorkshopEffects)
 
 local S={Active={}}
@@ -23,12 +22,9 @@ function S:StartTrial(player,id)
  if not p.Tutorial.FeatureUnlocks.Trials then return false,"TRIAL_LOCKED" end
  if self.Active[player] then return false,"TRIAL_RUNNING" end
  if cfg.Advanced and not self:AdvancedUnlocked(p) then return false,"ADVANCED_TRIAL_LOCKED" end
- if not p.World.UnlockedSectors[cfg.Sector] then return false,"SECTOR_LOCKED" end
- if self.X.MapService:Sector(player)~=cfg.Sector then return false,"WRONG_SECTOR" end
-
- local location=L.Sectors[cfg.Sector]
- local pos=location and self.X.Origin+location.Center+Vector3.new(0,2,30)
- if not pos or not self.X.U.Near(player,pos,14) then return false,"TOO_FAR" end
+ local root=player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+ local pos=root and root.Position or self.X.GardenPlotService:HivePosition(player)
+ if not pos then return false,"PROFILE_LOADING" end
 
  self.Active[player]={
   Advanced=cfg.Advanced==true,
