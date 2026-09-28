@@ -29,7 +29,7 @@ for name in [
     "Category_General","Category_Audio","Category_Gameplay","Category_Interface","Category_Graphics","Category_Controls",
     "TutorialsToggle","RewardPopupsToggle","MusicVolumeSlider","SfxVolumeSlider","MuteAllToggle",
     "AutoRollToggle","QuickRollToggle","RarityColorsToggle","CompactHudToggle","BloomToggle",
-    "LowEffectsToggle","UiScaleSlider","OpenMenuKeybind","RollKeybind","ResetButton","ApplyButton","SaveButton",
+    "LowEffectsToggle","UiScaleSlider","EffectiveLuckInput","OpenMenuKeybind","RollKeybind","ResetButton","ApplyButton","SaveButton",
 ]:
     if not find(kit,name): raise AssertionError(f"SettingsKit authored node missing: {name}")
 
@@ -54,6 +54,9 @@ for text,label in [
     ('ui:SetAutoRolling(not ui.Auto)',"Auto Roll binding"),
     ('bindKeybind(ui,openKey,"OpenMenuKey")',"menu keybind"),
     ('bindKeybind(ui,rollKey,"RollKey")',"roll keybind"),
+    ('find(scroll,"EffectiveLuckInput","TextBox")',"Effective Luck authored binding"),
+    ('ui:Send("Setting","EffectiveLuck",value)',"Effective Luck server commit"),
+    ('raw=="MAX"',"Effective Luck MAX sentinel"),
     ('object:IsA("BloomEffect")',"Bloom effect binding"),
 ]:
     need(settings,text,label)
@@ -71,6 +74,8 @@ for text,label in [
     ('MusicVolume={0,1}',"music volume clamp"),
     ('SFXVolume={0,1}',"SFX volume clamp"),
     ('UIScale={.8,1.15}',"UI scale clamp"),
+    ('EffectiveLuck={0,1000000}',"Effective Luck clamp"),
+    ('a=="EffectiveLuck" and b~=0 and b<1',"Effective Luck minimum validation"),
     ('a=="OpenMenuKey" or a=="RollKey"',"keybind allowlist"),
     ('TutorialsEnabled=true,RewardPopups=true,QuickRoll=true,ShowRarityColors=true,CompactHUD=true',"new boolean settings allowlist"),
 ]:
@@ -90,8 +95,19 @@ for text,label in [
     ('UIScale=1',"UI scale default"),
     ('OpenMenuKey="M"',"menu key default"),
     ('RollKey="R"',"roll key default"),
+    ('EffectiveLuck=0',"Effective Luck defaults to MAX"),
 ]:
     need(defaults,text,label)
+
+
+input_node=find(kit,"EffectiveLuckInput")
+if input_node.get("ClassName")!="TextBox":
+    raise AssertionError("EffectiveLuckInput must be authored as TextBox")
+if input_node.get("Properties",{}).get("Text")!="MAX":
+    raise AssertionError("EffectiveLuckInput authored default must display MAX")
+reset_node=find(kit,"StudioTutorialResetButton")
+if reset_node and "V5" not in reset_node.get("Properties",{}).get("Text",""):
+    raise AssertionError("Studio tutorial reset copy is stale")
 
 need(tutorial,'p.Settings and p.Settings.TutorialsEnabled==false',"tutorial visibility preference")
 need(bloom,'self.State.Profile.Settings.RewardPopups~=false',"reward popup preference")
@@ -102,4 +118,4 @@ need(bloom,'settings.OpenMenuKey or "M"',"menu key runtime")
 need(bloom,'settings.RollKey or "R"',"roll key runtime")
 
 print("settings-v2 runtime contract: PASS")
-print("Covered: authored SettingsKit, server authority/persistence, toggles, sliders, keybinds, quick roll, audio, tutorial hints and compact HUD.")
+print("Covered: authored SettingsKit, Effective Luck MAX/value input, server authority/persistence, toggles, sliders, keybinds, audio, tutorial hints and compact HUD.")
