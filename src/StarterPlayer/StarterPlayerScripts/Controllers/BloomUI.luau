@@ -714,7 +714,8 @@ function UI:OpenPlantInventory(slot)
  end
  self.GardenEditorState=self.GardenEditorState or {SelectedFlowerId=nil,SelectedSlot=nil}
  self.GardenEditorState.SelectedSlot=slot
- if self.LastSeed then
+ local p=self.State and self.State.Profile
+ if not self.GardenEditorState.SelectedFlowerId and p and WorkshopEffects.Feature(p,"GARDEN_3","RepeatPlant") and self.LastSeed then
   self.GardenEditorState.SelectedFlowerId=self.LastSeed
  end
  self:Open("Garden",{Slot=slot},{SilentMenu=true})
