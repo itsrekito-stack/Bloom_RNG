@@ -1,5 +1,6 @@
 local RS=game:GetService("ReplicatedStorage")
 local B=require(RS.Config.BeesConfig)
+local G=require(RS.Config.GardenSynergyConfig)
 local GardenRules=require(RS.Shared.GardenRules)
 
 local S={}
@@ -19,18 +20,20 @@ end
 function S:Get(p)
  local traits=B.GetTraitBonuses(p.Pollinators.EquippedBeeSlots)
  local passive=B.GetPassiveBonuses(p.Pollinators.EquippedBeeSlots)
+ local synergy=G.Get(p.Garden and p.Garden.ActiveSynergy or "")
+ local effect=synergy and synergy.Effect or {}
  return {
-  Luck=(traits.LuckMultiplier or 1)*(passive.LuckMultiplier or 1),
-  Yield=(traits.PollinatorYieldMultiplier or 1)*(passive.PollinatorYieldMultiplier or 1),
-  Speed=(traits.PollinatorTravelSpeedMultiplier or 1)*(passive.PollinatorTravelSpeedMultiplier or 1),
-  Power=(traits.PollinatorPowerMultiplier or 1)*(passive.PollinatorPowerMultiplier or 1),
-  FlowerGrowth=(traits.FlowerGrowthMultiplier or 1)*(passive.FlowerGrowthMultiplier or 1),
-  Coin=(traits.CoinMultiplier or 1)*(passive.CoinMultiplier or 1),
-  HiveHoney=(traits.HiveHoneyMultiplier or 1)*(passive.HiveHoneyMultiplier or 1),
+  Luck=(traits.LuckMultiplier or 1)*(passive.LuckMultiplier or 1)*(effect.LuckMultiplier or 1),
+  Yield=(traits.PollinatorYieldMultiplier or 1)*(passive.PollinatorYieldMultiplier or 1)*(effect.PollinatorYieldMultiplier or 1),
+  Speed=(traits.PollinatorTravelSpeedMultiplier or 1)*(passive.PollinatorTravelSpeedMultiplier or 1)*(effect.PollinatorTravelSpeedMultiplier or 1),
+  Power=(traits.PollinatorPowerMultiplier or 1)*(passive.PollinatorPowerMultiplier or 1)*(effect.PollinatorPowerMultiplier or 1),
+  FlowerGrowth=(traits.FlowerGrowthMultiplier or 1)*(passive.FlowerGrowthMultiplier or 1)*(effect.FlowerGrowthMultiplier or 1),
+  Coin=(traits.CoinMultiplier or 1)*(passive.CoinMultiplier or 1)*(effect.CoinMultiplier or 1),
+  HiveHoney=(traits.HiveHoneyMultiplier or 1)*(passive.HiveHoneyMultiplier or 1)*(effect.HiveHoneyMultiplier or 1),
   ClonePower=(traits.ClonePowerMultiplier or 1)*(passive.ClonePowerMultiplier or 1),
-  AbilityCooldown=(traits.AbilityCooldownMultiplier or 1)*(passive.AbilityCooldownMultiplier or 1),
+  AbilityCooldown=(traits.AbilityCooldownMultiplier or 1)*(passive.AbilityCooldownMultiplier or 1)*(effect.AbilityCooldownMultiplier or 1),
   AbilityDuration=(traits.AbilityDurationMultiplier or 1)*(passive.AbilityDurationMultiplier or 1),
-  BeeMasteryXP=(traits.BeeMasteryXPMultiplier or 1)*(passive.BeeMasteryXPMultiplier or 1),
+  BeeMasteryXP=1,
   CriticalChance=traits.CriticalChance or 0,
   CriticalMultiplier=(traits.CriticalMultiplier or 1)*(passive.CriticalMultiplier or 1),
   SplashChance=traits.SplashChance or 0,
