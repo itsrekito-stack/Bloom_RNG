@@ -8,9 +8,9 @@ local C={
 
 local names={
  ROLL={"Roll Tempo","Bloom Reserve","Fast Reveal","Discovery Lens","Roll Rhythm","Overclock"},
- GARDEN={"Flower Slot","Wide Adjacency","Quick Replant","Flower Slots","Pattern Lens","Living Garden"},
- BEES={"Bee Slot","Ability Tokens","Mastery Practice","Trait Depth","Bee Slots","Swarm Protocol"},
- ECONOMY={"Auto Dissolve","Rarity Filters","Duplicate Conversion","Milestone Chest","Dust Study","Prosperity"},
+ GARDEN={"Healthy Soil","Garden Fortune","Quick Replant","Deep Roots","Pattern Lens","Living Garden"},
+ BEES={"Stronger Wings","Ability Tokens","Mastery Practice","Trait Depth","Rich Nectar","Swarm Protocol"},
+ ECONOMY={"Coin Sense","Honey Storage","Nectar Refining","Milestone Chest","Prosperity I","Prosperity II"},
  BLOOM={"Mutation Slot","Active Nectar","Rare Seed Rule","Charge Reserve","Mutation Study","Signature Rule"},
  EXPLORATION={"Event Radar","Route Bonus","Crystal Interaction","Wild Bloom Sense","Twilight Interaction","Wayfinder"},
  LEGACY={"Season Memory","Keepsake","Legacy Mutation","Advanced Trials","Third Memory","Season Scholar"},
