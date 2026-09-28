@@ -30,7 +30,7 @@ for name in ["TopBar","CategoryNav","CatalogPanel","CatalogGrid","IndexCardTempl
     if not find(proto,name): raise AssertionError(f"Index authored node missing: {name}")
 for category in ["Flowers","Bees","Synergies","Traits"]:
     if not find(proto,"Category_"+category): raise AssertionError(f"Index category missing: {category}")
-if not find(model,"IndexButton"): raise AssertionError("Inventory IndexButton missing")
+if not find(model,"Dock_Index"): raise AssertionError("authored Index dock button missing")
 
 # Server payload: discovered entries are detailed, locked entries expose only slot/unlocked state.
 for text,label in [
@@ -92,7 +92,9 @@ for text,label in [
     ('IndexViewed="Index"',"read-state refresh mapping"),
 ]:
     need(bloom,text,label)
-need(inventory,'controller:Open("Index",nil,{SilentMenu=true})',"Inventory opens Index")
+need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Index","Workshop","Trials","Settings"}) do',"Index opens from the authored bottom dock")
+if 'controller:Open("Index"' in inventory:
+    raise AssertionError("Inventory must not carry a second disconnected Index entry point")
 need(player,'elseif action=="IndexViewed" then return self.UIStateService:MarkIndexRead(p,a,b)',"IndexViewed server route")
 need(remote,'elseif action=="IndexViewed" then',"IndexViewed schema")
 
