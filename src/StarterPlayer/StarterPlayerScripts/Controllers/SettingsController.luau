@@ -16,9 +16,9 @@ local CATEGORY_Y={
  General=0,
  Audio=148,
  Gameplay=296,
- Interface=444,
- Graphics=548,
- Controls=654,
+ Interface=486,
+ Graphics=590,
+ Controls=696,
 }
 
 local CATEGORY_SUBTITLE={
@@ -273,6 +273,29 @@ function S.Render(ui,profile,uiState)
  bindSlider(ui,music,"MusicVolume",0,1,tonumber(settings.MusicVolume) or .5)
  bindSlider(ui,sfx,"SFXVolume",0,1,tonumber(settings.SFXVolume) or tonumber(settings.TokenSoundVolume) or .5)
  bindSlider(ui,uiScale,"UIScale",.8,1.15,tonumber(settings.UIScale) or 1)
+
+ local effectiveLuck=find(scroll,"EffectiveLuckInput","TextBox")
+ if effectiveLuck then
+  local function displayLuck(value)
+   value=tonumber(value) or 0
+   if value<=0 then return "MAX" end
+   if math.abs(value-math.floor(value+.5))<.001 then return tostring(math.floor(value+.5)) end
+   return string.format("%.2f",value):gsub("0+$",""):gsub("%.$","")
+  end
+  effectiveLuck.Text=displayLuck(settings.EffectiveLuck)
+  connect(effectiveLuck.FocusLost,function()
+   local raw=string.upper(tostring(effectiveLuck.Text or "")):gsub("%s+","")
+   local value=(raw=="" or raw=="MAX") and 0 or tonumber(raw)
+   if value==nil or value<0 or (value>0 and value<1) then
+    effectiveLuck.Text=displayLuck(ui.State and ui.State.Profile and ui.State.Profile.Settings.EffectiveLuck or settings.EffectiveLuck)
+    ui:Toast("Effective Luck: enter MAX or a value of 1+")
+    return
+   end
+   value=math.min(1000000,value)
+   effectiveLuck.Text=displayLuck(value)
+   ui:Send("Setting","EffectiveLuck",value)
+  end)
+ end
 
  local language=find(scroll,"LanguageDropdown","TextButton")
  if language then
