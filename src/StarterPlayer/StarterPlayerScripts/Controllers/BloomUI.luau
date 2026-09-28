@@ -26,7 +26,7 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="bottom-menu-inventory-return-2026-09-28"
+local CLIENT_BUILD="inventory-expand-centered-workshop-2026-09-28"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
@@ -1238,24 +1238,38 @@ function UI:ApplySafeArea()
  self:ApplyResponsiveLayout(math.max(320,safeW),math.max(360,safeH))
 end
 
+function UI:ApplyMenuDockLayout(expanded)
+ if not self.Dock then return end
+ expanded=expanded==true
+ self.InventoryDockExpanded=expanded
+ local dockScale=self.Dock:FindFirstChild("UserScale")
+ if self.IsMobileLayout then
+  local safeSize=self.SafeRoot and self.SafeRoot.AbsoluteSize or Vector2.new(700,700)
+  local width=math.max(320,safeSize.X)
+  local scale=math.min(1,math.max(.68,(width-16)/415))
+  if dockScale then dockScale.Scale=scale end
+  self.Dock.AnchorPoint=Vector2.new(.5,1)
+  self.Dock.Position=UDim2.new(.5,expanded and 0 or math.floor(87*scale+.5),1,expanded and -14 or -94)
+ else
+  if dockScale then dockScale.Scale=1 end
+  self.Dock.AnchorPoint=Vector2.new(.5,1)
+  self.Dock.Position=UDim2.new(.5,expanded and 0 or 87,1,-14)
+ end
+end
+
 function UI:ApplyResponsiveLayout(width,height)
  -- Desktop layout is authored in StarterGui. Do not overwrite positions/sizes here,
  -- so designers can move every HUD block directly in Studio.
  self.IsMobileLayout=width<700
- local dockScale=self.Dock and self.Dock:FindFirstChild("UserScale")
  if width>=700 then
-  if dockScale then dockScale.Scale=1 end
-  self.Dock.AnchorPoint=Vector2.new(1,1)
-  self.Dock.Position=UDim2.new(.5,-46,1,-14)
+  self:ApplyMenuDockLayout(self.InventoryDockExpanded==true)
   return
  end
 
  -- Small-screen safety only. These adjustments intentionally touch as little as possible.
  self.ObjectiveCard.Size=UDim2.fromOffset(math.max(280,width-24),66)
  self.CurrencyHUD.Position=UDim2.fromOffset(10,208)
- if dockScale then dockScale.Scale=math.min(1,math.max(.68,(width-16)/332)) end
- self.Dock.AnchorPoint=Vector2.new(.5,1)
- self.Dock.Position=UDim2.new(.5,0,1,-94)
+ self:ApplyMenuDockLayout(self.InventoryDockExpanded==true)
  self.Guide.Size=UDim2.fromOffset(math.max(260,width-24),38)
  self.RollHUD.Size=UDim2.fromOffset(math.min(300,width-18),38)
  self.RollHUD.AnchorPoint=Vector2.new(.5,1)
@@ -1337,7 +1351,9 @@ function UI:Render()
  self.MeterArea.Visible=rollUnlocked and (p.Tutorial.Step>=(T.IndexById.Delivery or 8) or p.Tutorial.Skipped)
 
  local inventoryUnlocked=p.Tutorial.FeatureUnlocks.SeedSatchel==true
+ local inventoryDockOpen=self.Menu=="SeedSatchel" and self.MenuRenderer=="InventoryV2"
  self.Dock.Visible=inventoryUnlocked
+ self:ApplyMenuDockLayout(inventoryDockOpen)
  local dockUnlocked={
   SeedSatchel=inventoryUnlocked,
   Index=inventoryUnlocked,
@@ -1347,10 +1363,14 @@ function UI:Render()
  }
  for name,b in pairs(self.DockButtons) do
   local enabled=dockUnlocked[name]==true
-  b.Visible=inventoryUnlocked
+  local visible=name=="SeedSatchel" or inventoryDockOpen
+  b.Visible=inventoryUnlocked and visible
   b.Active=enabled
   b.Selectable=enabled
   b:SetAttribute("BloomDockEnabled",enabled)
+  b.BackgroundTransparency=1
+  local stroke=b:FindFirstChildOfClass("UIStroke")
+  if stroke then stroke.Transparency=1 end
   local icon=b:FindFirstChild("Icon")
   if icon and icon:IsA("ImageLabel") then
    local selected=self.Menu==name
