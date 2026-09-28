@@ -51,6 +51,8 @@ function S:LegacyStepComplete(p,step)
   return false
  end
  if step.Id=="BeeWork" then return (events.Work or 0)>0 end
+ if step.Id=="FillBloom" then return (events.BloomReady or 0)>0 or p.RollState.SpecialRollReady==true or (tonumber(p.RollState.BloomCharge) or 0)>=Bloom.BloomMax end
+ if step.Id=="BloomRoll" then return (events.BloomRoll or 0)>0 end
  if step.Id=="NormalRoll" then
   return (events.TutorialNormalRoll or 0)>0
    or (tonumber(p.RollState.TotalRolls) or 0)>=3
@@ -118,7 +120,14 @@ function S:Assist(player,p)
  if not step then return end
  local t=p.Tutorial
 
- if step.Id=="PollenSpark" then
+ if step.Id=="FillBloom" and not t.Events.TutorialAssistBloom then
+  local deliveryCharge=(Bloom.Charge and Bloom.Charge.Delivery) or 2
+  local target=math.max(0,Bloom.BloomMax-deliveryCharge)
+  if (tonumber(p.RollState.BloomCharge) or 0)<target then p.RollState.BloomCharge=target end
+  p.RollState.SpecialRollReady=(tonumber(p.RollState.BloomCharge) or 0)>=Bloom.BloomMax
+  t.Events.TutorialAssistBloom=1
+  self.X:MarkStateDirty(player)
+ elseif step.Id=="PollenSpark" then
   self.X.GardenActivityService:EnsureTutorialSpark(player)
  elseif step.Id=="HiveUpgrade" and not t.Events.TutorialAssistHive then
   local need=Bloom.HiveCosts[p.Hive.Level+1]
@@ -186,7 +195,11 @@ function S:Tick(player)
  local step=currentStep(p)
  if not step then return false end
 
- if step.Id=="PollenSpark" then
+ if step.Id=="FillBloom" and (p.RollState.SpecialRollReady==true or (tonumber(p.RollState.BloomCharge) or 0)>=Bloom.BloomMax) then
+  p.RollState.SpecialRollReady=true
+  self.X:Emit(player,"BloomReady",1)
+  return true
+ elseif step.Id=="PollenSpark" then
   self.X.GardenActivityService:EnsureTutorialSpark(player)
  elseif step.Id=="SunnyVisit" and self.X.MapService:Sector(player)=="SunnyOrchard" then
   self.X:Emit(player,"SunnyVisit",1)
