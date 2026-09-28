@@ -23,7 +23,7 @@ function S:Validate(action,a,b,c)
   if b~=nil and not integer(b,1,2147483647) then return false,"INVALID_VALUE" end
   if c~=nil then return false,"INVALID_VALUE" end
   return true
- elseif action=="Plant" or action=="GardenEdit" then
+ elseif action=="GardenEdit" then
   return integer(a,1,C.MaxFlowerSlots) and short(b,64,true) and c==nil,(integer(a,1,C.MaxFlowerSlots) and short(b,64,true) and c==nil) and nil or"INVALID_VALUE"
  elseif action=="EquipBee" then
   local idOK=a==nil or short(a,64,true)
