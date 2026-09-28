@@ -1,9 +1,7 @@
 local RS=game:GetService("ReplicatedStorage")
 local C=require(RS.Config.WorkshopConfig)
 local T=require(RS.Config.TutorialConfig)
-local Rules=require(RS.Shared.GardenRules)
 local E=require(RS.Shared.WorkshopEffects)
-local Copy=require(RS.Shared.BloomUtil).Copy
 local S={}
 
 function S:Init(x)
@@ -54,41 +52,10 @@ function S:Buy(player,id)
 end
 
 function S:Respec(player)
- local p=self.X:Profile(player)
- if not p then return false,"PROFILE_LOADING" end
- if not p.Tutorial.FeatureUnlocks.Workshop then return false,"FEATURE_LOCKED" end
-
- -- Validate the future profile before touching balances, nodes, slots or equips.
- local future=Copy(p)
- for id in pairs(future.WorkshopV5.Nodes) do
-  local node=C.Nodes[id]
-  if node and not node.Permanent then future.WorkshopV5.Nodes[id]=nil end
- end
- local gardenCapacity=Rules.FlowerCapacity(future)
- local beeCapacity=Rules.BeeCapacity(future)
- if Rules.HasOverflow(p.Garden.Slots,gardenCapacity) then return false,"RESPEC_GARDEN_OCCUPIED" end
- local changed=false
- for id in pairs(p.WorkshopV5.Nodes) do
-  local n=C.Nodes[id]
-  if n and not n.Permanent then
-   changed=true
-   p.WorkshopV5.Points+=(n.Cost or 0)
-   p.Currencies.Coins+=(n.Coins or 0)
-   p.Currencies.PetalDust+=(n.Dust or 0)
-   p.WorkshopV5.Nodes[id]=nil
-  end
- end
- if not changed then return false,"NO_CHANGES" end
-
- -- Empty overflow slots need no deletion. Ownership is separate from equipment.
- for slot in pairs(p.Pollinators.EquippedBeeSlots) do
-  if tonumber(slot) and tonumber(slot)>beeCapacity then p.Pollinators.EquippedBeeSlots[slot]=nil end
- end
-
- self.X.GardenPlotService:RefreshCapacity(player)
- self.X.GardenSynergyService:Recalculate(player)
- self.X.TutorialService:Refresh(player)
- return true
+ if not self.X:Profile(player) then return false,"PROFILE_LOADING" end
+ -- Normal respec is intentionally disabled. RESET & REFUND belongs to the
+ -- future Biome transition flow so players cannot freely rewrite builds mid-biome.
+ return false,"ACTION_UNAVAILABLE"
 end
 
 return S
