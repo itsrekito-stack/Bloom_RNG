@@ -119,7 +119,6 @@ function X:Request(player,action,a,b,c)
   return true
  elseif action=="Activity" then return self.GardenActivityService:Collect(player,a,b,c)
  elseif action=="WorkshopBuy" then return self.WorkshopService:Buy(player,a)
- elseif action=="Respec" then return self.WorkshopService:Respec(player)
  elseif action=="Trial" then return self.BuildTrialService:StartTrial(player,a)
  elseif action=="SeasonConfirm" then return self.SeasonService:Confirm(player,a)
  elseif action=="Card" then return self.SeasonService:Card(player,a)
