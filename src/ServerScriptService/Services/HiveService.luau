@@ -94,7 +94,10 @@ function S:Upgrade(player,requireDistance)
  p.Hive.Level=nextLevel
 
  local points=self.X.WorkshopService:AwardHiveLevel(player,nextLevel)
- if points>0 then self.X:Send(player,"Message","Hive "..tostring(nextLevel).." • +"..tostring(points).." Workshop Point"..(points==1 and "" or "s")) end
+ if points>0 then
+  local total=math.max(0,math.floor(tonumber(p.WorkshopV5.Points) or 0))
+  self.X:Send(player,"Message","Hive "..tostring(nextLevel).." • +"..tostring(points).." Workshop Point"..(points==1 and "" or "s").." • "..tostring(total).." total")
+ end
 
  self.X.GardenPlotService:RefreshCapacity(player)
  self.X:Emit(player,"HiveUpgrade",1)

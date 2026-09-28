@@ -384,6 +384,7 @@ function S:Hive(profile)
   Level=level,NextLevel=nextLevel,Honey=honey,Coins=coins,HoneyCost=honeyCost,CoinCost=coinCost,
   Progress=resourceProgress,QuestReady=questReady,QuestText=questText,QuestCurrent=current,QuestTarget=target,
   CanUpgrade=reason==nil,Reason=reason,ReasonText=reason and self:ReasonText(reason) or nil,
+  WorkshopPoints=math.max(0,math.floor(tonumber(profile.WorkshopV5.Points) or 0)),
   NextWorkshopPoints=Bloom.WorkshopPointsForHiveLevel(nextLevel),Road=road,
  }
 end

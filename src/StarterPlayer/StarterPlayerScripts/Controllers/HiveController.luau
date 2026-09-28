@@ -63,8 +63,10 @@ function S.Render(controller,profile,uiState)
  setText(runtime,"NextLevel","NEXT  •  LEVEL "..tostring(nextLevel))
  setText(runtime,"ProgressText",compact(hive.Honey).." / "..compact(hive.HoneyCost).." Honey  •  "..compact(hive.Coins).." / "..compact(hive.CoinCost).." Coins")
  setText(runtime,"QuestText",hive.QuestReady and "Hive quest complete" or tostring(hive.QuestText or "Complete the next Hive quest"))
+ local currentPoints=math.max(0,math.floor(tonumber(hive.WorkshopPoints) or 0))
  local points=math.max(0,math.floor(tonumber(hive.NextWorkshopPoints) or 0))
- setText(runtime,"RewardText",points>0 and ("NEXT REWARD  •  +"..tostring(points).." WORKSHOP POINT"..(points==1 and "" or "S")) or "NEXT REWARD  •  HIVE PROGRESSION")
+ local nextReward=points>0 and ("NEXT  +"..tostring(points)) or "NEXT  —"
+ setText(runtime,"RewardText","WORKSHOP POINTS  •  "..tostring(currentPoints).."  •  "..nextReward)
 
  local icon=find(runtime,"HiveIcon","ImageLabel")
  if icon then icon.Image=Icons.Get("System","Hive") end
