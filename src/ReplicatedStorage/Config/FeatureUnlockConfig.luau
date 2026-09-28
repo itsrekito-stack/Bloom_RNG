@@ -1,6 +1,6 @@
 return {
- Roll={Step=5},
- SeedSatchel={Event="SeedReward"},
+ Roll={Step=3},
+ SeedSatchel={Event="TutorialFlowerRoll"},
  Workshop={Event="WorkshopVisit"},
  Trials={Event="SunnyVisit"},
 }
