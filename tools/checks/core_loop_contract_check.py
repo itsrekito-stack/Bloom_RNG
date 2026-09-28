@@ -22,22 +22,21 @@ checks=[
  (roll,'self.X:Send(player,"Reward",result)',"Roll returns authoritative reward"),
  (roll,'tutorialStep.Id=="FirstFlowerRoll"', "tutorial Flower roll is explicit"),
  (roll,'tutorialStep.Id=="FirstBeeRoll"', "tutorial Bee roll is explicit"),
- (roll,'self.X.InventoryService:EquipBee(player,item.Id,1)',"tutorial first Bee equips through server"),
  (inventory,'f.OwnedSeedCopies[id]=1',"first Flower grants species ownership"),
  (inventory,'f.ObtainedFlowers[id]=(f.ObtainedFlowers[id] or 0)+1',"Flower obtained count increments"),
  (inventory,'self.X.FlowerProgressionService:AddDuplicate(player,id,1)',"duplicate Flower advances Level"),
  (inventory,'pollinators.BeeInventory[id]=1',"first Bee grants species ownership"),
  (inventory,'self.X.PollinatorService:AddMastery(player,id,C.BeeDuplicateXP)',"duplicate Bee advances Mastery"),
  (bloom_ui,'MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Index="IndexV1",Trials="QuestsV2",Settings="SettingsV2"}',"authored menu routes stay centralized"),
- (inventory_ui,'"PLANT IN GARDEN"',"Inventory hands unplanted Flowers to Garden editor"),
- (inventory_ui,'"EDIT / REMOVE IN GARDEN"',"Inventory hands planted Flowers to Garden editor"),
- (bloom_ui,'"PlantPicker"',"physical Garden opens editor"),
+ (inventory_ui,'CATEGORY_ORDER={"Bees","Resources","Special"}',"Inventory excludes Flowers; planting stays in Garden"),
+ (bloom_ui,'function UI:OpenGardenMenu(slot)',"Garden menu owns planting entry point"),
  (bloom_ui,'GardenEditor.Render(self,p,ui)',"authored Garden editor renderer"),
  (player,'elseif action=="GardenEdit" then return self.GardenPlotService:GardenEdit(player,a,b)',"Garden editor route stays server-owned"),
- (garden,'self.X.U.Near(player,pos,C.InteractionDistance)',"Plant remains server proximity gated"),
- (garden,'self.X.InventoryService:Available(p,id)<1',"Plant validates owned available species"),
- (garden,'return false,"ALREADY_PLANTED"', "Garden prevents duplicate planted species"),
- (garden,'self.X:Emit(player,"Plant",1)',"Plant advances progression event"),
+ (garden,'temp.MenuOpen~=true or temp.MenuName~="Garden"',"Garden edits require active Garden menu session"),
+ (garden,'(self.EditorSessions[player] or 0)<workspace:GetServerTimeNow()',"Garden editor session expires server-side"),
+ (garden,'(p.FlowerCollection.OwnedSeedCopies[id] or 0)<1',"Garden edit validates Flower ownership"),
+ (garden,'if slotIndex~=i and existing.SpeciesId==id then sourceIndex=slotIndex break end',"Garden moves duplicate species instead of duplicating it"),
+ (garden,'self.X:Emit(player,"Plant",1)',"Garden edit advances Plant progression event"),
  (pollinator,'profile.Hive.Honey+=honey',"Bee delivery produces Honey"),
  (pollinator,'profile.Currencies.Coins+=coins',"Bee delivery produces Coins"),
  (pollinator,'self.X.GardenPlotService:AddFlowerXP(player,state.Slot,workAmount)',"Bee work updates Flower telemetry/presentation"),
@@ -48,7 +47,6 @@ checks=[
  (hive,'C.WorkshopPointHiveMilestones[nextLevel] or 0',"Hive uses static Workshop point milestones"),
  (workshop,'w.Nodes[id]=true',"Workshop purchase owns node"),
  (player,'elseif action=="Roll" then return self.RollService:Roll',"remote Roll route remains server-owned"),
- (player,'elseif action=="Plant" then return self.GardenPlotService:Plant',"remote Plant route remains server-owned"),
  (ui_state,'Inventory=self:Inventory(player,profile)',"snapshot exposes Inventory"),
  (ui_state,'Garden={ActiveSynergy=profile.Garden.ActiveSynergy or "",Hint=Effects.Feature(profile,"GARDEN_5","PatternHints") and self.X.GardenSynergyService:Hint(profile) or nil}',"snapshot exposes gated Garden hint without hidden recipe data"),
 ]
@@ -57,6 +55,10 @@ for src,needle,label in checks: need(src,needle,label)
 
 if 'self.X.InventoryService:Grant(player,"Bee","WorkerBee")' in hive:
     raise AssertionError("direct Hive starter Bee grant returned")
+if 'self.X.InventoryService:EquipBee(player,item.Id,1)' in roll:
+    raise AssertionError("tutorial Bee roll must not auto-equip before the Equip Bee step")
+if 'action=="Plant"' in player:
+    raise AssertionError("legacy Plant remote returned; GardenEdit must remain the only planting route")
 if 'self:AddMastery(player,bee.Id,1' in pollinator:
     raise AssertionError("routine pollination still grants Bee Mastery")
 
