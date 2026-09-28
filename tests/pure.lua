@@ -7,6 +7,23 @@ test("default game vision profile",function()
  assert(next(p.FlowerCollection.OwnedSeedCopies)==nil and next(p.Pollinators.BeeInventory)==nil)
 end)
 
+test("Trial-free Journey migration preserves SeasonReady progress",function()
+ local p=Schema.CreateDefault()
+ p.Migrations.JourneyNoTrialV1=nil
+ p.Quests.JourneyStep=15
+ p.Quests.Claimed.Journey_14=true
+ assert(Schema.Prepare(p))
+ assert(p.Migrations.JourneyNoTrialV1==true and p.Quests.JourneyStep==14 and not p.Quests.Claimed.Journey_14)
+
+ local done=Schema.CreateDefault()
+ done.Migrations.JourneyNoTrialV1=nil
+ done.Quests.JourneyStep=16
+ done.Quests.Claimed.Journey_14=true
+ done.Quests.Claimed.Journey_15=true
+ assert(Schema.Prepare(done))
+ assert(done.Quests.JourneyStep==15 and done.Quests.Claimed.Journey_14==true and done.Quests.Claimed.Journey_15==nil)
+end)
+
 test("legacy mapping migrates copies into species progression",function()
  local p={Inventory={Apple=2,UnknownFruit=3},Currencies={FruitDust=12,Coins=9,AncientSeeds=77},DiscoveredFruits={Apple=true},Garden={UnlockedSlots=3,Slots={{SpeciesId="Tulip",Level=2,XP=4}}},FruitMastery={Apple={Level=999}}}
  assert(Schema.Prepare(p))
@@ -236,6 +253,13 @@ test("effective luck can only reduce earned roll luck",function()
  assert(math.abs(service:RollLuck(player,p)-earned)<1e-6)
  p.Settings.EffectiveLuck=0
  assert(math.abs(service:RollLuck(player,p)-earned)<1e-6)
+ local temp=service.X.Temp[player]
+ temp.ServerBloomLuckRolls=1
+ p.Settings.EffectiveLuck=1
+ assert(service:RollLuck(player,p)==100)
+ assert(service:ConsumeServerBloomRoll(player))
+ assert(temp.ServerBloomLuckRolls==0 and service:RollLuck(player,p)==1)
+ assert(not service:ConsumeServerBloomRoll(player))
 end)
 
 test("activity owner checkpoint order and expiry",function()

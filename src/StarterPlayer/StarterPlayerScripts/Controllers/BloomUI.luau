@@ -26,7 +26,7 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="inventory-close-bee-reconcile-v10-2026-09-28"
+local CLIENT_BUILD="compact-traits-quest-tracker-server-bloom-v11-2026-09-28"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
@@ -72,7 +72,7 @@ local SETTINGS_NAMES={
  RareFeed="Show rare discoveries",
 }
 local JOURNEY={
- "Get your first bee","Collect a Pollen Spark","Honey delivery","Make a roll","Plant a flower","Fill the Bloom Meter","Make a Bloom Roll","Reach Hive Level 2","Buy a Workshop node","Create a synergy","Unlock the second bee slot","Activate a Bee Trait","Discover 6 flowers","Complete a Trial from Quests > Trials","Prepare a Season Turn",
+ "Get your first bee","Collect a Pollen Spark","Honey delivery","Make a roll","Plant a flower","Fill the Bloom Meter","Make a Bloom Roll","Reach Hive Level 2","Buy a Workshop node","Create a synergy","Unlock the second bee slot","Activate a Bee Trait","Discover 6 flowers","Prepare a Season Turn",
 }
 
 function UI:JourneyCount()
@@ -311,7 +311,7 @@ end
 
 function UI:WorkshopHUDObjects()
  return {
-  self.ObjectiveCard,self.CurrencyHUD,self.RollHUD,self.Roll,self.RouletteViewport,
+  self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.QuestTracker,self.RollHUD,self.Roll,self.RouletteViewport,
   self.Guide,self.ToastRoot,self.Reveal,
  }
 end
@@ -1342,14 +1342,69 @@ function UI:RefreshMenuDock()
  end
 end
 
+function UI:RenderQuestTracker()
+ if not self.QuestTracker or not self.State then return end
+ local p=self.State.Profile
+ local visible=not self.IsMobileLayout and not self:IsFullscreenExclusive() and p.Tutorial.Step>#T.Steps
+ self.QuestTracker.Visible=visible
+ if not visible then return end
+
+ local ui=self.State.UI or {}
+ local hive=ui.QuestTracker and ui.QuestTracker.Hive or {}
+ local function setRow(row,kicker,text,progress,color)
+  if not row then return end
+  local kickerLabel=row:FindFirstChild("Kicker")
+  local textLabel=row:FindFirstChild("Text")
+  local progressLabel=row:FindFirstChild("Progress")
+  local accent=row:FindFirstChild("Accent")
+  if kickerLabel and kickerLabel:IsA("TextLabel") then kickerLabel.Text=kicker end
+  if textLabel and textLabel:IsA("TextLabel") then textLabel.Text=text end
+  if progressLabel and progressLabel:IsA("TextLabel") then progressLabel.Text=progress end
+  if accent and accent:IsA("Frame") then accent.BackgroundColor3=color end
+ end
+
+ local hiveCurrent=math.max(0,tonumber(hive.Current) or 0)
+ local hiveTarget=math.max(1,tonumber(hive.Target) or 1)
+ setRow(
+  self.QuestRows[1],
+  hive.Title=="Hive MAX" and "HIVE QUEST" or ("HIVE QUEST  •  LV."..tostring(hive.Level or (p.Hive.Level+1))),
+  tostring(hive.Text or "Grow your Hive"),
+  hive.Complete and "READY" or (compact(hiveCurrent).." / "..compact(hiveTarget)),
+  hive.Complete and C.Green or C.Honey
+ )
+
+ local journeyStep=math.max(1,tonumber(p.Quests.JourneyStep) or 1)
+ local journeyDone=journeyStep>#JOURNEY
+ setRow(
+  self.QuestRows[2],
+  "JOURNEY  •  STEP "..tostring(math.min(journeyStep,#JOURNEY)),
+  journeyDone and "Journey complete" or self:JourneyText(journeyStep),
+  journeyDone and "DONE" or (tostring(journeyStep).." / "..tostring(#JOURNEY)),
+  journeyDone and C.Green or C.Blue
+ )
+
+ local bloomMax=math.max(1,tonumber(BloomConfig.BloomMax) or 100)
+ local bloomCharge=math.clamp(tonumber(p.RollState.BloomCharge) or 0,0,bloomMax)
+ local bloomReady=p.RollState.SpecialRollReady==true
+ setRow(
+  self.QuestRows[3],
+  "BLOOM QUEST",
+  bloomReady and "Use your Bloom Roll" or "Fill the Bloom Meter",
+  bloomReady and "READY" or (tostring(math.floor(bloomCharge+.5)).." / "..tostring(bloomMax)),
+  bloomReady and C.Gold or C.Nectar
+ )
+end
+
 function UI:ApplyResponsiveLayout(width,height)
  -- Desktop layout is authored in StarterGui. Do not overwrite positions/sizes here,
  -- so designers can move every HUD block directly in Studio.
  self.IsMobileLayout=width<700
  if width>=700 then
   self:ApplyMenuDockLayout(self.InventoryDockExpanded==true)
+  if self.State then self:RenderQuestTracker() end
   return
  end
+ if self.QuestTracker then self.QuestTracker.Visible=false end
 
  -- Small-screen safety only. These adjustments intentionally touch as little as possible.
  self.ObjectiveCard.Size=UDim2.fromOffset(math.max(280,width-24),66)
@@ -1447,6 +1502,7 @@ function UI:Render()
   local traits=inventory.Traits or {}
   self.TraitHUD:Update(traits,inventory.EquippedBeeSlots or {},self.State.Revision)
  end
+ self:RenderQuestTracker()
  self:ApplyWorkshopFocusVisibility()
  self:ApplyIndexFocusVisibility()
 end
@@ -1791,6 +1847,18 @@ function UI:BindStaticUI()
  self.ObjectiveProgress=self.ObjectiveCard:WaitForChild("ObjectiveProgress")
  self.ObjectiveProgressFill=self.ObjectiveProgress:WaitForChild("ObjectiveProgressFill")
 
+ self.QuestTracker=root:WaitForChild("QuestTrackerHUD")
+ self.QuestRows={}
+ for i=1,3 do
+  local row=self.QuestTracker:WaitForChild("Quest_"..i)
+  self.QuestRows[i]=row
+  row.Activated:Connect(function()
+   local p=self.State and self.State.Profile
+   if p and p.Tutorial.FeatureUnlocks.Trials then self:Open("Trials")
+   else self:Toast("Quests unlock through progression") end
+  end)
+ end
+
  self.CurrencyHUD=root:WaitForChild("CurrencyHUD")
  self.CurrencyLayout=self.CurrencyHUD:FindFirstChildOfClass("UIListLayout")
  self.CurrencyRows={}
@@ -1933,7 +2001,7 @@ local REQUIRED_AUTHORED_UI={
  "ObjectiveCard","CurrencyHUD","MenuDock","RollHUD","VerticalRoulette","TutorialGuideBanner",
  "TutorialSpotlight","TutorialCallout","TutorialScreenArrow",
  "Toast","ModalShade","MainPanel","RewardReveal","ActiveBoostsHUD","ActiveBoostTooltip",
- "TraitHUD","TraitTooltip","TraitTierPopup","WorldUIPrototypes",
+ "TraitHUD","TraitTooltip","TraitTierPopup","QuestTrackerHUD","WorldUIPrototypes",
 }
 local RETIRED_MENU_GUI={"Dock_FieldGuide","Dock_Map","FieldGuideKit","MapKit"}
 

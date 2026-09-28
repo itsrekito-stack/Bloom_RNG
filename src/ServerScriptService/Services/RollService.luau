@@ -94,6 +94,7 @@ function S:Roll(player,automatic,requestId)
 
  self.Last[player]=os.clock()
  local special=p.RollState.SpecialRollReady
+ local serverBloomLuck=self.X.BoostService and self.X.BoostService.ConsumeServerBloomRoll and self.X.BoostService:ConsumeServerBloomRoll(player) or false
  local new=self.X.InventoryService:Grant(player,item.Kind,item.Id)
 
  p.RollState.TotalRolls+=1
@@ -136,6 +137,7 @@ function S:Roll(player,automatic,requestId)
   Chance=item.Chance,
   IsNew=new,
   IsSpecialRoll=special,
+  ServerBloomLuck=serverBloomLuck,
   Cooldown=cd,
  }
  self.X:Send(player,"Reward",result)

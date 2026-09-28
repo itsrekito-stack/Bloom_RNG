@@ -8,7 +8,7 @@ end
 function S:Contribute(player,amount)
  local flower=self.X.World:FindFirstChild("ServerBloom") local text=flower and flower:FindFirstChild("LevelText",true) if text then text.Text="SERVER BLOOM • "..math.floor(self.Progress).."/"..A.ServerBloomTarget end
  self.Progress=self.Progress+amount self.Contributions[player]=(self.Contributions[player] or 0)+amount
- if self.Progress>=A.ServerBloomTarget then self.Round=self.Round+1 for who,n in pairs(self.Contributions) do local p=self.X:Profile(who) if p and n>0 then p.Currencies.PetalDust=p.Currencies.PetalDust+2+math.min(8,math.floor(n/10)) self.X.RollService:Charge(who,15) p.World.EventStats.ServerBloom=(p.World.EventStats.ServerBloom or 0)+1 self.X:MarkStateDirty(who) self.X:Send(who,"Ceremony",{Kind="ServerBloom",Text="Server Bloom"}) end end self.Progress=0 self.Contributions={} end
+ if self.Progress>=A.ServerBloomTarget then self.Round=self.Round+1 for who,n in pairs(self.Contributions) do local p=self.X:Profile(who) if p and n>0 then local temp=self.X.Temp[who] p.Currencies.PetalDust=p.Currencies.PetalDust+2+math.min(8,math.floor(n/10)) self.X.RollService:Charge(who,15) if temp then temp.ServerBloomLuckRolls=1 end p.World.EventStats.ServerBloom=(p.World.EventStats.ServerBloom or 0)+1 self.X:MarkStateDirty(who) self.X:Send(who,"Ceremony",{Kind="ServerBloom",Text="Server Bloom • x100 Luck next Roll"}) end end self.Progress=0 self.Contributions={} end
 end
 function S:Tick()
  if self.Pulse then self.Pulse=nil return true end

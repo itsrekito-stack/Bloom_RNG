@@ -33,6 +33,10 @@ for text,label in [
  ('traitEquipPreview(item,inventory)',"Trait delta preview"),
  ('item.Odds or "1/—"',"1/N presentation"),
  ('item.Obtained or 1',"obtained count presentation"),
+ ('local traitNames=card:FindFirstChild("Traits")',"authored Bee-card trait label binding"),
+ ('string.upper(table.concat(item.Traits or {}," • "))',"Bee-card trait names"),
+ ('badge.BackgroundColor3=C.Panel',"readable dark rarity badge"),
+ ('badgeText.TextColor3=color',"rarity text uses rarity accent"),
 ]:
     need(client,text,label)
 

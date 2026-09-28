@@ -1,6 +1,6 @@
 local S={}
-local goals={"TutorialBeeRoll","PollenSpark","Delivery","Roll","Plant","Charge","BloomRoll","Hive2","WorkshopPurchase","Synergy","BeeSlots","Trait","Discover6","Trial","SeasonReady"}
-local POINT_MILESTONES={Synergy=1,Trait=1,Trial=2,SeasonReady=2}
+local goals={"TutorialBeeRoll","PollenSpark","Delivery","Roll","Plant","Charge","BloomRoll","Hive2","WorkshopPurchase","Synergy","BeeSlots","Trait","Discover6","SeasonReady"}
+local POINT_MILESTONES={Synergy=1,Trait=1,SeasonReady=2}
 function S:Init(x) self.X=x end
 function S:Tick(player)
  local p=self.X:Profile(player) if not p then return false end

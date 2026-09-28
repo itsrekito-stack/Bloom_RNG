@@ -403,6 +403,25 @@ function S:Settings(profile)
  }
 end
 
+function S:QuestTracker(profile)
+ local nextLevel=(tonumber(profile.Hive.Level) or 1)+1
+ local cost=Bloom.HiveCosts[nextLevel]
+ if not cost then
+  return {Hive={Title="Hive MAX",Text="All Hive upgrades complete",Current=1,Target=1,Complete=true,Level=profile.Hive.Level}}
+ end
+ local ready,text,current,target=self.X.HiveService:QuestStatus(profile,nextLevel)
+ local objective=tostring(text or "Hive quest")
+ objective=objective:match("^(.-) •") or objective
+ return {Hive={
+  Title="Hive "..tostring(nextLevel).." Quest",
+  Text=objective,
+  Current=tonumber(current) or (ready and 1 or 0),
+  Target=math.max(1,tonumber(target) or 1),
+  Complete=ready==true,
+  Level=nextLevel,
+ }}
+end
+
 function S:Snapshot(player)
  local profile=self.X:Profile(player)
  if not profile then return nil end
@@ -413,6 +432,7 @@ function S:Snapshot(player)
   Map=self:Map(player,profile),
   Trials=self:Trials(player,profile),
   Settings=self:Settings(profile),
+  QuestTracker=self:QuestTracker(profile),
   Garden={ActiveSynergy=profile.Garden.ActiveSynergy or "",Hint=Effects.Feature(profile,"GARDEN_5","PatternHints") and self.X.GardenSynergyService:Hint(profile) or nil},
   Index=self:Index(player,profile),
   Boosts=self.X.BoostService and self.X.BoostService:Snapshot(player,profile) or {Items={}},

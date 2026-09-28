@@ -28,7 +28,7 @@ function S.Reconcile(p) if type(p)~="table" then return false,"Profile must be a
 local function prepareProfile(p)
  local ok,err=S.Validate(p) if not ok then return false,err end
  if type(p.SchemaVersion)=="number" and p.SchemaVersion>C.SchemaVersion then return false,"FUTURE_SCHEMA" end
- local n=U.Copy(p) local migrate=not(n.Migrations and n.Migrations.BloomReworkV1) local visionMigrate=not(n.Migrations and n.Migrations.GameVisionV1)
+ local n=U.Copy(p) local migrate=not(n.Migrations and n.Migrations.BloomReworkV1) local visionMigrate=not(n.Migrations and n.Migrations.GameVisionV1) local journeyMigrate=not(n.Migrations and n.Migrations.JourneyNoTrialV1)
  -- Do not seed defaults into a returning player's empty garden or add starter inventory twice.
  local savedSlots=type(n.Garden)=="table" and type(n.Garden.Slots)=="table" and U.Copy(n.Garden.Slots)
  local savedCopies=type(n.FlowerCollection)=="table" and type(n.FlowerCollection.OwnedSeedCopies)=="table" and U.Copy(n.FlowerCollection.OwnedSeedCopies)
@@ -72,6 +72,19 @@ local function prepareProfile(p)
   -- Existing physical flowers are granted enough ownership to preserve their planted layout.
   local counts={} for _,slot in pairs(n.Garden.Slots) do if type(slot)=="table" and Flowers.Exists(slot.SpeciesId) then counts[slot.SpeciesId]=(counts[slot.SpeciesId] or 0)+1 end end
   for id,count in pairs(counts) do f.OwnedSeedCopies[id]=math.max(f.OwnedSeedCopies[id] or 0,count) f.DiscoveredFlowers[id]=true end
+ end
+ if journeyMigrate then
+  local oldStep=math.max(1,math.floor(tonumber(n.Quests and n.Quests.JourneyStep) or 1))
+  local claimed=n.Quests and n.Quests.Claimed or {}
+  if oldStep>=16 then
+   claimed.Journey_14=claimed.Journey_15==true or nil
+   claimed.Journey_15=nil
+   n.Quests.JourneyStep=15
+  elseif oldStep==15 then
+   claimed.Journey_14=nil
+   n.Quests.JourneyStep=14
+  end
+  n.Migrations.JourneyNoTrialV1=true
  end
  if visionMigrate then
   local f=n.FlowerCollection

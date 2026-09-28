@@ -133,6 +133,8 @@ function S.new()
   LastTiers={},
   LastRevision=nil,
   PopupGeneration=0,
+  TooltipHoverGeneration=0,
+  TooltipHovered=false,
  },S)
 end
 
@@ -153,6 +155,15 @@ function S:Init(ui)
  end
  self.Template.Visible=false
  self.Tooltip.Visible=false
+ self.Tooltip.Active=true
+ self.Tooltip.MouseEnter:Connect(function()
+  self.TooltipHovered=true
+  self.TooltipHoverGeneration+=1
+ end)
+ self.Tooltip.MouseLeave:Connect(function()
+  self.TooltipHovered=false
+  self:HideTooltip()
+ end)
  self.Popup.Visible=false
 end
 
@@ -167,6 +178,7 @@ end
 
 function S:ShowTooltip(item)
  if self.Suppressed or not self.Tooltip then return end
+ self.TooltipHoverGeneration+=1
  local title=self.Tooltip:FindFirstChild("Title")
  local progress=self.Tooltip:FindFirstChild("Progress")
  local description=self.Tooltip:FindFirstChild("Description")
@@ -209,7 +221,17 @@ function S:ShowTooltip(item)
 end
 
 function S:HideTooltip()
+ self.TooltipHoverGeneration+=1
  if self.Tooltip then self.Tooltip.Visible=false end
+end
+
+function S:ScheduleHideTooltip()
+ self.TooltipHoverGeneration+=1
+ local generation=self.TooltipHoverGeneration
+ task.delay(.12,function()
+  if generation~=self.TooltipHoverGeneration or self.TooltipHovered then return end
+  if self.Tooltip then self.Tooltip.Visible=false end
+ end)
 end
 
 function S:ShowTierPopup(item,row)
@@ -313,7 +335,7 @@ function S:BuildRows(traits,tierUps,equippedSlots)
   end
 
   row.MouseEnter:Connect(function() self:ShowTooltip(item) end)
-  row.MouseLeave:Connect(function() self:HideTooltip() end)
+  row.MouseLeave:Connect(function() self:ScheduleHideTooltip() end)
  end
 
  for _,item in ipairs(tierUps) do

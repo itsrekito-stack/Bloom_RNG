@@ -10,16 +10,16 @@ end
 
 function S:QuestStatus(profile,nextLevel)
  local rule=C.HiveQuestRequirements[nextLevel]
- if not rule then return true,"No additional quest" end
+ if not rule then return true,"No additional quest",1,1 end
 
  if rule.Discoveries then
   local total=self.X.U.Count(profile.FlowerCollection.DiscoveredFlowers)+self.X.U.Count(profile.Pollinators.DiscoveredBees)
-  return total>=rule.Discoveries,string.format("Discover %d Flowers or Bees • %d/%d",rule.Discoveries,total,rule.Discoveries)
+  return total>=rule.Discoveries,string.format("Discover %d Flowers or Bees • %d/%d",rule.Discoveries,total,rule.Discoveries),total,rule.Discoveries
  end
 
  if rule.Synergies then
   local total=self.X.U.Count(profile.GardenSynergies.Discovered)
-  return total>=rule.Synergies,string.format("Discover %d Garden Synergy • %d/%d",rule.Synergies,total,rule.Synergies)
+  return total>=rule.Synergies,string.format("Discover %d Garden Synergy • %d/%d",rule.Synergies,total,rule.Synergies),total,rule.Synergies
  end
 
  if rule.BeeMasteryLevel then
@@ -27,20 +27,20 @@ function S:QuestStatus(profile,nextLevel)
   for id in pairs(profile.Pollinators.DiscoveredBees) do
    best=math.max(best,Bees.GetMasteryState(profile.Pollinators.BeeMastery[id]).Level)
   end
-  return best>=rule.BeeMasteryLevel,string.format("Reach Bee Mastery Lv. %d • best Lv. %d",rule.BeeMasteryLevel,best)
+  return best>=rule.BeeMasteryLevel,string.format("Reach Bee Mastery Lv. %d • best Lv. %d",rule.BeeMasteryLevel,best),best,rule.BeeMasteryLevel
  end
 
  if rule.Activities then
   local total=math.floor(tonumber(profile.Tutorial.Events.ActivityCompleted) or 0)
-  return total>=rule.Activities,string.format("Complete %d Activities • %d/%d",rule.Activities,total,rule.Activities)
+  return total>=rule.Activities,string.format("Complete %d Activities • %d/%d",rule.Activities,total,rule.Activities),total,rule.Activities
  end
 
  if rule.Trials then
   local total=self.X.U.Count(profile.Quests.Trials)
-  return total>=rule.Trials,string.format("Complete %d Trial • %d/%d",rule.Trials,total,rule.Trials)
+  return total>=rule.Trials,string.format("Complete %d Trial • %d/%d",rule.Trials,total,rule.Trials),total,rule.Trials
  end
 
- return true,"Quest complete"
+ return true,"Quest complete",1,1
 end
 
 function S:PromptText(profile)

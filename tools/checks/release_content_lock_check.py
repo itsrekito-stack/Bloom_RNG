@@ -163,8 +163,8 @@ if len(actual_activities)!=12:
     raise AssertionError("release must ship 12 activity types")
 if len(actual_cards)!=5:
     raise AssertionError("release must ship 5 Season cards")
-if len(actual_journey)!=15:
-    raise AssertionError("release must ship 15 Journey objectives")
+if len(actual_journey)!=14:
+    raise AssertionError("release must ship 14 Journey objectives")
 
 rarity_match=re.search(r'Order=\{([^}]+)\}',rarity)
 if not rarity_match:
@@ -209,5 +209,5 @@ if season_trial_ids!=EXPECTED_SEASON_KEY_TRIALS:
     raise AssertionError(f"Season key trial set changed: expected={EXPECTED_SEASON_KEY_TRIALS} actual={season_trial_ids}")
 
 print("release content lock: PASS")
-print("v1 content: 12 flowers, 13 bees, central map only, 8 trials, 7 Workshop branches, 12 activities, 5 Season cards, 15 Journey objectives.")
+print("v1 content: 12 flowers, 13 bees, central map only, 8 trials, 7 Workshop branches, 12 activities, 5 Season cards, 14 Journey objectives.")
 print("ReleaseContentManifest is the single v1 set contract for rarities, collectibles, world, trials, Workshop, Season cards and Journey IDs.")

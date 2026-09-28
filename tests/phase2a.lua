@@ -290,7 +290,7 @@ test('representative legacy profiles retain ownership and survive release rejoin
   db.Values[key]={Revision=7,Data=U.Copy(fixture.Data)}
   local p=new(fixture.Id)
   local migrated=U.Copy(s:GetProfile(p))
-  assert(migrated.Migrations.BloomReworkV1 and migrated.Migrations.GameVisionV1 and migrated.SchemaVersion==6)
+  assert(migrated.Migrations.BloomReworkV1 and migrated.Migrations.GameVisionV1 and migrated.Migrations.JourneyNoTrialV1 and migrated.SchemaVersion==6)
   assert(type(migrated.FlowerCollection)=='table' and type(migrated.Pollinators)=='table' and type(migrated.WorkshopV5)=='table')
   assert(migrated.WorkshopV5.Points>=tonumber((fixture.Data.WorkshopV2 or {}).Points or 0))
   assert(type(migrated.LegacyArchive)=='table')

@@ -165,11 +165,6 @@ function S:Build(player)
   pad:SetAttribute("SlotId",i)
 
   if unlocked then
-   self.X:Prompt(pad,"Open Garden",function(who)
-    if who==player then self.X:Send(player,"Open","Garden") end
-   end)
-
-
    local slot=p.Garden.Slots[i]
    local f=slot and F.Species[slot.SpeciesId]
    if f then

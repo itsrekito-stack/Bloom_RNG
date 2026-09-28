@@ -15,7 +15,7 @@ function S:Offer(player,kind,position,sector,bee,priority,tutorial)
    local angle=(i-1)*math.pi*2/cfg.Steps
    nodes[i]=position+Vector3.new(math.cos(angle)*routeRadius,3,math.sin(angle)*routeRadius)
   end
- else for i=1,cfg.Steps do local t=(i-1)/math.max(1,cfg.Steps-1) if kind=="PollenTrail" then nodes[i]=position:Lerp(origin,t)+Vector3.new(0,2+math.sin(t*math.pi)*2,0) else nodes[i]=position+Vector3.new(math.sin(i*1.8)*7,3,math.cos(i*1.8)*7) end end end
+ else local flat=origin-position local lateral=flat.Magnitude>.001 and Vector3.new(-flat.Z,0,flat.X).Unit or Vector3.new(1,0,0) for i=1,cfg.Steps do local t=(i-1)/math.max(1,cfg.Steps-1) if kind=="PollenTrail" then local side=math.sin(t*math.pi*3)*4 nodes[i]=position:Lerp(origin,t)+lateral*side+Vector3.new(0,2,0) else nodes[i]=position+Vector3.new(math.sin(i*1.8)*7,3,math.cos(i*1.8)*7) end end end
  offers[id]={Id=id,Kind=kind,Nodes=nodes,Index=1,Expires=workspace:GetServerTimeNow()+cfg.Life,Sector=sector,Bee=bee,Revision=p.Garden.Revision,Tutorial=tutorial==true}
  if kind=="BloomSurge" then self.X.Temp[player].Hotspot=position self.X.Temp[player].HotspotUntil=os.clock()+cfg.Life end
  self.X:Emit(player,"ActivityOffered",1) self:Push(player) return true,id

@@ -31,6 +31,12 @@ if find(template,"BeeStrip"): raise AssertionError("TraitTemplate must not show 
 tooltip=find(model,"TraitTooltip")
 for name in ["BeeStrip","BeeIconTemplate"]:
     if not find(tooltip,name): raise AssertionError(f"TraitTooltip missing hover Bee UI: {name}")
+hud=find(model,"TraitHUD")
+hud_size=hud.get("Properties",{}).get("Size",{}).get("UDim2")
+row_size=template.get("Properties",{}).get("Size",{}).get("UDim2")
+if hud_size!=[[0,214],[0,164]]: raise AssertionError(f"TraitHUD compact geometry drifted: {hud_size}")
+if row_size!=[[1,-2],[0,24]]: raise AssertionError(f"Trait row compact geometry drifted: {row_size}")
+if tooltip.get("Properties",{}).get("Active") is not True: raise AssertionError("TraitTooltip must accept pointer hover")
 
 for text,label in [
     ('local function signature(traits,equippedSlots)',"stable trait + equipped Bee signature"),
@@ -43,7 +49,10 @@ for text,label in [
     ('local isEquipped=equipped[beeId]==true',"equipped Bee visual state"),
     ('member.ImageTransparency=isEquipped and 0 or .42',"unequipped Bee dimming"),
     ('row.MouseEnter:Connect(function() self:ShowTooltip(item) end)',"hover tooltip enter"),
-    ('row.MouseLeave:Connect(function() self:HideTooltip() end)',"hover tooltip leave"),
+    ('row.MouseLeave:Connect(function() self:ScheduleHideTooltip() end)',"hover bridge from row to tooltip"),
+    ('self.Tooltip.MouseEnter:Connect',"tooltip itself is hoverable"),
+    ('self.Tooltip.MouseLeave:Connect',"tooltip leave closes details"),
+    ('task.delay(.12',"hover bridge delay"),
     ('thresholdText(item)',"tooltip threshold effects"),
     ('beeNames(item)',"tooltip member Bees"),
     ('tier>previous',"tier increase detection"),

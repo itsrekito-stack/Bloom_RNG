@@ -24,7 +24,7 @@ def one(name):
 
 for token in (
     'return self.WorkshopFocus==true and self.Menu=="Workshop"',
-    'self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.RollHUD,self.Roll,self.RouletteViewport',
+    'self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.QuestTracker,self.RollHUD,self.Roll,self.RouletteViewport',
     'if self:IsWorkshopExclusive() and name~="Workshop" then return end',
     'if name=="Workshop" then self:SetWorkshopFocus(true) end',
     'if wasWorkshop then self:SetWorkshopFocus(false) end',

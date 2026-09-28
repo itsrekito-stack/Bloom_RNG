@@ -9,7 +9,7 @@ return {
   PollenSpark={Life=8,Steps=1,Charge=4,CheckpointRadius=4},
   NectarBud={Life=10,Steps=1,Charge=6,CheckpointRadius=4.25},
   DewDrop={Life=8,Steps=1,Charge=0,CheckpointRadius=4},
-  PollenTrail={Life=25,Steps=4,Charge=8,CheckpointRadius=4.5},
+  PollenTrail={Life=35,Steps=7,Charge=8,CheckpointRadius=4.5},
   CrossPollination={Life=20,Steps=3,Charge=8,CheckpointRadius=4.5},
   Overcharge={Life=8,Steps=1,Charge=4,CheckpointRadius=5},
   BloomSurge={Life=45,Steps=5,Charge=12,CheckpointRadius=4.75},

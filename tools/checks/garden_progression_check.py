@@ -15,6 +15,8 @@ synergy=read("src/ServerScriptService/Services/GardenSynergyService.luau")
 recipes=read("src/ReplicatedStorage/Config/GardenSynergyConfig.luau")
 domain=read("src/ServerScriptService/Data/ProfileDomain.luau")
 presentation=read("src/StarterPlayer/StarterPlayerScripts/Controllers/GardenPresentationController.luau")
+activity_cfg=read("src/ReplicatedStorage/Config/ActivityConfig.luau")
+activity_service=read("src/ServerScriptService/Services/GardenActivityService.luau")
 
 need(bloom,"MaxFlowerSlots=7","garden hard cap is seven flowers")
 need(bloom,"StartingSlots=0","fresh garden starts at zero slots")
@@ -61,6 +63,10 @@ need(garden,'self.X.FlowerService.Build(i,f,pos)',"physical Flower models follow
 need(garden,'flowerVisualScale(mastery.Level,growth)',"world Flower scale follows species level")
 if 'Instance.new("Beam")' in presentation or 'LocalSynergyLines' in presentation:
     raise AssertionError("persistent Garden beam clutter returned")
+if '"Open Garden"' in garden:
+    raise AssertionError("world Flower slots must not create Open Garden prompts")
+need(activity_cfg,'PollenTrail={Life=35,Steps=7,Charge=8,CheckpointRadius=4.5}',"Pollen Trail has seven ground checkpoints")
+need(activity_service,'local side=math.sin(t*math.pi*3)*4',"Pollen Trail spreads checkpoints laterally")
 
 print("garden progression contract: PASS")
 print("Seven-slot Hive progression, species-wide Flower levels, safe replacement and strongest-only Synergy are wired.")

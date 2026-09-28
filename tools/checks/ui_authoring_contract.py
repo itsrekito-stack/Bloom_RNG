@@ -67,6 +67,7 @@ for required in [
     "StateKits","HoverScale","TutorialCompleteScale","WorkshopZoomScale",
     "WorldUIPrototypes","TutorialWorldBillboard","ActivityCheckpointBillboard",
     "TutorialWorldLabelTemplate","ActivityCheckpointLabelTemplate",
+    "QuestTrackerHUD","Quest_1","Quest_2","Quest_3",
 ]:
     assert required in nodes, f"authored BloomUI node missing: {required}"
 
@@ -85,6 +86,16 @@ assert grid_props.get("FillDirection")=="Horizontal", "Inventory grid must fill 
 assert grid_props.get("StartCorner")=="TopLeft", "Inventory grid must start at top-left"
 assert grid_props.get("HorizontalAlignment")=="Left", "Inventory grid must align left"
 assert grid_props.get("VerticalAlignment")=="Top", "Inventory grid must align top"
+
+item_card=nodes.get("ItemCardTemplate")
+assert item_card, "authored Inventory ItemCardTemplate missing"
+assert any(child.get("Name")=="Traits" and child.get("ClassName")=="TextLabel" for child in item_card.get("Children",[])), "Bee card trait-name label must be authored"
+rarity_badge=nodes.get("RarityBadge")
+assert rarity_badge, "authored readable rarity badge missing"
+rarity_text=next((child for child in rarity_badge.get("Children",[]) if child.get("Name")=="Text"),None)
+assert rarity_text and rarity_text.get("Properties",{}).get("TextSize",0)>=10, "Inventory rarity text is too small"
+quest_tracker=nodes.get("QuestTrackerHUD")
+assert quest_tracker and quest_tracker.get("ClassName")=="Frame", "right-side QuestTrackerHUD must be authored"
 
 need(bloom,'function UI:MenuTemplate(name)',"dynamic menu authored template resolver")
 need(bloom,'self.StateKits=self.Panel:FindFirstChild("StateKits")',"state kit runtime binding")
@@ -115,6 +126,7 @@ need(editor,'state.activeUiState=null',"empty workspace state")
 need(editor,'if(!state.activeUiState){',"empty Explorer state")
 need(editor,'world_ui:"World UI"', "World UI state title")
 need(editor,'world_ui:"WorldUIPrototypes"', "World UI authored focus")
+need(editor,'"QuestTrackerHUD"', "Quest tracker gameplay preview")
 assert "MOCK PREVIEW · NOT RUNTIME" not in editor
 assert '<div class="preview-menu-generic">' not in editor
 need(editor,'LOADING_TARGET="src/ReplicatedFirst/BloomLoadingTemplate.model.json"',"loading model editor target")

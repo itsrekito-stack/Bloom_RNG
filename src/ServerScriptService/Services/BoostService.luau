@@ -112,8 +112,17 @@ function S:RollLuck(player,profile)
  local solar=self:ActivityBoostMultiplier(player,"SolarBloom","LuckMultiplier")
  local earned=base*solar+(tonumber(temp.Dew) or 0)*.1
  local requested=tonumber(p.Settings and p.Settings.EffectiveLuck) or 0
- if requested>0 then return math.min(earned,math.max(1,requested)) end
- return earned
+ local effective=requested>0 and math.min(earned,math.max(1,requested)) or earned
+ if (tonumber(temp.ServerBloomLuckRolls) or 0)>0 then effective*=100 end
+ return effective
+end
+
+function S:ConsumeServerBloomRoll(player)
+ local temp=self.X.Temp[player]
+ local rolls=temp and math.max(0,math.floor(tonumber(temp.ServerBloomLuckRolls) or 0)) or 0
+ if rolls<=0 then return false end
+ temp.ServerBloomLuckRolls=math.max(0,rolls-1)
+ return true
 end
 
 function S:ApplyActivity(player,kind)
@@ -232,6 +241,10 @@ function S:Snapshot(player,profile)
  local dew=math.max(0,tonumber(temp.Dew) or 0)
  if dew>0 then
   source(buckets,"Luck","Activity","Dew Luck ×"..tostring(dew),additiveText(dew*.1),"Consumed by your next roll.",nil)
+ end
+
+ if (tonumber(temp.ServerBloomLuckRolls) or 0)>0 then
+  source(buckets,"Luck","Server","Server Bloom","×100","Applies to your next Roll, then expires.",nil)
  end
 
  local swiftRemaining=remaining(temp.SwiftUntil,now)

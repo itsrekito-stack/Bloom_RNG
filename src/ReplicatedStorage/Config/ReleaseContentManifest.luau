@@ -7,7 +7,7 @@ return {
  RarityOrder={"Common","Uncommon","Rare","Epic","Legendary","Mythic","Celestial"},
  SeasonCards={"SpringResonance","SummerSwarm","AutumnFortune","CrystalSeason","TwilightSeason"},
  SeasonKeyTrials={"MeadowCircuit","SwiftRoute","CrystalTriangle"},
- Journey={"TutorialBeeRoll","PollenSpark","Delivery","Roll","Plant","Charge","BloomRoll","Hive2","WorkshopPurchase","Synergy","BeeSlots","Trait","Discover6","Trial","SeasonReady"},
+ Journey={"TutorialBeeRoll","PollenSpark","Delivery","Roll","Plant","Charge","BloomRoll","Hive2","WorkshopPurchase","Synergy","BeeSlots","Trait","Discover6","SeasonReady"},
  Flowers={
   Daisy={Rarity="Common"},
   Tulip={Rarity="Common"},

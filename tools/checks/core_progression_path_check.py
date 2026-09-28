@@ -12,6 +12,7 @@ def number(src,key):
     return float(m.group(1))
 
 default=read("src/ServerScriptService/Data/DefaultProfile.luau")
+schema=read("src/ServerScriptService/Data/ProfileSchema.luau")
 tutorial=read("src/ReplicatedStorage/Config/TutorialConfig.luau")
 features=read("src/ReplicatedStorage/Config/FeatureUnlockConfig.luau")
 bloom=read("src/ReplicatedStorage/Config/BloomConfig.luau")
@@ -28,6 +29,10 @@ bees=read("src/ReplicatedStorage/Config/BeesConfig.luau")
 trials=read("src/ReplicatedStorage/Config/BuildTrialConfig.luau")
 
 need(default,"SchemaVersion=6","game vision schema")
+need(default,"JourneyNoTrialV1=true","fresh profiles use Trial-free Journey indices")
+need(schema,"local journeyMigrate=not(n.Migrations and n.Migrations.JourneyNoTrialV1)","returning Journey migration marker")
+need(schema,"elseif oldStep==15 then","old SeasonReady step remaps after Trial removal")
+need(schema,"claimed.Journey_14=claimed.Journey_15==true or nil","completed SeasonReady claim remaps safely")
 need(default,"OwnedSeedCopies={}","fresh profile starts with no Flower")
 need(default,"BeeInventory={}","fresh profile starts with no Bee")
 need(default,"UnlockedSlots=0","fresh profile starts with zero Garden slots")
@@ -67,7 +72,7 @@ for key in ("Discoveries","Synergies","BeeMasteryLevel","Activities","Trials"):
     need(bloom,key+"=","Hive quest table covers "+key)
 need(hive,"if not questReady then","Hive upgrade blocks incomplete quest")
 need(hive,"C.WorkshopPointHiveMilestones[nextLevel] or 0","static Hive milestone points")
-need(meta,'local POINT_MILESTONES={Synergy=1,Trait=1,Trial=2,SeasonReady=2}',"Journey point milestone table")
+need(meta,'local POINT_MILESTONES={Synergy=1,Trait=1,SeasonReady=2}',"Journey point milestone table without Trial gate")
 need(meta,'self.X.WorkshopService:Point(player,"JourneyMilestone_"..key,points)',"key Journey milestones award Workshop Points through one-time sources")
 
 honey_per=number(bloom,"HoneyPerDelivery")

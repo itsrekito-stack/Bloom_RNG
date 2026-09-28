@@ -387,9 +387,12 @@ function InventoryV2.Render(controller,profile,uiState)
   local badge=details:FindFirstChild("RarityBadge")
   if badge then
    local badgeText=badge:FindFirstChild("Text")
-   if badgeText and badgeText:IsA("TextLabel") then badgeText.Text=string.upper(item.Rarity or item.Kind) end
-   badge.BackgroundColor3=color
-   local st=badge:FindFirstChildOfClass("UIStroke") if st then st.Color=color end
+   if badgeText and badgeText:IsA("TextLabel") then
+    badgeText.Text=string.upper(item.Rarity or item.Kind)
+    badgeText.TextColor3=color
+   end
+   badge.BackgroundColor3=C.Panel
+   local st=badge:FindFirstChildOfClass("UIStroke") if st then st.Color=color st.Transparency=.06 end
   end
   local preview=details:FindFirstChild("PreviewCard")
   if preview then
@@ -566,11 +569,16 @@ function InventoryV2.Render(controller,profile,uiState)
    local name=card:FindFirstChild("Name")
    if name and name:IsA("TextLabel") then name.Text=item.DisplayName end
    local rarity=card:FindFirstChild("Rarity")
+   local traitNames=card:FindFirstChild("Traits")
    if rarity and rarity:IsA("TextLabel") then
     if item.Kind=="Bee" then rarity.Text="M "..tostring(item.Mastery and item.Mastery.Level or 1)
     elseif item.Kind=="Flower" or item.Kind=="Seed" then rarity.Text="LV "..tostring(item.Mastery and item.Mastery.Level or 1)
     else rarity.Text=string.upper(item.Rarity or "") end
     rarity.TextColor3=color
+   end
+   if traitNames and traitNames:IsA("TextLabel") then
+    traitNames.Visible=item.Kind=="Bee"
+    traitNames.Text=item.Kind=="Bee" and string.upper(table.concat(item.Traits or {}," • ")) or ""
    end
    local fav=card:FindFirstChild("Favorite")
    if fav and fav:IsA("TextLabel") then

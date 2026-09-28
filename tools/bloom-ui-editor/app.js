@@ -505,7 +505,7 @@ function previewVisible(n){
  if(scene==="workshop"&&["HeaderIcon","PanelTitle","PanelSubtitle","HeaderAccent"].includes(name))return false;
  if(name==="Content"&&p==="MainPanel"&&MENU_PREVIEW_SCENES.has(scene))return false;
 
- const hudNames=new Set(["ObjectiveCard","CurrencyHUD","MenuDock","RollHUD","VerticalRoulette","RollButton"]);
+ const hudNames=new Set(["ObjectiveCard","CurrencyHUD","QuestTrackerHUD","MenuDock","RollHUD","VerticalRoulette","RollButton"]);
  if(hudNames.has(name))return scene==="gameplay";
  if(name==="MainPanel")return MENU_PREVIEW_SCENES.has(scene);
  if(name==="ModalShade")return MENU_PREVIEW_SCENES.has(scene);
@@ -522,7 +522,7 @@ function previewText(n,parentNode){
  const name=n.Name||"",p=parentNode?.Name||parentName(n);
  if(name==="ObjectiveTitle")return "JOURNEY • STEP 5";
  if(name==="ObjectiveText")return "Build your garden and discover new blooms";
- if(name==="MeterLabel")return "BLOOM  38%  •  DISCOVERY  3/30";
+ if(name==="MeterLabel")return "BLOOM  38%";
  if(name==="PanelTitle"&&PREVIEW_META[scene])return PREVIEW_META[scene].title;
  if(name==="PanelSubtitle"&&PREVIEW_META[scene])return PREVIEW_META[scene].subtitle;
  if(name==="RewardTitle"&&scene==="reward")return "Daisy";

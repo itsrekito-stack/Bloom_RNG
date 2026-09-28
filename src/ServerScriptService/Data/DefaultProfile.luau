@@ -1,7 +1,7 @@
 return {
  SchemaVersion=6,
  Currencies={Coins=0,PetalDust=0,AncientNectar=0},
- Migrations={BloomReworkV1=true,GameVisionV1=true},
+ Migrations={BloomReworkV1=true,GameVisionV1=true,JourneyNoTrialV1=true},
  RollState={TotalRolls=0,BloomCharge=0,DiscoveryPity=0,SpecialRollReady=false},
  FlowerCollection={OwnedSeedCopies={},ObtainedFlowers={},DiscoveredFlowers={},FlowerMastery={},LockedFlowers={},FavoriteFlowers={}},
  Garden={UnlockedSlots=0,Slots={{},{},{},{},{},{},{}},Revision=0,ActiveSynergy=""},

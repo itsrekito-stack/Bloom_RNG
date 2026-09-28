@@ -54,6 +54,9 @@ for name in required:
 
 if one("TrialsKit")[1] is not None:
     raise AssertionError("legacy TrialsKit returned")
+for name in ("QuestTrackerHUD","Quest_1","Quest_2","Quest_3"):
+    if one(name)[1] is None:
+        raise AssertionError(f"right-side quest tracker node missing: {name}")
 
 quest_card=one("QuestCardTemplate")[1]
 if quest_card.get("Properties",{}).get("Visible") is not False:
@@ -85,6 +88,12 @@ if 'Instance.new(' in quests:
 
 need(state,'CanStart=reason==nil',"server-authoritative CanStart")
 need(state,'RewardText=(profile.Quests.Trials[id] and "Repeat • 5 Coins"', "server-derived reward copy")
+need(state,'function S:QuestTracker(profile)',"authoritative quest tracker projection")
+need(state,'self.X.HiveService:QuestStatus(profile,nextLevel)',"Hive Quest reuses authoritative rules")
+need(state,'QuestTracker=self:QuestTracker(profile)',"quest tracker included in state snapshot")
+need(bloom,'function UI:RenderQuestTracker()', "right-side quest tracker renderer")
+need(bloom,'self.QuestRows[1]', "first tracker slot reserved for Hive Quest")
+need(bloom,'"BLOOM QUEST"', "third tracker slot is recurring Bloom quest")
 need(activity,'function S:SetTracked(id)',"activity tracking")
 need(activity,'prefix=tracked and "◆ TRACKED  •  " or ""',"tracked world checkpoint feedback")
 
