@@ -123,6 +123,7 @@ boost_root_path,boost_root=one('ActiveBoostsHUD')
 boost_tooltip_path,boost_tooltip=one('ActiveBoostTooltip')
 boost_template=one('BoostTemplate')[1]
 boost_minimize=one('MinimizeButton')[1]
+check('Trait HUD authored',one('TraitHUD')[1] is not None and one('TraitTemplate')[1] is not None and one('TraitTooltip')[1] is not None and one('TraitTierPopup')[1] is not None)
 check('Active boosts direct child of SafeRoot',boost_root_path==safe_path+'/ActiveBoostsHUD',boost_root_path or '')
 check('Active boost tooltip direct child of SafeRoot',boost_tooltip_path==safe_path+'/ActiveBoostTooltip',boost_tooltip_path or '')
 check('Active boost template authored hidden',boost_template is not None and boost_template.get('ClassName')=='ImageButton' and boost_template.get('Properties',{}).get('Visible') is False)
@@ -169,7 +170,7 @@ check('BR-010 map tells Hive-ready players to use gate','Hive ready — go to th
 check('BR-010 trials expose shrine guidance','NearShrine=nearShrine' in ui_state_source and 'StartHint=startHint' in ui_state_source and 'Garden Trials shrine' in ui_state_source)
 check('BR-010 client renders derived trial guidance','trial.StartHint' in quests_v2_source and 'AT SHRINE' in quests_v2_source)
 check('UI Studio uses desktop state rail','class="state-rail"' in editor_html and 'class="app-titlebar"' in editor_html and 'class="app-workspace"' in editor_html)
-check('UI Studio exposes all authored state buttons',all(('data-ui-state="'+state+'"') in editor_html for state in ['gameplay','inventory_v2','garden','workshop','trials','settings','season','replay','cards','reward','toast','tutorial','boosts','world_ui','loading']))
+check('UI Studio exposes all authored state buttons',all(('data-ui-state="'+state+'"') in editor_html for state in ['gameplay','inventory_v2','traits','garden','workshop','trials','settings','season','replay','cards','reward','toast','tutorial','boosts','world_ui','loading']))
 check('UI Studio hides retired alpha menus','data-ui-state="fieldguide"' not in editor_html and 'data-ui-state="map"' not in editor_html and 'data-ui-state="plant"' not in editor_html)
 check('UI STATE toggles active state back to empty workspace','const closing=state.activeUiState===scene' in editor_source and 'state.activeUiState=null' in editor_source and 'Empty workspace' in editor_source)
 check('UI Studio removed HTML runtime mock injection','MOCK PREVIEW · NOT RUNTIME' not in editor_source and '<div class="preview-menu-generic">' not in editor_source and 'function injectRuntimePreview(){/* UI STATE shows authored Roblox instances only.' in editor_source)
