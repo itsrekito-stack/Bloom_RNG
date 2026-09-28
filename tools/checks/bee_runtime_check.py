@@ -56,7 +56,7 @@ need(poll,'if type(index)~="number" or index>capacity or equipped~=state.Id then
 
 need(inventory,'if not self.X.U.Integer(slot,capacity) then return false,"INVALID_SLOT" end',"equipment slot authority")
 need(inventory,'if (p.Pollinators.BeeInventory[id] or 0)<1 then return false,"NOT_OWNED" end',"bee ownership authority")
-need(inventory,'if used>=(p.Pollinators.BeeInventory[id] or 0) then return false,"NOT_OWNED" end',"duplicate equipped-copy authority")
+need(inventory,'if i~=slot and v==id then return false,"ALREADY_EQUIPPED" end',"one equipped slot per Bee species")
 
 for field in [
     "WorkMultiplier","RewardMultiplier","HiveHoneyMultiplier","CriticalChanceBonus",
