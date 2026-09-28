@@ -215,7 +215,7 @@ function S:Snapshot(player,profile)
      end
     end
    end
-   local mastery=Bees.GetMasteryState(p.Pollinators.BeeMastery[beeId])
+   local mastery=Bees.GetMasteryState and Bees.GetMasteryState(p.Pollinators.BeeMastery[beeId]) or {Level=1,LuckMultiplier=1}
    local masteryLuck=tonumber(mastery.LuckMultiplier) or 1
    if masteryLuck>1.0001 then
     source(buckets,"Luck","Bee Mastery",bee.DisplayName.." • Lv."..tostring(mastery.Level),multiplierText(masteryLuck,false),"Bee Mastery permanently improves this equipped Bee's roll luck.",nil)
@@ -229,7 +229,7 @@ function S:Snapshot(player,profile)
   if flower then
    local mastery=p.FlowerCollection.FlowerMastery[id]
    local level=math.max(1,math.floor(tonumber(mastery and mastery.Level) or 1))
-   local buff=Flowers.GetLevelBuff(id,level)
+   local buff=Flowers.GetLevelBuff and Flowers.GetLevelBuff(id,level) or nil
    local stat=buff and BEE_STAT_MAP[buff.Stat]
    local meta=stat and META[stat]
    if buff and stat and meta then

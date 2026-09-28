@@ -30,15 +30,15 @@ function S:Get(p)
   local id=slot.SpeciesId
   if type(id)=="string" then
    local mastery=p.FlowerCollection and p.FlowerCollection.FlowerMastery and p.FlowerCollection.FlowerMastery[id]
-   local buff=F.GetLevelBuff(id,mastery and mastery.Level or 1)
+   local buff=F.GetLevelBuff and F.GetLevelBuff(id,mastery and mastery.Level or 1) or nil
    if buff and flower[buff.Stat] then flower[buff.Stat]*=buff.Multiplier end
   end
  end
  local masteryLuck=1
  for _,beeId in pairs(p.Pollinators.EquippedBeeSlots or {}) do
   if type(beeId)=="string" then
-   local state=B.GetMasteryState(p.Pollinators.BeeMastery[beeId])
-   masteryLuck*=tonumber(state.LuckMultiplier) or 1
+   local state=B.GetMasteryState and B.GetMasteryState(p.Pollinators.BeeMastery[beeId]) or nil
+   masteryLuck*=tonumber(state and state.LuckMultiplier) or 1
   end
  end
  return {
