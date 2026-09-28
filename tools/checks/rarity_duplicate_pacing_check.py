@@ -113,10 +113,9 @@ need(inventory,'self.X.PollinatorService:AddMastery(player,id,C.BeeDuplicateXP)'
 need(inventory,'f.OwnedSeedCopies[id]=1',"Flower species ownership does not stack copies")
 need(inventory,'pollinators.BeeInventory[id]=1',"Bee species ownership does not stack copies")
 
-# Player-facing copy must not promise a guaranteed endgame discovery.
-need(ui,'"  •  PITY READY"',"truthful pity HUD copy")
-if "NEW GUARANTEED" in ui:
-    raise AssertionError("HUD still promises an uncapped guaranteed discovery")
+# Discovery pity is internal progression state and must not clutter the player-facing Bloom HUD.
+if "PITY READY" in ui or "NEW GUARANTEED" in ui or "DISCOVERY" in ui:
+    raise AssertionError("Discovery pity copy returned to the player-facing Bloom HUD")
 
 threshold=int(re.search(r'\bDiscoveryThreshold=(\d+)',bloom).group(1))
 cooldown=float(re.search(r'\bRollCooldown=([0-9.]+)',bloom).group(1))
