@@ -73,6 +73,8 @@ end
 function S:Interact(player)
  local p=self.X:Profile(player)
  if not p then return false,"PROFILE_LOADING" end
+ local hivePosition=self.X.GardenPlotService:HivePosition(player)
+ if not hivePosition or not self.X.U.Near(player,hivePosition,C.InteractionDistance) then return false,"TOO_FAR" end
 
  if (p.Tutorial.Events.FirstGardenSlot or 0)==0 and not p.Tutorial.Skipped then
   self.X:Emit(player,"FirstGardenSlot",1)
