@@ -272,12 +272,6 @@ function S:ResolveWorldTarget(step)
  elseif target=="SynergySlot" then
   local slot=self:GardenSlot(step.Slot or 2)
   if slot then return slot,"SYNERGY SLOT" end
- elseif target=="Workshop" then
-  local part=world and world:FindFirstChild("Workshop")
-  if part and part:IsA("BasePart") then return part,"WORKSHOP" end
- elseif L.Sectors[target] then
-  local gate=world and world:FindFirstChild(target.."Gate")
-  if gate and gate:IsA("BasePart") then return gate,string.upper(L.Sectors[target].Name) end
  end
  return nil,nil
 end
@@ -475,7 +469,17 @@ function S:Update()
  if step.Target=="WorkshopNode" then
   if ui.Menu~="Workshop" then
    local button=ui.DockButtons.Workshop
-   if button and button.Visible then ui.Dock.Visible=true end
+   if not button or not button.Visible then
+    local inventory=ui.DockButtons.SeedSatchel
+    if inventory and inventory.Visible then
+     ui.Dock.Visible=true
+     if self:PlaceScreenTarget(inventory,"OPEN INVENTORY","Open Inventory to reveal the menu row, then choose Workshop.") then self.LastMissingKey=nil else self:Missing(step) end
+    else
+     self:Missing(step)
+    end
+    return
+   end
+   ui.Dock.Visible=true
    if self:PlaceScreenTarget(button,"OPEN WORKSHOP",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
    return
   end
