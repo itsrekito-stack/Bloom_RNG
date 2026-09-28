@@ -15,7 +15,10 @@ end
 function S:Validate(action,a,b,c)
  if NO_ARGS[action] then return a==nil and b==nil and c==nil,a==nil and b==nil and c==nil and nil or"INVALID_VALUE" end
  if not scalar(a) or not scalar(b) or not scalar(c) then return false,"INVALID_VALUE" end
- if action=="Roll" then
+ if action=="FullReset" then
+  local ok=a=="RESET_ALL_PROGRESS" and b==nil and c==nil
+  return ok,ok and nil or "INVALID_VALUE"
+ elseif action=="Roll" then
   if a~=nil and type(a)~="boolean" then return false,"INVALID_VALUE" end
   if b~=nil and not integer(b,1,2147483647) then return false,"INVALID_VALUE" end
   if c~=nil then return false,"INVALID_VALUE" end
