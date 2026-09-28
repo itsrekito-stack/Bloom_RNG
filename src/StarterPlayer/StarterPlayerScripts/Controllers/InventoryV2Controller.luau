@@ -91,6 +91,28 @@ local function cloneTable(t)
  return out
 end
 
+local function traitEquipPreview(item,inventory)
+ if not item or item.Kind~="Bee" then return "" end
+ local slots=cloneTable(inventory.EquippedBeeSlots or {})
+ if findEquippedSlot(slots,item.Id) then return "Equipped" end
+ local free=firstFreeBeeSlot(slots,inventory.BeeCapacity)
+ if not free then return "No free Bee slot" end
+ local before=Bees.GetTraitState(slots)
+ slots[free]=item.Id
+ local after=Bees.GetTraitState(slots)
+ local byId={} for _,state in ipairs(before) do byId[state.Id]=state end
+ local changes={}
+ for _,state in ipairs(after) do
+  local old=byId[state.Id]
+  if old and (state.Count~=old.Count or state.Tier~=old.Tier) then
+   local oldNext=old.NextThreshold or old.Count
+   local newNext=state.NextThreshold or state.Count
+   table.insert(changes,state.Name.." "..old.Count.."/"..oldNext.." → "..state.Count.."/"..newNext)
+  end
+ end
+ return #changes>0 and table.concat(changes,"  •  ") or "No Trait tier change"
+end
+
 local function buildItems(profile,inventory)
  local out={Flowers={},Bees={},Seeds={},Resources={},Special={}}
  for _,entry in ipairs(inventory.Flowers or {}) do
@@ -100,7 +122,7 @@ local function buildItems(profile,inventory)
     Kind="Flower",Id=entry.Id,DisplayName=entry.DisplayName or cfg.DisplayName,Rarity=entry.Rarity or cfg.Rarity,
     Count=entry.Count or 0,Free=entry.Free or 0,Planted=entry.Planted or 0,Mastery=entry.Mastery or {Level=1,XP=0,NextXP=25},
     Favorite=entry.Favorite==true,Protected=entry.Protected==true,CanDissolve=entry.CanDissolve==true,CanUpgrade=entry.CanUpgrade==true,
-    Icon=flowerIcon(entry.Id),
+    Icon=flowerIcon(entry.Id),Odds=entry.Odds or "1/—",
    }
    table.insert(out.Flowers,item)
    if item.Free>0 then
@@ -119,7 +141,7 @@ local function buildItems(profile,inventory)
     Kind="Bee",Id=entry.Id,DisplayName=entry.DisplayName or cfg.DisplayName,Rarity=entry.Rarity or cfg.Rarity,
     Count=entry.Count or 0,Equipped=entry.Equipped or 0,Free=entry.Free or 0,CanDissolve=entry.CanDissolve==true,DissolveValue=entry.DissolveValue or 0,
     Traits=entry.Traits or cfg.Traits or {},Ability=entry.Ability or (cfg.Ability and cfg.Ability.Name) or "",
-    Mastery=entry.Mastery or Bees.GetMasteryState(0),Icon=Icons.GetBeeIcon(entry.Id),Favorite=false,Protected=false,
+    Mastery=entry.Mastery or Bees.GetMasteryState(0),Icon=Icons.GetBeeIcon(entry.Id),Favorite=false,Protected=false,Odds=entry.Odds or "1/—",
    })
   end
  end
@@ -407,7 +429,8 @@ function InventoryV2.Render(controller,profile,uiState)
     local ability=Bees.GetAbilityDescription(item.Id)
     local passive=Bees.GetPassiveDescription(item.Id)
     local traits=#(item.Traits or {})>0 and table.concat(item.Traits,", ") or "None"
-    description.Text="Traits: "..traits.."  •  "..passive.."  •  "..ability.."  •  Mastery: "..tostring(item.Mastery.BonusText or "No mastery bonus yet")
+    local preview=traitEquipPreview(item,inventory)
+    description.Text="1/N: "..tostring(item.Odds or "1/—").."  •  Traits: "..traits.."  •  "..passive.."  •  "..ability.."  •  Mastery: "..tostring(item.Mastery.BonusText or "No mastery bonus yet").."  •  Equip preview: "..preview
    elseif item.Kind=="Resource" then
     description.Text=item.Description or "A Bloom RNG progression resource."
    else
@@ -563,11 +586,18 @@ function InventoryV2.Render(controller,profile,uiState)
    local icon=card:FindFirstChild("Icon")
    if icon and icon:IsA("ImageLabel") then icon.Image=item.Icon or "" end
    local count=card:FindFirstChild("Count")
-   if count and count:IsA("TextLabel") then count.Text="x"..compact(item.Count) end
+   if count and count:IsA("TextLabel") then
+    count.Text=(item.Kind=="Flower" or item.Kind=="Seed" or item.Kind=="Bee") and tostring(item.Odds or "1/—") or "x"..compact(item.Count)
+   end
    local name=card:FindFirstChild("Name")
    if name and name:IsA("TextLabel") then name.Text=item.DisplayName end
    local rarity=card:FindFirstChild("Rarity")
-   if rarity and rarity:IsA("TextLabel") then rarity.Text=string.upper(item.Rarity or "") rarity.TextColor3=color end
+   if rarity and rarity:IsA("TextLabel") then
+    if item.Kind=="Bee" then rarity.Text="M "..tostring(item.Mastery and item.Mastery.Level or 1)
+    elseif item.Kind=="Flower" or item.Kind=="Seed" then rarity.Text="LV "..tostring(item.Mastery and item.Mastery.Level or 1)
+    else rarity.Text=string.upper(item.Rarity or "") end
+    rarity.TextColor3=color
+   end
    local fav=card:FindFirstChild("Favorite")
    if fav and fav:IsA("TextLabel") then
     fav.Visible=item.Kind=="Flower" or item.Kind=="Seed"
