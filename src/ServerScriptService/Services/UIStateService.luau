@@ -36,6 +36,7 @@ local REASONS={
  INVALID_VALUE="Invalid value",
  NOT_DISCOVERED="Discover this item first",
  NOT_OWNED="You do not own this item",
+ ALREADY_EQUIPPED="This Bee species is already equipped",
  NO_FREE_COPY="No free copy available",
  LAST_COPY="You cannot dissolve your last copy",
  PROTECTED="Item is protected",
