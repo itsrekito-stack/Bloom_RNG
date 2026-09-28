@@ -644,22 +644,22 @@
       "id": "vision-garden-discovery",
       "group": "[Garden]",
       "title": "Stage 4 · Add hidden Synergy discovery and ghost hints",
-      "detail": "Undiscovered recipes stay secret. Persist discoveries and show progression-aware ghost suggestions without revealing the recipe name or full solution.",
-      "done": false
+      "detail": "Server persists Synergy discoveries; Workshop-gated ghost hints expose only one owned FlowerId and never reveal hidden recipe ids/names. Covered by Garden/core-loop contracts.",
+      "done": true
     },
     {
       "id": "vision-garden-editor",
       "group": "[Garden]",
       "title": "Stage 5 · Build the confirmed 7-slot Garden editor",
-      "detail": "Author the left Flower list + circular 7-slot editor + current Synergy panel from the saved reference. Choose Flower, choose slot, replace directly, and update the physical Garden immediately.",
-      "done": false
+      "detail": "Authored GardenKit now provides the left Flower list, circular seven-slot editor, current Synergy panel, direct replace/remove actions and UI Studio garden state.",
+      "done": true
     },
     {
       "id": "vision-garden-world-sync",
       "group": "[Garden]",
       "title": "Stage 6 · Synchronize Garden UI and world presentation",
-      "detail": "Garden edits must update server state, authored UI and physical flower models consistently, with safe replacement and no loss of species progression.",
-      "done": false
+      "detail": "GardenEdit is server-authoritative, validates the editor session/ownership/slot, preserves slot telemetry on moves, increments revision and rebuilds physical Garden models immediately.",
+      "done": true
     },
     {
       "id": "vision-bees-duplicates",
@@ -686,8 +686,8 @@
       "id": "vision-bees-traits",
       "group": "[Bees]",
       "title": "Stage 4 · Build TFT-style Trait HUD and tier feedback",
-      "detail": "Left-side Trait list shows icon, name and n1/n2. Hover gives thresholds/effects/member Bees. Tier activation gets a small popup and 1–2 second highlight.",
-      "done": false
+      "detail": "Authored TFT-style Trait HUD is wired to authoritative equipped-Bee trait state with n1/n2 progress, hover thresholds/effects/member Bees and short tier-up popup/highlight feedback.",
+      "done": true
     },
     {
       "id": "vision-bees-preview",
@@ -770,15 +770,15 @@
       "id": "vision-inventory-flower-details",
       "group": "[Inventory]",
       "title": "Stage 4 · Finish Flower detail and Garden actions",
-      "detail": "Flower detail shows icon/name/1/N/Level and integrates cleanly with the Garden editor without old free-copy/proximity confusion.",
-      "done": false
+      "detail": "Flower details show icon/name, 1/N, species Level and Garden status. Plant/Edit actions preserve the selected Flower and hand off through the proximity/session-validated Garden editor without copy-stock actions.",
+      "done": true
     },
     {
       "id": "vision-inventory-hud",
       "group": "[Inventory]",
       "title": "Stage 5 · Integrate Inventory with the compact HUD",
-      "detail": "When Inventory opens, hide Roll. Keep only the intended core HUD: Roll, Inventory, currencies, Trait list and Hive progress.",
-      "done": false
+      "detail": "Opening Inventory suppresses Roll/RollHUD/roulette while the compact HUD keeps currencies/Hive state and Trait HUD; the core dock exposes only Inventory and secondary menus live inside it.",
+      "done": true
     },
     {
       "id": "vision-inventory-qa",
@@ -805,15 +805,15 @@
       "id": "vision-index-ui",
       "group": "[Index]",
       "title": "Stage 3 · Author the fullscreen Index shell",
-      "detail": "Fullscreen Workshop-like focus, vertical category nav on the left, dense small-card grid in the center and right-side details.",
-      "done": false
+      "detail": "Fullscreen authored Index shell is wired with left category navigation, dense locked/redacted catalog cards, per-category progress and right-side details; UI Studio exposes the Index state.",
+      "done": true
     },
     {
       "id": "vision-index-details",
       "group": "[Index]",
       "title": "Stage 4 · Implement category-specific detail panels",
-      "detail": "Bee, Flower, Synergy and Trait details must match Q60–Q63 exactly, including 1/N, Mastery, level requirements, tier effects and biome modifier info where applicable.",
-      "done": false
+      "detail": "Flower, Bee, Synergy and Trait details are implemented with 1/N, Level/Mastery/obtained data, requirements/effects, tier thresholds/member Bees and current-release biome modifier handling.",
+      "done": true
     },
     {
       "id": "vision-workshop-points",
