@@ -604,6 +604,146 @@
       "title": "Monitor the first live sessions",
       "detail": "Watch errors, persistence failures, progression blockers and economy anomalies; prepare a small hotfix only if needed.",
       "done": false
+    },
+    {
+      "id": "vision-schema-foundation",
+      "group": "9 · Vision Foundation",
+      "title": "Migrate profile schema to the new game-vision data model",
+      "detail": "Introduce migration-safe persistent state for global Flower progression, Bee obtained/mastery stats, Index discovery/read state and Effective Luck control. Preserve existing ownership/progression and add deterministic round-trip migration coverage.",
+      "done": false
+    },
+    {
+      "id": "vision-garden-capacity",
+      "group": "10 · Garden Vision",
+      "title": "Rebuild Garden capacity around 0 → 7 Hive-unlocked slots",
+      "detail": "Change new profiles from 3 starting / 8 max slots to 0 starting / 7 max. First slot comes from tutorial; later slots come only from static Hive milestones, with all 7 targeted by roughly 30% progression. Remove Workshop slot ownership from capacity rules without losing existing planted data.",
+      "done": false
+    },
+    {
+      "id": "vision-flower-duplicate-levels",
+      "group": "10 · Garden Vision",
+      "title": "Make Flower duplicates level the species automatically",
+      "detail": "Replace planted-instance/copy-centric Flower progression with species-wide Level/XP gained automatically from duplicate Flower rolls. Safely migrate existing planted Level/XP and copy ownership; planting must reference the species progression instead of resetting a slot to Level 1.",
+      "done": false
+    },
+    {
+      "id": "vision-garden-editor-ui",
+      "group": "10 · Garden Vision",
+      "title": "Implement the confirmed 7-slot Garden editor UI",
+      "detail": "Author the Garden UI from docs/game-vision/assets/bloom-rng-garden-ui-reference.webp: vertical Flower list left, circular 7-slot editor right, selected Flower → target slot placement/replacement, current Synergy panel, and immediate physical-world Garden update. Major layout must live in BloomUI.model.json.",
+      "done": false
+    },
+    {
+      "id": "vision-garden-synergy-engine",
+      "group": "10 · Garden Vision",
+      "title": "Replace additive Garden synergies with strongest-valid hierarchy",
+      "detail": "Redesign GardenSynergyConfig/Service so Flower recipes support exact members and per-Flower level requirements, evaluate a ranked hierarchy, and activate only the strongest valid Synergy with automatic fallback. Remove Bee-Trait and Biome recipes from the Flower Synergy engine.",
+      "done": false
+    },
+    {
+      "id": "vision-garden-discovery-hints",
+      "group": "10 · Garden Vision",
+      "title": "Add hidden Synergy discovery and progression-aware ghost hints",
+      "detail": "Keep undiscovered recipes hidden from client/index data. Persist discovered Synergies. When one owned Flower can complete a useful undiscovered recipe, show a ghost suggestion in the Garden editor without revealing the recipe/name; selection should favor current progression relevance over absolute endgame strength.",
+      "done": false
+    },
+    {
+      "id": "vision-bee-duplicate-mastery",
+      "group": "11 · Bee Vision",
+      "title": "Convert Bee duplicates into species Mastery instead of inventory copies",
+      "detail": "First Bee roll unlocks the species entry; later copies immediately add species Mastery and obtained count rather than increasing BeeInventory quantity or becoming dismantle stock. Migrate existing copy counts safely and stop equipment logic from depending on duplicate quantity.",
+      "done": false
+    },
+    {
+      "id": "vision-bee-mastery-model",
+      "group": "11 · Bee Vision",
+      "title": "Rebalance Bee Mastery around duplicate-driven long-term growth",
+      "detail": "Remove routine pollination/work as the primary Mastery XP source. Keep species-wide progression, with early stat growth, ability improvements and later customization hooks. Revisit BeeMasteryXP multipliers/Workshop effects that currently assume work-earned XP.",
+      "done": false
+    },
+    {
+      "id": "vision-bee-trait-hud",
+      "group": "11 · Bee Vision",
+      "title": "Build TFT-style Bee Trait HUD and tier feedback",
+      "detail": "Author a left-side vertical Trait list showing icon, name and n1/n2 next-threshold count. Hover tooltip shows thresholds/effects/member Bees and future biome modifier info. New tier activation gets a small popup plus 1–2 second row highlight.",
+      "done": false
+    },
+    {
+      "id": "vision-bee-equip-preview",
+      "group": "11 · Bee Vision",
+      "title": "Add manual Bee equip detail with Trait delta preview",
+      "detail": "Keep manual Equip/Unequip. In Bee Inventory details show 1/N, Mastery, Traits, ability and a preview such as Magma 2/4 → 3/4 before equipping. Equipment must use the new species-owned model rather than copy counts.",
+      "done": false
+    },
+    {
+      "id": "vision-luck-control",
+      "group": "12 · Roll / Progression Vision",
+      "title": "Add server-validated Effective Luck control",
+      "detail": "Add a Gameplay Settings control defaulting to MAX where the player can enter a lower effective Luck for rolls. Clamp to the player's real earned maximum, persist the preference, apply it in RollLuck only, and never mutate build/equipment/source stats.",
+      "done": false
+    },
+    {
+      "id": "vision-tutorial-roll-sequence",
+      "group": "12 · Roll / Progression Vision",
+      "title": "Rewrite onboarding to first slot → Flower roll → Bee roll",
+      "detail": "New player begins with 0 Garden slots and no direct starter Bee grant. Tutorial unlocks slot 1, then one Flower-only Roll guarantees the first Flower, then one Bee-only Roll guarantees the first Bee, then restores the normal mixed pool. Update tutorial targets/events/migrations accordingly.",
+      "done": false
+    },
+    {
+      "id": "vision-hive-progression",
+      "group": "12 · Roll / Progression Vision",
+      "title": "Rebuild Hive upgrades around Honey + Hive Quests + static milestones",
+      "detail": "Require both Honey and meaningful cross-system Hive Quest checks for upgrades. Move Garden and Bee slot unlocks to static Hive milestone rewards, remove Workshop capacity dependencies, and define later static milestone bonuses such as Luck. Workshop Points should come from Hive/key milestones rather than every level by default.",
+      "done": false
+    },
+    {
+      "id": "vision-roll-presentation",
+      "group": "12 · Roll / Progression Vision",
+      "title": "Align Roll timing and rarity reveals with the final vision",
+      "detail": "Target ~4–5s early Roll with fast cruise and pronounced late slowdown, progressing to ~2–3s through upgrades. Give Legendary/Mythic/Celestial distinct reveal language and let very rare results temporarily suppress most HUD. Preserve server-authoritative result timing and request/session guards.",
+      "done": false
+    },
+    {
+      "id": "vision-hud-inventory",
+      "group": "13 · UI / Index Vision",
+      "title": "Align HUD and Inventory with the compact final layout",
+      "detail": "Base HUD should focus on Roll, Inventory, currencies, left Trait HUD and top Hive progress. Hide Roll while Inventory is open. Inventory cards prioritize icon/name/large 1/N with a small Level/Mastery badge; Flower/Bee detail panels follow the Q&A fields and avoid duplicate menu clutter.",
+      "done": false
+    },
+    {
+      "id": "vision-index-backend",
+      "group": "13 · UI / Index Vision",
+      "title": "Implement Index discovery/read-state backend",
+      "detail": "Add Flowers/Bees/Synergies/Traits Index payloads, per-category completion counts, persistent NEW/unread state and Bee obtained counts. Undiscovered entries must be represented as locked records without leaking hidden recipe/member data. Index grants no completion rewards.",
+      "done": false
+    },
+    {
+      "id": "vision-index-ui",
+      "group": "13 · UI / Index Vision",
+      "title": "Author the fullscreen Index UI",
+      "detail": "Create a fullscreen Workshop-like Index with persistent vertical category navigation on the left, dense small-card grid, locked empty undiscovered cards, NEW badges, category-specific progress and a right detail panel. Bee/Synergy/Trait/Flower details must match Q60–Q63 exactly.",
+      "done": false
+    },
+    {
+      "id": "vision-workshop-alignment",
+      "group": "14 · Future Meta & QA",
+      "title": "Align Workshop points, major nodes and respec policy",
+      "detail": "Keep the branching fullscreen hex tree and limited points, but ensure ordinary nodes are stat upgrades while major nodes unlock features/QoL. Source points from Hive/key milestones. Restrict RESET & REFUND to the future Biome-transition flow instead of unrestricted normal respec.",
+      "done": false
+    },
+    {
+      "id": "vision-biome-meta-future",
+      "group": "14 · Future Meta & QA",
+      "title": "Backlog future Biome meta modifiers and Workshop branches",
+      "detail": "Future-only: Biome transition requires Hive level + key Hive Quests, replaces the old biome for now, modifies selected Trait/Synergy effectiveness, exposes modifiers in tooltips, adds new Workshop branches and offers KEEP BUILD vs RESET & REFUND. Do not prioritize before core vision migration.",
+      "done": false
+    },
+    {
+      "id": "vision-migration-qa",
+      "group": "14 · Future Meta & QA",
+      "title": "Run migration and runtime acceptance for the completed vision rebuild",
+      "detail": "After vision tasks land, extend deterministic tests for profile migration, 0→7 Garden reachability, duplicate conversion, strongest-only Synergies, tutorial guarantees, Hive milestones, Effective Luck and Index redaction. Then run real Studio acceptance at 1366×768 / 1280×720 plus persistence rejoin checks.",
+      "done": false
     }
   ]
 }
