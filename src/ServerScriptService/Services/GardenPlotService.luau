@@ -34,9 +34,8 @@ function S:HivePosition(player)
 end
 
 function S:HivePromptText(p)
- local inventory=p and p.Pollinators and p.Pollinators.BeeInventory
- local ownsStarter=type(inventory)=="table" and (tonumber(inventory.WorkerBee) or 0)>0
- if not ownsStarter then return "Get Worker Bee" end
+ if self.X and self.X.HiveService then return self.X.HiveService:PromptText(p) end
+ if (p.Tutorial.Events.FirstGardenSlot or 0)==0 and not p.Tutorial.Skipped then return "Unlock Garden Slot 1" end
  local cost=C.HiveCosts[p.Hive.Level+1]
  return cost and ("Upgrade Hive • "..math.floor(cost).." Honey") or "Hive MAX"
 end
@@ -185,7 +184,7 @@ function S:Plant(player,i,id)
  if not p then return false,"PROFILE_LOADING" end
  if not self.X.U.Integer(i,p.Garden.UnlockedSlots) then return false,"INVALID_SLOT" end
  local tutorialStep=T.Steps[p.Tutorial.Step]
- if tutorialStep and tutorialStep.Id=="Plant" and i~=(tutorialStep.Slot or 3) then return false,"TUTORIAL_TARGET" end
+ if tutorialStep and tutorialStep.Id=="Plant" and i~=(tutorialStep.Slot or 1) then return false,"TUTORIAL_TARGET" end
  if tutorialStep and tutorialStep.Id=="Synergy" and (i~=(tutorialStep.Slot or 2) or id~="Tulip") then return false,"TUTORIAL_TARGET" end
  local pos=self:Position(player,i)
  if not pos or not self.X.U.Near(player,pos,C.InteractionDistance) then return false,"TOO_FAR" end
