@@ -1265,6 +1265,139 @@ end
 function UI:RefreshMenuDock()
  if not self.Dock or not self.State or not self.State.Profile then return end
  local p=self.State.Profile
+ local inventoryUnlocked=p.Tutorial.FeatureUnlocks.SeedSatchel==true
+ local inventoryDockOpen=self.Menu=="SeedSatchel" and self.MenuRenderer=="InventoryV2"
+ self.Dock.Visible=inventoryUnlocked
+ self:ApplyMenuDockLayout(inventoryDockOpen)
+
+ local dockUnlocked={
+  SeedSatchel=inventoryUnlocked,
+  Index=inventoryUnlocked,
+  Workshop=p.Tutorial.FeatureUnlocks.Workshop==true,
+  Trials=p.Tutorial.FeatureUnlocks.Trials==true,
+  Settings=inventoryUnlocked,
+ }
+
+ for name,b in pairs(self.DockButtons or {}) do
+  local enabled=dockUnlocked[name]==true
+  local visible=name=="SeedSatchel" or inventoryDockOpen
+  b.Visible=inventoryUnlocked and visible
+  b.Active=enabled
+  b.Selectable=enabled
+  b:SetAttribute("BloomDockEnabled",enabled)
+  b.BackgroundTransparency=1
+
+  local stroke=b:FindFirstChildOfClass("UIStroke")
+  if stroke then stroke.Transparency=1 end
+
+  local icon=b:FindFirstChild("Icon")
+  if icon and icon:IsA("ImageLabel") then
+   local selected=self.Menu==name
+   icon.ImageTransparency=enabled and 0 or .58
+   icon.ImageColor3=enabled and (selected and C.Blue or C.White) or C.Muted
+  end
+
+  local tip=self.DockTooltips and self.DockTooltips[name]
+  if tip then
+   tip.Text=(MENU_NAMES[name] or name)..(enabled and "" or " • LOCKED")
+   if not b.Visible then tip.Visible=false end
+  end
+ end
+end
+
+function UI:ApplyResponsiveLayout(width,height)
+ -- Desktop layout is authored in StarterGui. Do not overwrite positions/sizes here,
+ -- so designers can move every HUD block directly in Studio.
+ self.IsMobileLayout=width<700
+ if width>=700 then
+  self:ApplyMenuDockLayout(self.InventoryDockExpanded==true)
+  return
+ end
+
+ -- Small-screen safety only. These adjustments intentionally touch as little as possible.
+ self.ObjectiveCard.Size=UDim2.fromOffset(math.max(280,width-24),66)
+ self.CurrencyHUD.Position=UDim2.fromOffset(10,208)
+ self:ApplyMenuDockLayout(self.InventoryDockExpanded==true)
+ self.Guide.Size=UDim2.fromOffset(math.max(260,width-24),38)
+ self.RollHUD.Size=UDim2.fromOffset(math.min(300,width-18),38)
+ self.RollHUD.AnchorPoint=Vector2.new(.5,1)
+ self.RollHUD.Position=UDim2.new(.5,0,1,-62)
+ self.Roll.AnchorPoint=Vector2.new(.5,1)
+ self.Roll.Position=UDim2.new(.5,0,1,-10)
+ self.RouletteViewport.AnchorPoint=Vector2.new(.5,0)
+ self.RouletteViewport.Position=UDim2.new(.5,0,0,78)
+ self.ToastRoot.Size=UDim2.fromOffset(math.max(260,width-24),36)
+ self.Panel.Size=UDim2.fromOffset(math.max(300,width-16),math.max(300,height-108))
+ self.Panel.Position=UDim2.new(.5,0,.52,0)
+ self.Reveal.Size=UDim2.fromOffset(math.max(280,width-24),100)
+ if self.BoostHUD then self.BoostHUD:ApplyResponsiveLayout(width) end
+end
+
+function UI:Render()
+ self.ObjectiveCard.Visible=true
+ self.CurrencyHUD.Visible=true
+ local p=self.State.Profile
+ local step=T.Steps[p.Tutorial.Step]
+ if step then
+  self.ObjectiveTitle.Text="TUTORIAL  •  "..p.Tutorial.Step.."/"..#T.Steps
+  self.ObjectiveText.Text=step.Text
+  self.ObjectiveProgressFill.Size=UDim2.fromScale(math.clamp((p.Tutorial.Step-1)/#T.Steps,0,1),1)
+  self.ObjectiveProgress.Visible=true
+ else
+  self.ObjectiveTitle.Text="JOURNEY  •  STEP "..tostring(p.Quests.JourneyStep or 1)
+  self.ObjectiveText.Text=self:JourneyText(p.Quests.JourneyStep)
+  self.ObjectiveProgress.Visible=false
+  if self.JourneyGuideController then self.JourneyGuideController:RenderObjective() end
+ end
+
+ self.CurrencyRows.Coins.Value.Text=compact(p.Currencies.Coins)
+ self.CurrencyRows.Honey.Value.Text=compact(p.Hive.Honey)
+ self.CurrencyRows.Hive.Value.Text="Level "..tostring(p.Hive.Level)
+ self.CurrencyRows.PetalDust.Value.Text=compact(p.Currencies.PetalDust)
+ self.CurrencyRows.PetalDust.Root.Visible=p.Tutorial.FeatureUnlocks.SeedSatchel==true
+ self.CurrencyRows.AncientNectar.Value.Text=compact(p.Currencies.AncientNectar)
+ self.CurrencyRows.AncientNectar.Root.Visible=(p.Season.Count or 0)>0 or (p.Currencies.AncientNectar or 0)>0
+
+ local rollStep=T.IndexById.Roll or math.huge
+ local rollUnlocked=p.Tutorial.FeatureUnlocks.Roll==true or p.Tutorial.Skipped==true or (tonumber(p.Tutorial.Step) or 1)>=rollStep
+ local inventoryOpen=self.MenuRenderer=="InventoryV2" and self.Menu~=nil
+ local gardenOpen=self.MenuRenderer=="GardenV1" and self.Menu~=nil
+ local rollSuppressed=inventoryOpen or gardenOpen
+ self.RollHUD.Visible=rollUnlocked and not rollSuppressed
+ self.Roll.Visible=rollUnlocked and not rollSuppressed
+ self.RouletteViewport.Visible=rollUnlocked and not rollSuppressed and (self.Auto or self.RouletteRunning or self.RouletteLanding)
+ if not rollUnlocked and (self.Auto or self.RouletteRunning or self.RouletteLanding) then
+  self.Auto=false
+  self:StopRouletteAnimation()
+ end
+
+ local special=p.RollState.SpecialRollReady==true
+ if self.Auto then
+  self.Roll.Text=""
+  self.Roll.BackgroundTransparency=1
+  if self.RollStroke then self.RollStroke.Color=C.Green end
+  self.RollIcon.Image=Icons.GetActionIcon("AutoRoll")
+ else
+  self.Roll.Text=""
+  self.Roll.BackgroundTransparency=1
+  if self.RollStroke then self.RollStroke.Color=special and C.Gold or C.Blue end
+  self.RollIcon.Image=Icons.GetActionIcon("Roll")
+ end
+ self.RollIcon.ImageColor3=C.White
+ if self.RollStatusDot then
+  self.RollStatusDot.BackgroundColor3=self.Auto and C.Green or C.Faint
+ end
+ if self.Auto and not self.RouletteRunning and not self.RouletteLanding then self:StartRouletteAnimation() end
+
+ local bloomMax=math.max(1,tonumber(BloomConfig.BloomMax) or 100)
+ local pityMax=math.max(1,math.floor(tonumber(BloomConfig.DiscoveryThreshold) or 30))
+ local charge=math.clamp(tonumber(p.RollState.BloomCharge) or 0,0,bloomMax)
+ local pity=math.clamp(math.floor(tonumber(p.RollState.DiscoveryPity) or 0),0,pityMax)
+ local bloomPercent=charge/bloomMax*100
+ self.MeterLabel.Text=string.format("BLOOM  %.0f%%     •     DISCOVERY  %d/%d",bloomPercent,pity,pityMax)..(p.WorkshopV5.Nodes.ROLL_4 and pity>=pityMax-1 and "  •  PITY READY" or "")
+ self.BloomFill.Size=UDim2.fromScale(charge/bloomMax,1)
+ self.MeterArea.Visible=rollUnlocked and (p.Tutorial.Step>=(T.IndexById.Delivery or 8) or p.Tutorial.Skipped)
+
  self:RefreshMenuDock()
  if not self:IsWorkshopExclusive() then
   self.GuideController:Update()
