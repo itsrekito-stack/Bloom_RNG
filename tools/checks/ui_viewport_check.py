@@ -6,10 +6,10 @@ model=json.loads((ROOT/'src/StarterGui/BloomUI.model.json').read_text(encoding='
 TARGETS=['ObjectiveCard','CurrencyHUD','QuestTrackerHUD','MenuDock','RollHUD','VerticalRoulette','RollButton','ActiveBoostsHUD']
 VIEWPORTS=[(1920,1080),(1366,768),(1280,720)]
 NO_OVERLAP=[('ObjectiveCard','VerticalRoulette'),('CurrencyHUD','QuestTrackerHUD'),('QuestTrackerHUD','MenuDock'),('CurrencyHUD','MenuDock'),('RollHUD','RollButton'),('ActiveBoostsHUD','RollButton'),('ActiveBoostsHUD','RollHUD')]
-DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Garden','Dock_Hive','Dock_Index','Dock_Workshop','Dock_Trials','Dock_Settings']
+DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Garden','Dock_Hive','Dock_Index','Dock_Workshop','Dock_Quests','Dock_Settings']
 MIN_HIT=44
 MENU_DOCK_MIN_Z=130
-EXPANDED_DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Garden','Dock_Hive','Dock_Index','Dock_Workshop','Dock_Trials','Dock_Settings']
+EXPANDED_DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Garden','Dock_Hive','Dock_Index','Dock_Workshop','Dock_Quests','Dock_Settings']
 
 def children(node): return node.get('Children',[]) or []
 def find(node,name):

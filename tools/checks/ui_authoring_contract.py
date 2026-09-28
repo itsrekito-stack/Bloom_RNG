@@ -61,7 +61,7 @@ nodes={n.get("Name"):n for n in walk(model)}
 for required in [
     "TutorialSpotlight","TutorialCallout","TutorialScreenArrow",
     "ActionHitboxTemplate","OverlayHitboxTemplate","SearchBoxTemplate","EmptyStateTemplate",
-    "QuestsPrototype","QuestCardTemplate","QuestList","Tab_Main","Tab_Activities","Tab_Trials","Tab_Completed",
+    "QuestsPrototype","QuestCardTemplate","QuestList","Tab_Main","Tab_Activities","Tab_Completed","SummaryQuests",
     "WorkshopTemplate","WorkshopBody","TreePanel","TreeCanvas","PanMap","NodeTooltip","WorkshopCurrencyBar",
     "WorkshopPoints","WorkshopCoins","WorkshopPetalDust","WorkshopAncientNectar",
     "StateKits","HoverScale","TutorialCompleteScale","WorkshopZoomScale",
@@ -71,7 +71,7 @@ for required in [
     "TraitFilterPanel","TraitFilterList","TraitChipTemplate","UnequipAllButton","EquippedBadge","InventoryHoverScale",
     "BeeSummary","PassiveRowTemplate","AbilityDescription",
     "LuckBadge","ScrollLeft","ScrollRight","UsedBadge","GhostBadge","CurrencyHelp",
-    "MenuDock","Dock_SeedSatchel","Dock_Garden","Dock_Hive","Dock_Index","Dock_Workshop","Dock_Trials","Dock_Settings",
+    "MenuDock","Dock_SeedSatchel","Dock_Garden","Dock_Hive","Dock_Index","Dock_Workshop","Dock_Quests","Dock_Settings",
     "HiveKit","HiveShell","RoadList","RoadNodeTemplate","UpgradeButton",
     "TraitBeeStrip","TraitBeeIconTemplate","EquipSynergyButton",
 ]:

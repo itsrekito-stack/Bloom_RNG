@@ -95,7 +95,7 @@ for text,label in [
     ('IndexViewed="Index"',"read-state refresh mapping"),
 ]:
     need(bloom,text,label)
-need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Hive","Index","Workshop","Trials","Settings"}) do',"Index opens from the authored bottom dock")
+need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Hive","Index","Workshop","Quests","Settings"}) do',"Index opens from the authored bottom dock")
 if 'controller:Open("Index"' in inventory:
     raise AssertionError("Inventory must not carry a second disconnected Index entry point")
 need(player,'elseif action=="IndexViewed" then return self.UIStateService:MarkIndexRead(p,a,b)',"IndexViewed server route")

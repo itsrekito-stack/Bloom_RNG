@@ -66,7 +66,7 @@ if 'controller:Send("FlowerUpgrade",item.Id)' in client:
 
 need(bloom,'function UI:OpenGardenMenu(slot)',"Garden editor entry point stays inside Garden menu")
 need(bloom,'GardenEditor.Render(self,p,ui)',"Garden editor renderer")
-need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Hive","Index","Workshop","Trials","Settings"}) do',"Garden/Hive dock button binding")
+need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Hive","Index","Workshop","Quests","Settings"}) do',"Garden/Hive dock button binding")
 need(bloom,'local controlsVisible=rollUnlocked and self.Menu==nil',"Roll controls hide while menus are open")
 need(bloom,'self.RouletteViewport.Visible=rollUnlocked and',"roulette remains running beneath menus")
 need(garden,'function S:GardenEdit(player,i,id)',"server Garden editor mutation path")
