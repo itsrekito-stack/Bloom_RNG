@@ -93,6 +93,11 @@ function S.Render(controller,profile,uiState)
 
  local flowers={}
  for _,entry in ipairs(inventory.Flowers or {}) do flowers[#flowers+1]=entry end
+ local usedById={}
+ for slotIndex,slot in ipairs(profile.Garden and profile.Garden.Slots or {}) do
+  local speciesId=slot and slot.SpeciesId
+  if speciesId and speciesId~="" then usedById[speciesId]=slotIndex end
+ end
  table.sort(flowers,function(a,b)
   local ar=Rarity.Rank[a.Rarity] or 0
   local br=Rarity.Rank[b.Rarity] or 0
@@ -110,12 +115,19 @@ function S.Render(controller,profile,uiState)
   if icon and icon:IsA("ImageLabel") then icon.Image=iconFor(entry.Id) end
   setText(card,"Name",entry.DisplayName or entry.Id)
   setText(card,"Meta","1/N "..tostring(entry.Odds or "1/—").."  •  Lv. "..tostring(entry.Mastery and entry.Mastery.Level or 1))
+  local usedSlot=usedById[entry.Id]
+  local usedBadge=card:FindFirstChild("UsedBadge")
+  if usedBadge and usedBadge:IsA("TextLabel") then
+   usedBadge.Visible=usedSlot~=nil
+   usedBadge.Text=usedSlot and ("USED • SLOT "..tostring(usedSlot)) or ""
+  end
+  card.BackgroundColor3=usedSlot and C.PanelHover or C.Panel
   local stroke=card:FindFirstChildOfClass("UIStroke")
   if stroke then
    local selected=state.SelectedFlowerId==entry.Id
-   stroke.Color=selected and C.Blue or C.BorderSoft
-   stroke.Thickness=selected and 2 or 1
-   stroke.Transparency=selected and .02 or .35
+   stroke.Color=selected and C.Blue or (usedSlot and C.Green or C.BorderSoft)
+   stroke.Thickness=selected and 2 or (usedSlot and 1.6 or 1)
+   stroke.Transparency=selected and .02 or (usedSlot and .08 or .35)
   end
   card.Activated:Connect(function()
    state.SelectedFlowerId=entry.Id

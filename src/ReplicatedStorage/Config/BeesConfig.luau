@@ -57,7 +57,7 @@ function C.GetAll()return C.Bees end
 function C.GetTrait(id:string)return C.Traits[id]end
 function C.GetChancePercent(id:string):number local b=C.Bees[id]local w=b and tonumber(b.DropWeight)or 0 return totalWeight>0 and math.max(0,w)/totalWeight*100 or 0 end
 function C.GetOdds(id:string):number local p=C.GetChancePercent(id)/100 return p>0 and 1/p or math.huge end
-function C.FormatOdds(id:string):string local x=C.GetOdds(id)return x==math.huge and"1/∞"or"1/"..compact(x)end
+function C.FormatOdds(id:string):string local x=C.GetOdds(id)if x==math.huge then return"1/∞"end local m=x<100 and 1 or 10^math.max(0,math.floor((math.log(x)/math.log(10)))-1)local rounded=x<100 and math.floor(x)or math.floor(x/m)*m return"1/"..string.format("%.0f",math.max(1,rounded))end
 function C.GetTraitBees(traitId:string):{string} local out={}for id,b in pairs(C.Bees)do for _,t in ipairs(b.Traits or{})do if t==traitId then out[#out+1]=id break end end end table.sort(out,function(a,b)local x,y=C.Get(a),C.Get(b)return(x and x.SortOrder or 999)<(y and y.SortOrder or 999)end)return out end
 local MULT_DEFAULT={PollinatorPowerMultiplier=1,PollinatorTravelSpeedMultiplier=1,PollinatorYieldMultiplier=1,FlowerGrowthMultiplier=1,LuckMultiplier=1,CoinMultiplier=1,ClonePowerMultiplier=1,AbilityCooldownMultiplier=1,AbilityDurationMultiplier=1,HiveHoneyMultiplier=1,BeeMasteryXPMultiplier=1,CriticalMultiplier=1}
 local ADD_DEFAULT={SplashChance=0,SplashPercent=0,CriticalChance=0,DualPollinationChance=0,DualPollinationPercent=0}

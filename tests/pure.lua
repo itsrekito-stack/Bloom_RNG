@@ -82,6 +82,13 @@ test("odds normalized, 10000 samples known",function()
  end
 end)
 
+test("player-facing odds are whole and coarsely rounded",function()
+ local Pool=require(rs.Config.RollPoolConfig)
+ assert(Pool.FormatOddsNumber(65.5)=="65")
+ assert(Pool.FormatOddsNumber(1739000)=="1700000")
+ assert(Pool.FormatOddsNumber(999)=="990")
+end)
+
 test("roll pool tolerates missing temporary runtime state",function()
  local p=Schema.CreateDefault()
  p.RollState.SpecialRollReady=true

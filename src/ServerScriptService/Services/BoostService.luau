@@ -320,6 +320,7 @@ function S:Snapshot(player,profile)
  }
 
  local items={}
+ local luckSummary=nil
  for id,meta in pairs(META) do
   local total=totals[id]
   local src=buckets[id] or {}
@@ -332,21 +333,27 @@ function S:Snapshot(player,profile)
    active=math.abs((tonumber(total) or 1)-1)>.0001
    valueText=multiplierText(total or 1,meta.Inverse)
   end
-  if active or #src>0 then
-   table.sort(src,function(a,b)
-    if a.Group==b.Group then return a.Name<b.Name end
-    return a.Group<b.Group
-   end)
-   table.insert(items,{
-    Id=id,
-    Label=meta.Label,
-    Order=meta.Order,
-    IconGroup=meta.IconGroup,
-    IconId=meta.IconId,
-    ValueText=valueText,
-    Total=total,
-    Sources=src,
-   })
+  table.sort(src,function(a,b)
+   if a.Group==b.Group then return a.Name<b.Name end
+   return a.Group<b.Group
+  end)
+  local item={
+   Id=id,
+   Label=meta.Label,
+   Order=meta.Order,
+   IconGroup=meta.IconGroup,
+   IconId=meta.IconId,
+   ValueText=valueText,
+   Total=total,
+   Sources=src,
+  }
+  if id=="Luck" then
+   local bonus=math.max(0,math.floor(((tonumber(total) or 1)-1)*100+.5))
+   item.ValueText=bonus==0 and "0%" or ("+"..tostring(bonus).."%")
+   item.LuckBonusPercent=bonus
+   luckSummary=item
+  elseif active or #src>0 then
+   table.insert(items,item)
   end
  end
 
@@ -405,7 +412,7 @@ function S:Snapshot(player,profile)
   if a.Order==b.Order then return a.Label<b.Label end
   return a.Order<b.Order
  end)
- return {Items=items}
+ return {Items=items,Luck=luckSummary or {Id="Luck",Label="Luck",Order=0,IconGroup="WorkshopHex",IconId="Luck",ValueText="0%",Total=1,LuckBonusPercent=0,Sources={}}}
 end
 
 function S:Remove(player)

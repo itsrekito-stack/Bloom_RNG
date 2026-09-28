@@ -242,7 +242,9 @@ def merge_remote_changes(base, local, remote):
 REQUIRED_RUNTIME_UI_CHILDREN = {
     "ObjectiveCard", "CurrencyHUD", "MenuDock", "RollHUD", "VerticalRoulette",
     "TutorialGuideBanner", "Toast", "ModalShade", "MainPanel", "RewardReveal",
-    "ActiveBoostsHUD", "ActiveBoostTooltip", "MinimizeButton",
+    "ActiveBoostsHUD", "ActiveBoostTooltip", "MinimizeButton", "LuckBadge", "ScrollLeft", "ScrollRight",
+    "TraitFilterPanel", "TraitFilterList", "TraitChipTemplate", "UsedBadge", "MenuNav", "CurrencyHelp",
+    "Nav_Inventory", "Nav_Garden", "Nav_Index", "Nav_Workshop", "Nav_Quests", "Nav_Settings",
     "TutorialSpotlight", "TutorialCallout", "TutorialScreenArrow", "StateKits",
     "ActionHitboxTemplate", "OverlayHitboxTemplate", "SearchBoxTemplate", "EmptyStateTemplate",
     "HoverScale", "TutorialCompleteScale", "SlotScale", "WorkshopZoomScale",

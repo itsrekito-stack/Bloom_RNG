@@ -96,6 +96,13 @@ need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Index","Workshop","Tri
 if 'controller:Open("Index"' in inventory:
     raise AssertionError("Inventory must not carry a second disconnected Index entry point")
 need(player,'elseif action=="IndexViewed" then return self.UIStateService:MarkIndexRead(p,a,b)',"IndexViewed server route")
+need(controller,'if controller.BindMenuNavigation then controller:BindMenuNavigation(root) end',"Index authored menu navigation binding")
+need(bloom,'function UI:BindMenuNavigation(root)',"shared menu navigation binder")
+for name in ("Nav_Inventory","Nav_Garden","Nav_Workshop","Nav_Quests","Nav_Settings"):
+    if not find(model,name): raise AssertionError(f"Index/menu navigation node missing: {name}")
+index_blob=str(model)
+if "Petal Dust: earn from Server Bloom" not in index_blob or "Ancient Nectar: earn by completing Seasons" not in index_blob:
+    raise AssertionError("Index currency acquisition guidance missing")
 need(remote,'elseif action=="IndexViewed" then',"IndexViewed schema")
 
 # UI Studio exposes the authored fullscreen shell.

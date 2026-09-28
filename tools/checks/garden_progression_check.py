@@ -15,6 +15,7 @@ synergy=read("src/ServerScriptService/Services/GardenSynergyService.luau")
 recipes=read("src/ReplicatedStorage/Config/GardenSynergyConfig.luau")
 domain=read("src/ServerScriptService/Data/ProfileDomain.luau")
 presentation=read("src/StarterPlayer/StarterPlayerScripts/Controllers/GardenPresentationController.luau")
+editor=read("src/StarterPlayer/StarterPlayerScripts/Controllers/GardenEditorController.luau")
 activity_cfg=read("src/ReplicatedStorage/Config/ActivityConfig.luau")
 activity_service=read("src/ServerScriptService/Services/GardenActivityService.luau")
 
@@ -52,6 +53,15 @@ need(recipes,'Id="MeadowRing",Name="Sevenfold Garden"',"seven-flower high-tier s
 need(recipes,'Species={"Daisy","Tulip","Sunflower","Clover","CrystalRose","FrostLily","PrismBloom"}',"seven-flower synergy matches garden cap")
 need(recipes,"Levels={","synergies can require per-Flower levels")
 need(recipes,"Strength=","synergy strength hierarchy exists")
+need(recipes,'Id="SunlitPatch"', "additional early synergy ships")
+need(recipes,'Id="PrismaticMoon"', "additional midgame synergy ships")
+need(recipes,'Id="EclipseGarden"', "additional high-tier synergy ships")
+need(recipes,'Id="CelestialCrown"', "additional endgame synergy ships")
+if recipes.count('Id="')<17:
+    raise AssertionError("expanded synergy catalog regressed below 17 recipes")
+need(editor,'local usedById={}',"Garden derives used Flower set")
+need(editor,'local usedBadge=card:FindFirstChild("UsedBadge")',"authored used badge binding")
+need(editor,'usedBadge.Text=usedSlot and ("USED • SLOT "..tostring(usedSlot)) or ""',"used Flower slot copy")
 
 need(domain,'error("DUPLICATE_GARDEN_SPECIES:"..id)',"profile validation rejects duplicated planted species")
 need(domain,'D.Archive(p,"Garden.LegacySlotProgress"', "legacy slot Level/XP is archived")

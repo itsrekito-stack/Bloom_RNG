@@ -14,7 +14,8 @@ assert spec and spec.loader
 spec.loader.exec_module(module)
 
 required={"ActiveBoostsHUD","ActiveBoostTooltip"}
-required_nested={"MinimizeButton"}
+boost_required={"MinimizeButton","LuckBadge","ScrollLeft","ScrollRight"}
+additional_required={"TraitFilterPanel","TraitFilterList","TraitChipTemplate","UsedBadge","MenuNav","CurrencyHelp","Nav_Inventory","Nav_Garden","Nav_Index","Nav_Workshop","Nav_Quests","Nav_Settings"}
 workshop_required={
     "WorkshopTemplate","WorkshopBody","TreePanel","TreeCanvas","PanMap",
     "NodeTooltip","WorkshopCurrencyBar","WorkshopPoints","WorkshopCoins","WorkshopPetalDust","WorkshopAncientNectar",
@@ -34,12 +35,12 @@ names={x.get("Name") for x in merged["Children"]}
 assert "ActiveBoostsHUD" in names, "required runtime child was lost by Python AI-sync merge"
 assert "OptionalLocalPanel" not in names, "ordinary local deletion should still be preserved"
 
-base_hud=node("ActiveBoostsHUD",[node("MinimizeButton")])
+base_hud=node("ActiveBoostsHUD",[node("MinimizeButton"),node("LuckBadge"),node("ScrollLeft"),node("ScrollRight")])
 local_hud=node("ActiveBoostsHUD",[])
-remote_hud=node("ActiveBoostsHUD",[node("MinimizeButton")])
+remote_hud=node("ActiveBoostsHUD",[node("MinimizeButton"),node("LuckBadge"),node("ScrollLeft"),node("ScrollRight")])
 merged_hud=module.merge_remote_changes(base_hud,local_hud,remote_hud)
 nested_names={x.get("Name") for x in merged_hud["Children"]}
-assert "MinimizeButton" in nested_names, "required nested minimize control was lost by Python AI-sync merge"
+assert {"MinimizeButton","LuckBadge","ScrollLeft","ScrollRight"}<=nested_names, "required boost controls were lost by Python AI-sync merge"
 
 # Regression for the Studio failure seen after Workshop V2 landed: local UI Studio state
 # may still contain WorkshopBody without the newly required tooltip/currency overlay.
@@ -73,7 +74,9 @@ model_names={x.get("Name") for x in safe.get("Children",[])}
 assert required<=model_names, f"remote authored model missing required boost nodes: {sorted(required-model_names)}"
 boost_root=next(x for x in safe.get("Children",[]) if x.get("Name")=="ActiveBoostsHUD")
 boost_child_names={x.get("Name") for x in boost_root.get("Children",[])}
-assert required_nested<=boost_child_names, f"remote authored boost HUD missing controls: {sorted(required_nested-boost_child_names)}"
+assert boost_required<=boost_child_names, f"remote authored boost HUD missing controls: {sorted(boost_required-boost_child_names)}"
+missing_additional=sorted(name for name in additional_required if name not in all_nodes)
+assert not missing_additional, f"remote authored model missing new runtime controls: {missing_additional}"
 
 missing_workshop=sorted(name for name in workshop_required if name not in all_nodes)
 assert not missing_workshop, f"remote authored Workshop missing sync-critical nodes: {missing_workshop}"
@@ -84,7 +87,7 @@ model_tooltip_children={x.get("Name") for x in model_tooltip.get("Children",[])}
 assert {"Title","Branch","Effect","Cost","Hint","Accent"}<=model_tooltip_children
 
 assert "fn is_required_runtime_ui_child(value: &Value) -> bool" in RUST
-for name in sorted(required|required_nested|workshop_required):
+for name in sorted(required|boost_required|additional_required|workshop_required):
     assert f'"{name}"' in RUST, f"RoFlow merge protection missing {name}"
 assert "if is_required_runtime_ui_child(r) || b != r" in RUST
 

@@ -33,6 +33,15 @@ need(ui,'tonumber(BloomConfig.BloomMax)',"HUD Bloom meter uses configured max")
 if 'DISCOVERY' in ui or 'DiscoveryThreshold' in ui:
     raise AssertionError("Discovery pity must stay hidden from the player-facing Bloom HUD")
 need(ui,'self:FindRouletteTarget(payload)',"roulette lands on server result")
+need(pool,'function S.FormatOddsNumber(n)',"whole-number player-facing odds formatter")
+need(ui,'RollPool.FormatOddsNumber(odds)',"roulette uses shared rounded odds")
+need(ui,'function UI:PrepareRouletteLandingTarget(targetIndex,stepCount)',"landing target prepared without reel jump")
+need(ui,'self:PrepareRouletteLandingTarget(target,#steps)',"settle sequence prepositions reward")
+need(ui,'function UI:StepRoulette(duration,generation)',"roulette step is sequential only")
+assert 'self.RouletteCursor=((targetIndex-2)%#pool)+1' not in ui, "roulette must not jump the cursor before landing"
+need(ui,'local controlsVisible=rollUnlocked and self.Menu==nil',"menus hide roll controls only")
+need(ui,'self.RouletteViewport.Visible=rollUnlocked and',"roulette remains below open menus")
+assert 'if payload.Action=="Roll" and self.Auto' not in ui, "server roll rejection must not silently stop auto-roll"
 need(ui,'Normal roll rewards are shown only by the roulette itself.',"normal roll has no duplicate RewardReveal")
 
 print("roll / bloom / pity contract: PASS")

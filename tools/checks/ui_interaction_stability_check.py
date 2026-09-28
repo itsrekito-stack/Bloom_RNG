@@ -51,5 +51,10 @@ need(ui,'gui.Visible=visible',"Workshop restores exact pre-open state")
 need(ui,'self:RestoreWorkshopHUDVisibility()',"Workshop close restores snapshot before render")
 need(ui,'if self.BoostHUD then self.BoostHUD:SetSuppressed(false) end',"Workshop restores Active Boosts suppression")
 
+workshop_objects=ui[ui.index("function UI:WorkshopHUDObjects()"):ui.index("function UI:CaptureWorkshopHUDVisibility()")]
+assert "self.RouletteViewport" not in workshop_objects, "fullscreen menu must layer above roulette instead of stopping/hiding it"
+workshop_focus=ui[ui.index("function UI:SetWorkshopFocus"):ui.index("function UI:CaptureIndexHUDVisibility")]
+assert "self:StopRouletteAnimation()" not in workshop_focus and "self.Auto=false" not in workshop_focus, "Workshop open must preserve roulette session"
+
 print("UI interaction stability contract: PASS")
 print("Background state sync cannot reset Settings scroll or destroy stable hover targets.")

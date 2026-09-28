@@ -215,6 +215,13 @@ function S:ShowTooltip(item)
     memberStroke.Transparency=isEquipped and .16 or .62
    end
    member.Parent=beeStrip
+   member.MouseEnter:Connect(function()
+    local bee=Bees.Get(beeId)
+    if bees and bees:IsA("TextLabel") then bees.Text="TRAIT BEES  •  "..tostring(bee and bee.DisplayName or beeId) end
+   end)
+   member.MouseLeave:Connect(function()
+    if bees and bees:IsA("TextLabel") then bees.Text="TRAIT BEES" end
+   end)
   end
  end
  self.Tooltip.Visible=true

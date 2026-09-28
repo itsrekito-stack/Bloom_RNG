@@ -67,7 +67,13 @@ need(hud,'TweenService:Create(scale',"boost hover scale feedback")
 need(hud,'function S:SetMinimized(minimized,animate)',"boost HUD minimize state")
 need(hud,'self.Toggle.Activated:Connect',"authored minimize button binding")
 need(hud,'self.Toggle.Text=self.Minimized and "+" or "−"', "minimize/expand visual state")
-need(hud,'self.List.Visible=not self.Minimized and self.ItemCount>0',"collapsed list visibility")
+need(hud,'self.List.Visible=not self.Minimized',"expanded list always contains static Luck")
+need(hud,'self.LuckBadge=self.List and self.List:FindFirstChild("LuckBadge")',"authored static Luck badge binding")
+need(hud,'self.ScrollLeft=self.Root:FindFirstChild("ScrollLeft")',"left boost scroll control")
+need(hud,'self.ScrollRight=self.Root:FindFirstChild("ScrollRight")',"right boost scroll control")
+need(hud,'TweenService:Create(self.List',"horizontal boost scrolling")
+need(boosts,'Luck=luckSummary or {Id="Luck"', "server always projects Luck summary")
+need(boosts,'item.ValueText=bonus==0 and "0%"', "zero Luck remains visible")
 need(hud,'function S:ApplyResponsiveLayout(width)',"collapsed HUD responsive sizing")
 need(hud,'local contentWidth=16+count*52+math.max(0,count-1)*6',"boost-count-driven panel width")
 need(hud,'local expandedWidth=math.clamp(contentWidth,168,maxWidth)',"compact boost panel width clamp")
@@ -81,6 +87,9 @@ root=nodes.get("ActiveBoostsHUD")
 tooltip=nodes.get("ActiveBoostTooltip")
 template=nodes.get("BoostTemplate")
 minimize=nodes.get("MinimizeButton")
+luck_badge=nodes.get("LuckBadge")
+scroll_left=nodes.get("ScrollLeft")
+scroll_right=nodes.get("ScrollRight")
 if not root or root.get("ClassName")!="Frame":
     raise AssertionError("authored ActiveBoostsHUD frame missing")
 if not tooltip or tooltip.get("ClassName")!="Frame":
@@ -89,6 +98,12 @@ if not template or template.get("ClassName")!="ImageButton":
     raise AssertionError("authored BoostTemplate button missing")
 if not minimize or minimize.get("ClassName")!="TextButton":
     raise AssertionError("authored Active Boosts minimize button missing")
+if not luck_badge or luck_badge.get("ClassName")!="ImageButton" or luck_badge.get("Properties",{}).get("Visible") is not True:
+    raise AssertionError("static Luck badge must stay authored and visible")
+if luck_badge.get("Properties",{}).get("LayoutOrder")!=0:
+    raise AssertionError("static Luck badge must render before all dynamic boosts")
+if not scroll_left or not scroll_right:
+    raise AssertionError("horizontal Active Boost navigation controls missing")
 if template.get("Properties",{}).get("Visible") is not False:
     raise AssertionError("BoostTemplate must stay authored but hidden")
 if root.get("Properties",{}).get("AnchorPoint",{}).get("Vector2") != [0,1]:

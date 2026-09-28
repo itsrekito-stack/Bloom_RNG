@@ -201,6 +201,7 @@ function Index.Render(controller,profile,uiState)
  root.Position=UDim2.fromScale(0,0)
  root.LayoutOrder=1
  root.Parent=controller.Content
+ if controller.BindMenuNavigation then controller:BindMenuNavigation(root) end
 
  local nav=root:WaitForChild("CategoryNav")
  local catalog=root:WaitForChild("CatalogPanel")

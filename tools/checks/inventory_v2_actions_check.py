@@ -17,13 +17,17 @@ bloom=read("src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau")
 for text,label in [
  ('CATEGORY_ORDER={"Bees","Resources","Special"}',"Flowers removed from Inventory categories"),
  ('SORT_ORDER={"Rarity","Name","Count"}',"sort modes"),
- ('FILTER_ORDER={"All","Favorite","Protected","Available"}',"filter modes"),
- ('local function filteredItems(source,search,filter,sortMode)',"search/filter/sort pipeline"),
+ ('local function matchesTrait(item,traitId)',"Bee trait filter predicate"),
+ ('local function availableTraits(bees)',"owned-Bee trait availability"),
+ ('local function filteredItems(source,search,filter,sortMode,traitId)',"search/filter/sort/trait pipeline"),
  ('setupSearch(searchBar,state,refreshGrid)',"search binding"),
  ('local gridLayout=grid:FindFirstChildOfClass("UIGridLayout")',"authored grid layout binding"),
  ('card.Position=UDim2.fromOffset',"non-creating card placement fallback"),
  ('state.Sort=cycle(SORT_ORDER,state.Sort)',"sort cycling"),
- ('state.Filter=cycle(FILTER_ORDER,state.Filter)',"filter cycling"),
+ ('local traitPanel=browser:WaitForChild("TraitFilterPanel")',"authored trait filter panel"),
+ ('local traitTemplate=traitList:WaitForChild("TraitChipTemplate")',"authored trait chip template"),
+ ('filterButton.Text=selectedTrait and ("TRAITS • "..tostring(selectedTrait.Name)) or "TRAITS"',"Trait filter button copy"),
+ ('state.TraitFilter=traitId',"Trait selection state"),
 ]:
     need(client,text,label)
 
@@ -53,7 +57,8 @@ if 'controller:Send("FlowerUpgrade",item.Id)' in client:
 need(bloom,'function UI:OpenGardenMenu(slot)',"Garden editor entry point stays inside Garden menu")
 need(bloom,'GardenEditor.Render(self,p,ui)',"Garden editor renderer")
 need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Index","Workshop","Trials","Settings"}) do',"Garden dock button binding")
-need(bloom,'local visible=rollUnlocked and self.Menu==nil',"Roll hidden while menus are open")
+need(bloom,'local controlsVisible=rollUnlocked and self.Menu==nil',"Roll controls hide while menus are open")
+need(bloom,'self.RouletteViewport.Visible=rollUnlocked and',"roulette remains running beneath menus")
 need(garden,'function S:GardenEdit(player,i,id)',"server Garden editor mutation path")
 need(garden,'temp.MenuOpen~=true or temp.MenuName~="Garden"',"Garden menu required for edits")
 if 'action=="Plant"' in player:

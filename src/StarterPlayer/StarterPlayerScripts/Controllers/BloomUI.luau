@@ -16,6 +16,7 @@ local R=require(RS.Config.RarityConfig)
 local Theme=require(RS.Config.UIThemeConfig)
 local RollAudio=require(RS.Config.RollAudioConfig)
 local BloomConfig=require(RS.Config.BloomConfig)
+local RollPool=require(RS.Config.RollPoolConfig)
 local NumberFormatter=require(RS.Shared.NumberFormatter)
 local WorkshopEffects=require(RS.Shared.WorkshopEffects)
 local InventoryV2=require(script.Parent.InventoryV2Controller)
@@ -311,7 +312,7 @@ end
 
 function UI:WorkshopHUDObjects()
  return {
-  self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.QuestTracker,self.RollHUD,self.Roll,self.RouletteViewport,
+  self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.QuestTracker,self.RollHUD,self.Roll,
   self.Guide,self.ToastRoot,self.Reveal,
  }
 end
@@ -353,8 +354,6 @@ function UI:SetWorkshopFocus(active)
  if active then
   self:CaptureWorkshopHUDVisibility()
   self.WorkshopFocus=true
-  self.Auto=false
-  self:StopRouletteAnimation()
   self.ToastUntil=nil
   self:ApplyWorkshopFocusVisibility()
  else
@@ -403,8 +402,6 @@ function UI:SetIndexFocus(active)
  if active then
   self:CaptureIndexHUDVisibility()
   self.IndexFocus=true
-  self.Auto=false
-  self:StopRouletteAnimation()
   self.ToastUntil=nil
   self:ApplyIndexFocusVisibility()
  else
@@ -948,6 +945,7 @@ function UI:RenderMenu(preserveInteraction)
    shell.LayoutOrder=1
    self.WorkshopRuntime=shell
    self.WorkshopZoomLabel=nil
+   self:BindMenuNavigation(shell)
    structure=workshopStructure(shell)
    if not structure then error("[BloomUI] WorkshopRuntime clone failed authored structure validation") end
   end
@@ -1250,11 +1248,11 @@ function UI:RefreshRollHUDVisibility()
  local p=self.State.Profile
  local rollUnlocked=p.Tutorial.FeatureUnlocks.Roll==true or p.Tutorial.Skipped==true
  local tutorialActive,tutorialAllowed=self:TutorialRollState()
- local visible=rollUnlocked and self.Menu==nil
- local enabled=visible and (not tutorialActive or tutorialAllowed) and not self.Pending
+ local controlsVisible=rollUnlocked and self.Menu==nil
+ local enabled=controlsVisible and (not tutorialActive or tutorialAllowed) and not self.Pending
 
- self.RollHUD.Visible=visible
- self.Roll.Visible=visible
+ self.RollHUD.Visible=controlsVisible
+ self.Roll.Visible=controlsVisible
  self.Roll.Active=enabled
  self.Roll.Selectable=enabled
  if self.RollIcon then
@@ -1262,12 +1260,12 @@ function UI:RefreshRollHUDVisibility()
   self.RollIcon.ImageTransparency=enabled and 0 or .48
  end
  if self.RollTutorialLock then
-  self.RollTutorialLock.Visible=visible and tutorialActive and not tutorialAllowed
+  self.RollTutorialLock.Visible=controlsVisible and tutorialActive and not tutorialAllowed
   self.RollTutorialLock.Text="COMPLETE THE TUTORIAL TO ROLL AGAIN"
  end
 
  local spinning=self.RouletteRunning or self.RouletteLanding
- self.RouletteViewport.Visible=visible and (self.RouletteLanding or ((not tutorialActive or tutorialAllowed) and (self.Auto or spinning)))
+ self.RouletteViewport.Visible=rollUnlocked and (self.RouletteLanding or ((not tutorialActive or tutorialAllowed) and (self.Auto or spinning)))
  return rollUnlocked
 end
 
@@ -1296,6 +1294,35 @@ function UI:OpenDockMenu(name)
   self:Close()
  end
  self:Open(name)
+end
+
+function UI:BindMenuNavigation(root)
+ if not root then return end
+ local nav=root:FindFirstChild("MenuNav",true)
+ if not nav then return end
+ local targets={
+  Nav_Inventory="SeedSatchel",
+  Nav_Garden="Garden",
+  Nav_Index="Index",
+  Nav_Workshop="Workshop",
+  Nav_Quests="Trials",
+  Nav_Settings="Settings",
+ }
+ for buttonName,menuName in pairs(targets) do
+  local button=nav:FindFirstChild(buttonName)
+  if button and button:IsA("GuiButton") and not button:GetAttribute("BloomNavBound") then
+   button:SetAttribute("BloomNavBound",true)
+   button.MouseEnter:Connect(function()
+    TweenService:Create(button,TweenInfo.new(.10),{BackgroundColor3=C.PanelHover}):Play()
+   end)
+   button.MouseLeave:Connect(function()
+    TweenService:Create(button,TweenInfo.new(.10),{BackgroundColor3=C.Panel}):Play()
+   end)
+   button.Activated:Connect(function()
+    self:OpenDockMenu(menuName)
+   end)
+  end
+ end
 end
 
 function UI:RefreshMenuDock()
@@ -1365,34 +1392,54 @@ function UI:RenderQuestTracker()
 
  local hiveCurrent=math.max(0,tonumber(hive.Current) or 0)
  local hiveTarget=math.max(1,tonumber(hive.Target) or 1)
- setRow(
-  self.QuestRows[1],
-  hive.Title=="Hive MAX" and "HIVE QUEST" or ("HIVE QUEST  •  LV."..tostring(hive.Level or (p.Hive.Level+1))),
-  tostring(hive.Text or "Grow your Hive"),
-  hive.Complete and "READY" or (compact(hiveCurrent).." / "..compact(hiveTarget)),
-  hive.Complete and C.Green or C.Honey
- )
+ local hiveRow=self.QuestRows[1]
+ local hideHive=hive.Complete==true or hive.Title=="Hive MAX"
+ hiveRow.Visible=not hideHive
+ if not hideHive then
+  setRow(
+   hiveRow,
+   "HIVE QUEST  •  LV."..tostring(hive.Level or (p.Hive.Level+1)),
+   tostring(hive.Text or "Grow your Hive"),
+   compact(hiveCurrent).." / "..compact(hiveTarget),
+   C.Honey
+  )
+ end
 
  local journeyStep=math.max(1,tonumber(p.Quests.JourneyStep) or 1)
  local journeyDone=journeyStep>#JOURNEY
- setRow(
-  self.QuestRows[2],
-  "JOURNEY  •  STEP "..tostring(math.min(journeyStep,#JOURNEY)),
-  journeyDone and "Journey complete" or self:JourneyText(journeyStep),
-  journeyDone and "DONE" or (tostring(journeyStep).." / "..tostring(#JOURNEY)),
-  journeyDone and C.Green or C.Blue
- )
+ local journeyRow=self.QuestRows[2]
+ journeyRow.Visible=not journeyDone
+ if not journeyDone then
+  setRow(
+   journeyRow,
+   "JOURNEY  •  STEP "..tostring(math.min(journeyStep,#JOURNEY)),
+   self:JourneyText(journeyStep),
+   tostring(journeyStep).." / "..tostring(#JOURNEY),
+   C.Blue
+  )
+ end
 
  local bloomMax=math.max(1,tonumber(BloomConfig.BloomMax) or 100)
  local bloomCharge=math.clamp(tonumber(p.RollState.BloomCharge) or 0,0,bloomMax)
  local bloomReady=p.RollState.SpecialRollReady==true
+ local bloomRow=self.QuestRows[3]
+ bloomRow.Visible=true
  setRow(
-  self.QuestRows[3],
+  bloomRow,
   "BLOOM QUEST",
   bloomReady and "Use your Bloom Roll" or "Fill the Bloom Meter",
-  bloomReady and "READY" or (tostring(math.floor(bloomCharge+.5)).." / "..tostring(bloomMax)),
+  bloomReady and "ROLL READY" or (tostring(math.floor(bloomCharge+.5)).." / "..tostring(bloomMax)),
   bloomReady and C.Gold or C.Nectar
  )
+
+ local visibleCount=0
+ for _,row in ipairs(self.QuestRows) do
+  if row.Visible then
+   row.Position=UDim2.fromOffset(8,22+visibleCount*43)
+   visibleCount+=1
+  end
+ end
+ self.QuestTracker.Size=UDim2.fromOffset(250,26+visibleCount*43)
 end
 
 function UI:ApplyResponsiveLayout(width,height)
@@ -1586,7 +1633,7 @@ function UI:SetRouletteSlot(slot,data,role)
  end
  if chance and chance:IsA("TextLabel") then
   local odds=tonumber(data.Odds)
-  chance.Text=odds and odds<math.huge and ("1 / "..compact(math.max(1,math.floor(odds+.5)))) or "1 / ∞"
+  chance.Text=odds and odds<math.huge and ("1 / "..RollPool.FormatOddsNumber(odds)) or "1 / ∞"
   local showRarity=not self.State or not self.State.Profile or self.State.Profile.Settings.ShowRarityColors~=false
   chance.TextColor3=current and C.Gold or (showRarity and color or C.Muted)
   chance.TextTransparency=faint
@@ -1649,21 +1696,20 @@ function UI:PlayRouletteRewardSound()
  s.PlaybackSpeed=RollAudio.RewardPlaybackSpeed s:Play()
 end
 
-function UI:StepRoulette(duration,targetIndex,generation)
+function UI:StepRoulette(duration,generation)
  local pool=self.RouletteVisualPool
  if not pool or #pool==0 or not self.RouletteStrip then return false end
- if targetIndex then
-  self.RouletteCursor=((targetIndex-2)%#pool)+1
-  self:RefreshRouletteSlots()
- end
  self.RouletteStrip.Position=UDim2.fromOffset(0,0)
  local quick=self.State and self.State.Profile and self.State.Profile.Settings.QuickRoll==true
  local actualDuration=duration*(quick and .58 or 1)
- local tween=TweenService:Create(self.RouletteStrip,TweenInfo.new(actualDuration,Enum.EasingStyle.Linear),{Position=UDim2.fromOffset(0,RollAudio.StepPixels)})
- self.RouletteTween=tween self:PlayRouletteTick() tween:Play() tween.Completed:Wait()
+ local tween=TweenService:Create(self.RouletteStrip,TweenInfo.new(actualDuration,Enum.EasingStyle.Linear,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(0,RollAudio.StepPixels)})
+ self.RouletteTween=tween
+ self:PlayRouletteTick()
+ tween:Play()
+ tween.Completed:Wait()
  if generation and generation~=self.RouletteGeneration then return false end
  if self.RouletteTween==tween then self.RouletteTween=nil end
- if targetIndex then self.RouletteCursor=targetIndex else self.RouletteCursor=(self.RouletteCursor%#pool)+1 end
+ self.RouletteCursor=(self.RouletteCursor%#pool)+1
  self.RouletteStrip.Position=UDim2.fromOffset(0,0)
  self:RefreshRouletteSlots()
  return true
@@ -1677,7 +1723,7 @@ function UI:StartRouletteAnimation()
  local generation=self.RouletteGeneration
  task.spawn(function()
   while self.RouletteRunning and not self.RouletteLanding and generation==self.RouletteGeneration and self.Gui and self.Gui.Parent do
-   if not self:StepRoulette(RollAudio.CruiseStep,nil,generation) then break end
+   if not self:StepRoulette(RollAudio.CruiseStep,generation) then break end
   end
   if generation==self.RouletteGeneration and self.RouletteStrip then self.RouletteStrip.Position=UDim2.fromOffset(0,0) end
   if generation==self.RouletteGeneration then self.RouletteTween=nil end
@@ -1734,6 +1780,16 @@ function UI:FindRouletteTarget(payload)
  if icon=="" then icon=Icons.Get("System",payload.Kind=="Bee" and "Bee" or "Flower") end
  table.insert(pool,{Id=payload.Id,Kind=payload.Kind,DisplayName=payload.DisplayName or payload.Id or "Reward",Rarity=payload.Rarity or "Common",Icon=icon,Odds=payload.Odds,Chance=payload.Chance})
  self.RouletteVisualPool=pool return #pool
+end
+
+function UI:PrepareRouletteLandingTarget(targetIndex,stepCount)
+ local pool=self.RouletteVisualPool or {}
+ if #pool==0 or not targetIndex then return end
+ local desired=((self.RouletteCursor-1+math.max(1,stepCount or 1))%#pool)+1
+ if targetIndex~=desired then
+  pool[targetIndex],pool[desired]=pool[desired],pool[targetIndex]
+ end
+ self.RouletteVisualPool=pool
 end
 
 function UI:SetRareRollFocus(active,rarity)
@@ -1809,10 +1865,10 @@ function UI:ResolveRouletteReward(payload)
   local revealScale=WorkshopEffects.Value(profile,"ROLL_3","RevealScale",1)
   local target=self:FindRouletteTarget(payload)
   local steps=RollAudio.SettleSteps
-  for i,duration in ipairs(steps) do
+  self:PrepareRouletteLandingTarget(target,#steps)
+  for _,duration in ipairs(steps) do
    if generation~=self.RouletteGeneration then break end
-   local final=i==#steps
-   if not self:StepRoulette(duration*revealScale,final and target or nil,generation) then break end
+   if not self:StepRoulette(duration*revealScale,generation) then break end
   end
   if generation==self.RouletteGeneration then
    local quick=self.State and self.State.Profile and self.State.Profile.Settings.QuickRoll==true
@@ -2013,13 +2069,37 @@ local function validateBloomGui(gui)
  for _,name in ipairs(REQUIRED_AUTHORED_UI) do
   if not root:FindFirstChild(name) then table.insert(missing,name) end
  end
+  local boosts=root:FindFirstChild("ActiveBoostsHUD")
+  if boosts then
+   for _,name in ipairs({"LuckBadge","ScrollLeft","ScrollRight"}) do
+    if not boosts:FindFirstChild(name,true) then table.insert(missing,"ActiveBoostsHUD/"..name) end
+   end
+  end
  local panel=root:FindFirstChild("MainPanel")
  if panel then
   for _,name in ipairs({"InventoryPrototype","WorkshopTemplate","QuestsPrototype","IndexPrototype"}) do
    if not panel:FindFirstChild(name) then table.insert(missing,"MainPanel/"..name) end
   end
+   local inventoryPrototype=panel:FindFirstChild("InventoryPrototype")
+   if inventoryPrototype then
+    for _,name in ipairs({"TraitFilterPanel","TraitFilterList","TraitChipTemplate"}) do
+     if not inventoryPrototype:FindFirstChild(name,true) then table.insert(missing,"InventoryPrototype/"..name) end
+    end
+   end
+   local workshopTemplate=panel:FindFirstChild("WorkshopTemplate")
+   if workshopTemplate then
+    for _,name in ipairs({"MenuNav","CurrencyHelp"}) do
+     if not workshopTemplate:FindFirstChild(name,true) then table.insert(missing,"WorkshopTemplate/"..name) end
+    end
+   end
+   local indexPrototype=panel:FindFirstChild("IndexPrototype")
+   if indexPrototype and not indexPrototype:FindFirstChild("MenuNav",true) then table.insert(missing,"IndexPrototype/MenuNav") end
   local stateKits=panel:FindFirstChild("StateKits")
-  if not stateKits or not stateKits:FindFirstChild("GardenKit") then table.insert(missing,"MainPanel/StateKits/GardenKit") end
+   if not stateKits or not stateKits:FindFirstChild("GardenKit") then
+    table.insert(missing,"MainPanel/StateKits/GardenKit")
+   elseif not stateKits.GardenKit:FindFirstChild("UsedBadge",true) then
+    table.insert(missing,"MainPanel/StateKits/GardenKit/UsedBadge")
+   end
  end
  for _,name in ipairs(RETIRED_MENU_GUI) do
   if root:FindFirstChild(name,true) then table.insert(missing,"retired:"..name) end
@@ -2263,7 +2343,6 @@ function UI:Start()
     if refreshMenu and self.Menu==refreshMenu then self.MenuRefreshRequested=true end
    end
    if relevant and not payload.OK then
-    if payload.Action=="Roll" and self.Auto and rollSession==(self.RollSession or 0) then self:SetAutoRolling(false) end
     local silentActivity=payload.Action=="Activity" and (
      payload.Reason=="STALE_ACTIVITY"
      or payload.Reason=="ACTIVITY_EXPIRED"
@@ -2400,9 +2479,11 @@ function UI:Start()
    if self.Auto and not self.Pending and not self.RouletteLanding then self:RollNow(true) end
    if self.Pending and os.clock()-self.PendingAt>15 then
     self.Pending=false
-    self.Auto=false
-    self:StopRouletteAnimation()
-    self:Toast("Server response timed out. Auto was turned off.")
+    self.PendingRollRequest=nil
+    self.PendingRollSession=nil
+    self.NextRoll=math.max(self.NextRoll,os.clock()+1)
+    self:Toast(self.Auto and "Server response timed out. Retrying..." or "Server response timed out.")
+    if self.Auto and not self.RouletteRunning and not self.RouletteLanding then self:StartRouletteAnimation() end
     if self.State then self:Render() end
    end
    if self.State then

@@ -26,6 +26,17 @@ end
 
 local function payloadSignature(payload)
  local parts={}
+ local luck=payload and payload.Luck
+ if luck then
+  table.insert(parts,"Luck")
+  table.insert(parts,tostring(luck.Total or ""))
+  table.insert(parts,tostring(luck.ValueText or ""))
+  for _,source in ipairs(luck.Sources or {}) do
+   table.insert(parts,tostring(source.Group or ""))
+   table.insert(parts,tostring(source.Name or ""))
+   table.insert(parts,tostring(source.ValueText or ""))
+  end
+ end
  for _,item in ipairs(payload and payload.Items or {}) do
   table.insert(parts,tostring(item.Id or ""))
   table.insert(parts,tostring(item.Label or ""))
@@ -52,12 +63,15 @@ function S:Init(ui)
  self.List=self.Root:FindFirstChild("BoostList")
  self.Empty=self.Root:FindFirstChild("EmptyLabel")
  self.Template=self.List and self.List:FindFirstChild("BoostTemplate")
+ self.LuckBadge=self.List and self.List:FindFirstChild("LuckBadge")
+ self.ScrollLeft=self.Root:FindFirstChild("ScrollLeft")
+ self.ScrollRight=self.Root:FindFirstChild("ScrollRight")
  self.Title=self.Root:FindFirstChild("Title")
  self.Toggle=self.Root:FindFirstChild("MinimizeButton")
  self.TooltipTitle=self.Tooltip:FindFirstChild("Title")
  self.TooltipTotal=self.Tooltip:FindFirstChild("Total")
  self.TooltipBreakdown=self.Tooltip:FindFirstChild("Breakdown")
- if not self.List or not self.Template or not self.Empty or not self.Title or not self.Toggle or not self.TooltipTitle or not self.TooltipTotal or not self.TooltipBreakdown then
+ if not self.List or not self.Template or not self.LuckBadge or not self.ScrollLeft or not self.ScrollRight or not self.Empty or not self.Title or not self.Toggle or not self.TooltipTitle or not self.TooltipTotal or not self.TooltipBreakdown then
   error("[BoostHUD] Authored boost HUD hierarchy is incomplete. Re-sync BloomUI.model.json before Play.")
  end
  self.LastRevision=nil
@@ -80,6 +94,15 @@ function S:Init(ui)
  self.Toggle.MouseLeave:Connect(function()
   TweenService:Create(self.Toggle,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.Panel,TextColor3=C.Muted}):Play()
  end)
+ self.ScrollLeft.Activated:Connect(function()
+  local x=math.max(0,self.List.CanvasPosition.X-116)
+  TweenService:Create(self.List,TweenInfo.new(Theme.Motion.Fast),{CanvasPosition=Vector2.new(x,0)}):Play()
+ end)
+ self.ScrollRight.Activated:Connect(function()
+  local maxX=math.max(0,self.List.AbsoluteCanvasSize.X-self.List.AbsoluteWindowSize.X)
+  local x=math.min(maxX,self.List.CanvasPosition.X+116)
+  TweenService:Create(self.List,TweenInfo.new(Theme.Motion.Fast),{CanvasPosition=Vector2.new(x,0)}):Play()
+ end)
  self:SetMinimized(false,false)
 end
 
@@ -95,7 +118,7 @@ end
 function S:ApplyResponsiveLayout(width)
  self.ViewportWidth=tonumber(width) or self.ViewportWidth or 1366
  local maxWidth=math.max(168,math.min(340,self.ViewportWidth-24))
- local count=math.max(1,tonumber(self.ItemCount) or 0)
+ local count=math.max(1,tonumber(self.DisplayCount) or ((tonumber(self.ItemCount) or 0)+1))
  local contentWidth=16+count*52+math.max(0,count-1)*6
  local expandedWidth=math.clamp(contentWidth,168,maxWidth)
  self.ExpandedSize=UDim2.fromOffset(expandedWidth,82)
@@ -109,8 +132,10 @@ function S:SetMinimized(minimized,animate)
  self.Tooltip.Visible=false
  self.Toggle.Text=self.Minimized and "+" or "−"
  self.Title.Text=self.Minimized and ("BOOSTS  •  "..tostring(self.ItemCount)) or "ACTIVE BOOSTS"
- self.List.Visible=not self.Minimized and self.ItemCount>0
- self.Empty.Visible=not self.Minimized and self.ItemCount==0
+ self.List.Visible=not self.Minimized
+ self.Empty.Visible=false
+ self.ScrollLeft.Visible=not self.Minimized
+ self.ScrollRight.Visible=not self.Minimized
  local target=self.Minimized and UDim2.fromOffset(132,30) or (self.ExpandedSize or UDim2.fromOffset(168,82))
  if animate then
   TweenService:Create(self.Root,TweenInfo.new(Theme.Motion.Normal,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Size=target}):Play()
@@ -183,17 +208,23 @@ function S:BindBadge(badge,item)
  if not scale or not scale:IsA("UIScale") then
   error("[BoostHUD] Authored BoostTemplate/HoverScale is missing")
  end
- local timed=item.Remaining~=nil
- if stroke then stroke.Color=timed and C.Gold or C.Border end
+ self.ItemsByBadge[badge]=item
+ if badge:GetAttribute("BoostHoverBound") then return end
+ badge:SetAttribute("BoostHoverBound",true)
 
  badge.MouseEnter:Connect(function()
-  self.Hovered={Badge=badge,Item=item}
+  local current=self.ItemsByBadge[badge]
+  if not current then return end
+  local timed=current.Remaining~=nil
+  self.Hovered={Badge=badge,Item=current}
   if stroke then TweenService:Create(stroke,TweenInfo.new(Theme.Motion.Fast),{Color=C.Gold,Thickness=2}):Play() end
   TweenService:Create(badge,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.PanelHover}):Play()
   TweenService:Create(scale,TweenInfo.new(Theme.Motion.Fast),{Scale=1.06}):Play()
-  self:PlaceTooltip(badge,item)
+  self:PlaceTooltip(badge,current)
  end)
  badge.MouseLeave:Connect(function()
+  local current=self.ItemsByBadge[badge]
+  local timed=current and current.Remaining~=nil
   if self.Hovered and self.Hovered.Badge==badge then self.Hovered=nil self.Tooltip.Visible=false end
   if stroke then TweenService:Create(stroke,TweenInfo.new(Theme.Motion.Fast),{Color=timed and C.Gold or C.Border,Thickness=1.5}):Play() end
   TweenService:Create(badge,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.Panel}):Play()
@@ -213,7 +244,16 @@ function S:Update(payload,revision)
  self:Clear()
 
  local items=payload and payload.Items or {}
- self.ItemCount=#items
+ local luck=cloneData(payload and payload.Luck or {Id="Luck",Label="Luck",ValueText="0%",Total=1,Sources={}})
+ self.ItemCount=#items+1
+ local luckValue=self.LuckBadge:FindFirstChild("Value")
+ local luckIcon=self.LuckBadge:FindFirstChild("Icon")
+ if luckValue and luckValue:IsA("TextLabel") then luckValue.Text=tostring(luck.ValueText or "0%") end
+ if luckIcon and luckIcon:IsA("ImageLabel") then luckIcon.Image=self:Icon(luck) end
+ self.LuckBadge.Visible=true
+ self.LuckBadge.LayoutOrder=0
+ self.LuckBadge:SetAttribute("BoostId","Luck")
+ self:BindBadge(self.LuckBadge,luck)
  local safeWidth=self.UI.SafeRoot and self.UI.SafeRoot.AbsoluteSize.X or self.ViewportWidth or 1366
  self:ApplyResponsiveLayout(safeWidth)
  self:SetSuppressed(self.UI:IsWorkshopExclusive())

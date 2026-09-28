@@ -14,8 +14,6 @@ local CATEGORY_ORDER={"Bees","Resources","Special"}
 local CATEGORY_TITLES={Bees="BEES",Resources="RESOURCES",Special="SPECIAL"}
 local SORT_ORDER={"Rarity","Name","Count"}
 local SORT_LABELS={Rarity="RARITY  ˅",Name="NAME  ˅",Count="COUNT  ˅"}
-local FILTER_ORDER={"All","Favorite","Protected","Available"}
-local FILTER_LABELS={All="ALL  ›",Favorite="FAVORITES  ›",Protected="PROTECTED  ›",Available="AVAILABLE  ›"}
 
 local function countMap(t)
  local n=0
@@ -208,14 +206,34 @@ local function sortItems(items,mode)
  end)
 end
 
-local function filteredItems(source,search,filter,sortMode)
+local function matchesTrait(item,traitId)
+ if not traitId or traitId=="" then return true end
+ if item.Kind~="Bee" then return true end
+ return table.find(item.Traits or {},traitId)~=nil
+end
+
+local function filteredItems(source,search,filter,sortMode,traitId)
  local out={}
  local q=normalized(search)
  for _,item in ipairs(source or {}) do
   local match=q=="" or string.find(normalized(item.DisplayName),q,1,true) or string.find(normalized(item.Id),q,1,true)
-  if match and matchesFilter(item,filter) then table.insert(out,item) end
+  if match and matchesFilter(item,filter) and matchesTrait(item,traitId) then table.insert(out,item) end
  end
  sortItems(out,sortMode)
+ return out
+end
+
+local function availableTraits(bees)
+ local seen={}
+ for _,item in ipairs(bees or {}) do
+  for _,traitId in ipairs(item.Traits or {}) do seen[traitId]=true end
+ end
+ local out={}
+ for traitId in pairs(seen) do out[#out+1]=traitId end
+ table.sort(out,function(a,b)
+  local ta,tb=Bees.GetTrait(a),Bees.GetTrait(b)
+  return tostring(ta and ta.Name or a)<tostring(tb and tb.Name or b)
+ end)
  return out
 end
 
@@ -288,12 +306,12 @@ function InventoryV2.Render(controller,profile,uiState)
 
  local state=controller.InventoryV2State
  if type(state)~="table" then
-  state={Category="Bees",Search="",Sort="Rarity",Filter="All",Selected={}}
+  state={Category="Bees",Search="",Sort="Rarity",Filter="All",TraitFilter=nil,TraitPanelOpen=false,Selected={}}
   controller.InventoryV2State=state
  end
  if not table.find(CATEGORY_ORDER,state.Category) then state.Category="Bees" end
  if not table.find(SORT_ORDER,state.Sort) then state.Sort="Rarity" end
- if not table.find(FILTER_ORDER,state.Filter) then state.Filter="All" end
+ if state.Filter==nil then state.Filter="All" end
  state.Selected=state.Selected or {}
  local all=buildItems(profile,inventory)
  local shellRoot=prototype:Clone()
@@ -316,6 +334,9 @@ function InventoryV2.Render(controller,profile,uiState)
  local searchBar=browser:WaitForChild("SearchBar")
  local sortButton=browser:WaitForChild("SortButton")
  local filterButton=browser:WaitForChild("FilterButton")
+ local traitPanel=browser:WaitForChild("TraitFilterPanel")
+ local traitList=traitPanel:WaitForChild("TraitFilterList")
+ local traitTemplate=traitList:WaitForChild("TraitChipTemplate")
  local sectionTitle=browser:WaitForChild("SectionTitle")
  local sectionCount=browser:WaitForChild("SectionCount")
  for _,child in ipairs(grid:GetChildren()) do
@@ -350,6 +371,8 @@ function InventoryV2.Render(controller,profile,uiState)
     state.Category=category
     state.Search=""
     state.Filter="All"
+    state.TraitFilter=nil
+    state.TraitPanelOpen=false
     rerender()
    end)
   end
@@ -360,12 +383,41 @@ function InventoryV2.Render(controller,profile,uiState)
   state.Sort=cycle(SORT_ORDER,state.Sort)
   rerender()
  end)
- local filterAllowed=false
- filterButton.Visible=false
- filterButton.Text=FILTER_LABELS[state.Filter] or FILTER_LABELS.All
+ local traitIds=availableTraits(all.Bees)
+ local selectedTrait=state.TraitFilter and Bees.GetTrait(state.TraitFilter) or nil
+ filterButton.Visible=state.Category=="Bees"
+ filterButton.Text=selectedTrait and ("TRAITS • "..tostring(selectedTrait.Name)) or "TRAITS"
+ traitPanel.Visible=state.Category=="Bees" and state.TraitPanelOpen==true
+ for _,child in ipairs(traitList:GetChildren()) do
+  if child:GetAttribute("TraitFilterRuntime") then child:Destroy() end
+ end
+ local function addTraitChip(label,traitId,order)
+  local chip=traitTemplate:Clone()
+  chip.Name=traitId and ("Trait_"..traitId) or "Trait_All"
+  chip.Text=label
+  chip.LayoutOrder=order
+  chip.Visible=true
+  chip:SetAttribute("TraitFilterRuntime",true)
+  local selected=state.TraitFilter==traitId
+  chip.BackgroundColor3=selected and C.Blue or C.Panel
+  local stroke=chip:FindFirstChildOfClass("UIStroke")
+  if stroke then stroke.Color=selected and C.Blue or C.BorderSoft stroke.Transparency=selected and .02 or .32 end
+  chip.Activated:Connect(function()
+   state.TraitFilter=traitId
+   state.TraitPanelOpen=false
+   rerender()
+  end)
+  chip.Parent=traitList
+ end
+ addTraitChip("ALL TRAITS",nil,1)
+ for index,traitId in ipairs(traitIds) do
+  local trait=Bees.GetTrait(traitId)
+  addTraitChip(tostring(trait and trait.Name or traitId),traitId,index+1)
+ end
  filterButton.Activated:Connect(function()
-  state.Filter=cycle(FILTER_ORDER,state.Filter)
-  rerender()
+  if state.Category~="Bees" then return end
+  state.TraitPanelOpen=not state.TraitPanelOpen
+  traitPanel.Visible=state.TraitPanelOpen
  end)
 
  sectionTitle.Text=CATEGORY_TITLES[state.Category] or string.upper(state.Category)
@@ -516,7 +568,7 @@ function InventoryV2.Render(controller,profile,uiState)
   for _,child in ipairs(grid:GetChildren()) do
    if child:IsA("GuiButton") or child.Name=="_EmptyState" then child:Destroy() end
   end
-  local visible=filteredItems(all[state.Category] or {},state.Search,state.Filter,state.Sort)
+  local visible=filteredItems(all[state.Category] or {},state.Search,state.Filter,state.Sort,state.Category=="Bees" and state.TraitFilter or nil)
   sectionCount.Text=tostring(#visible).." ITEMS"
   local cellWidth=gridLayout and gridLayout.CellSize.X.Offset or math.max(1,cardTemplate.Size.X.Offset)
   local cellHeight=gridLayout and gridLayout.CellSize.Y.Offset or math.max(1,cardTemplate.Size.Y.Offset)

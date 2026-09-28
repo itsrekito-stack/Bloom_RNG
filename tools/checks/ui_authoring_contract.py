@@ -68,6 +68,9 @@ for required in [
     "WorldUIPrototypes","TutorialWorldBillboard","ActivityCheckpointBillboard",
     "TutorialWorldLabelTemplate","ActivityCheckpointLabelTemplate",
     "QuestTrackerHUD","Quest_1","Quest_2","Quest_3",
+    "TraitFilterPanel","TraitFilterList","TraitChipTemplate",
+    "LuckBadge","ScrollLeft","ScrollRight","UsedBadge","CurrencyHelp",
+    "Nav_Inventory","Nav_Garden","Nav_Index","Nav_Workshop","Nav_Quests","Nav_Settings",
 ]:
     assert required in nodes, f"authored BloomUI node missing: {required}"
 
@@ -97,6 +100,13 @@ assert rarity_text and rarity_text.get("Properties",{}).get("TextSize",0)>=10, "
 quest_tracker=nodes.get("QuestTrackerHUD")
 assert quest_tracker and quest_tracker.get("ClassName")=="Frame", "right-side QuestTrackerHUD must be authored"
 
+trait_filter=nodes.get("TraitFilterPanel")
+assert trait_filter and trait_filter.get("ClassName")=="Frame" and trait_filter.get("Properties",{}).get("Visible") is False, "Inventory Trait filter panel must be authored hidden"
+luck_badge=nodes.get("LuckBadge")
+assert luck_badge and luck_badge.get("ClassName")=="ImageButton" and luck_badge.get("Properties",{}).get("LayoutOrder")==0, "static Luck badge must be authored first"
+used_badge=nodes.get("UsedBadge")
+assert used_badge and used_badge.get("ClassName")=="TextLabel", "Garden used-state badge must be authored"
+
 need(bloom,'function UI:MenuTemplate(name)',"dynamic menu authored template resolver")
 need(bloom,'self.StateKits=self.Panel:FindFirstChild("StateKits")',"state kit runtime binding")
 need(inventory,'componentTemplate(button,"ActionHitboxTemplate"):Clone()',"inventory authored hitbox clone")
@@ -105,6 +115,8 @@ need(quests,'cardTemplate(runtime):Clone()',"Quests authored card clone")
 need(quests,'EmptyStateTemplate',"Quests authored empty-state clone")
 need(bloom,'local function workshopStructure(shell)',"Workshop authored structure binding")
 need(bloom,'local currencyBar=structure.CurrencyBar',"Workshop authored currency binding")
+need(bloom,'function UI:BindMenuNavigation(root)',"shared authored menu navigation binder")
+need(bloom,'self:BindMenuNavigation(shell)',"Workshop navigation binding")
 assert 'WaitForChild("NodeTooltip")' not in bloom, "Workshop must not wait forever for a stale authored tooltip"
 need(boost,'badge:FindFirstChild("HoverScale")',"boost authored hover scale")
 

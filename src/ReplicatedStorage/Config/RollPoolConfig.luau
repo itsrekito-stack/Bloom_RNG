@@ -13,12 +13,15 @@ function S.Build(p,luck,temp)
  if p.RollState.DiscoveryPity+1>=C.DiscoveryThreshold then local cap=R.Rank[C.DiscoveryPityMaxRarity] or R.Rank.Epic local new={} for _,v in ipairs(pool) do if v.Undiscovered and (R.Rank[v.Rarity] or math.huge)<=cap then table.insert(new,v) end end if #new>0 then pool=new end end
  local total=0 for _,v in ipairs(pool) do total=total+v.Weight end if total<=0 then return {},0 end for _,v in ipairs(pool) do v.Chance=v.Weight/total v.Odds=total/v.Weight end return pool,total
 end
-local function compact(n)
- local a=math.abs(n)local v=n local suffix=""
- if a>=1e12 then v=n/1e12;suffix="T"elseif a>=1e9 then v=n/1e9;suffix="B"elseif a>=1e6 then v=n/1e6;suffix="M"elseif a>=1e3 then v=n/1e3;suffix="K"end
- local digits=math.abs(v)>=100 and 0 or math.abs(v)>=10 and 1 or 2
- local text=digits==0 and tostring(math.floor(v+.5)) or string.format("%."..digits.."f",v):gsub("(%..-)0+$","%1"):gsub("%.$","")
- return text..suffix
+local function roundedOdds(n)
+ n=math.max(1,tonumber(n)or 1)
+ if n<100 then return math.floor(n) end
+ local magnitude=10^math.max(0,math.floor((math.log(n)/math.log(10)))-1)
+ return math.max(1,math.floor(n/magnitude)*magnitude)
+end
+function S.FormatOddsNumber(n)
+ if n==math.huge then return "∞" end
+ return string.format("%.0f",roundedOdds(n))
 end
 local BASE_TOTAL=0
 for _,v in pairs(F.Species)do BASE_TOTAL+=math.max(0,tonumber(v.DropWeight)or 0)end
@@ -30,6 +33,6 @@ function S.BaseOdds(kind,id)
 end
 function S.FormatBaseOdds(kind,id)
  local odds=S.BaseOdds(kind,id)
- return odds==math.huge and "1/∞" or "1/"..compact(odds)
+ return odds==math.huge and "1/∞" or "1/"..S.FormatOddsNumber(odds)
 end
 return S

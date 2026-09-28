@@ -94,6 +94,11 @@ need(state,'QuestTracker=self:QuestTracker(profile)',"quest tracker included in 
 need(bloom,'function UI:RenderQuestTracker()', "right-side quest tracker renderer")
 need(bloom,'self.QuestRows[1]', "first tracker slot reserved for Hive Quest")
 need(bloom,'"BLOOM QUEST"', "third tracker slot is recurring Bloom quest")
+need(bloom,'hiveRow.Visible=not hideHive',"finished Hive quest leaves tracker")
+need(bloom,'journeyRow.Visible=not journeyDone',"finished Journey leaves tracker")
+need(bloom,'bloomReady and "ROLL READY"',"actionable Bloom state uses specific copy")
+assert 'hive.Complete and "READY"' not in bloom, "generic READY completion copy returned"
+need(bloom,'row.Position=UDim2.fromOffset(8,22+visibleCount*43)',"remaining quest cards compact upward")
 need(activity,'function S:SetTracked(id)',"activity tracking")
 need(activity,'prefix=tracked and "◆ TRACKED  •  " or ""',"tracked world checkpoint feedback")
 
