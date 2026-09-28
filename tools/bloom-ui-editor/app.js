@@ -17,7 +17,7 @@ const DEFAULT_TARGET="src/StarterGui/BloomUI.model.json";
 const LOADING_TARGET="src/ReplicatedFirst/BloomLoadingTemplate.model.json";
 function lastGoodModelKey(){return state?.targetPath===LOADING_TARGET?"BloomUIStudioLastGoodModelLoading":"BloomUIStudioLastGoodModel"}
 const UI_STATE_TITLES={
- gameplay:"HUD",inventory_v2:"Inventory",garden:"Garden",workshop:"Workshop",trials:"Quests",
+ gameplay:"HUD",inventory_v2:"Inventory",traits:"Traits",garden:"Garden",workshop:"Workshop",trials:"Quests",
  settings:"Settings",season:"Season",replay:"Tutorial Replay",cards:"Cards",
  reward:"Reward",toast:"Toast",tutorial:"Tutorial Guidance",boosts:"Active Boosts",world_ui:"World UI",loading:"Loading Screen"
 };
@@ -389,7 +389,7 @@ async function switchUiModel(path,key){
 }
 function stateFocusName(scene){
  return {
-  gameplay:"SafeRoot",inventory_v2:"InventoryPrototype",garden:"GardenKit",workshop:"WorkshopTemplate",
+  gameplay:"SafeRoot",inventory_v2:"InventoryPrototype",traits:"TraitHUD",garden:"GardenKit",workshop:"WorkshopTemplate",
   trials:"QuestsPrototype",settings:"SettingsKit",
   season:"SeasonKit",replay:"ReplayKit",cards:"CardsKit",
   reward:"RewardReveal",toast:"Toast",tutorial:"TutorialGuideBanner",boosts:"ActiveBoostsHUD",
@@ -488,6 +488,8 @@ function previewVisible(n){
  if(name==="SafeRoot")return true;
  if(name==="Templates"||p==="Templates"||name==="Tooltip")return false;
  if(name==="SeedSatchelTemplate")return false;
+ if(name==="TraitHUD")return scene==="gameplay"||scene==="traits";
+ if(name==="TraitTooltip"||name==="TraitTierPopup")return scene==="traits";
  if(name==="InventoryPrototype")return scene==="inventory_v2";
  if(name==="WorkshopTemplate")return scene==="workshop";
  if(name==="QuestsPrototype")return scene==="trials";
