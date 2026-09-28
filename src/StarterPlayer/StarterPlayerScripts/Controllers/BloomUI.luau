@@ -66,7 +66,6 @@ local SETTINGS_NAMES={
  ShowOtherPollinators="Show other players' bees",
  HideOtherPlayersTokens="Hide other players' activities",
  RareFeed="Show rare discoveries",
- AutoDissolve="Auto-dissolve duplicates",
 }
 local JOURNEY={
  "Get your first bee","Collect a Pollen Spark","Honey delivery","Make a roll","Plant a flower","Fill the Bloom Meter","Make a Bloom Roll","Reach Hive Level 2","Visit the Workshop","Buy a Workshop node","Create a synergy","Unlock the second bee slot","Activate a Bee Trait","Visit Sunny Orchard","Complete Solar Bloom","Discover 6 flowers","Unlock Crystal Gate","Complete a trial","Visit Crystal Greenhouse","Prepare a Season Turn",
@@ -101,8 +100,6 @@ local WORKSHOP_FEATURE_TEXT={
  RepeatPlant="Replant the last seed",
  GuaranteedAbilityToken="Rare bee abilities always offer an Overcharge token",
  PatternHints="Flower pattern hints",
- AutoDissolve="Auto-dissolve duplicates",
- DissolveFilters="Auto-dissolve filters by rarity",
  SeedMutation="Unlocks seed mutations",
  EventRadar="Shows world events",
  LaunchPads="Unlocks fast travel",
@@ -121,17 +118,17 @@ local function workshopEffectText(rules)
   elseif key=="RollCooldown" then text="Roll cooldown → "..tostring(value).."s"
   elseif key=="Reserve" then text="Bloom reserve +"..tostring(value)
   elseif key=="RevealScale" then text="Reveal time ×"..tostring(value)
-  elseif key=="FlowerSlots" then text="Flower slots +"..tostring(value)
-  elseif key=="Adjacency" then text="Adjacency radius +"..tostring(value)
-  elseif key=="SynergyXP" then text="Synergy XP ×"..tostring(value)
-  elseif key=="BeeSlots" then text="Bee slots +"..tostring(value)
+  elseif key=="FlowerGrowthMultiplier" then text="Flower growth ×"..tostring(value)
+  elseif key=="LuckMultiplier" then text="Luck ×"..tostring(value)
+  elseif key=="PollinatorPowerMultiplier" then text="Bee power ×"..tostring(value)
+  elseif key=="PollinatorYieldMultiplier" then text="Bee yield ×"..tostring(value)
+  elseif key=="HiveHoneyMultiplier" then text="Hive Honey ×"..tostring(value)
   elseif key=="TokenChance" then text="Ability token chance +"..math.floor((tonumber(value) or 0)*100+.5).."%"
   elseif key=="BeeXP" then text="Bee XP ×"..tostring(value)
   elseif key=="TraitCooldown" then text="Trait cooldown ×"..tostring(value)
   elseif key=="AbilityYield" then text="Ability rewards ×"..tostring(value)
   elseif key=="DustYield" then text="Petal Dust ×"..tostring(value)
   elseif key=="MilestoneCoins" then text="Milestone Coins +"..tostring(value)
-  elseif key=="StudyDiscount" then text="Mastery cost −"..math.floor((tonumber(value) or 0)*100+.5).."%"
   elseif key=="CoinYield" then text="Coins ×"..tostring(value)
   elseif key=="ManualCharge" then text="Bloom charge ×"..tostring(value)
   elseif key=="NewWeight" then text="New discovery weight ×"..tostring(value)
