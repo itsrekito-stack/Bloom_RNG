@@ -1,6 +1,7 @@
 local RS=game:GetService("ReplicatedStorage")
 local C=require(RS.Config.QuestConfig)
 local Bees=require(RS.Config.BeesConfig)
+local Effects=require(RS.Shared.WorkshopEffects)
 
 local S={}
 
@@ -97,8 +98,9 @@ function S:Claim(player,id)
  if current<target then return false,"QUEST_INCOMPLETE" end
 
  local reward=quest.Reward or {}
- profile.Currencies.Coins+=(tonumber(reward.Coins) or 0)
- profile.Currencies.PetalDust+=(tonumber(reward.PetalDust) or 0)
+ local bonus=math.max(1,tonumber(Effects.Value(profile,"LEGACY_4","QuestRewardMultiplier",1)) or 1)
+ profile.Currencies.Coins+=math.floor((tonumber(reward.Coins) or 0)*bonus+.5)
+ profile.Currencies.PetalDust+=math.floor((tonumber(reward.PetalDust) or 0)*bonus+.5)
  profile.Currencies.AncientNectar+=(tonumber(reward.AncientNectar) or 0)
  local points=math.max(0,math.floor(tonumber(reward.WorkshopPoints) or 0))
  if points>0 then self.X.WorkshopService:Point(player,"Quest_"..id,points) end

@@ -2,7 +2,6 @@ local RS=game:GetService("ReplicatedStorage")
 local Flowers=require(RS.Config.FlowersConfig)
 local Bees=require(RS.Config.BeesConfig)
 local Workshop=require(RS.Config.WorkshopConfig)
-local Trials=require(RS.Config.BuildTrialConfig)
 local Locations=require(RS.Config.LocationsConfig)
 local Bloom=require(RS.Config.BloomConfig)
 local Rarity=require(RS.Config.RarityConfig)
@@ -59,10 +58,6 @@ local REASONS={
  TOO_FAR="Move closer to the object",
  WRONG_SECTOR="Move to the required location",
  SECTOR_LOCKED="Unlock this location first",
- TRIAL_LOCKED="Trials are still locked",
- ADVANCED_TRIAL_LOCKED="Unlock Advanced Trials in the Workshop",
- TRIAL_RUNNING="A trial is already running",
- ACTIVITY_UNAVAILABLE="Trial route could not spawn. Try again",
  COOLDOWN="Wait for the cooldown to finish",
  EMPTY_POOL="No rewards are available in the roulette",
  SEASON_PREVIEW_OPEN="Finish the Season confirmation first",
@@ -72,7 +67,9 @@ local REASONS={
  TUTORIAL_ROLL_LOCKED="Complete the tutorial to roll again",
  TUTORIAL_SINGLE_ROLL="Tutorial rolls are single-use",
  USE_GARDEN_MENU="Plant Flowers from the Garden menu",
- MENU_REQUIRED="Open the Garden menu to edit planting",
+ MENU_REQUIRED="Open the required menu first",
+ QUEST_LOCKED="Complete the previous Quest first",
+ QUEST_INCOMPLETE="Quest objective is not complete yet",
 }
 
 local function plantedCount(profile,id)
@@ -263,51 +260,6 @@ function S:Map(player,profile)
  }
 end
 
-function S:Trials(player,profile)
- local list={}
- for id,cfg in pairs(Trials) do
-  local reason=nil
-  if self.X.BuildTrialService.Active[player] then reason="TRIAL_RUNNING"
-  elseif not profile.Tutorial.FeatureUnlocks.Trials then reason="TRIAL_LOCKED"
-  elseif cfg.Advanced and not Effects.Feature(profile,"LEGACY_4","AdvancedTrials") then reason="ADVANCED_TRIAL_LOCKED"
-  end
-  local startHint
-  if reason=="TRIAL_RUNNING" then startHint="Finish the active trial first"
-  elseif reason=="TRIAL_LOCKED" then startHint="Unlock Trials through Hive progression"
-  elseif reason=="ADVANCED_TRIAL_LOCKED" then startHint="Unlock Advanced Trials in the Workshop"
-  else startHint="Ready to start from Quests" end
-  table.insert(list,{
-   Id=id,
-   Name=cfg.Name,
-   Sector="Center",
-   Advanced=cfg.Advanced==true,
-   Completed=profile.Quests.Trials[id]==true,
-   CanStart=reason==nil,
-   NearShrine=true,
-   Reason=reason,
-   ReasonText=reason and self:ReasonText(reason) or nil,
-   StartHint=startHint,
-   Target=cfg.Target,
-   Event=cfg.Event,
-   Seconds=cfg.Seconds,
-   RewardText=(profile.Quests.Trials[id] and "Repeat • 5 Coins" or (cfg.Advanced and "First clear • 3 Workshop Points" or "First clear • 2 Workshop Points")),
-  })
- end
- table.sort(list,function(a,b) return a.Name<b.Name end)
-
- local active=self.X.BuildTrialService.Active[player]
- local activePublic=nil
- if active then
-  local cfg=Trials[active.Id]
-  activePublic={
-   Id=active.Id,
-   Advanced=active.Advanced==true,
-   Counts=self.X.U.Copy(active.Counts or {}),
-   TimeLeft=math.max(0,(cfg and cfg.Seconds or 0)-(os.clock()-(active.Start or os.clock()))),
-  }
- end
- return {Items=list,Active=activePublic}
-end
 local function sortedFlowerIds()
  local ids={} for id in pairs(Flowers.Species) do table.insert(ids,id) end
  table.sort(ids,function(a,b)
@@ -467,7 +419,7 @@ function S:Snapshot(player)
   Workshop=self:Workshop(player,profile),
   Hive=self:Hive(profile),
   Map=self:Map(player,profile),
-  Trials=self:Trials(player,profile),
+  Quests=self.X.QuestService:State(profile),
   Settings=self:Settings(profile),
   QuestTracker=self:QuestTracker(profile),
   Garden={ActiveSynergy=profile.Garden.ActiveSynergy or "",Hint=Effects.Feature(profile,"GARDEN_5","PatternHints") and self.X.GardenSynergyService:Hint(profile) or nil},

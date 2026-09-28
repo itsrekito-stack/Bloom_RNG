@@ -19,7 +19,7 @@ function X:Emit(player,event,n)
  self:MarkStateDirty(player)
  self.TutorialService:RecordEvent(player,event)
 
- -- Tutorial progression is core state and must commit before optional telemetry/trial hooks.
+ -- Tutorial progression is core state and must commit before optional hooks.
  local tutorialOK,tutorialErr=xpcall(function() self.TutorialService:Refresh(player) end,debug.traceback)
  if not tutorialOK then
   local activeTutorial=T.Steps[p.Tutorial.Step]~=nil
@@ -31,10 +31,6 @@ function X:Emit(player,event,n)
  local analyticsOK,analyticsErr=xpcall(function() self.AnalyticsService:Event(player,event,amount) end,debug.traceback)
  if not analyticsOK then warn("[Bloom] Analytics hook error",event,analyticsErr) end
 
- if event~="Trial" then
-  local trialOK,trialErr=xpcall(function() self.BuildTrialService:Event(player,event,amount) end,debug.traceback)
-  if not trialOK then warn("[Bloom] Trial hook error",event,trialErr) end
- end
 end
 function X:EmitOnce(player,event) local p=self:Profile(player) if p and not p.Tutorial.Events[event] then self:Emit(player,event,1) end end
 function X:Part(parent,name,pos,size,color,collide)
@@ -48,7 +44,7 @@ function X:Snapshot(player)
  local p=self:Profile(player) if not p then return nil end
  self.TutorialService:Refresh(player)
  local uiState=self.UIStateService:Snapshot(player)
- local public={Revision=self:StateRevision(player),Profile=U.Copy(p),Synergies=self.GardenSynergyService.Active[player] or {},BeeCapacity=self.StatsService:BeeCapacity(p),HivePosition=self.GardenPlotService:HivePosition(player),Trial=uiState and uiState.Trials and uiState.Trials.Active or nil,ServerBloom=self.SocialService.Progress,Pulse=self.SocialService.Pulse,Cards=self.SeasonService:Offers(p),Odds=self.RollService:Odds(player),UI=uiState}
+ local public={Revision=self:StateRevision(player),Profile=U.Copy(p),Synergies=self.GardenSynergyService.Active[player] or {},BeeCapacity=self.StatsService:BeeCapacity(p),HivePosition=self.GardenPlotService:HivePosition(player),ServerBloom=self.SocialService.Progress,Pulse=self.SocialService.Pulse,Cards=self.SeasonService:Offers(p),Odds=self.RollService:Odds(player),UI=uiState}
  public.Profile.LegacyArchive=nil public.Profile.Telemetry=nil public.Profile.Migrations=nil
  return public
 end
@@ -64,7 +60,6 @@ function X:Push(player,force)
 end
 function X:RebuildFreshRuntime(player)
  self.SeasonService:Remove(player)
- self.BuildTrialService:Remove(player)
  self.GardenActivityService:Remove(player)
  self.PollinatorService:Remove(player)
  self.RollService:Remove(player)
@@ -131,7 +126,7 @@ function X:Request(player,action,a,b,c)
   return true
  elseif action=="Activity" then return self.GardenActivityService:Collect(player,a,b,c)
  elseif action=="WorkshopBuy" then return self.WorkshopService:Buy(player,a)
- elseif action=="Trial" then return self.BuildTrialService:StartTrial(player,a)
+ elseif action=="ClaimQuest" then return self.QuestService:Claim(player,a)
  elseif action=="SeasonConfirm" then return self.SeasonService:Confirm(player,a)
  elseif action=="Card" then return self.SeasonService:Card(player,a)
  elseif action=="Keepsake" then return self.SeasonService:Keepsake(player,a,b)
@@ -163,7 +158,7 @@ function X:Request(player,action,a,b,c)
    return true
   end
   if type(a)~="string" then return false,"INVALID_ACTION" end
-  if a~="Settings" and a~="Hive" and not p.Tutorial.FeatureUnlocks[a] then return false,"LOCKED" end
+  if a~="Settings" and a~="Hive" and a~="Quests" and not p.Tutorial.FeatureUnlocks[a] then return false,"LOCKED" end
   self.Temp[player].MenuOpen=true
   self.Temp[player].MenuName=a
   if a=="Garden" then
@@ -175,7 +170,7 @@ function X:Request(player,action,a,b,c)
    end
   end
   local tutorialStep=T.Steps[p.Tutorial.Step]
-  if a=="Trials" and tutorialStep and tutorialStep.Id=="Quests" then
+  if a=="Quests" and tutorialStep and tutorialStep.Id=="Quests" then
    self:Emit(player,"QuestsOpen",1)
   end
   return true
@@ -231,6 +226,8 @@ function X:Loaded(player)
    task.defer(function() self:Push(player,true) end)
   end
  end)
+ self.WorkshopService:ReconcileHivePoints(player)
+ self.QuestService:SyncJourney(p)
  spawn() self:EmitOnce(player,"Wake") player:SetAttribute("BloomGameplayReady",true) self:Push(player,true)
  if p.Migrations.BloomSummary and not p.Migrations.BloomSummaryLogged then print("[Bloom] migrated",player.UserId,p.Migrations.BloomSummary.PetalDust) p.Migrations.BloomSummaryLogged=true end
 end
@@ -266,8 +263,6 @@ function X:Start(data,services,names)
     if self.MetaProgressionService:Tick(player) then self:MarkStateDirty(player) end
     self.AnalyticsService:Tick(player,C.TickSeconds)
    end
-   local trialChanged=self.BuildTrialService:Tick(player)
-   if trialChanged or (self.BuildTrialService.Active[player] and sync>=C.SyncSeconds) then self:MarkStateDirty(player) end
    if sync>=C.SyncSeconds then self:Push(player) end
   end,debug.traceback) if not ok then warn("[Bloom] Tick",err) end end end if sync>=C.SyncSeconds then sync=0 end
  end end)
