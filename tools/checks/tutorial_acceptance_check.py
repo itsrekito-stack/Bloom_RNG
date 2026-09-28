@@ -73,7 +73,8 @@ assert 'DISCOVERY  %d/%d' not in bloom, "Discovery n/n returned to Bloom HUD"
 assert 'NormalRoll' not in bloom, "removed NormalRoll client step returned"
 
 need(default,'Tutorial={Version=10,Step=1,FeatureUnlocks={},Events={}}',"fresh tutorial version")
-need(settings,'RESTART TUTORIAL V10 (STUDIO)',"Studio reset copy")
+need(settings,'find(runtime,"StudioTutorialResetButton","TextButton")',"Studio tutorial reset authored binding")
+need(settings,'ui:Send("StudioTutorialReset")',"Studio tutorial reset action")
 need(hive,'self.X:Emit(player,"FirstGardenSlot",1)',"first Garden slot")
 need(hive,'self.X:Emit(player,"HiveUpgrade",1)',"Hive upgrade event")
 assert 'LocationsConfig' not in hive and 'gate is ready to unlock' not in hive, "Hive still exposes location gates"
