@@ -159,7 +159,7 @@ check('RoFlow serves UI Studio live from project','fn ui_studio_document(state: 
 check('RoFlow reloads live UI Studio after AI Sync','const documentHtml=await invoke("ui_studio_document")' in roflow_web and 'frame.srcdoc=documentHtml' in roflow_web and 'if(state.currentPage==="ui")await ensureUiStudio(true)' in roflow_web and 'unloadUiStudio("AI Sync while inactive")' in roflow_web)
 check('RoFlow keeps bundled UI Studio as fallback','frame.src="./ui-studio/index.html?ts="+Date.now()' in roflow_web and 'Bundled UI Studio fallback loaded' in roflow_web)
 check('Inventory v2 rerender follows renderer','controller.MenuRenderer=="InventoryV2"' in inventory_v2_source)
-check('Inventory v2 binds authoritative inventory','uiState.Inventory' in inventory_v2_source and 'controller:Send("Dissolve"' in inventory_v2_source and 'controller:Send("EquipBee"' in inventory_v2_source)
+check('Inventory v2 binds authoritative species inventory','uiState.Inventory' in inventory_v2_source and 'item.Obtained or 1' in inventory_v2_source and 'controller:Send("EquipBee"' in inventory_v2_source)
 check('physical Plant opens Inventory Flowers','function UI:OpenPlantInventory(slot)' in source and 'state.Category="Flowers"' in source and 'state.Filter="Available"' in source and 'self:Open("SeedSatchel",{PlantSlot=slot},{SilentMenu=true})' in source)
 check('Inventory v2 executes server-authoritative Plant','controller:Send("Plant",plantSlot,item.Id)' in inventory_v2_source and '"PLANT IN SLOT "..tostring(plantSlot)' in inventory_v2_source)
 check('standalone Plant menu removed','elseif name=="Plant" then' not in source and one('PlantKit')[1] is None)
