@@ -84,7 +84,7 @@ C.Ids.Flowers={Daisy=0,Tulip=0,Sunflower=0,Clover=0,CrystalRose=0,FrostLily=0,Pr
 C.Ids.Activities={PollenSpark=0,NectarBud=0,DewDrop=0,PollenTrail=0,CrossPollination=0,Overcharge=0,BloomSurge=0,PollenWind=0,SolarBloom=0,CrystalResonance=0,FireflyRoute=0,ShadowBloom=0}
 C.Ids.Seasons={SpringResonance=0,SummerSwarm=0,AutumnFortune=0,CrystalSeason=0,TwilightSeason=0}
 C.Ids.Currencies.PetalDust=C.Ids.Currencies.FruitDust C.Ids.Currencies.AncientNectar=0
-C.Ids.Menus.SeedSatchel=C.Ids.Menus.Inventory C.Ids.Menus.FieldGuide=C.Ids.System.Flower C.Ids.Menus.Map=0 C.Ids.Menus.Trials=C.Ids.System.Quests
+C.Ids.Menus.SeedSatchel=C.Ids.Menus.Inventory C.Ids.Menus.FieldGuide=C.Ids.System.Flower C.Ids.Menus.Map=0 C.Ids.Menus.Trials=C.Ids.System.Quests C.Ids.Menus.Garden=C.Ids.System.Garden
 C.Ids.Traits.Swift=0
 function C.Get(group,id) local t=C.Ids[group] local value=t and t[id] if type(value)~="number" or value<=0 then return "" end return group=="Fruits" and asset(value) or thumb(value) end
 function C.GetFlowerIcon(id) local icon=C.Get("Flowers",id) return icon~="" and icon or C.Get("System","Flower") end
