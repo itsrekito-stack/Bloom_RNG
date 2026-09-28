@@ -20,6 +20,8 @@ for text,label in [
  ('FILTER_ORDER={"All","Favorite","Protected","Available"}',"filter modes"),
  ('local function filteredItems(source,search,filter,sortMode)',"search/filter/sort pipeline"),
  ('setupSearch(searchBar,state,refreshGrid)',"search binding"),
+ ('local gridLayout=grid:FindFirstChildOfClass("UIGridLayout")',"authored grid layout binding"),
+ ('card.Position=UDim2.fromOffset',"non-creating card placement fallback"),
  ('state.Sort=cycle(SORT_ORDER,state.Sort)',"sort cycling"),
  ('state.Filter=cycle(FILTER_ORDER,state.Filter)',"filter cycling"),
 ]:

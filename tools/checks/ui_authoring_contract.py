@@ -75,6 +75,17 @@ for kit in ["SettingsKit","SeasonKit","ReplayKit","CardsKit"]:
 for retired in ["TrialsKit","PlantKit","FieldGuideKit","MapKit","Dock_FieldGuide","Dock_Map"]:
     assert retired not in nodes, f"retired alpha menu returned: {retired}"
 
+item_grid=nodes.get("ItemGrid")
+assert item_grid, "authored Inventory ItemGrid missing"
+inventory_grid=next((child for child in item_grid.get("Children",[]) if child.get("ClassName")=="UIGridLayout"),None)
+assert inventory_grid, "authored Inventory ItemGrid UIGridLayout missing"
+assert inventory_grid.get("Name")=="UIGridLayout", "Inventory grid layout must use canonical authored name"
+grid_props=inventory_grid.get("Properties",{})
+assert grid_props.get("FillDirection")=="Horizontal", "Inventory grid must fill horizontally"
+assert grid_props.get("StartCorner")=="TopLeft", "Inventory grid must start at top-left"
+assert grid_props.get("HorizontalAlignment")=="Left", "Inventory grid must align left"
+assert grid_props.get("VerticalAlignment")=="Top", "Inventory grid must align top"
+
 need(bloom,'function UI:MenuTemplate(name)',"dynamic menu authored template resolver")
 need(bloom,'self.StateKits=self.Panel:FindFirstChild("StateKits")',"state kit runtime binding")
 need(inventory,'componentTemplate(button,"ActionHitboxTemplate"):Clone()',"inventory authored hitbox clone")

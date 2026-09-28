@@ -286,6 +286,7 @@ function InventoryV2.Render(controller,profile,uiState)
  local browser=shell:WaitForChild("BrowserPanel")
  local details=shell:WaitForChild("DetailsPanel")
  local grid=browser:WaitForChild("ItemGrid")
+ local gridLayout=grid:FindFirstChildOfClass("UIGridLayout")
  local searchBar=browser:WaitForChild("SearchBar")
  local sortButton=browser:WaitForChild("SortButton")
  local filterButton=browser:WaitForChild("FilterButton")
@@ -488,6 +489,12 @@ function InventoryV2.Render(controller,profile,uiState)
   end
   local visible=filteredItems(all[state.Category] or {},state.Search,state.Filter,state.Sort)
   sectionCount.Text=tostring(#visible).." ITEMS"
+  local cellWidth=gridLayout and gridLayout.CellSize.X.Offset or math.max(1,cardTemplate.Size.X.Offset)
+  local cellHeight=gridLayout and gridLayout.CellSize.Y.Offset or math.max(1,cardTemplate.Size.Y.Offset)
+  local gapX=gridLayout and gridLayout.CellPadding.X.Offset or 9
+  local gapY=gridLayout and gridLayout.CellPadding.Y.Offset or 9
+  local usableWidth=math.max(cellWidth,grid.AbsoluteSize.X-8)
+  local columns=math.max(1,math.floor((usableWidth+gapX)/(cellWidth+gapX)))
   local selectedId=state.Selected[state.Category]
   local active=nil
   for _,item in ipairs(visible) do if item.Id==selectedId then active=item break end end
@@ -509,6 +516,10 @@ function InventoryV2.Render(controller,profile,uiState)
    card.Name="Item_"..item.Id:gsub("[^%w_]","_")
    card.Visible=true
    card.LayoutOrder=index
+   local zeroIndex=index-1
+   local column=zeroIndex%columns
+   local row=math.floor(zeroIndex/columns)
+   card.Position=UDim2.fromOffset(1+column*(cellWidth+gapX),1+row*(cellHeight+gapY))
    card.Parent=grid
    local selected=active and active.Id==item.Id
    local color=rarityColor(item.Rarity)
@@ -547,6 +558,13 @@ function InventoryV2.Render(controller,profile,uiState)
     state.Selected[state.Category]=item.Id
     refreshGrid()
    end)
+  end
+  if not gridLayout then
+   local rows=math.ceil(#visible/columns)
+   grid.AutomaticCanvasSize=Enum.AutomaticSize.None
+   grid.CanvasSize=UDim2.fromOffset(0,math.max(0,rows*cellHeight+math.max(0,rows-1)*gapY+14))
+  else
+   grid.AutomaticCanvasSize=Enum.AutomaticSize.Y
   end
   drawDetails(active)
  end
