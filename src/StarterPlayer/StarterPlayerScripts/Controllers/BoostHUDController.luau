@@ -83,6 +83,7 @@ function S:Init(ui)
  self.Hovered=nil
  self.ItemsByBadge={}
  self.BadgesById={}
+ self.RootBaseColor=self.Root.BackgroundColor3
  self.RootStroke=self.Root:FindFirstChildOfClass("UIStroke")
  if self.RootStroke then
   self.RootStrokeBaseColor=self.RootStroke.Color
@@ -276,6 +277,7 @@ function S:Update(payload,revision)
  local items=payload and payload.Items or {}
  local luck=hydrateTimedItem(payload and payload.Luck or {Id="Luck",Label="Luck",ValueText="0%",Total=1,Sources={}})
  self.ItemCount=#items+1
+ if self.Minimized then self.Title.Text="BOOSTS  •  "..tostring(self.ItemCount) end
 
  local luckValue=self.LuckBadge:FindFirstChild("Value")
  local luckIcon=self.LuckBadge:FindFirstChild("Icon")
@@ -357,7 +359,7 @@ function S:Tick()
     Transparency=self.RootStrokeBaseTransparency or .18,
    }):Play()
   end
-  TweenService:Create(self.Root,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=C.Panel}):Play()
+  TweenService:Create(self.Root,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=self.RootBaseColor or C.Panel}):Play()
  end
  for _,badge in ipairs(self.Badges) do
   local item=self.ItemsByBadge[badge]

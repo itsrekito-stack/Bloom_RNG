@@ -41,7 +41,7 @@ for name in ["CurrencyHUD","MenuDock","RollHUD","RollButton"]:
         raise AssertionError(f"compact HUD authored UserScale missing: {name}")
 
 need(bloom,'local SettingsV2=require(script.Parent.SettingsController)',"settings controller require")
-need(bloom,'local MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Index="IndexV1",Trials="QuestsV2",Settings="SettingsV2"}',"settings renderer dispatch")
+need(bloom,'local MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Hive="HiveV1",Index="IndexV1",Trials="QuestsV2",Settings="SettingsV2"}',"settings renderer dispatch")
 need(bloom,'elseif renderer=="SettingsV2" then',"settings renderer branch")
 need(bloom,'SettingsV2.Render(self,p,ui)',"settings authored render")
 if 'elseif name=="Settings" then' in bloom:
