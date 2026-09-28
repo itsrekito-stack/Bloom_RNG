@@ -6,10 +6,10 @@ model=json.loads((ROOT/'src/StarterGui/BloomUI.model.json').read_text(encoding='
 TARGETS=['ObjectiveCard','CurrencyHUD','MenuDock','RollHUD','VerticalRoulette','RollButton','ActiveBoostsHUD']
 VIEWPORTS=[(1920,1080),(1366,768),(1280,720)]
 NO_OVERLAP=[('ObjectiveCard','VerticalRoulette'),('CurrencyHUD','MenuDock'),('RollHUD','RollButton'),('ActiveBoostsHUD','RollButton'),('ActiveBoostsHUD','RollHUD')]
-DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Index','Dock_Workshop','Dock_Trials','Dock_Settings']
+DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Garden','Dock_Index','Dock_Workshop','Dock_Trials','Dock_Settings']
 MIN_HIT=44
 MENU_DOCK_MIN_Z=130
-EXPANDED_DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Index','Dock_Workshop','Dock_Trials','Dock_Settings']
+EXPANDED_DOCK_BUTTONS=['Dock_SeedSatchel','Dock_Garden','Dock_Index','Dock_Workshop','Dock_Trials','Dock_Settings']
 
 def children(node): return node.get('Children',[]) or []
 def find(node,name):
@@ -49,13 +49,13 @@ safe=find(model,'SafeRoot')
 if not safe: raise SystemExit('FAIL SafeRoot missing')
 direct={child.get('Name'):child for child in children(safe)}
 
+failed=[]
 dock_node=direct.get('MenuDock')
 shade_node=direct.get('ModalShade')
 if not dock_node or int(dock_node.get('Properties',{}).get('ZIndex',0))<MENU_DOCK_MIN_Z:
     failed.append('MenuDock must render above modal dimming')
 if shade_node and dock_node and int(dock_node.get('Properties',{}).get('ZIndex',0))<=int(shade_node.get('Properties',{}).get('ZIndex',0)):
     failed.append('ModalShade must stay below MenuDock')
-failed=[]
 dock_model=direct.get('MenuDock')
 if dock_model:
     dp=dock_model.get('Properties',{})
@@ -65,8 +65,9 @@ if dock_model:
     if workshop:
         wr=rect(workshop,dock_w,75)
         workshop_center=wr[0]+wr[2]/2
-        if abs(workshop_center-dock_w/2)>.01:
-            failed.append('Dock_Workshop is not centered in expanded MenuDock')
+        # Runtime positions the 495px dock at X=-42 so Workshop stays screen-centered.
+        if abs((workshop_center-dock_w/2)-42)>.01:
+            failed.append('Dock_Workshop expanded center offset must stay exactly +42px inside MenuDock')
     for name in EXPANDED_DOCK_BUTTONS:
         node=by_name.get(name)
         if not node:
