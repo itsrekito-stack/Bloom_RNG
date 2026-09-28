@@ -25,14 +25,18 @@ for name in ["TraitHUD","TraitList","TraitTemplate","TraitTooltip","TraitTierPop
     if not find(model,name): raise AssertionError(f"authored trait UI missing: {name}")
 
 template=find(model,"TraitTemplate")
-for name in ["IconBadge","Name","Tier","Progress","HighlightScale"]:
+for name in ["IconBadge","TraitIcon","BeeStrip","BeeIconTemplate","Name","Tier","Progress","HighlightScale"]:
     if not find(template,name): raise AssertionError(f"TraitTemplate missing {name}")
 
 for text,label in [
-    ('local function signature(traits)',"stable trait signature"),
+    ('local function signature(traits,equippedSlots)',"stable trait + equipped Bee signature"),
     ('if nextSignature==self.LastSignature then',"unrelated state revisions keep rows stable"),
     ('if (tonumber(item.Count) or 0)>0 then visible[#visible+1]=item end',"only equipped-build traits shown"),
     ('progressText(item)',"n1/n2 presentation"),
+    ('traitIcon(item.Id)',"Trait icon projection"),
+    ('beeIcon(beeId)',"member Bee icon projection"),
+    ('local isEquipped=equipped[beeId]==true',"equipped Bee visual state"),
+    ('member.ImageTransparency=isEquipped and 0 or .42',"unequipped Bee dimming"),
     ('row.MouseEnter:Connect(function() self:ShowTooltip(item) end)',"hover tooltip enter"),
     ('row.MouseLeave:Connect(function() self:HideTooltip() end)',"hover tooltip leave"),
     ('thresholdText(item)',"tooltip threshold effects"),
@@ -48,7 +52,7 @@ for text,label in [
 for text,label in [
     ('self.TraitHUD=require(script.Parent.TraitHUDController)',"Trait HUD lifecycle wiring"),
     ('self.TraitHUD:Init(self)',"Trait HUD init"),
-    ('self.TraitHUD:Update(traits,self.State.Revision)',"Trait HUD state update"),
+    ('self.TraitHUD:Update(traits,inventory.EquippedBeeSlots or {},self.State.Revision)',"Trait HUD state + equipped Bee update"),
     ('self.TraitHUD:SetSuppressed(exclusive)',"Workshop suppresses Trait HUD"),
     ('self.TraitHUD:SetSuppressed(false)',"Workshop restores Trait HUD"),
 ]:
