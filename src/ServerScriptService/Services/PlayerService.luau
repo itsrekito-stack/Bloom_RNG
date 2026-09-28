@@ -62,10 +62,7 @@ function X:Push(player,force)
  local leader=player:FindFirstChild("leaderstats") if leader then leader.Coins.Value=math.floor(p.Currencies.Coins) leader.Hive.Value=p.Hive.Level end
  return true
 end
-function X:ResetStudioTutorial(player)
- local ok,reason=self.DataService:BeginStudioTransientProfile(player)
- if not ok then return false,reason end
-
+function X:RebuildFreshRuntime(player)
  self.SeasonService:Remove(player)
  self.BuildTrialService:Remove(player)
  self.GardenActivityService:Remove(player)
@@ -74,20 +71,41 @@ function X:ResetStudioTutorial(player)
  self.GardenSynergyService:Remove(player)
  self.TutorialService:Remove(player)
  self.GardenPlotService:Remove(player)
+ if self.BoostService.Remove then self.BoostService:Remove(player) end
+ if self.SocialService.Remove then self.SocialService:Remove(player) end
 
  self.Temp[player]={}
  self.LastPushedStateRevision[player]=-1
  self.GardenPlotService:Build(player)
  self.GardenActivityService:Push(player)
  self:Send(player,"Bees",{})
+ self:Send(player,"OtherTokens",{})
  self:MarkStateDirty(player)
 
  local root=player.Character and player.Character:FindFirstChild("HumanoidRootPart")
  local hive=self.GardenPlotService:HivePosition(player)
  if root and hive then root.CFrame=CFrame.new(hive+Vector3.new(0,4,8)) end
+end
 
+function X:ResetStudioTutorial(player)
+ local ok,reason=self.DataService:BeginStudioTransientProfile(player)
+ if not ok then return false,reason end
+ self:RebuildFreshRuntime(player)
  print("[Tutorial] Studio fresh-start profile activated player="..tostring(player.Name))
  self:Send(player,"Message","Studio tutorial test started • session progress will not be saved")
+ return true
+end
+
+function X:FullReset(player)
+ local result=self.DataService:ResetProfile(player)
+ if not result or not result.Committed then
+  local code=result and result.Code or "PERSISTENCE_UNCONFIRMED"
+  if code=="RETRYABLE_FAILURE" then return false,"PERSISTENCE_BUSY" end
+  return false,"PERSISTENCE_UNCONFIRMED"
+ end
+ self:RebuildFreshRuntime(player)
+ print("[Bloom] Full progress reset committed player="..tostring(player.Name))
+ self:Send(player,"Message","Progress reset complete")
  return true
 end
 
@@ -97,7 +115,7 @@ end
 function X:Request(player,action,a,b,c)
  local p=self:Profile(player) if not p then return false,"PROFILE_LOADING" end
  if action=="SeasonCancel" then self.SeasonService.Pending[player]=nil return true end
- if self.SeasonService.Pending[player] and action~="SeasonConfirm" and action~="Menu" and action~="Ready" then return false,"SEASON_PREVIEW_OPEN" end
+ if self.SeasonService.Pending[player] and action~="SeasonConfirm" and action~="Menu" and action~="Ready" and action~="FullReset" then return false,"SEASON_PREVIEW_OPEN" end
  if action=="Ready" then self.GardenActivityService:Push(player) return true
  elseif action=="Roll" then return self.RollService:Roll(player,a==true,b)
  elseif action=="Plant" then return self.GardenPlotService:Plant(player,a,b)
@@ -119,6 +137,7 @@ function X:Request(player,action,a,b,c)
  elseif action=="Skip" then self.TutorialService:Skip(player) return true
  elseif action=="Replay" then self.TutorialService:Replay(player) return true
  elseif action=="StudioTutorialReset" then return self:ResetStudioTutorial(player)
+ elseif action=="FullReset" then return self:FullReset(player)
  elseif action=="IndexViewed" then return self.UIStateService:MarkIndexRead(p,a,b)
  elseif action=="SaveSettings" then
   local result=self.DataService:SaveProfile(player,false)
