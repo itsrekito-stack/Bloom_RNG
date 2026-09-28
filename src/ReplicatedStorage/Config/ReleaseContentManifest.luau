@@ -7,6 +7,7 @@ return {
  RarityOrder={"Common","Uncommon","Rare","Epic","Legendary","Mythic","Celestial"},
  SeasonCards={"SpringResonance","SummerSwarm","AutumnFortune","CrystalSeason","TwilightSeason"},
  QuestCount=25,
+ GardenSynergyCount=32,
  Flowers={
   Daisy={Rarity="Common"},Tulip={Rarity="Common"},Sunflower={Rarity="Uncommon"},Clover={Rarity="Uncommon"},
   CrystalRose={Rarity="Rare"},FrostLily={Rarity="Rare"},PrismBloom={Rarity="Epic"},MoonOrchid={Rarity="Epic"},

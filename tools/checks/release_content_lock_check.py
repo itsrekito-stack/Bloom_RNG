@@ -15,6 +15,7 @@ workshop=read("src/ReplicatedStorage/Config/WorkshopConfig.luau")
 effects=read("src/ReplicatedStorage/Config/WorkshopEffectsConfig.luau")
 activities=read("src/ReplicatedStorage/Config/ActivityConfig.luau")
 quests=read("src/ReplicatedStorage/Config/QuestConfig.luau")
+synergies=read("src/ReplicatedStorage/Config/GardenSynergyConfig.luau")
 season=read("src/ReplicatedStorage/Config/SeasonConfig.luau")
 
 mf=between(manifest,"Flowers={","\n },\n Bees={")
@@ -42,6 +43,8 @@ for id_,(r,_,_) in actual_bees.items():
 
 quest_order=re.findall(r'"(Q\d+_[A-Za-z0-9_]+)"',re.search(r'C\.Order=\{(.*?)\n\}',quests,re.S).group(1))
 if len(quest_order)!=25 or 'QuestCount=25' not in manifest: raise AssertionError("release must ship exactly 25 quests")
+synergy_count=len(re.findall(r'\{Id="[^"]+",Name="[^"]+",Strength=',synergies))
+if synergy_count!=32 or 'GardenSynergyCount=32' not in manifest: raise AssertionError(f"release must ship 32 Garden Synergies, got {synergy_count}")
 if "Trials={" in manifest or "SeasonKeyTrials" in manifest or "TrialIds" in season: raise AssertionError("Trials returned to release content")
 
 branches=re.findall(r'"([^"]+)"',re.search(r'WorkshopBranches=\{([^}]*)\}',manifest).group(1))
@@ -58,4 +61,4 @@ if 'return icon~=""and icon or thumb(C.Ids.System.Bee or 0)' not in icons: raise
 if 'function C.GetFlowerIcon(id) local icon=C.Get("Flowers",id) return icon~="" and icon or C.Get("System","Flower") end' not in icons: raise AssertionError("Flower icon fallback missing")
 
 print("release content lock: PASS")
-print("Content: 27 Flowers, 28 Bees, 25 Quests, 12 Activities, 7 Workshop branches, no Trials.")
+print("Content: 27 Flowers, 28 Bees, 32 Garden Synergies, 25 Quests, 12 Activities, 7 Workshop branches, no Trials.")
