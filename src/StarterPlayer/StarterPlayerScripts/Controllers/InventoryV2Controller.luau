@@ -120,7 +120,7 @@ local function buildItems(profile,inventory)
   if cfg then
    local item={
     Kind="Flower",Id=entry.Id,DisplayName=entry.DisplayName or cfg.DisplayName,Rarity=entry.Rarity or cfg.Rarity,
-    Count=entry.Count or 0,Free=entry.Free or 0,Planted=entry.Planted or 0,Mastery=entry.Mastery or {Level=1,XP=0,NextXP=25},
+    Count=entry.Count or 0,Obtained=entry.Obtained or entry.Count or 0,Free=entry.Free or 0,Planted=entry.Planted or 0,Mastery=entry.Mastery or {Level=1,XP=0,NextXP=25},
     Favorite=entry.Favorite==true,Protected=entry.Protected==true,CanDissolve=entry.CanDissolve==true,CanUpgrade=entry.CanUpgrade==true,
     Icon=flowerIcon(entry.Id),Odds=entry.Odds or "1/—",
    }
@@ -139,7 +139,7 @@ local function buildItems(profile,inventory)
   if cfg then
    table.insert(out.Bees,{
     Kind="Bee",Id=entry.Id,DisplayName=entry.DisplayName or cfg.DisplayName,Rarity=entry.Rarity or cfg.Rarity,
-    Count=entry.Count or 0,Equipped=entry.Equipped or 0,Free=entry.Free or 0,CanDissolve=entry.CanDissolve==true,DissolveValue=entry.DissolveValue or 0,
+    Count=entry.Count or 0,Obtained=entry.Obtained or entry.Count or 0,Equipped=entry.Equipped or 0,Free=entry.Free or 0,CanDissolve=false,DissolveValue=0,
     Traits=entry.Traits or cfg.Traits or {},Ability=entry.Ability or (cfg.Ability and cfg.Ability.Name) or "",
     Mastery=entry.Mastery or Bees.GetMasteryState(0),Icon=Icons.GetBeeIcon(entry.Id),Favorite=false,Protected=false,Odds=entry.Odds or "1/—",
    })
@@ -423,7 +423,7 @@ function InventoryV2.Render(controller,profile,uiState)
     if plantSlot then
      description.Text=item.DisplayName.." • "..item.Rarity..". Choose an available copy for Garden Slot "..tostring(plantSlot).."."
     else
-     description.Text=item.DisplayName.." • "..item.Rarity..". Plant a free copy, protect rare items, and upgrade Mastery with Petal Dust."
+     description.Text=item.DisplayName.." • "..item.Rarity.." • 1/N: "..tostring(item.Odds or "1/—")..". Duplicate rolls increase this Flower species Level."
     end
    elseif item.Kind=="Bee" then
     local ability=Bees.GetAbilityDescription(item.Id)
@@ -449,10 +449,10 @@ function InventoryV2.Render(controller,profile,uiState)
    local masteryTrack=stats:FindFirstChild("MasteryTrack")
    local masteryXP=stats:FindFirstChild("MasteryXP")
    if item.Kind=="Flower" or item.Kind=="Seed" then
-    if ownedLabel then ownedLabel.Text="Owned" end
-    if ownedValue then ownedValue.Text=tostring(item.Kind=="Seed" and (item.Count+item.Planted) or item.Count).."" end
-    if freeLabel then freeLabel.Text="Available" end
-    if freeValue then freeValue.Text=tostring(item.Free).."" end
+    if ownedLabel then ownedLabel.Text="Obtained" end
+    if ownedValue then ownedValue.Text=tostring(item.Obtained or 1) end
+    if freeLabel then freeLabel.Text="Garden" end
+    if freeValue then freeValue.Text=(item.Planted or 0)>0 and "Planted" or "Available" end
     if masteryLabel then masteryLabel.Text="Mastery" end
     if masteryLevel then masteryLevel.Text="Lv. "..tostring(item.Mastery.Level or 1) end
     if masteryTrack then
@@ -463,8 +463,8 @@ function InventoryV2.Render(controller,profile,uiState)
     end
     if masteryXP then masteryXP.Text=tostring(item.Mastery.XP or 0).." / "..tostring(item.Mastery.NextXP or 0) end
    elseif item.Kind=="Bee" then
-    if ownedLabel then ownedLabel.Text="Owned" end
-    if ownedValue then ownedValue.Text=tostring(item.Count).."" end
+    if ownedLabel then ownedLabel.Text="Obtained" end
+    if ownedValue then ownedValue.Text=tostring(item.Obtained or 1) end
     if freeLabel then freeLabel.Text="Equipped" end
     if freeValue then freeValue.Text=tostring(item.Equipped or 0).."" end
     if masteryLabel then masteryLabel.Text="Bee Mastery" end
@@ -514,8 +514,8 @@ function InventoryV2.Render(controller,profile,uiState)
    end
    setButton(favorite,true,item.Favorite and "★  REMOVE FAVORITE" or "★  FAVORITE",true,function() controller:Send("Flag",item.Id,"FavoriteFlowers") end)
    setButton(protect,true,item.Protected and "◆  UNPROTECT" or "◆  PROTECT",true,function() controller:Send("Flag",item.Id,"LockedFlowers") end)
-   setButton(dissolve,true,"DISSOLVE ×1",item.CanDissolve==true,function() controller:Send("Dissolve",item.Id,1) end)
-   setButton(mastery,true,"MASTERY +"..tostring(item.Mastery.Cost or "").." DUST",item.CanUpgrade==true,function() controller:Send("FlowerUpgrade",item.Id) end)
+   setButton(dissolve,false)
+   setButton(mastery,false)
   elseif item.Kind=="Bee" then
    local slots=inventory.EquippedBeeSlots or (profile.Pollinators and profile.Pollinators.EquippedBeeSlots) or {}
    local equippedSlot=findEquippedSlot(slots,item.Id)
@@ -527,7 +527,7 @@ function InventoryV2.Render(controller,profile,uiState)
    end
    setButton(favorite,false)
    setButton(protect,false)
-   setButton(dissolve,true,"DISMANTLE ×1  •  +"..tostring(item.DissolveValue or 0).." DUST",item.CanDissolve==true,function() controller:Send("DissolveBee",item.Id,1) end)
+   setButton(dissolve,false)
    setButton(mastery,false)
   elseif item.Kind=="Resource" and item.Id=="AncientNectar" then
    setButton(plant,false)
