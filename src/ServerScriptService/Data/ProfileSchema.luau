@@ -7,6 +7,13 @@ local Default=require(script.Parent.DefaultProfile)
 local Mapping=require(script.Parent.LegacyBloomMapping)
 local Domain=require(script.Parent.ProfileDomain)
 local S={}
+local function addFlowerXP(m,xp)
+ m.Level=math.max(1,math.floor(tonumber(m.Level) or 1));m.XP=math.max(0,tonumber(m.XP) or 0)+(tonumber(xp) or 0)
+ while m.Level<C.MasteryCap and m.XP>=m.Level*C.MasteryXP do m.XP-=m.Level*C.MasteryXP;m.Level+=1 end
+end
+local function addBeeXP(total,xp)
+ return Bees.GetMasteryState((tonumber(total) or 0)+(tonumber(xp) or 0)).TotalXP
+end
 local function reconcile(p,d) for k,v in pairs(d) do if type(p[k])~=type(v) then p[k]=U.Copy(v) elseif type(v)=="table" then reconcile(p[k],v) end end end
 local function valid(v,seen,depth)
  if depth>64 then return false,"Depth limit" end
@@ -21,7 +28,7 @@ function S.Reconcile(p) if type(p)~="table" then return false,"Profile must be a
 local function prepareProfile(p)
  local ok,err=S.Validate(p) if not ok then return false,err end
  if type(p.SchemaVersion)=="number" and p.SchemaVersion>C.SchemaVersion then return false,"FUTURE_SCHEMA" end
- local n=U.Copy(p) local migrate=not(n.Migrations and n.Migrations.BloomReworkV1)
+ local n=U.Copy(p) local migrate=not(n.Migrations and n.Migrations.BloomReworkV1) local visionMigrate=not(n.Migrations and n.Migrations.GameVisionV1)
  -- Do not seed defaults into a returning player's empty garden or add starter inventory twice.
  local savedSlots=type(n.Garden)=="table" and type(n.Garden.Slots)=="table" and U.Copy(n.Garden.Slots)
  local savedCopies=type(n.FlowerCollection)=="table" and type(n.FlowerCollection.OwnedSeedCopies)=="table" and U.Copy(n.FlowerCollection.OwnedSeedCopies)
@@ -65,6 +72,76 @@ local function prepareProfile(p)
   -- Existing physical flowers are granted enough ownership to preserve their planted layout.
   local counts={} for _,slot in pairs(n.Garden.Slots) do if type(slot)=="table" and Flowers.Exists(slot.SpeciesId) then counts[slot.SpeciesId]=(counts[slot.SpeciesId] or 0)+1 end end
   for id,count in pairs(counts) do f.OwnedSeedCopies[id]=math.max(f.OwnedSeedCopies[id] or 0,count) f.DiscoveredFlowers[id]=true end
+ end
+ if visionMigrate then
+  local f=n.FlowerCollection
+  f.ObtainedFlowers=type(f.ObtainedFlowers)=="table" and f.ObtainedFlowers or {}
+  local plantedSeen={}
+  for key,slot in pairs(type(n.Garden.Slots)=="table" and n.Garden.Slots or {}) do
+   if type(slot)=="table" and Flowers.Exists(slot.SpeciesId) then
+    local id=slot.SpeciesId
+    f.DiscoveredFlowers[id]=true
+    f.OwnedSeedCopies[id]=math.max(1,math.floor(tonumber(f.OwnedSeedCopies[id]) or 0))
+    f.ObtainedFlowers[id]=math.max(1,math.floor(tonumber(f.ObtainedFlowers[id]) or 0))
+    local m=f.FlowerMastery[id] or {Level=1,XP=0}
+    f.FlowerMastery[id]=m
+    local slotLevel=math.max(1,math.floor(tonumber(slot.Level) or 1))
+    local slotXP=math.max(0,tonumber(slot.XP) or 0)
+    if slotLevel>(tonumber(m.Level) or 1) or (slotLevel==(tonumber(m.Level) or 1) and slotXP>(tonumber(m.XP) or 0)) then
+     m.Level=slotLevel;m.XP=slotXP
+    end
+    local index=tonumber(key)
+    if plantedSeen[id] or not index or index%1~=0 or index<1 or index>C.MaxFlowerSlots then
+     Domain.Archive(n,"GameVisionV1.GardenSlots",key,slot)
+     n.Garden.Slots[key]={}
+    else
+     plantedSeen[id]=true
+    end
+   end
+  end
+  for id,count in pairs(f.OwnedSeedCopies) do
+   local owned=math.max(0,math.floor(tonumber(count) or 0))
+   if owned>0 and Flowers.Exists(id) then
+    f.DiscoveredFlowers[id]=true
+    f.ObtainedFlowers[id]=math.max(math.floor(tonumber(f.ObtainedFlowers[id]) or 0),owned)
+    local m=f.FlowerMastery[id] or {Level=1,XP=0}
+    f.FlowerMastery[id]=m
+    if owned>1 then addFlowerXP(m,(owned-1)*C.FlowerDuplicateXP) end
+    f.OwnedSeedCopies[id]=1
+   end
+  end
+  local b=n.Pollinators
+  b.BeeObtained=type(b.BeeObtained)=="table" and b.BeeObtained or {}
+  for id,count in pairs(b.BeeInventory) do
+   local owned=math.max(0,math.floor(tonumber(count) or 0))
+   if owned>0 and Bees.Exists(id) then
+    b.DiscoveredBees[id]=true
+    b.BeeObtained[id]=math.max(math.floor(tonumber(b.BeeObtained[id]) or 0),owned)
+    if owned>1 then b.BeeMastery[id]=addBeeXP(b.BeeMastery[id],(owned-1)*C.BeeDuplicateXP) end
+    b.BeeInventory[id]=1
+   end
+  end
+  local oldUnlocked=math.max(0,math.floor(tonumber(n.Garden.UnlockedSlots) or 0))
+  local hasPlanted=next(plantedSeen)~=nil
+  if oldUnlocked>0 or hasPlanted then n.Tutorial.Events.FirstGardenSlot=math.max(1,tonumber(n.Tutorial.Events.FirstGardenSlot) or 0) end
+  local hiveLevel=tonumber(n.Hive.Level)
+  if type(hiveLevel)~="number" or hiveLevel~=hiveLevel or math.abs(hiveLevel)==math.huge then hiveLevel=1 end
+  hiveLevel=math.max(1,math.floor(hiveLevel))
+  local capacity=(n.Tutorial.Events.FirstGardenSlot or 0)>0 and 1 or 0
+  for _,required in ipairs(C.GardenSlotHiveMilestones or {}) do if hiveLevel>=required then capacity+=1 end end
+  capacity=math.min(C.MaxFlowerSlots,capacity)
+  for key,slot in pairs(n.Garden.Slots) do
+   local index=tonumber(key)
+   if index and index%1==0 and index>capacity and type(slot)=="table" and next(slot)~=nil then
+    Domain.Archive(n,"GameVisionV1.CapacityOverflow",key,slot)
+    n.Garden.Slots[key]={}
+   end
+  end
+  n.Garden.UnlockedSlots=capacity
+  n.Garden.ActiveSynergy=""
+  Domain.Archive(n,"GameVisionV1","StarterBeeGranted",n.StarterBeeGranted)
+  n.StarterBeeGranted=nil
+  n.Migrations.GameVisionV1=true
  end
  Domain.Apply(n)
  n.SchemaVersion=C.SchemaVersion
