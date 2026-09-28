@@ -64,7 +64,9 @@ need(garden,'self:Build(player)',"physical world rebuild after edit")
 need(garden,'self.EditorSessions[player]=nil',"session cleanup")
 
 need(player,'elseif action=="GardenEdit" then return self.GardenPlotService:GardenEdit(player,a,b)',"server action route")
-need(remote,'action=="Plant" or action=="GardenEdit"',"remote schema")
+need(remote,'action=="GardenEdit"',"GardenEdit remote schema")
+if 'action=="Plant"' in remote:
+    raise AssertionError("legacy Plant remote route must stay removed")
 need(state,'Hint=Effects.Feature(profile,"GARDEN_5","PatternHints") and self.X.GardenSynergyService:Hint(profile) or nil',"hint stays Workshop-gated")
 
 need(bloom,'Garden="GardenV1"',"Garden renderer id")
