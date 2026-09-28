@@ -236,7 +236,7 @@ end
 function S:Tick(player,dt)
  local profile=self.X:Profile(player)
  local temp=self.X.Temp[player]
- if not profile or not profile.StarterBeeGranted or not temp then return end
+ if not profile or not temp then return end
 
  local slots=flowerSlots(profile)
  if #slots==0 then return end
