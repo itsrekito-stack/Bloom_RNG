@@ -26986,6 +26986,87 @@
                               ]
                             }
                           ]
+                        },
+                        {
+                          "ClassName": "TextButton",
+                          "Name": "UnequipAllButton",
+                          "Properties": {
+                            "Position": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  110
+                                ],
+                                [
+                                  0,
+                                  51
+                                ]
+                              ]
+                            },
+                            "Size": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  100
+                                ],
+                                [
+                                  0,
+                                  20
+                                ]
+                              ]
+                            },
+                            "BackgroundColor3": [
+                              0.09,
+                              0.055,
+                              0.075
+                            ],
+                            "BackgroundTransparency": 0.03,
+                            "BorderSizePixel": 0,
+                            "Text": "UNEQUIP ALL",
+                            "TextColor3": [
+                              1,
+                              0.45,
+                              0.5
+                            ],
+                            "TextSize": 7,
+                            "TextWrapped": false,
+                            "TextXAlignment": "Center",
+                            "TextYAlignment": "Center",
+                            "Font": "GothamBold",
+                            "AutoButtonColor": false,
+                            "Visible": true,
+                            "ZIndex": 57
+                          },
+                          "Children": [
+                            {
+                              "ClassName": "UICorner",
+                              "Name": "UICorner",
+                              "Properties": {
+                                "CornerRadius": {
+                                  "UDim": [
+                                    0,
+                                    7
+                                  ]
+                                }
+                              },
+                              "Children": []
+                            },
+                            {
+                              "ClassName": "UIStroke",
+                              "Name": "UIStroke",
+                              "Properties": {
+                                "Color": [
+                                  0.45,
+                                  0.12,
+                                  0.18
+                                ],
+                                "Thickness": 1,
+                                "Transparency": 0.25,
+                                "ApplyStrokeMode": "Border"
+                              },
+                              "Children": []
+                            }
+                          ]
                         }
                       ]
                     },
@@ -28474,6 +28555,295 @@
                               "Children": []
                             }
                           ]
+                        },
+                        {
+                          "ClassName": "Frame",
+                          "Name": "BeeSummary",
+                          "Properties": {
+                            "Position": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  16
+                                ],
+                                [
+                                  0,
+                                  246
+                                ]
+                              ]
+                            },
+                            "Size": {
+                              "UDim2": [
+                                [
+                                  1,
+                                  -32
+                                ],
+                                [
+                                  0,
+                                  154
+                                ]
+                              ]
+                            },
+                            "BackgroundTransparency": 1,
+                            "BorderSizePixel": 0,
+                            "Visible": false,
+                            "ZIndex": 56,
+                            "ClipsDescendants": false
+                          },
+                          "Children": [
+                            {
+                              "ClassName": "Frame",
+                              "Name": "PassiveList",
+                              "Properties": {
+                                "Position": {
+                                  "UDim2": [
+                                    [
+                                      0,
+                                      0
+                                    ],
+                                    [
+                                      0,
+                                      0
+                                    ]
+                                  ]
+                                },
+                                "Size": {
+                                  "UDim2": [
+                                    [
+                                      1,
+                                      0
+                                    ],
+                                    [
+                                      0,
+                                      68
+                                    ]
+                                  ]
+                                },
+                                "BackgroundTransparency": 1,
+                                "BorderSizePixel": 0,
+                                "Visible": true,
+                                "ZIndex": 57
+                              },
+                              "Children": [
+                                {
+                                  "ClassName": "UIListLayout",
+                                  "Name": "UIListLayout",
+                                  "Properties": {
+                                    "FillDirection": "Vertical",
+                                    "Padding": {
+                                      "UDim": [
+                                        0,
+                                        1
+                                      ]
+                                    },
+                                    "SortOrder": "LayoutOrder",
+                                    "HorizontalAlignment": "Left",
+                                    "VerticalAlignment": "Top"
+                                  },
+                                  "Children": []
+                                },
+                                {
+                                  "ClassName": "Frame",
+                                  "Name": "PassiveRowTemplate",
+                                  "Properties": {
+                                    "Size": {
+                                      "UDim2": [
+                                        [
+                                          1,
+                                          0
+                                        ],
+                                        [
+                                          0,
+                                          22
+                                        ]
+                                      ]
+                                    },
+                                    "BackgroundTransparency": 1,
+                                    "BorderSizePixel": 0,
+                                    "Visible": false,
+                                    "ZIndex": 58,
+                                    "LayoutOrder": 1
+                                  },
+                                  "Children": [
+                                    {
+                                      "ClassName": "ImageLabel",
+                                      "Name": "Icon",
+                                      "Properties": {
+                                        "Position": {
+                                          "UDim2": [
+                                            [
+                                              0,
+                                              0
+                                            ],
+                                            [
+                                              0.5,
+                                              -9
+                                            ]
+                                          ]
+                                        },
+                                        "Size": {
+                                          "UDim2": [
+                                            [
+                                              0,
+                                              18
+                                            ],
+                                            [
+                                              0,
+                                              18
+                                            ]
+                                          ]
+                                        },
+                                        "BackgroundTransparency": 1,
+                                        "BorderSizePixel": 0,
+                                        "Image": "",
+                                        "ScaleType": "Fit",
+                                        "Visible": true,
+                                        "ZIndex": 59
+                                      },
+                                      "Children": []
+                                    },
+                                    {
+                                      "ClassName": "TextLabel",
+                                      "Name": "Value",
+                                      "Properties": {
+                                        "Position": {
+                                          "UDim2": [
+                                            [
+                                              0,
+                                              26
+                                            ],
+                                            [
+                                              0,
+                                              0
+                                            ]
+                                          ]
+                                        },
+                                        "Size": {
+                                          "UDim2": [
+                                            [
+                                              1,
+                                              -26
+                                            ],
+                                            [
+                                              1,
+                                              0
+                                            ]
+                                          ]
+                                        },
+                                        "BackgroundTransparency": 1,
+                                        "BorderSizePixel": 0,
+                                        "Text": "+0%",
+                                        "TextColor3": [
+                                          0.96,
+                                          0.972,
+                                          0.988
+                                        ],
+                                        "TextSize": 12,
+                                        "TextWrapped": false,
+                                        "TextXAlignment": "Left",
+                                        "TextYAlignment": "Center",
+                                        "Font": "GothamBold",
+                                        "Visible": true,
+                                        "ZIndex": 59
+                                      },
+                                      "Children": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "ClassName": "TextLabel",
+                              "Name": "AbilityKicker",
+                              "Properties": {
+                                "Position": {
+                                  "UDim2": [
+                                    [
+                                      0,
+                                      0
+                                    ],
+                                    [
+                                      0,
+                                      76
+                                    ]
+                                  ]
+                                },
+                                "Size": {
+                                  "UDim2": [
+                                    [
+                                      1,
+                                      0
+                                    ],
+                                    [
+                                      0,
+                                      14
+                                    ]
+                                  ]
+                                },
+                                "BackgroundTransparency": 1,
+                                "BorderSizePixel": 0,
+                                "Text": "ABILITY",
+                                "TextColor3": [
+                                  0.345,
+                                  0.694,
+                                  1
+                                ],
+                                "TextSize": 8,
+                                "TextXAlignment": "Left",
+                                "TextYAlignment": "Center",
+                                "Font": "GothamBold",
+                                "Visible": true,
+                                "ZIndex": 57
+                              },
+                              "Children": []
+                            },
+                            {
+                              "ClassName": "TextLabel",
+                              "Name": "AbilityDescription",
+                              "Properties": {
+                                "Position": {
+                                  "UDim2": [
+                                    [
+                                      0,
+                                      0
+                                    ],
+                                    [
+                                      0,
+                                      92
+                                    ]
+                                  ]
+                                },
+                                "Size": {
+                                  "UDim2": [
+                                    [
+                                      1,
+                                      0
+                                    ],
+                                    [
+                                      0,
+                                      58
+                                    ]
+                                  ]
+                                },
+                                "BackgroundTransparency": 1,
+                                "BorderSizePixel": 0,
+                                "Text": "Ability description",
+                                "TextColor3": [
+                                  0.96,
+                                  0.972,
+                                  0.988
+                                ],
+                                "TextSize": 10,
+                                "TextWrapped": true,
+                                "TextXAlignment": "Left",
+                                "TextYAlignment": "Top",
+                                "Font": "GothamBold",
+                                "Visible": true,
+                                "ZIndex": 57
+                              },
+                              "Children": []
+                            }
+                          ]
                         }
                       ]
                     }
@@ -29162,6 +29532,93 @@
                             "Font": "GothamBold",
                             "Visible": true,
                             "ZIndex": 59
+                          },
+                          "Children": []
+                        },
+                        {
+                          "ClassName": "TextLabel",
+                          "Name": "EquippedBadge",
+                          "Properties": {
+                            "Position": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  6
+                                ],
+                                [
+                                  0,
+                                  6
+                                ]
+                              ]
+                            },
+                            "Size": {
+                              "UDim2": [
+                                [
+                                  0,
+                                  82
+                                ],
+                                [
+                                  0,
+                                  18
+                                ]
+                              ]
+                            },
+                            "BackgroundColor3": [
+                              0.05,
+                              0.19,
+                              0.13
+                            ],
+                            "BackgroundTransparency": 0.02,
+                            "BorderSizePixel": 0,
+                            "Text": "EQUIPPED  •  S1",
+                            "TextColor3": [
+                              0.42,
+                              0.94,
+                              0.67
+                            ],
+                            "TextSize": 7,
+                            "Font": "GothamBold",
+                            "TextXAlignment": "Center",
+                            "TextYAlignment": "Center",
+                            "Visible": false,
+                            "ZIndex": 62
+                          },
+                          "Children": [
+                            {
+                              "ClassName": "UICorner",
+                              "Name": "UICorner",
+                              "Properties": {
+                                "CornerRadius": {
+                                  "UDim": [
+                                    0,
+                                    7
+                                  ]
+                                }
+                              },
+                              "Children": []
+                            },
+                            {
+                              "ClassName": "UIStroke",
+                              "Name": "UIStroke",
+                              "Properties": {
+                                "Color": [
+                                  0.18,
+                                  0.55,
+                                  0.36
+                                ],
+                                "Thickness": 1,
+                                "Transparency": 0.12,
+                                "ApplyStrokeMode": "Border"
+                              },
+                              "Children": []
+                            }
+                          ]
+                        },
+                        {
+                          "ClassName": "UIScale",
+                          "Name": "InventoryHoverScale",
+                          "Properties": {
+                            "Scale": 1
                           },
                           "Children": []
                         }
@@ -40698,6 +41155,85 @@
                                         "ZIndex": 62
                                       },
                                       "Children": []
+                                    },
+                                    {
+                                      "ClassName": "TextLabel",
+                                      "Name": "GhostBadge",
+                                      "Properties": {
+                                        "Position": {
+                                          "UDim2": [
+                                            [
+                                              0,
+                                              8
+                                            ],
+                                            [
+                                              1,
+                                              -23
+                                            ]
+                                          ]
+                                        },
+                                        "Size": {
+                                          "UDim2": [
+                                            [
+                                              1,
+                                              -16
+                                            ],
+                                            [
+                                              0,
+                                              16
+                                            ]
+                                          ]
+                                        },
+                                        "BackgroundColor3": [
+                                          0.04,
+                                          0.12,
+                                          0.18
+                                        ],
+                                        "BackgroundTransparency": 0.16,
+                                        "BorderSizePixel": 0,
+                                        "Text": "GHOST  •  HIVE LV. 7",
+                                        "TextColor3": [
+                                          0.32,
+                                          0.76,
+                                          1
+                                        ],
+                                        "TextSize": 7,
+                                        "Font": "GothamBold",
+                                        "TextXAlignment": "Center",
+                                        "TextYAlignment": "Center",
+                                        "Visible": true,
+                                        "ZIndex": 64
+                                      },
+                                      "Children": [
+                                        {
+                                          "ClassName": "UICorner",
+                                          "Name": "UICorner",
+                                          "Properties": {
+                                            "CornerRadius": {
+                                              "UDim": [
+                                                0,
+                                                6
+                                              ]
+                                            }
+                                          },
+                                          "Children": []
+                                        },
+                                        {
+                                          "ClassName": "UIStroke",
+                                          "Name": "UIStroke",
+                                          "Properties": {
+                                            "Color": [
+                                              0.2,
+                                              0.58,
+                                              0.82
+                                            ],
+                                            "Thickness": 1,
+                                            "Transparency": 0.22,
+                                            "ApplyStrokeMode": "Border"
+                                          },
+                                          "Children": []
+                                        }
+                                      ]
                                     }
                                   ]
                                 }

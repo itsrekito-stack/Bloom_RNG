@@ -53,6 +53,13 @@ need(poll,"ability.BurstHiveMultiplier","burst Hive runtime")
 need(poll,"rng:NextNumber()<C.AbilityTokenChance","ability token chance uses BloomConfig")
 need(poll,"while state.Elapsed>=C.DeliverySeconds and deliveryGuard<8 do","large-dt delivery catch-up is bounded")
 need(poll,'if type(index)~="number" or index>capacity or equipped~=state.Id then states[index]=nil end',"unequipped runtime state pruning")
+need(poll,'local function chooseNextSlot(slots,current,state,states)',"per-Bee target brain")
+need(poll,'brain=Random.new(rng:NextInteger(1,2147483646))',"independent Bee RNG stream")
+need(poll,'if other~=state and table.find(slots,other.Slot) then occupied[other.Slot]=true end',"Bee avoids already-targeted Flowers when possible")
+need(poll,'state.Slot=chooseNextSlot(slots,state.Slot,state,states) or state.Slot',"new Flower chosen after every delivery")
+need(poll,'state.Slot=chooseNextSlot(slots,nil,state,states) or slots[1]',"independent initial Flower choice")
+if 'if temp.Hotspot and (temp.HotspotUntil or 0)>os.clock() then' in poll:
+    raise AssertionError("BloomSurge hotspot must not force every Bee onto the same Flower")
 
 need(inventory,'if not self.X.U.Integer(slot,capacity) then return false,"INVALID_SLOT" end',"unequip slot authority")
 need(inventory,'if (p.Pollinators.BeeInventory[id] or 0)<1 then return false,"NOT_OWNED" end',"bee ownership authority")

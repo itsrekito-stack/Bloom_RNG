@@ -43,6 +43,12 @@ need(boost,'self.LastRevision=revision',"revision still tracked without rebuild"
 need(boost,'badge.MouseEnter:Connect',"hover remains event-driven")
 need(boost,'badge.MouseLeave:Connect',"hover only closes on actual pointer leave")
 
+need(ui,'local PERSISTENT_HOVERS=setmetatable({}, {__mode="k"})',"persistent generic hover registry")
+need(ui,'button:SetAttribute("BloomHovered",true)',"generic hover state retained across renders")
+need(ui,'refreshPersistentHovers()',"render reapplies active hover visuals")
+need(ui,'button:SetAttribute("BloomDockHovered",true)',"dock hover state retained")
+need(ui,'local hovered=b:GetAttribute("BloomDockHovered")==true',"dock render respects current pointer hover")
+
 # Fullscreen Workshop must restore every HUD block it temporarily hid.
 need(ui,'function UI:CaptureWorkshopHUDVisibility()',"Workshop captures HUD visibility")
 need(ui,'function UI:RestoreWorkshopHUDVisibility()',"Workshop restores HUD visibility")

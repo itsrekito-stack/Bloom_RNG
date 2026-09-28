@@ -1,4 +1,5 @@
 local RS=game:GetService("ReplicatedStorage")
+local TweenService=game:GetService("TweenService")
 
 local Flowers=require(RS.Config.FlowersConfig)
 local Bees=require(RS.Config.BeesConfig)
@@ -57,6 +58,43 @@ local function resourceIcon(id)
  if icon=="" then icon=Icons.Get("System","Flower") end
  return icon
 end
+
+local PASSIVE_ORDER={
+ "CoinMultiplier","PollinatorYieldMultiplier","PollinatorPowerMultiplier","PollinatorTravelSpeedMultiplier",
+ "LuckMultiplier","FlowerGrowthMultiplier","HiveHoneyMultiplier","BeeMasteryXPMultiplier","AbilityCooldownMultiplier",
+}
+
+local function passiveIcon(stat)
+ if stat=="CoinMultiplier" then return Icons.GetCurrencyIcon("Coins") end
+ if stat=="PollinatorYieldMultiplier" then return Icons.Get("System","Bee") end
+ if stat=="PollinatorPowerMultiplier" then return Icons.Get("System","Upgrade") end
+ if stat=="PollinatorTravelSpeedMultiplier" then return Icons.Get("System","ArrowRight") end
+ if stat=="LuckMultiplier" then return Icons.Get("WorkshopHex","Luck") end
+ if stat=="FlowerGrowthMultiplier" then return Icons.Get("System","Flower") end
+ if stat=="HiveHoneyMultiplier" then return Icons.Get("System","Hive") end
+ if stat=="BeeMasteryXPMultiplier" then return Icons.Get("WorkshopHex","Mastery") end
+ if stat=="AbilityCooldownMultiplier" then return Icons.Get("WorkshopHex","AutoRoll") end
+ return Icons.Get("System","Bee")
+end
+
+local function passivePercent(stat,value)
+ local multiplier=tonumber(value) or 1
+ local delta=(multiplier-1)*100
+ if stat=="AbilityCooldownMultiplier" and multiplier<1 then
+  return "-"..tostring(math.floor((1-multiplier)*100+.5)).."%"
+ end
+ local rounded=math.floor(math.abs(delta)+.5)
+ return (delta>=0 and "+" or "-")..tostring(rounded).."%"
+end
+
+local function equippedCount(slots)
+ local n=0
+ for _,id in pairs(slots or {}) do
+  if type(id)=="string" and id~="" then n+=1 end
+ end
+ return n
+end
+
 
 local function findEquippedSlot(slots,id)
  for i,v in pairs(slots or {}) do
@@ -334,6 +372,7 @@ function InventoryV2.Render(controller,profile,uiState)
  local searchBar=browser:WaitForChild("SearchBar")
  local sortButton=browser:WaitForChild("SortButton")
  local filterButton=browser:WaitForChild("FilterButton")
+ local unequipAllButton=browser:WaitForChild("UnequipAllButton")
  local traitPanel=browser:WaitForChild("TraitFilterPanel")
  local traitList=traitPanel:WaitForChild("TraitFilterList")
  local traitTemplate=traitList:WaitForChild("TraitChipTemplate")
@@ -421,6 +460,15 @@ function InventoryV2.Render(controller,profile,uiState)
  end)
 
  sectionTitle.Text=CATEGORY_TITLES[state.Category] or string.upper(state.Category)
+ local equippedSlots=inventory.EquippedBeeSlots or (profile.Pollinators and profile.Pollinators.EquippedBeeSlots) or {}
+ local equippedTotal=equippedCount(equippedSlots)
+ setButton(
+  unequipAllButton,
+  state.Category=="Bees",
+  equippedTotal>0 and ("UNEQUIP ALL  •  "..tostring(equippedTotal)) or "UNEQUIP ALL",
+  equippedTotal>0,
+  function() controller:Send("UnequipAllBees") end
+ )
 
  local function drawDetails(item)
   if not item then
@@ -457,7 +505,11 @@ function InventoryV2.Render(controller,profile,uiState)
   end
 
   local description=details:FindFirstChild("Description")
+  local beeSummary=details:FindFirstChild("BeeSummary")
+  local stats=details:FindFirstChild("StatsCard")
+  local isBee=item.Kind=="Bee"
   if description and description:IsA("TextLabel") then
+   description.Visible=not isBee
    if item.Kind=="Flower" then
     local synergyId=uiState.Garden and uiState.Garden.ActiveSynergy or ""
     local synergyName="None"
@@ -466,11 +518,7 @@ function InventoryV2.Render(controller,profile,uiState)
     end
     description.Text=item.DisplayName.." • "..item.Rarity.." • 1/N: "..tostring(item.Odds or "1/—").." • Level "..tostring(item.Mastery.Level or 1).." • Current Synergy: "..synergyName..". Duplicate rolls increase this Flower species Level."
    elseif item.Kind=="Bee" then
-    local ability=Bees.GetAbilityDescription(item.Id)
-    local passive=Bees.GetPassiveDescription(item.Id)
-    local traits=#(item.Traits or {})>0 and table.concat(item.Traits,", ") or "None"
-    local preview=traitEquipPreview(item,inventory)
-    description.Text="1/N: "..tostring(item.Odds or "1/—").."  •  Traits: "..traits.."  •  "..passive.."  •  "..ability.."  •  Mastery: "..tostring(item.Mastery.BonusText or "No mastery bonus yet").."  •  Equip preview: "..preview
+    description.Text=""
    elseif item.Kind=="Resource" then
     description.Text=item.Description or "A Bloom RNG progression resource."
    else
@@ -478,8 +526,51 @@ function InventoryV2.Render(controller,profile,uiState)
    end
   end
 
-  local stats=details:FindFirstChild("StatsCard")
+  if beeSummary and beeSummary:IsA("GuiObject") then
+   beeSummary.Visible=isBee
+   local passiveList=beeSummary:FindFirstChild("PassiveList")
+   local passiveTemplate=passiveList and passiveList:FindFirstChild("PassiveRowTemplate")
+   local abilityDescription=beeSummary:FindFirstChild("AbilityDescription")
+   if passiveList then
+    for _,child in ipairs(passiveList:GetChildren()) do
+     if child:GetAttribute("BeePassiveRuntime") then child:Destroy() end
+    end
+   end
+   if isBee and passiveList and passiveTemplate and passiveTemplate:IsA("Frame") then
+    local bee=Bees.Get(item.Id)
+    local passive=bee and bee.Passive or {}
+    local seen={}
+    local order=0
+    local function addPassive(stat,value)
+     if seen[stat] or tonumber(value)==nil then return end
+     seen[stat]=true
+     order+=1
+     local row=passiveTemplate:Clone()
+     row.Name="Passive_"..tostring(stat)
+     row.LayoutOrder=order
+     row.Visible=true
+     row:SetAttribute("BeePassiveRuntime",true)
+     local icon=row:FindFirstChild("Icon")
+     local valueLabel=row:FindFirstChild("Value")
+     if icon and icon:IsA("ImageLabel") then icon.Image=passiveIcon(stat) end
+     if valueLabel and valueLabel:IsA("TextLabel") then valueLabel.Text=passivePercent(stat,value) end
+     row.Parent=passiveList
+    end
+    for _,stat in ipairs(PASSIVE_ORDER) do
+     if passive[stat]~=nil then addPassive(stat,passive[stat]) end
+    end
+    local extras={}
+    for stat in pairs(passive) do if not seen[stat] then extras[#extras+1]=stat end end
+    table.sort(extras)
+    for _,stat in ipairs(extras) do addPassive(stat,passive[stat]) end
+    if abilityDescription and abilityDescription:IsA("TextLabel") then
+     abilityDescription.Text=Bees.GetAbilityDescription(item.Id)
+    end
+   end
+  end
+
   if stats then
+   stats.Visible=not isBee
    local ownedLabel=stats:FindFirstChild("OwnedLabel")
    local ownedValue=stats:FindFirstChild("OwnedValue")
    local freeLabel=stats:FindFirstChild("FreeLabel")
@@ -536,7 +627,7 @@ function InventoryV2.Render(controller,profile,uiState)
   local mastery=details:FindFirstChild("MasteryButton")
 
   if item.Kind=="Bee" then
-   local slots=inventory.EquippedBeeSlots or (profile.Pollinators and profile.Pollinators.EquippedBeeSlots) or {}
+   local slots=equippedSlots
    local equippedSlot=findEquippedSlot(slots,item.Id)
    if equippedSlot then
     setButton(plant,true,"UNEQUIP BEE",true,function() controller:Send("EquipBee","",equippedSlot) end)
@@ -640,6 +731,23 @@ function InventoryV2.Render(controller,profile,uiState)
    end
    local marker=card:FindFirstChild("SelectedMarker")
    if marker and marker:IsA("GuiObject") then marker.Visible=selected end
+   local equippedBadge=card:FindFirstChild("EquippedBadge")
+   local equippedSlot=item.Kind=="Bee" and findEquippedSlot(equippedSlots,item.Id) or nil
+   if equippedBadge and equippedBadge:IsA("TextLabel") then
+    equippedBadge.Visible=equippedSlot~=nil
+    equippedBadge.Text=equippedSlot and ("EQUIPPED  •  S"..tostring(equippedSlot)) or ""
+   end
+   local hoverScale=card:FindFirstChild("InventoryHoverScale")
+   if hoverScale and hoverScale:IsA("UIScale") then
+    card.MouseEnter:Connect(function()
+     TweenService:Create(hoverScale,TweenInfo.new(Theme.Motion.Fast),{Scale=1.04}):Play()
+     if stroke then TweenService:Create(stroke,TweenInfo.new(Theme.Motion.Fast),{Thickness=selected and 2.6 or 1.8,Transparency=0}):Play() end
+    end)
+    card.MouseLeave:Connect(function()
+     TweenService:Create(hoverScale,TweenInfo.new(Theme.Motion.Fast),{Scale=1}):Play()
+     if stroke then TweenService:Create(stroke,TweenInfo.new(Theme.Motion.Fast),{Thickness=selected and 2.2 or 1,Transparency=selected and 0 or .28}):Play() end
+    end)
+   end
    card.Activated:Connect(function()
     state.Selected[state.Category]=item.Id
     refreshGrid()

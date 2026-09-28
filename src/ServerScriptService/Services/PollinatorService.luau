@@ -22,6 +22,34 @@ local function offsetSlot(slots,current,offset)
  return slots[((index-1+(offset or 0))%#slots)+1]
 end
 
+local function brainFor(state)
+ local brain=state and state.Brain
+ if typeof(brain)=="Random" then return brain end
+ brain=Random.new(rng:NextInteger(1,2147483646))
+ if state then state.Brain=brain end
+ return brain
+end
+
+local function chooseNextSlot(slots,current,state,states)
+ if #slots==0 then return current end
+ if #slots==1 then return slots[1] end
+ local occupied={}
+ for _,other in pairs(states or {}) do
+  if other~=state and table.find(slots,other.Slot) then occupied[other.Slot]=true end
+ end
+ local preferred={}
+ local fallback={}
+ for _,slot in ipairs(slots) do
+  if slot~=current then
+   fallback[#fallback+1]=slot
+   if not occupied[slot] then preferred[#preferred+1]=slot end
+  end
+ end
+ local choices=#preferred>0 and preferred or fallback
+ if #choices==0 then return current end
+ return choices[brainFor(state):NextInteger(1,#choices)]
+end
+
 local function tempRewardBonus(temp)
  local now=os.clock()
  return ((temp.TemporaryMutationUntil or 0)>now and 1.1 or 1)
@@ -187,7 +215,7 @@ function S:ProcessAbilityTicks(player,profile,state,bee,mastery,stats,slots)
  if remaining<=0 then state.AbilityTickSlot=nil end
 end
 
-function S:Deliver(player,profile,temp,state,bee,mastery,stats,slots)
+function S:Deliver(player,profile,temp,state,bee,mastery,stats,slots,states)
  local ability=bee.Ability
  local now=os.clock()
  local active=(state.ActiveUntil or 0)>now
@@ -227,7 +255,7 @@ function S:Deliver(player,profile,temp,state,bee,mastery,stats,slots)
   profile.GardenSynergies.Mastery[synergy]=(profile.GardenSynergies.Mastery[synergy] or 0)+E.Value(profile,"GARDEN_6","SynergyXP",1)
  end
 
- state.Slot=offsetSlot(slots,state.Slot,1) or state.Slot
+ state.Slot=chooseNextSlot(slots,state.Slot,state,states) or state.Slot
  if not profile.Tutorial.Events.PollenSpark then
   self.X.GardenActivityService:Offer(player,"PollenSpark",self.X.GardenPlotService:Position(player,state.Slot))
  end
@@ -261,20 +289,13 @@ function S:Tick(player,dt)
       *(stats.AbilityCooldown or 1)
       *mastery.AbilityCooldownMultiplier
       *E.Value(profile,"BEES_4","TraitCooldown",1)
-     state={Id=id,Elapsed=0,AbilityAt=os.clock()+math.max(.1,initialCooldown),Slot=slots[(index-1)%#slots+1]}
+     state={Id=id,Elapsed=0,AbilityAt=os.clock()+math.max(.1,initialCooldown)}
      states[index]=state
+     state.Slot=chooseNextSlot(slots,nil,state,states) or slots[1]
     end
 
     if not profile.Garden.Slots[state.Slot] or not profile.Garden.Slots[state.Slot].SpeciesId then
-     state.Slot=slots[1]
-    end
-
-    if temp.Hotspot and (temp.HotspotUntil or 0)>os.clock() then
-     local best=math.huge
-     for _,slotIndex in ipairs(slots) do
-      local d=(self.X.GardenPlotService:Position(player,slotIndex)-temp.Hotspot).Magnitude
-      if d<best then best=d state.Slot=slotIndex end
-     end
+     state.Slot=chooseNextSlot(slots,state.Slot,state,states) or slots[1]
     end
 
     local now=os.clock()
@@ -300,7 +321,7 @@ function S:Tick(player,dt)
     while state.Elapsed>=C.DeliverySeconds and deliveryGuard<8 do
      deliveryGuard+=1
      state.Elapsed-=C.DeliverySeconds
-     self:Deliver(player,profile,temp,state,bee,mastery,stats,slots)
+     self:Deliver(player,profile,temp,state,bee,mastery,stats,slots,states)
     end
    end
   end

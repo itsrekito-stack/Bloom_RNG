@@ -82,6 +82,8 @@ function S.Render(controller,profile,uiState)
  local synergyEffect=runtime:FindFirstChild("SynergyEffect",true)
  local hint=runtime:FindFirstChild("GhostHint",true)
  local remove=runtime:FindFirstChild("RemoveButton",true)
+ local ghostSlot=slotRing and slotRing:FindFirstChild("Slot7")
+ local ghostBadge=ghostSlot and ghostSlot:FindFirstChild("GhostBadge")
 
  if not flowerList or not flowerTemplate or not slotRing then
   error("[GardenEditor] Authored GardenKit structure is incomplete")
@@ -147,35 +149,44 @@ function S.Render(controller,profile,uiState)
    local slot=slots[i] or {}
    local id=slot.SpeciesId
    local open=i<=unlocked
+   local ghost=i==7 and not open
    button.Active=open
    button.AutoButtonColor=false
-   button.BackgroundTransparency=open and .02 or .35
+   button.BackgroundTransparency=open and .02 or (ghost and .62 or .35)
+   if i==7 and ghostBadge and ghostBadge:IsA("TextLabel") then
+    ghostBadge.Visible=ghost
+   end
    local icon=button:FindFirstChild("Icon")
    local name=button:FindFirstChild("Name")
    local level=button:FindFirstChild("Level")
    local lock=button:FindFirstChild("Lock")
    if icon and icon:IsA("ImageLabel") then
-    icon.Visible=open and id~=nil and id~=""
-    icon.Image=(id and id~="") and iconFor(id) or ""
+    icon.Visible=(open and id~=nil and id~="") or ghost
+    icon.Image=ghost and Icons.Get("System","Flower") or ((id and id~="") and iconFor(id) or "")
+    icon.ImageTransparency=ghost and .52 or 0
+    icon.ImageColor3=ghost and C.Blue or C.White
    end
    if name and name:IsA("TextLabel") then
-    name.Text=not open and "LOCKED" or (id and Flowers.Species[id] and Flowers.Species[id].DisplayName or "EMPTY")
+    name.Text=not open and (ghost and "GHOST SLOT" or "LOCKED") or (id and Flowers.Species[id] and Flowers.Species[id].DisplayName or "EMPTY")
    end
    if level and level:IsA("TextLabel") then
     local mastery=id and masteryFor(inventory,id) or {Level=1}
     level.Visible=open and id~=nil and id~=""
     level.Text="Lv. "..tostring(mastery.Level or 1)
    end
-   if lock and lock:IsA("TextLabel") then lock.Visible=not open end
+   if lock and lock:IsA("TextLabel") then
+    lock.Visible=not open and not ghost
+    if ghost then lock.Text="FINAL SLOT • HIVE LV. 7" end
+   end
    local stroke=button:FindFirstChildOfClass("UIStroke")
    if stroke then
     local selected=state.SelectedSlot==i
-    stroke.Color=selected and C.Gold or (open and C.Border or C.BorderSoft)
-    stroke.Thickness=selected and 2.2 or 1.2
-    stroke.Transparency=selected and 0 or .28
+    stroke.Color=selected and C.Gold or (ghost and C.Blue or (open and C.Border or C.BorderSoft))
+    stroke.Thickness=selected and 2.2 or (ghost and 1.8 or 1.2)
+    stroke.Transparency=selected and 0 or (ghost and .18 or .28)
    end
    button.Activated:Connect(function()
-    if not open then controller:Toast("This garden slot is locked.") return end
+    if not open then controller:Toast(ghost and "Reach Hive Level 7 to unlock the final Garden slot." or "This garden slot is locked.") return end
     state.SelectedSlot=i
     local selected=state.SelectedFlowerId
     if selected and selected~="" then

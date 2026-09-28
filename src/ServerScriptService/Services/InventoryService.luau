@@ -96,6 +96,23 @@ local function chooseEquipSlot(p,id,capacity)
  return bestSlot
 end
 
+function S:UnequipAllBees(player)
+ local p=self.X:Profile(player)
+ if not p then return false,"PROFILE_LOADING" end
+ local changed=false
+ for slot in pairs(p.Pollinators.EquippedBeeSlots) do
+  if type(slot)=="number" then
+   p.Pollinators.EquippedBeeSlots[slot]=nil
+   changed=true
+  end
+ end
+ if changed then
+  self.X.GardenSynergyService:Recalculate(player)
+  self.X.PollinatorService:Remove(player)
+ end
+ return true
+end
+
 function S:EquipBee(player,id,slot)
  local p=self.X:Profile(player)
  if not p then return false,"PROFILE_LOADING" end

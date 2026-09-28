@@ -44,6 +44,8 @@ need(activity,'if index~=o.Index then return false,"STALE_ACTIVITY" end',"stale 
 need(roll,'not p.Tutorial.FeatureUnlocks.Roll',"Roll progression lock")
 need(roll,'os.clock()-(self.Last[player] or -100)<cd',"Roll server cooldown")
 need(inventory,'(p.Pollinators.BeeInventory[id] or 0)<1',"Bee ownership validation")
+need(remote,'UnequipAllBees=true',"Unequip All uses no-argument remote schema")
+need(player,'elseif action=="UnequipAllBees" then return self.InventoryService:UnequipAllBees(player)',"Unequip All request route")
 need(inventory,'if v==id then return false,"ALREADY_EQUIPPED" end',"Bee species uniqueness validation")
 need(inventory,'local function chooseEquipSlot(p,id,capacity)',"Bee replacement slot is server-selected")
 need(inventory,'if rank<newRank',"replacement cannot evict equal/higher rarity Bee")

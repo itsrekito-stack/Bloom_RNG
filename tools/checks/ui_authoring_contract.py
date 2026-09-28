@@ -68,8 +68,9 @@ for required in [
     "WorldUIPrototypes","TutorialWorldBillboard","ActivityCheckpointBillboard",
     "TutorialWorldLabelTemplate","ActivityCheckpointLabelTemplate",
     "QuestTrackerHUD","Quest_1","Quest_2","Quest_3",
-    "TraitFilterPanel","TraitFilterList","TraitChipTemplate",
-    "LuckBadge","ScrollLeft","ScrollRight","UsedBadge","CurrencyHelp",
+    "TraitFilterPanel","TraitFilterList","TraitChipTemplate","UnequipAllButton","EquippedBadge","InventoryHoverScale",
+    "BeeSummary","PassiveRowTemplate","AbilityDescription",
+    "LuckBadge","ScrollLeft","ScrollRight","UsedBadge","GhostBadge","CurrencyHelp",
     "Nav_Inventory","Nav_Garden","Nav_Index","Nav_Workshop","Nav_Quests","Nav_Settings",
 ]:
     assert required in nodes, f"authored BloomUI node missing: {required}"
@@ -93,6 +94,8 @@ assert grid_props.get("VerticalAlignment")=="Top", "Inventory grid must align to
 item_card=nodes.get("ItemCardTemplate")
 assert item_card, "authored Inventory ItemCardTemplate missing"
 assert any(child.get("Name")=="Traits" and child.get("ClassName")=="TextLabel" for child in item_card.get("Children",[])), "Bee card trait-name label must be authored"
+assert any(child.get("Name")=="EquippedBadge" and child.get("ClassName")=="TextLabel" for child in item_card.get("Children",[])), "Bee equipped-state badge must be authored"
+assert any(child.get("Name")=="InventoryHoverScale" and child.get("ClassName")=="UIScale" for child in item_card.get("Children",[])), "Inventory hover scale must be authored"
 rarity_badge=nodes.get("RarityBadge")
 assert rarity_badge, "authored readable rarity badge missing"
 rarity_text=next((child for child in rarity_badge.get("Children",[]) if child.get("Name")=="Text"),None)

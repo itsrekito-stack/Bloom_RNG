@@ -28,6 +28,16 @@ for text,label in [
  ('local traitTemplate=traitList:WaitForChild("TraitChipTemplate")',"authored trait chip template"),
  ('filterButton.Text=selectedTrait and ("TRAITS • "..tostring(selectedTrait.Name)) or "TRAITS"',"Trait filter button copy"),
  ('state.TraitFilter=traitId',"Trait selection state"),
+ ('local unequipAllButton=browser:WaitForChild("UnequipAllButton")',"authored Unequip All control"),
+ ('function() controller:Send("UnequipAllBees") end',"Unequip All client action"),
+ ('local equippedBadge=card:FindFirstChild("EquippedBadge")',"equipped Bee card indicator"),
+ ('equippedBadge.Text=equippedSlot and ("EQUIPPED  •  S"..tostring(equippedSlot)) or ""',"equipped slot indicator copy"),
+ ('local beeSummary=details:FindFirstChild("BeeSummary")',"compact Bee summary"),
+ ('local passiveTemplate=passiveList and passiveList:FindFirstChild("PassiveRowTemplate")',"authored passive row template"),
+ ('abilityDescription.Text=Bees.GetAbilityDescription(item.Id)',"ability description binding"),
+ ('description.Visible=not isBee',"legacy long Bee description hidden"),
+ ('stats.Visible=not isBee',"legacy Bee stats block hidden"),
+ ('local hoverScale=card:FindFirstChild("InventoryHoverScale")',"inventory hover scale"),
 ]:
     need(client,text,label)
 
@@ -69,10 +79,14 @@ need(garden,'(p.FlowerCollection.OwnedSeedCopies[id] or 0)<1',"Garden editor spe
 for text,label in [
 
  ('elseif action=="EquipBee" then return self.InventoryService:EquipBee(player,a,b)',"Equip server route"),
+ ('elseif action=="UnequipAllBees" then return self.InventoryService:UnequipAllBees(player)',"Unequip All server route"),
  ('if b~="LockedFlowers" and b~="FavoriteFlowers" then return false,"INVALID_ACTION" end',"Flag field allowlist"),
 ]:
     need(player,text,label)
 
+need(inventory,'function S:UnequipAllBees(player)',"server-authoritative Unequip All")
+need(inventory,'p.Pollinators.EquippedBeeSlots[slot]=nil',"Unequip All clears equipped slots")
+need(inventory,'self.X.PollinatorService:Remove(player)',"Unequip All clears stale Bee brains")
 need(inventory,'if not self.X.U.Integer(slot,capacity) then return false,"INVALID_SLOT" end',"Bee unequip slot capacity guard")
 need(inventory,'if (p.Pollinators.BeeInventory[id] or 0)<1 then return false,"NOT_OWNED" end',"Bee species ownership guard")
 need(inventory,'if v==id then return false,"ALREADY_EQUIPPED" end',"one equipped copy per Bee species")

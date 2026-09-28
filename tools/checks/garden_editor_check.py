@@ -26,7 +26,7 @@ def find(node,name):
 
 kit=find(model,"GardenKit")
 if not kit: raise AssertionError("authored GardenKit missing")
-for name in ["GardenShell","FlowerPanel","FlowerList","FlowerCardTemplate","UsedBadge","LayoutPanel","SlotRing","SynergyPanel","SynergyName","SynergyEffect","GhostHint","RemoveButton"]:
+for name in ["GardenShell","FlowerPanel","FlowerList","FlowerCardTemplate","UsedBadge","LayoutPanel","SlotRing","Slot7","GhostBadge","SynergyPanel","SynergyName","SynergyEffect","GhostHint","RemoveButton"]:
     if not find(kit,name): raise AssertionError(f"GardenKit authored node missing: {name}")
 for i in range(1,8):
     slot=find(kit,f"Slot{i}")
@@ -46,6 +46,13 @@ if "gardenState.Hint.Recipe" in controller or "gardenState.Hint.RecipeId" in con
 need(controller,'CURRENT SYNERGY  •  ',"active Synergy presentation")
 need(controller,'1/N ',"Flower odds presentation")
 need(controller,'Lv. ',"Flower level presentation")
+need(controller,'local ghost=i==7 and not open',"seventh slot ghost state")
+need(controller,'name.Text=not open and (ghost and "GHOST SLOT" or "LOCKED")',"seventh slot ghost copy")
+need(controller,'icon.Image=ghost and Icons.Get("System","Flower")',"seventh slot ghost icon")
+need(controller,'ghost and "Reach Hive Level 7 to unlock the final Garden slot."', "seventh slot unlock guidance")
+need(garden,'local ghost=i==C.MaxFlowerSlots and not unlocked',"physical final-slot ghost state")
+need(garden,'unlocked and Enum.Material.Ground or (ghost and Enum.Material.ForceField or Enum.Material.Slate)',"physical ghost material")
+need(garden,'pad:SetAttribute("GhostSlot",ghost)',"physical ghost slot attribute")
 
 need(garden,'EditorSessions={}',"server editor session state")
 need(garden,'function S:OpenEditor(player)',"Garden menu editor session entry")

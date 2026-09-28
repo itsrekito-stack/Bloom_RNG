@@ -15,7 +15,7 @@ spec.loader.exec_module(module)
 
 required={"ActiveBoostsHUD","ActiveBoostTooltip"}
 boost_required={"MinimizeButton","LuckBadge","ScrollLeft","ScrollRight"}
-additional_required={"TraitFilterPanel","TraitFilterList","TraitChipTemplate","UsedBadge","MenuNav","CurrencyHelp","Nav_Inventory","Nav_Garden","Nav_Index","Nav_Workshop","Nav_Quests","Nav_Settings"}
+additional_required={"TraitFilterPanel","TraitFilterList","TraitChipTemplate","UnequipAllButton","EquippedBadge","InventoryHoverScale","BeeSummary","PassiveRowTemplate","AbilityDescription","UsedBadge","GhostBadge","MenuNav","CurrencyHelp","Nav_Inventory","Nav_Garden","Nav_Index","Nav_Workshop","Nav_Quests","Nav_Settings"}
 workshop_required={
     "WorkshopTemplate","WorkshopBody","TreePanel","TreeCanvas","PanMap",
     "NodeTooltip","WorkshopCurrencyBar","WorkshopPoints","WorkshopCoins","WorkshopPetalDust","WorkshopAncientNectar",

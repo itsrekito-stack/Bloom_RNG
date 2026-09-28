@@ -37,6 +37,7 @@ local MENU_REFRESH_ACTIONS={
  Setting="Settings",
  ResetSettings="Settings",
  EquipBee="SeedSatchel",
+ UnequipAllBees="SeedSatchel",
  GardenEdit="Garden",
  IndexViewed="Index",
  Flag="SeedSatchel",
@@ -84,16 +85,32 @@ function UI:JourneyText(step)
  return JOURNEY[tonumber(step) or 1] or "Keep growing your garden"
 end
 
+local PERSISTENT_HOVERS=setmetatable({}, {__mode="k"})
 local function hover(button,base,over)
  button.AutoButtonColor=false
+ PERSISTENT_HOVERS[button]={Base=base,Over=over,Hovered=false}
  button.MouseEnter:Connect(function()
   if not button.Parent then return end
+  local state=PERSISTENT_HOVERS[button]
+  if state then state.Hovered=true end
+  button:SetAttribute("BloomHovered",true)
   TweenService:Create(button,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=over}):Play()
  end)
  button.MouseLeave:Connect(function()
   if not button.Parent then return end
+  local state=PERSISTENT_HOVERS[button]
+  if state then state.Hovered=false end
+  button:SetAttribute("BloomHovered",false)
   TweenService:Create(button,TweenInfo.new(Theme.Motion.Fast),{BackgroundColor3=base}):Play()
  end)
+end
+
+local function refreshPersistentHovers()
+ for button,state in pairs(PERSISTENT_HOVERS) do
+  if button and button.Parent and state then
+   button.BackgroundColor3=state.Hovered and state.Over or state.Base
+  end
+ end
 end
 
 local function compact(v)
@@ -1312,12 +1329,7 @@ function UI:BindMenuNavigation(root)
   local button=nav:FindFirstChild(buttonName)
   if button and button:IsA("GuiButton") and not button:GetAttribute("BloomNavBound") then
    button:SetAttribute("BloomNavBound",true)
-   button.MouseEnter:Connect(function()
-    TweenService:Create(button,TweenInfo.new(.10),{BackgroundColor3=C.PanelHover}):Play()
-   end)
-   button.MouseLeave:Connect(function()
-    TweenService:Create(button,TweenInfo.new(.10),{BackgroundColor3=C.Panel}):Play()
-   end)
+   hover(button,C.Panel,C.PanelHover)
    button.Activated:Connect(function()
     self:OpenDockMenu(menuName)
    end)
@@ -1355,16 +1367,17 @@ function UI:RefreshMenuDock()
   if stroke then stroke.Transparency=1 end
 
   local icon=b:FindFirstChild("Icon")
+  local hovered=b:GetAttribute("BloomDockHovered")==true
   if icon and icon:IsA("ImageLabel") then
    local selected=self.Menu==name
    icon.ImageTransparency=enabled and 0 or .58
-   icon.ImageColor3=enabled and (selected and C.Blue or C.White) or C.Muted
+   icon.ImageColor3=enabled and ((hovered or selected) and C.Blue or C.White) or C.Muted
   end
 
   local tip=self.DockTooltips and self.DockTooltips[name]
   if tip then
    tip.Text=(MENU_NAMES[name] or name)..(enabled and "" or " • LOCKED")
-   if not b.Visible then tip.Visible=false end
+   tip.Visible=b.Visible and hovered
   end
  end
 end
@@ -1535,6 +1548,7 @@ function UI:Render()
  if self.BloomTutorialIndicator then self.BloomTutorialIndicator.Visible=bloomTutorialActive end
 
  self:RefreshMenuDock()
+ refreshPersistentHovers()
  if not self:IsWorkshopExclusive() then
   self.GuideController:Update()
   if self.JourneyGuideController then self.JourneyGuideController:Update() end
@@ -1943,12 +1957,14 @@ function UI:BindStaticUI()
   if icon and icon:IsA("ImageLabel") then icon.Image=image end
   button.MouseEnter:Connect(function()
    if not button.Visible then return end
+   button:SetAttribute("BloomDockHovered",true)
    tip.Visible=true
    if icon and icon:IsA("ImageLabel") and button:GetAttribute("BloomDockEnabled")~=false then
     TweenService:Create(icon,TweenInfo.new(Theme.Motion.Fast),{ImageColor3=C.Blue}):Play()
    end
   end)
   button.MouseLeave:Connect(function()
+   button:SetAttribute("BloomDockHovered",false)
    tip.Visible=false
    if icon and icon:IsA("ImageLabel") then
     local enabled=button:GetAttribute("BloomDockEnabled")~=false
@@ -2082,7 +2098,7 @@ local function validateBloomGui(gui)
   end
    local inventoryPrototype=panel:FindFirstChild("InventoryPrototype")
    if inventoryPrototype then
-    for _,name in ipairs({"TraitFilterPanel","TraitFilterList","TraitChipTemplate"}) do
+    for _,name in ipairs({"TraitFilterPanel","TraitFilterList","TraitChipTemplate","UnequipAllButton","EquippedBadge","InventoryHoverScale","BeeSummary","PassiveRowTemplate","AbilityDescription"}) do
      if not inventoryPrototype:FindFirstChild(name,true) then table.insert(missing,"InventoryPrototype/"..name) end
     end
    end
@@ -2097,8 +2113,10 @@ local function validateBloomGui(gui)
   local stateKits=panel:FindFirstChild("StateKits")
    if not stateKits or not stateKits:FindFirstChild("GardenKit") then
     table.insert(missing,"MainPanel/StateKits/GardenKit")
-   elseif not stateKits.GardenKit:FindFirstChild("UsedBadge",true) then
-    table.insert(missing,"MainPanel/StateKits/GardenKit/UsedBadge")
+   else
+    for _,name in ipairs({"UsedBadge","GhostBadge"}) do
+     if not stateKits.GardenKit:FindFirstChild(name,true) then table.insert(missing,"MainPanel/StateKits/GardenKit/"..name) end
+    end
    end
  end
  for _,name in ipairs(RETIRED_MENU_GUI) do

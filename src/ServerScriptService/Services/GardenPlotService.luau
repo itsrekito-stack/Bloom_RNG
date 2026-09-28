@@ -159,10 +159,16 @@ function S:Build(player)
    unlocked and Color3.fromRGB(140,101,65) or Color3.fromRGB(72,70,68),
    false
   )
-  horizontalCylinder(pad,unlocked and Enum.Material.Ground or Enum.Material.Slate)
+  local ghost=i==C.MaxFlowerSlots and not unlocked
+  horizontalCylinder(pad,unlocked and Enum.Material.Ground or (ghost and Enum.Material.ForceField or Enum.Material.Slate))
+  pad.Transparency=ghost and .62 or 0
+  if ghost then
+   pad.Color=Color3.fromRGB(80,190,235)
+  end
   pad.CanQuery=unlocked
   pad:SetAttribute("OwnerUserId",player.UserId)
   pad:SetAttribute("SlotId",i)
+  pad:SetAttribute("GhostSlot",ghost)
 
   if unlocked then
    local slot=p.Garden.Slots[i]
