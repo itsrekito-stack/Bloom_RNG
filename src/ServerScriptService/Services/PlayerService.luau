@@ -101,6 +101,7 @@ function X:Request(player,action,a,b,c)
  if action=="Ready" then self.GardenActivityService:Push(player) return true
  elseif action=="Roll" then return self.RollService:Roll(player,a==true,b)
  elseif action=="Plant" then return self.GardenPlotService:Plant(player,a,b)
+ elseif action=="GardenEdit" then return self.GardenPlotService:GardenEdit(player,a,b)
  elseif action=="EquipBee" then return self.InventoryService:EquipBee(player,a,b)
  elseif action=="Flag" then
   if not p.Tutorial.FeatureUnlocks.SeedSatchel then return false,"LOCKED" end
