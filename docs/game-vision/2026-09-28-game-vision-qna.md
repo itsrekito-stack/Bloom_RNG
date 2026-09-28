@@ -114,6 +114,10 @@ Tutorial:
 
 **Visual direction:** сгенерированный в Q&A макет Garden UI был подтверждён как **идеальный ориентир**.
 
+![Bloom RNG Garden UI reference](assets/bloom-rng-garden-ui-reference.webp)
+
+**Reference asset:** `docs/game-vision/assets/bloom-rng-garden-ui-reference.webp`
+
 ---
 
 ## 3. Bees, Traits and Mastery
