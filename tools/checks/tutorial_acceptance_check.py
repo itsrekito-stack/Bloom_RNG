@@ -24,9 +24,9 @@ remote=read("src/ServerScriptService/Services/RemoteService.luau")
 ui_state=read("src/ServerScriptService/Services/UIStateService.luau")
 
 ids=re.findall(r'\{Id="([^"]+)"',config)
-expected=["GardenSlot","FirstFlowerRoll","Plant","FirstBeeRoll","BeeWork","NormalRoll","Inventory","InventoryExplain","PollenSpark","HiveUpgrade","WorkshopVisit","WorkshopPurchase","Synergy","SunnyVisit","Quests"]
+expected=["GardenSlot","FirstFlowerRoll","Plant","FirstBeeRoll","EquipBee","BeeWork","NormalRoll","Inventory","InventoryExplain","PollenSpark","HiveUpgrade","WorkshopVisit","WorkshopPurchase","Synergy","SunnyVisit","Quests"]
 assert ids==expected, f"unexpected tutorial sequence: {ids}"
-assert 'Version=7' in config and len(ids)==15
+assert 'Version=8' in config and len(ids)==16
 
 for forbidden in ("Trait","BloomRoll","WorldActivity","TutorialActivity","Deliveries","Delivery"):
     assert f'Event="{forbidden}"' not in config, f"random/slow mandatory step returned: {forbidden}"
@@ -75,7 +75,7 @@ need(guide,'warn(string.format("[Tutorial] target missing step=%s target=%s"', "
 need(guide,'ui.Activities:Target("Tutorial")',"checkpoint pointer")
 need(guide,'ui.Bees:Target(true)',"local Bee pointer")
 need(guide,'runtime and runtime:FindFirstChild("StatsCard",true)',"Inventory stats pointer")
-need(guide,'step.Id=="PollenSpark" or step.Id=="SunnyVisit"',"world-step menu handoff")
+need(guide,'step.Id=="BeeWork" or step.Id=="PollenSpark" or step.Id=="SunnyVisit"',"world-step menu handoff")
 need(guide,'ui:Close({SuppressInventoryReturn=true})',"world-step menu closes without bouncing back to Inventory")
 
 need(service,'local function completionKey(step)',"step completion persistence")
@@ -95,7 +95,17 @@ need(roll,'if stepId=="FirstFlowerRoll" then',"Flower-only tutorial roll mode")
 need(roll,'item.Kind=="FlowerSeed" and item.Id=="Daisy"',"first Flower is deterministic when available")
 need(roll,'elseif stepId=="FirstBeeRoll" then',"Bee-only tutorial roll mode")
 need(roll,'item.Kind=="Bee" and item.Id=="WorkerBee"',"first Bee is deterministic when available")
-need(roll,'self.X.InventoryService:EquipBee(player,item.Id,1)',"first Bee auto-equips")
+if 'self.X.InventoryService:EquipBee(player,item.Id,1)' in roll:
+    raise AssertionError("first Bee must not auto-equip during tutorial Roll")
+need(config,'Id="EquipBee",Event="EquipBee"',"explicit Bee equip tutorial step")
+need(config,'Target="InventoryBeeEquip",BeeId="WorkerBee"',"Bee equip screen target")
+need(guide,'if step.Target=="InventoryBeeEquip" then',"Bee equip tutorial guide")
+need(service,'if step.Id=="EquipBee" then',"Bee equip migration support")
+need(player,'self:Emit(player,"SatchelOpen",1)',"Inventory tutorial event still exists")
+need(read("src/ServerScriptService/Services/InventoryService.luau"),'self.X:Emit(player,"EquipBee",1)',"Bee equip progression event")
+pollinator=read("src/ServerScriptService/Services/PollinatorService.luau")
+if 'StarterBeeGranted' in pollinator:
+    raise AssertionError("obsolete StarterBeeGranted gate blocks equipped Bee runtime")
 need(roll,'self.X:Emit(player,"TutorialFlowerRoll",1)',"Flower tutorial event")
 need(roll,'self.X:Emit(player,"TutorialBeeRoll",1)',"Bee tutorial event")
 need(roll,'self.X:Emit(player,"TutorialNormalRoll",1)',"normal RNG handoff event")
@@ -116,7 +126,7 @@ need(activity_client,'self.UI:Send("Activity",id,item.Index,"Reach")',"checkpoin
 assert "ProximityPrompt" not in activity_client, "activity client must not require E"
 
 need(default,'SchemaVersion=6',"new profile schema")
-need(default,'Tutorial={Version=7,Step=1,FeatureUnlocks={},Events={}}',"new profile tutorial version")
+need(default,'Tutorial={Version=8,Step=1,FeatureUnlocks={},Events={}}',"new profile tutorial version")
 need(default,'UnlockedSlots=0',"fresh profile starts before first Garden slot")
 need(default,'OwnedSeedCopies={}',"fresh profile has no direct starter Flower")
 need(default,'BeeInventory={}',"fresh profile has no direct starter Bee")
@@ -162,4 +172,4 @@ for path in (
         if path.endswith("TutorialConfig.luau") and stale in text:
             raise AssertionError(f"{path} contains stale tutorial token {stale}")
 
-print("PASS tutorial acceptance: v7 uses Garden-only planting and one-shot tutorial Rolls.")
+print("PASS tutorial acceptance: v8 uses Garden-only planting, explicit Bee equip, working Bee runtime, and one-shot tutorial Rolls.")
