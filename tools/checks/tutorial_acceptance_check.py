@@ -39,7 +39,7 @@ need(config,'Target="GardenEditorSlot",Slot=2,PartnerSlot=1,FlowerId="Tulip"',"S
 need(config,'It gives +4 Bloom Charge, counts as an Activity for progression and Hive Quests, and contributes to the Server Bloom.',"Pollen Spark reward explanation")
 
 need(features,'Workshop={Event="HiveUpgrade"}',"Workshop menu unlocks from Hive progression")
-need(features,'Quests={Event="HiveUpgrade"}',"Quests/Trials unlock from Hive progression")
+need(features,'Quests={Event="HiveUpgrade"}',"Quests unlock from Hive progression")
 need(guide,'if step.Target=="WorkshopNode" then',"Workshop node guide")
 need(guide,'local button=ui.DockButtons.Workshop',"Workshop is opened from bottom menu")
 if 'world:FindFirstChild("Workshop")' in guide:

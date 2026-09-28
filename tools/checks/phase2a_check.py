@@ -21,7 +21,7 @@ local syntaxPaths={
  "ServerScriptService/Services/PlayerService", "ServerScriptService/Services/WorkshopService",
  "ServerScriptService/Services/GardenPlotService", "ServerScriptService/Services/StatsService",
  "ServerScriptService/Services/UIStateService", "ServerScriptService/Services/RemoteService",
- "ServerScriptService/Services/RollService", "ServerScriptService/Services/MetaProgressionService",
+ "ServerScriptService/Services/RollService", "ServerScriptService/Services/QuestService",
  "ServerScriptService/Services/MapService", "ServerScriptService/Services/SocialService",
  "ServerScriptService/Data/ProfileDomain", "ServerScriptService/Data/ProfileSchema",
  "ServerScriptService/Data/DataConfig", "ReplicatedStorage/Shared/GardenRules"

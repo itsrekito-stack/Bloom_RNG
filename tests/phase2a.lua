@@ -268,12 +268,12 @@ test('successful Season caller rebuilds exactly once with committed data',functi
  local s,db,new=setup();local player=new(1);local profile=s:GetProfile(player)
  profile.Tutorial.Events.FirstGardenSlot=1;profile.Tutorial.Step=16
  local season=require(node('ServerScriptService/Services/SeasonService'));local previousEligible=season.Eligible;season.Eligible=function() return true end
- local rebuilt=0;local trialRemoved=0
+ local rebuilt=0
  season:Init({Profile=function(_,p) return s:GetProfile(p) end,DataService=s,U=U,Revisions={[player]=0},Temp={[player]={}},
- Send=function() end,GardenActivityService={CancelGarden=function() end},BuildTrialService={Remove=function() trialRemoved=trialRemoved+1 end},PollinatorService={Remove=function() end},
+ Send=function() end,GardenActivityService={CancelGarden=function() end},PollinatorService={Remove=function() end},
  GardenPlotService={Build=function() assert(s:GetProfile(player).Season.Count==1);rebuilt=rebuilt+1 end}})
  season.Pending[player]={Token='turn',Revision=0,Expires=now+30,Confirm=1,Before=U.Copy(profile)}
- assert(season:Confirm(player,'turn'));assert(rebuilt==1 and trialRemoved==1 and s:GetProfile(player) and not season.Pending[player]);season.Eligible=previousEligible
+ assert(season:Confirm(player,'turn'));assert(rebuilt==1 and s:GetProfile(player) and not season.Pending[player]);season.Eligible=previousEligible
 end) end)
 os.clock=oldClock;os.time=oldTime;game=oldGame
 
@@ -290,7 +290,7 @@ test('representative legacy profiles retain ownership and survive release rejoin
   db.Values[key]={Revision=7,Data=U.Copy(fixture.Data)}
   local p=new(fixture.Id)
   local migrated=U.Copy(s:GetProfile(p))
-  assert(migrated.Migrations.BloomReworkV1 and migrated.Migrations.GameVisionV1 and migrated.Migrations.JourneyNoTrialV1 and migrated.SchemaVersion==6)
+  assert(migrated.Migrations.BloomReworkV1 and migrated.Migrations.GameVisionV1 and migrated.Migrations.JourneyNoTrialV1 and migrated.Migrations.TrialsRemovedV1 and migrated.SchemaVersion==7)
   assert(type(migrated.FlowerCollection)=='table' and type(migrated.Pollinators)=='table' and type(migrated.WorkshopV5)=='table')
   assert(migrated.WorkshopV5.Points>=tonumber((fixture.Data.WorkshopV2 or {}).Points or 0))
   assert(type(migrated.LegacyArchive)=='table')

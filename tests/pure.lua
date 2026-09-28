@@ -1,8 +1,8 @@
 test("default game vision profile",function()
  local p=Schema.CreateDefault()
  assert(Schema.Prepare(p))
- assert(p.SchemaVersion==6 and p.Inventory==nil and p.Currencies.Coins==0)
- assert(p.Tutorial.Version==10 and p.Tutorial.Step==1)
+ assert(p.SchemaVersion==7 and p.Inventory==nil and p.Currencies.Coins==0)
+ assert(p.Tutorial.Version==11 and p.Tutorial.Step==1)
  assert(p.Garden.UnlockedSlots==0 and #p.Garden.Slots==7)
  assert(next(p.FlowerCollection.OwnedSeedCopies)==nil and next(p.Pollinators.BeeInventory)==nil)
 end)
@@ -27,7 +27,7 @@ end)
 test("legacy mapping migrates copies into species progression",function()
  local p={Inventory={Apple=2,UnknownFruit=3},Currencies={FruitDust=12,Coins=9,AncientSeeds=77},DiscoveredFruits={Apple=true},Garden={UnlockedSlots=3,Slots={{SpeciesId="Tulip",Level=2,XP=4}}},FruitMastery={Apple={Level=999}}}
  assert(Schema.Prepare(p))
- assert(p.SchemaVersion==6)
+ assert(p.SchemaVersion==7)
  assert(p.FlowerCollection.OwnedSeedCopies.Daisy==1 and p.FlowerCollection.ObtainedFlowers.Daisy>=2)
  assert(p.FlowerCollection.OwnedSeedCopies.Tulip==1 and p.FlowerCollection.ObtainedFlowers.Tulip>=1)
  assert(p.Currencies.PetalDust==27 and p.Currencies.AncientNectar==0)
@@ -295,7 +295,7 @@ test("Workshop purchase prerequisites balance and idempotence",function()
  assert(not s:Buy({},"LEGACY_1"))
 end)
 
-test("tutorial v10 gates future events and completes ordered flow",function()
+test("tutorial v11 gates future events and completes ordered flow",function()
  local player={} local p=Schema.CreateDefault() local completed=0 local sparks=0
  local service=require(node("ServerScriptService/Services/TutorialService"))
  local x={
@@ -311,7 +311,7 @@ test("tutorial v10 gates future events and completes ordered flow",function()
  }
  service:Init(x)
  local T=require(rs.Config.TutorialConfig)
- assert(#T.Steps==13 and T.Version==10)
+ assert(#T.Steps==13 and T.Version==11)
  p.Tutorial.Events.Delivery=99
  assert(not service:RecordEvent(player,"Delivery"))
  service:Refresh(player) assert(p.Tutorial.Step==1)
