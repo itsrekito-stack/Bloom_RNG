@@ -269,6 +269,11 @@ function Service:CommitProfile(player, candidate, transactionId)
  end
  return result
 end
+function Service:ResetProfile(player)
+ local fresh=Schema.CreateDefault()
+ local transactionId="FullReset:"..tostring(player.UserId)..":"..HttpService:GenerateGUID(false)
+ return self:CommitProfile(player,fresh,transactionId)
+end
 function Service:BeginStudioTransientProfile(player)
  if not RunService:IsStudio() then return false,"NOT_STUDIO" end
  local record=recordsByUserId[player.UserId]
