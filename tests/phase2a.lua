@@ -257,6 +257,7 @@ test('leave during autosave uses fresh final snapshot after serialized save',fun
 end) end)
 test('real Season caller does not rebuild after timed-out commit and late release',function() scenario(function()
  local s,db,new=setup();local player=new(1);local profile=s:GetProfile(player)
+ profile.Tutorial.Events.FirstGardenSlot=1;profile.Tutorial.Step=16
  local season=require(node('ServerScriptService/Services/SeasonService'));local previousEligible=season.Eligible;season.Eligible=function() return true end
  local rebuilt=0
  season:Init({Profile=function(_,p) return s:GetProfile(p) end,DataService=s,U=U,Revisions={[player]=0},Temp={[player]={}},
@@ -287,6 +288,7 @@ test('invalid live profile is retained and has explicit final failure',function(
 end) end)
 test('successful Season caller rebuilds exactly once with committed data',function() scenario(function()
  local s,db,new=setup();local player=new(1);local profile=s:GetProfile(player)
+ profile.Tutorial.Events.FirstGardenSlot=1;profile.Tutorial.Step=16
  local season=require(node('ServerScriptService/Services/SeasonService'));local previousEligible=season.Eligible;season.Eligible=function() return true end
  local rebuilt=0;local trialRemoved=0
  season:Init({Profile=function(_,p) return s:GetProfile(p) end,DataService=s,U=U,Revisions={[player]=0},Temp={[player]={}},
