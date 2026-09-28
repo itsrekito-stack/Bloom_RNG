@@ -11,6 +11,7 @@ player=read("src/ServerScriptService/Services/PlayerService.luau")
 inventory=read("src/ServerScriptService/Services/InventoryService.luau")
 garden=read("src/ServerScriptService/Services/GardenPlotService.luau")
 state=read("src/ServerScriptService/Services/UIStateService.luau")
+domain=read("src/ServerScriptService/Data/ProfileDomain.luau")
 bloom=read("src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau")
 
 for text,label in [
@@ -64,6 +65,7 @@ for text,label in [
 need(inventory,'if not self.X.U.Integer(slot,capacity) then return false,"INVALID_SLOT" end',"Bee slot capacity guard")
 need(inventory,'if (p.Pollinators.BeeInventory[id] or 0)<1 then return false,"NOT_OWNED" end',"Bee species ownership guard")
 need(inventory,'if i~=slot and v==id then return false,"ALREADY_EQUIPPED" end',"one equipped copy per Bee species")
+need(domain,'if (tonumber(b.BeeInventory[id]) or 0)<1 then b.BeeInventory[id]=1 end',"discovered Bee ownership repair")
 need(inventory,'function S:Dissolve()',"legacy Flower dissolve endpoint exists only as rejection")
 need(inventory,'function S:DissolveBee()',"legacy Bee dissolve endpoint exists only as rejection")
 if inventory.count('return false,"ACTION_UNAVAILABLE"')<2:

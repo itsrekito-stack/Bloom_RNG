@@ -26,12 +26,11 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="tutorial-bloom-indicator-v9-2026-09-28"
+local CLIENT_BUILD="inventory-close-bee-reconcile-v10-2026-09-28"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
 local MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Index="IndexV1",Trials="QuestsV2",Settings="SettingsV2"}
-local RETURN_TO_INVENTORY={Garden=true,Workshop=true,Index=true,Trials=true,Settings=true}
 local MENU_DOCK_CONTEXT={SeedSatchel=true,Index=true,Workshop=true,Trials=true,Settings=true,Garden=true}
 local MENU_REFRESH_ACTIONS={
  Setting="Settings",
@@ -719,14 +718,8 @@ function UI:SetPanelVisible(visible)
  end
 end
 
-function UI:Close(options)
- options=type(options)=="table" and options or {}
+function UI:Close()
  local closingMenu=self.Menu
- local returnToInventory=options.SuppressInventoryReturn~=true
-  and RETURN_TO_INVENTORY[closingMenu]==true
-  and self.State
-  and self.State.Profile
-  and self.State.Profile.Tutorial.FeatureUnlocks.SeedSatchel==true
 
  self:DisconnectWorkshopPan()
  self.ReplayIndex=nil
@@ -748,12 +741,8 @@ function UI:Close(options)
  if wasWorkshop then self:SetWorkshopFocus(false) end
  if wasIndex then self:SetIndexFocus(false) end
  if serverMenuOpen then self:Send("Menu",false) end
- if returnToInventory then
-  self:Open("SeedSatchel")
- else
-  self:RefreshMenuDock()
-  self:RefreshRollHUDVisibility()
- end
+ self:RefreshMenuDock()
+ self:RefreshRollHUDVisibility()
 end
 
 function UI:Open(name,arg,options)
@@ -1304,7 +1293,7 @@ end
 function UI:OpenDockMenu(name)
  if not self.State then return end
  if self.Menu and self.Menu~=name then
-  self:Close({SuppressInventoryReturn=true})
+  self:Close()
  end
  self:Open(name)
 end
@@ -2099,9 +2088,17 @@ function UI:ApplyState(payload,source)
  end
  local firstState=self.State==nil
  local previousTutorialStep=not firstState and self.State.Profile and self.State.Profile.Tutorial and self.State.Profile.Tutorial.Step or nil
+ local previousTutorialId=previousTutorialStep and T.Steps[previousTutorialStep] and T.Steps[previousTutorialStep].Id or nil
+ local nextTutorialStep=payload.Profile.Tutorial and payload.Profile.Tutorial.Step or nil
+ local closeInventoryAfterEquip=self.Menu=="SeedSatchel"
+  and previousTutorialId=="EquipBee"
+  and previousTutorialStep~=nil
+  and nextTutorialStep~=nil
+  and nextTutorialStep>previousTutorialStep
  if not firstState and payload.Revision~=nil and self.State.Revision==payload.Revision then return false end
  self.State=payload
  SettingsV2.ApplyEffects(self,payload.Profile)
+ if closeInventoryAfterEquip then self:Close() end
  if firstState then
   self.ObjectiveCard.Visible=true
   self.CurrencyHUD.Visible=true
@@ -2116,7 +2113,6 @@ function UI:ApplyState(payload,source)
   print("[BloomUI] First authoritative render ready revision:",tonumber(payload.Revision) or 0)
  end
 
- local nextTutorialStep=payload.Profile.Tutorial and payload.Profile.Tutorial.Step or nil
  if previousTutorialStep and previousTutorialStep<=#T.Steps and nextTutorialStep and nextTutorialStep>#T.Steps then
   self.ObjectiveCard.Visible=true
   self.ObjectiveTitle.Text="TUTORIAL COMPLETE"

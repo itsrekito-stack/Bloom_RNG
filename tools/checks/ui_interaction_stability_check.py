@@ -20,6 +20,9 @@ need(ui,'local refreshMenu=MENU_REFRESH_ACTIONS[payload.Action]',"successful act
 need(ui,'Setting="Settings"',"Settings refresh action mapping")
 need(ui,'WorkshopBuy="Workshop"',"Workshop refresh action mapping")
 need(ui,'EquipBee="SeedSatchel"',"Inventory refresh action mapping")
+assert "RETURN_TO_INVENTORY" not in ui, "closing a menu must not reopen Inventory"
+assert "SuppressInventoryReturn" not in ui, "legacy close-to-Inventory option returned"
+need(ui,'close.Activated:Connect(function() self:Close() end)',"X always performs a real close")
 
 # Intentional menu refreshes preserve user interaction position.
 need(ui,'function UI:CapturePanelInteractionState()',"generic panel interaction capture")

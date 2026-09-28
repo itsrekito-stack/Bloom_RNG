@@ -66,6 +66,8 @@ need(service,'self.X.InventoryService:Grant(player,"FlowerSeed","Tulip")',"Syner
 need(activity,'self.X.RollService:Charge(player,A.Types[kind].Charge',"activities add Bloom Charge")
 
 need(bloom,'self.BloomTutorialIndicator.Visible=bloomTutorialActive',"persistent Bloom indicator")
+need(bloom,'previousTutorialId=="EquipBee"',"Equip Bee transition is detected")
+need(bloom,'if closeInventoryAfterEquip then self:Close() end',"Inventory closes before Fill Bloom")
 need(bloom,'self.MeterLabel.Text=string.format("BLOOM  %.0f%%",bloomPercent)',"Bloom label")
 assert 'DISCOVERY  %d/%d' not in bloom, "Discovery n/n returned to Bloom HUD"
 assert 'NormalRoll' not in bloom, "removed NormalRoll client step returned"
