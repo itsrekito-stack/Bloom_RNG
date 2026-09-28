@@ -15,9 +15,9 @@ function S:DistillNectar(player)
  p.Currencies.PetalDust+=Bloom.NectarDistillDust*E.Value(p,"ECONOMY_3","DustYield",1)
  return true
 end
-function S:Eligible(p) local completed=0 for _,id in ipairs(C.TrialIds) do if p.Quests.Trials[id] then completed=completed+1 end end return p.Hive.Level>=C.Hive and p.World.UnlockedSectors.SunnyOrchard and p.World.UnlockedSectors.CrystalGreenhouse and p.World.UnlockedSectors.TwilightGrove and completed>=C.Trials and self.X.U.Count(p.FlowerCollection.DiscoveredFlowers)>=C.Flowers and self.X.U.Count(p.Pollinators.DiscoveredBees)>=C.Bees end
+function S:Eligible(p) local completed=0 for _,id in ipairs(C.TrialIds) do if p.Quests.Trials[id] then completed+=1 end end return p.Hive.Level>=C.Hive and completed>=C.Trials and self.X.U.Count(p.FlowerCollection.DiscoveredFlowers)>=C.Flowers and self.X.U.Count(p.Pollinators.DiscoveredBees)>=C.Bees end
 function S:Preview(player)
- local p=self.X:Profile(player) if not p then return end if not self:Eligible(p) then self.X:Send(player,"Message",string.format("Season: Hive %d, all sectors, %d key trials, %d flowers, %d bees",C.Hive,C.Trials,C.Flowers,C.Bees)) return end
+ local p=self.X:Profile(player) if not p then return end if not self:Eligible(p) then self.X:Send(player,"Message",string.format("Season: Hive %d, %d key trials, %d flowers, %d bees",C.Hive,C.Trials,C.Flowers,C.Bees)) return end
  local plan=Plan.BuildSeasonTurnPlan(p) local token=Http:GenerateGUID(false) self.Pending[player]={Token=token,Revision=self.X.Revisions[player],Expires=os.clock()+30,Confirm=0,Before=self.X.U.Copy(p)}
  self.X:Send(player,"SeasonPreview",{Token=token,Diff=plan.Diff,Keep=C.Keep,Reset=C.Reset})
 end
