@@ -143,8 +143,10 @@ check('boost HUD never infinite-waits authored roots','WaitForChild("ActiveBoost
 check('boost HUD missing hierarchy fails fast','[BoostHUD] Authored boost HUD is missing from canonical BloomUI' in boost_hud_source and '[BoostHUD] Authored boost HUD hierarchy is incomplete' in boost_hud_source)
 
 # BR-002: feature id and renderer are explicit and editor has one live inventory preview.
-check('authored v2 menu routes','SeedSatchel="InventoryV2"' in source and 'Garden="GardenV1"' in source and 'Trials="QuestsV2"' in source and 'Settings="SettingsV2"' in source)
+check('authored v2 menu routes','SeedSatchel="InventoryV2"' in source and 'Garden="GardenV1"' in source and 'Index="IndexV1"' in source and 'Trials="QuestsV2"' in source and 'Settings="SettingsV2"' in source)
 check('Inventory v2 backend linked','InventoryV2Controller' in source and 'InventoryV2.Render(self,p,ui)' in source)
+check('Index backend linked','IndexController' in source and 'IndexV1.Render(self,p,ui)' in source and one('IndexPrototype')[1] is not None and one('IndexCardTemplate')[1] is not None)
+check('Inventory authored Index access',one('IndexButton')[1] is not None and 'controller:Open("Index",nil,{SilentMenu=true})' in inventory_v2_source)
 check('Quests v2 backend linked','QuestsController' in source and 'QuestsV2.Render(self,p,ui)' in source and one('QuestsPrototype')[1] is not None and one('QuestCardTemplate')[1] is not None)
 check('legacy TrialsKit removed',one('TrialsKit')[1] is None)
 check('dynamic menus use authored state kits','self.StateKits=self.Panel:FindFirstChild("StateKits")' in source and 'function UI:MenuTemplate(name)' in source and 'self:MenuTemplate("ButtonTemplate")' in source)
@@ -170,7 +172,7 @@ check('BR-010 map tells Hive-ready players to use gate','Hive ready — go to th
 check('BR-010 trials expose shrine guidance','NearShrine=nearShrine' in ui_state_source and 'StartHint=startHint' in ui_state_source and 'Garden Trials shrine' in ui_state_source)
 check('BR-010 client renders derived trial guidance','trial.StartHint' in quests_v2_source and 'AT SHRINE' in quests_v2_source)
 check('UI Studio uses desktop state rail','class="state-rail"' in editor_html and 'class="app-titlebar"' in editor_html and 'class="app-workspace"' in editor_html)
-check('UI Studio exposes all authored state buttons',all(('data-ui-state="'+state+'"') in editor_html for state in ['gameplay','inventory_v2','traits','garden','workshop','trials','settings','season','replay','cards','reward','toast','tutorial','boosts','world_ui','loading']))
+check('UI Studio exposes all authored state buttons',all(('data-ui-state="'+state+'"') in editor_html for state in ['gameplay','inventory_v2','index','traits','garden','workshop','trials','settings','season','replay','cards','reward','toast','tutorial','boosts','world_ui','loading']))
 check('UI Studio hides retired alpha menus','data-ui-state="fieldguide"' not in editor_html and 'data-ui-state="map"' not in editor_html and 'data-ui-state="plant"' not in editor_html)
 check('UI STATE toggles active state back to empty workspace','const closing=state.activeUiState===scene' in editor_source and 'state.activeUiState=null' in editor_source and 'Empty workspace' in editor_source)
 check('UI Studio removed HTML runtime mock injection','MOCK PREVIEW · NOT RUNTIME' not in editor_source and '<div class="preview-menu-generic">' not in editor_source and 'function injectRuntimePreview(){/* UI STATE shows authored Roblox instances only.' in editor_source)
