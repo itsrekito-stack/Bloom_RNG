@@ -1347,8 +1347,7 @@ function UI:Render()
  }
  for name,b in pairs(self.DockButtons) do
   local enabled=dockUnlocked[name]==true
-  local progressionButton=name=="Workshop" or name=="Trials"
-  b.Visible=inventoryUnlocked and (enabled or not progressionButton)
+  b.Visible=inventoryUnlocked
   b.Active=enabled
   b.Selectable=enabled
   b:SetAttribute("BloomDockEnabled",enabled)
