@@ -91,6 +91,7 @@ function S:EquipBee(player,id,slot)
 
  p.Pollinators.EquippedBeeSlots[slot]=id
  self.X.GardenSynergyService:Recalculate(player)
+ self.X:Emit(player,"EquipBee",1)
  local _,traits=B.GetTraitBonuses(p.Pollinators.EquippedBeeSlots)
  if #traits>0 then self.X:Emit(player,"Trait",1) end
  return true
