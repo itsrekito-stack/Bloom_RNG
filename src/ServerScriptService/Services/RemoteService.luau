@@ -38,6 +38,8 @@ function S:Validate(action,a,b,c)
  elseif action=="Menu" then
   local menuOK=a==false or short(a,32,false)
   return menuOK and b==nil and c==nil,(menuOK and b==nil and c==nil) and nil or"INVALID_VALUE"
+ elseif action=="IndexViewed" then
+  return short(a,16,false) and short(b,64,false) and c==nil,(short(a,16,false) and short(b,64,false) and c==nil) and nil or"INVALID_VALUE"
  elseif action=="Setting" then
   local valueOK=type(b)=="boolean" or finite(b) or short(b,16,false)
   return short(a,32,false) and valueOK and c==nil,(short(a,32,false) and valueOK and c==nil) and nil or"INVALID_VALUE"
