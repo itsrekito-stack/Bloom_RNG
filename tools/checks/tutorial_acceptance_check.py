@@ -99,6 +99,9 @@ need(roll,'self.X.InventoryService:EquipBee(player,item.Id,1)',"first Bee auto-e
 need(roll,'self.X:Emit(player,"TutorialFlowerRoll",1)',"Flower tutorial event")
 need(roll,'self.X:Emit(player,"TutorialBeeRoll",1)',"Bee tutorial event")
 need(roll,'self.X:Emit(player,"TutorialNormalRoll",1)',"normal RNG handoff event")
+need(roll,'if step.Id=="FirstFlowerRoll" then return "FlowerSeed" end',"Flower-only tutorial roulette pool")
+need(roll,'if step.Id=="FirstBeeRoll" then return "Bee" end',"Bee-only tutorial roulette pool")
+need(roll,'if not kind then return pool,total end',"normal mixed pool restored after tutorial-only rolls")
 need(features,'Roll={Step=2}',"Roll unlock timing")
 
 need(activity,'function S:EnsureTutorialSpark(player)',"tutorial checkpoint factory")
