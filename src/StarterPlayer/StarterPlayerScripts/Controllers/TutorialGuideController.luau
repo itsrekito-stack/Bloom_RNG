@@ -317,8 +317,9 @@ function S:Update()
  local step=T.Steps[ui.ReplayIndex or p.Tutorial.Step]
 
  if not ui.ReplayIndex and step then
-  if step.Id=="Delivery" and ui.Menu=="SeedSatchel" then ui:Close() end
-  if step.Id=="Synergy" and ui.Menu=="Workshop" then ui:Close() end
+  if (step.Id=="PollenSpark" or step.Id=="Synergy" or step.Id=="SunnyVisit") and ui.Menu then
+   ui:Close({SuppressInventoryReturn=true})
+  end
  end
 
  self:HideWorldTarget()
@@ -335,6 +336,23 @@ function S:Update()
   local button=ui.DockButtons.SeedSatchel
   if button and button.Visible then ui.Dock.Visible=true end
   if self:PlaceScreenTarget(button,"OPEN INVENTORY",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
+  return
+ end
+
+ if step.Target=="QuestsButton" then
+  local button=ui.DockButtons.Trials
+  if not button or not button.Visible then
+   local inventory=ui.DockButtons.SeedSatchel
+   if inventory and inventory.Visible then
+    ui.Dock.Visible=true
+    if self:PlaceScreenTarget(inventory,"OPEN INVENTORY","Open Inventory first to reveal the menu row, then choose Quests.") then self.LastMissingKey=nil else self:Missing(step) end
+   else
+    self:Missing(step)
+   end
+   return
+  end
+  ui.Dock.Visible=true
+  if self:PlaceScreenTarget(button,"OPEN QUESTS",step.Helper) then self.LastMissingKey=nil else self:Missing(step) end
   return
  end
 
