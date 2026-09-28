@@ -295,6 +295,49 @@ test("Workshop purchase prerequisites balance and idempotence",function()
  assert(not s:Buy({},"LEGACY_1"))
 end)
 
+test("Hive Workshop Points reconcile missed upgrades and stay idempotent",function()
+ local player={Name="Tester"}
+ local p=Schema.CreateDefault()
+ p.Hive.Level=11
+ p.Season.Count=0
+ local messages={}
+ local s=require(node("ServerScriptService/Services/WorkshopService"))
+ s:Init({Profile=function() return p end,Send=function(_,pl,kind,payload) messages[#messages+1]={kind,payload} end})
+ local restored=s:ReconcileHivePoints(player)
+ assert(restored==9 and p.WorkshopV5.Points==9)
+ assert(s:ReconcileHivePoints(player)==0 and p.WorkshopV5.Points==9)
+ local awarded=s:AwardHiveLevel(player,12)
+ assert(awarded==1 and p.WorkshopV5.Points==10)
+ assert(s:AwardHiveLevel(player,12)==0 and p.WorkshopV5.Points==10)
+end)
+
+test("Equip Synergy selects an attainable matching Bee loadout",function()
+ local player={}
+ local p=Schema.CreateDefault()
+ p.Pollinators.BeeInventory.WorkerBee=1
+ p.Pollinators.BeeInventory.NectarBee=1
+ p.Pollinators.BeeInventory.GardenerBee=1
+ local recalculated=0
+ local removed=0
+ local emitted={}
+ local s=require(node("ServerScriptService/Services/InventoryService"))
+ s:Init({
+  Profile=function() return p end,
+  StatsService={BeeCapacity=function() return 3 end},
+  PollinatorService={Remove=function() removed=removed+1 end},
+  GardenSynergyService={Recalculate=function() recalculated=recalculated+1 end},
+  Emit=function(_,pl,event) emitted[event]=(emitted[event] or 0)+1 end,
+  Send=function() end,
+ })
+ assert(s:EquipTraitSynergy(player,"Bloom"))
+ assert(#p.Pollinators.EquippedBeeSlots==3)
+ local B=require(rs.Config.BeesConfig)
+ local bloomState=nil
+ for _,state in ipairs(B.GetTraitState(p.Pollinators.EquippedBeeSlots)) do if state.Id=="Bloom" then bloomState=state break end end
+ assert(bloomState and bloomState.Tier==2 and bloomState.Count==3)
+ assert(recalculated==1 and removed==1 and emitted.EquipBee==1 and emitted.Trait==1)
+end)
+
 test("tutorial v11 gates future events and completes ordered flow",function()
  local player={} local p=Schema.CreateDefault() local completed=0 local sparks=0
  local service=require(node("ServerScriptService/Services/TutorialService"))

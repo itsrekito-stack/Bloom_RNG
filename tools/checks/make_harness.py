@@ -69,6 +69,46 @@ function C.GetPassiveBonuses(equipped)
  end
  return out
 end
+function C.GetTrait(id) return C.Traits[id] end
+function C.GetTraitBees(traitId)
+ local out={}
+ for id,bee in pairs(C.Bees) do
+  for _,tag in ipairs(bee.Traits or {}) do
+   if tag==traitId then out[#out+1]=id break end
+  end
+ end
+ table.sort(out,function(a,b) return (C.Bees[a].SortOrder or 999)<(C.Bees[b].SortOrder or 999) end)
+ return out
+end
+function C.GetTraitState(equipped)
+ local counts=C.GetTraitCounts(equipped)
+ local out={}
+ for traitId,data in pairs(C.Traits) do
+  local count=counts[traitId] or 0
+  local tier=0
+  local nextThreshold=nil
+  for i,bp in ipairs(data.Breakpoints or {}) do
+   if count>=bp.Count then tier=i elseif not nextThreshold then nextThreshold=bp.Count end
+  end
+  out[#out+1]={Id=traitId,Name=data.Name,Count=count,Tier=tier,NextThreshold=nextThreshold,Breakpoints=data.Breakpoints,BeeIds=C.GetTraitBees(traitId)}
+ end
+ return out
+end
+function C.GetMasteryState(totalXP)
+ local cfg=C.BeeMastery
+ local maxXP=0
+ for _,need in ipairs(cfg.XPPerLevel or {}) do maxXP=maxXP+(tonumber(need) or 0) end
+ local xp=math.clamp(tonumber(totalXP) or 0,0,maxXP)
+ local level=1
+ local spent=0
+ while level<(cfg.Cap or 1) do
+  local need=tonumber(cfg.XPPerLevel[level]) or 0
+  if xp-spent<need then break end
+  spent=spent+need
+  level=level+1
+ end
+ return {Level=level,TotalXP=xp,MaxXP=maxXP,IsMax=level>=(cfg.Cap or level)}
+end
 return C'''
  modules[key]=txt
 base='''local nativeRequire=require
