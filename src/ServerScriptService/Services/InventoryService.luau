@@ -111,11 +111,9 @@ function S:EquipBee(player,id,slot)
  if type(id)~="string" or not B.Exists(id) then return false,"INVALID_ITEM" end
  if (p.Pollinators.BeeInventory[id] or 0)<1 then return false,"NOT_OWNED" end
 
- local used=0
  for i,v in pairs(p.Pollinators.EquippedBeeSlots) do
-  if i~=slot and v==id then used+=1 end
+  if i~=slot and v==id then return false,"ALREADY_EQUIPPED" end
  end
- if used>=(p.Pollinators.BeeInventory[id] or 0) then return false,"NOT_OWNED" end
 
  p.Pollinators.EquippedBeeSlots[slot]=id
  self.X.GardenSynergyService:Recalculate(player)
