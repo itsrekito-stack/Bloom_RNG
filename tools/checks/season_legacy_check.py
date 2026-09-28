@@ -41,9 +41,10 @@ need(service,'local result=self.X.DataService:CommitProfile(player,plan.After,to
 need(service,'if result.Code~="SUCCESS" then',"commit failure handling")
 need(player,'if self.SeasonService.Pending[player] and action~="SeasonConfirm" and action~="Menu" and action~="Ready" then return false,"SEASON_PREVIEW_OPEN" end',"preview mutation lock")
 
-# Reset semantics derive slot counts from BloomConfig instead of literals.
-need(plan,'UnlockedSlots=C.StartingSlots',"configured starting garden slots")
-need(plan,'for i=1,C.MaxFlowerSlots do',"configured max garden slots")
+# Season reset remains immediately plantable while respecting the seven-slot cap.
+need(plan,'UnlockedSlots=1',"Season reset preserves one usable Garden slot")
+need(plan,'for i=1,C.MaxFlowerSlots do',"configured max Garden slots")
+need(plan,'after.Garden.UnlockedSlots=math.max(after.Garden.UnlockedSlots,2)',"second Flower keepsake expands reset capacity safely")
 need(plan,'after.Currencies.Coins=0',"Coin reset")
 need(plan,'after.Currencies.AncientNectar=after.Currencies.AncientNectar+C.SeasonReward+E.Value(profile,"LEGACY_6","SeasonNectar",0)',"Ancient Nectar reward")
 need(plan,'Level=1',"Hive level reset")
