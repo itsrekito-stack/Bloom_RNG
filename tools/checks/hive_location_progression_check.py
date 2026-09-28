@@ -45,7 +45,7 @@ need(hive,'self.X:Emit(player,"HiveUpgrade",1)',"Hive progression event")
 assert 'gate is ready to unlock' not in hive and 'LocationsConfig' not in hive
 
 need(garden,'return "Unlock Garden Slot 1"',"fresh Hive prompt")
-need(garden,'"Upgrade Hive • "..math.floor(cost).." Honey"',"upgrade cost prompt")
+need(garden,'"Upgrade Hive • "..math.floor(cost).." Honey • "..math.floor(coins).." Coins"',"dual-resource upgrade cost prompt")
 need(map_service,'return "Center"',"single central map sector")
 assert '"Workshop"' not in map_service, "physical Workshop returned"
 need(features,'Workshop={Event="HiveUpgrade"}',"Workshop menu unlock")
