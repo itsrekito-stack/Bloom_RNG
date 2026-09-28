@@ -26,12 +26,13 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="inventory-roll-spacing-2026-09-28"
+local CLIENT_BUILD="menu-dock-over-modal-roll-visibility-2026-09-28"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
 local MENU_RENDERERS={SeedSatchel="InventoryV2",Garden="GardenV1",Index="IndexV1",Trials="QuestsV2",Settings="SettingsV2"}
 local RETURN_TO_INVENTORY={Workshop=true,Index=true,Trials=true,Settings=true}
+local MENU_DOCK_CONTEXT={SeedSatchel=true,Index=true,Workshop=true,Trials=true,Settings=true,Garden=true}
 local MENU_REFRESH_ACTIONS={
  Setting="Settings",
  ResetSettings="Settings",
@@ -311,7 +312,7 @@ end
 
 function UI:WorkshopHUDObjects()
  return {
-  self.ObjectiveCard,self.CurrencyHUD,self.Dock,self.RollHUD,self.Roll,self.RouletteViewport,
+  self.ObjectiveCard,self.CurrencyHUD,self.RollHUD,self.Roll,self.RouletteViewport,
   self.Guide,self.ToastRoot,self.Reveal,
  }
 end
@@ -1262,13 +1263,21 @@ function UI:ApplyMenuDockLayout(expanded)
  end
 end
 
+function UI:OpenDockMenu(name)
+ if not self.State then return end
+ if self.Menu and self.Menu~=name then
+  self:Close({SuppressInventoryReturn=true})
+ end
+ self:Open(name)
+end
+
 function UI:RefreshMenuDock()
  if not self.Dock or not self.State or not self.State.Profile then return end
  local p=self.State.Profile
  local inventoryUnlocked=p.Tutorial.FeatureUnlocks.SeedSatchel==true
- local inventoryDockOpen=self.Menu=="SeedSatchel" and self.MenuRenderer=="InventoryV2"
+ local menuDockOpen=MENU_DOCK_CONTEXT[self.Menu]==true
  self.Dock.Visible=inventoryUnlocked
- self:ApplyMenuDockLayout(inventoryDockOpen)
+ self:ApplyMenuDockLayout(menuDockOpen)
 
  local dockUnlocked={
   SeedSatchel=inventoryUnlocked,
@@ -1280,7 +1289,7 @@ function UI:RefreshMenuDock()
 
  for name,b in pairs(self.DockButtons or {}) do
   local enabled=dockUnlocked[name]==true
-  local visible=name=="SeedSatchel" or inventoryDockOpen
+  local visible=name=="SeedSatchel" or menuDockOpen
   b.Visible=inventoryUnlocked and visible
   b.Active=enabled
   b.Selectable=enabled
@@ -1360,9 +1369,8 @@ function UI:Render()
 
  local rollStep=T.IndexById.Roll or math.huge
  local rollUnlocked=p.Tutorial.FeatureUnlocks.Roll==true or p.Tutorial.Skipped==true or (tonumber(p.Tutorial.Step) or 1)>=rollStep
- local inventoryOpen=self.MenuRenderer=="InventoryV2" and self.Menu~=nil
- local gardenOpen=self.MenuRenderer=="GardenV1" and self.Menu~=nil
- local rollSuppressed=inventoryOpen or gardenOpen
+ local menuOpen=self.Menu~=nil
+ local rollSuppressed=menuOpen
  self.RollHUD.Visible=rollUnlocked and not rollSuppressed
  self.Roll.Visible=rollUnlocked and not rollSuppressed
  self.RouletteViewport.Visible=rollUnlocked and not rollSuppressed and (self.Auto or self.RouletteRunning or self.RouletteLanding)
@@ -1782,7 +1790,7 @@ function UI:BindStaticUI()
   end)
   button.Activated:Connect(function()
    if button:GetAttribute("BloomDockEnabled")==false then return end
-   self:Open(name)
+   self:OpenDockMenu(name)
   end)
   self.DockButtons[name]=button
   self.DockTooltips[name]=tip
