@@ -158,7 +158,7 @@ local function respecFixture()
 end
 test('respec with empty overflow preserves ownership and valid slots',function()
  local p,s=respecFixture();local copies=U.Copy(p.FlowerCollection.OwnedSeedCopies)
- assert(s:Respec({}));assert(p.Garden.UnlockedSlots==3 and equal(copies,p.FlowerCollection.OwnedSeedCopies))
+ assert(s:Respec({}));assert(p.Garden.UnlockedSlots==0 and equal(copies,p.FlowerCollection.OwnedSeedCopies))
  assert(Schema.Prepare(p))
 end)
 test('respec occupied overflow rejects atomically before refunds',function()
@@ -174,14 +174,15 @@ end)
 test('respec overflow bee unequips without destroying bee ownership',function()
  local p,s=respecFixture();p.Pollinators.BeeInventory.WorkerBee=2;p.Pollinators.EquippedBeeSlots={'WorkerBee','WorkerBee'}
  assert(s:Respec({}));assert(p.Pollinators.BeeInventory.WorkerBee==2 and p.Pollinators.EquippedBeeSlots[1]=='WorkerBee' and not p.Pollinators.EquippedBeeSlots[2])
+ assert(Schema.Prepare(p));assert(p.Pollinators.BeeInventory.WorkerBee==1 and p.Pollinators.BeeObtained.WorkerBee==2)
 end)
 test('schema negative active values repair and retain original diagnostic values',function()
  local p=Schema.CreateDefault();p.Currencies.Coins=-5;p.Hive.Honey=-20;p.WorkshopV5.Points=-3;p.FlowerCollection.OwnedSeedCopies.Tulip=-9
- assert(Schema.Prepare(p));assert(p.Currencies.Coins==0 and p.Hive.Honey==0 and p.WorkshopV5.Points==0 and p.FlowerCollection.OwnedSeedCopies.Tulip==0)
+ assert(Schema.Prepare(p));assert(p.Currencies.Coins==0 and p.Hive.Honey==0 and p.WorkshopV5.Points==0 and p.FlowerCollection.OwnedSeedCopies.Tulip==nil)
  assert(p.LegacyArchive.DomainV1.Currencies.Coins==-5)
 end)
 test('schema NaN and infinity reject without changing source',function()
- for _,bad in ipairs({0/0,math.huge,-math.huge}) do local p=Schema.CreateDefault();p.Currencies.Coins=bad;assert(not Schema.Prepare(p));assert(p.Garden.Slots[1].SpeciesId=='Daisy') end
+ for _,bad in ipairs({0/0,math.huge,-math.huge}) do local p=Schema.CreateDefault();p.Currencies.Coins=bad;assert(not Schema.Prepare(p));assert(not p.Garden.Slots[1].SpeciesId and p.Garden.UnlockedSlots==0) end
 end)
 test('schema unknown registries archived and future keys retained',function()
  local p=Schema.CreateDefault();p.WorkshopV5.Nodes.OLD_NODE=true;p.WorkshopV5.Nodes.ROLL_1=false
@@ -193,45 +194,56 @@ test('schema unknown registries archived and future keys retained',function()
 end)
 test('schema excessive equipment repairs while preserving owned counts',function()
  local p=Schema.CreateDefault();p.Pollinators.BeeInventory.WorkerBee=10;p.Pollinators.EquippedBeeSlots={[1]='WorkerBee',[2]='WorkerBee',[99]='WorkerBee'}
- assert(Schema.Prepare(p));assert(p.Pollinators.BeeInventory.WorkerBee==10 and p.Pollinators.EquippedBeeSlots[1]=='WorkerBee' and not p.Pollinators.EquippedBeeSlots[2] and not p.Pollinators.EquippedBeeSlots[99])
+ assert(Schema.Prepare(p));assert(p.Pollinators.BeeInventory.WorkerBee==1 and p.Pollinators.BeeObtained.WorkerBee==10 and p.Pollinators.EquippedBeeSlots[1]=='WorkerBee' and not p.Pollinators.EquippedBeeSlots[2] and not p.Pollinators.EquippedBeeSlots[99])
 end)
 test('schema invalid occupied slot rejects without silent removal',function()
  local p=Schema.CreateDefault();p.Garden.Slots[4]={SpeciesId='Daisy',Level=6,XP=9,Mutation='Radiant'};p.FlowerCollection.OwnedSeedCopies.Daisy=2
  local before=U.Copy(p);local ok,why=Schema.Prepare(p);assert(not ok and why:find('GARDEN_CAPACITY_CONFLICT') and equal(before,p))
  p.Garden.Slots[4]=nil;p.Garden.Slots[1].SpeciesId='UnknownFlower';before=U.Copy(p);assert(not Schema.Prepare(p) and equal(before,p))
 end)
-test('schema inconsistent planted ownership rejected without granting copies',function()
- local p=Schema.CreateDefault();p.Garden.Slots[2]=U.Copy(p.Garden.Slots[1]);local before=U.Copy(p)
+test('schema duplicate planted species rejected without granting copies',function()
+ local p=Schema.CreateDefault();p.Tutorial.Skipped=true;p.Hive.Level=2
+ p.FlowerCollection.OwnedSeedCopies.Daisy=1;p.FlowerCollection.DiscoveredFlowers.Daisy=true
+ p.Garden.Slots[1]={SpeciesId='Daisy',Mutation='',TotalPollination=0}
+ p.Garden.Slots[2]={SpeciesId='Daisy',Mutation='',TotalPollination=0}
+ local before=U.Copy(p)
  assert(not Schema.Prepare(p) and equal(before,p))
 end)
 test('schema huge finite values reject instead of silently capping earned progression',function()
  local p=Schema.CreateDefault();p.Currencies.Coins=1e30;assert(not Schema.Prepare(p) and p.Currencies.Coins==1e30)
  p.Currencies.Coins=2e12;assert(Schema.Prepare(p) and p.Currencies.Coins==2e12)
 end)
-test('schema valid progression round trip idempotent after mutation',function()
+test('schema valid species progression round trip is idempotent',function()
  local p=Schema.CreateDefault();assert(Schema.Prepare(p))
- p.Hive.Level=4;p.Garden.UnlockedSlots=6;p.FlowerCollection.OwnedSeedCopies.Tulip=3;p.FlowerCollection.DiscoveredFlowers.Tulip=true
- p.Garden.Slots[6]={SpeciesId='Tulip',Level=7,XP=21,TotalPollination=99,Mutation='HistoricalMutation',Extra={Tag='keep'}}
+ p.Tutorial.Skipped=true;p.Hive.Level=6;p.Garden.UnlockedSlots=6
+ p.FlowerCollection.OwnedSeedCopies.Tulip=3;p.FlowerCollection.DiscoveredFlowers.Tulip=true
+ p.Garden.Slots[6]={SpeciesId='Tulip',TotalPollination=99,Mutation='HistoricalMutation',Extra={Tag='keep'}}
  p.FlowerCollection.FlowerMastery.Tulip={Level=12,XP=17};p.FlowerCollection.FavoriteFlowers.Tulip=true;p.FlowerCollection.LockedFlowers.Tulip=true
  p.Currencies.Coins=1234.5;assert(Schema.Prepare(p));local before=U.Copy(p)
  assert(Schema.Validate(p));assert(Schema.Prepare(p) and equal(before,p))
- assert(p.Garden.Slots[6].Extra.Tag=='keep' and p.Garden.Slots[6].Mutation=='HistoricalMutation')
+ assert(p.FlowerCollection.OwnedSeedCopies.Tulip==1 and p.FlowerCollection.ObtainedFlowers.Tulip==3)
+ assert(p.Garden.Slots[6].Extra.Tag=='keep' and p.Garden.Slots[6].Mutation=='HistoricalMutation' and p.Garden.Slots[6].Level==nil and p.Garden.Slots[6].XP==nil)
 end)
 test('schema old migration retains original legacy archive and mappings',function()
  local p={Inventory={Apple=2},Currencies={FruitDust=4},LegacyArchive={Preexisting='keep'}}
- assert(Schema.Prepare(p));assert(p.LegacyArchive.Preexisting=='keep' and p.FlowerCollection.OwnedSeedCopies.Daisy==3)
+ assert(Schema.Prepare(p));assert(p.LegacyArchive.Preexisting=='keep' and p.FlowerCollection.OwnedSeedCopies.Daisy==1 and p.FlowerCollection.ObtainedFlowers.Daisy==2)
  local before=U.Copy(p);assert(Schema.Prepare(p) and equal(before,p))
 end)
 test('schema future version rejected rather than downgraded',function()
  local p=Schema.CreateDefault();p.SchemaVersion=99;assert(not Schema.Prepare(p) and p.SchemaVersion==99)
 end)
-test('plant replacement and unplant block progressed state loss',function()
- local p=Schema.CreateDefault();assert(Schema.Prepare(p));p.Garden.Slots[1].Level=2;p.Garden.Slots[1].Mutation='Radiant';p.FlowerCollection.OwnedSeedCopies.Tulip=1
+test('plant replacement preserves species progression and enforces uniqueness',function()
+ local p=Schema.CreateDefault();assert(Schema.Prepare(p));p.Tutorial.Skipped=true;p.Tutorial.Events.FirstGardenSlot=1;p.Garden.UnlockedSlots=1
+ p.FlowerCollection.OwnedSeedCopies.Daisy=1;p.FlowerCollection.DiscoveredFlowers.Daisy=true;p.FlowerCollection.FlowerMastery.Daisy={Level=7,XP=9}
+ p.FlowerCollection.OwnedSeedCopies.Tulip=1;p.FlowerCollection.DiscoveredFlowers.Tulip=true;p.FlowerCollection.FlowerMastery.Tulip={Level=3,XP=4}
+ p.Garden.Slots[1]={SpeciesId='Daisy',Mutation='Radiant',TotalPollination=10}
  local s=require(node('ServerScriptService/Services/GardenPlotService'));local player={}
- s:Init({Profile=function() return p end,U={Integer=U.Integer,Near=function() return true end}})
- local oldPosition=s.Position;s.Position=function() return Vector3.zero end
- local before=U.Copy(p);local ok,reason=s:Plant(player,1,'');assert(not ok and reason=='GARDEN_PROGRESS_PROTECTED' and equal(p,before))
- assert(not s:Plant(player,1,'Tulip'));assert(s:Plant(player,1,'Daisy'));s.Position=oldPosition
+ s:Init({Profile=function() return p end,U={Integer=U.Integer,Near=function() return true end},InventoryService={Available=function(_,profile,id) return id=='Tulip' and 1 or 0 end},Temp={[player]={}},GardenActivityService={CancelGarden=function() end},Emit=function() end})
+ local oldPosition=s.Position;s.Position=function() return Vector3.zero end;local oldBuild=s.Build;s.Build=function() end
+ assert(s:Plant(player,1,'Tulip'));assert(p.Garden.Slots[1].SpeciesId=='Tulip')
+ assert(p.FlowerCollection.FlowerMastery.Daisy.Level==7 and p.FlowerCollection.FlowerMastery.Tulip.Level==3)
+ assert(s:Plant(player,1,''));assert(not p.Garden.Slots[1].SpeciesId)
+ s.Position=oldPosition;s.Build=oldBuild
 end)
 test('lease-expired read cannot return previous successful save as final success',function() scenario(function()
  local s,db,new=setup();local p=new(1);s:GetProfile(p).Currencies.Coins=2;assert(s:SaveProfile(p,false).Code=='SUCCESS')
@@ -298,23 +310,23 @@ test('representative legacy profiles retain ownership and survive release rejoin
   db.Values[key]={Revision=7,Data=U.Copy(fixture.Data)}
   local p=new(fixture.Id)
   local migrated=U.Copy(s:GetProfile(p))
-  assert(migrated.Migrations.BloomReworkV1 and migrated.SchemaVersion==5)
+  assert(migrated.Migrations.BloomReworkV1 and migrated.Migrations.GameVisionV1 and migrated.SchemaVersion==6)
   assert(type(migrated.FlowerCollection)=='table' and type(migrated.Pollinators)=='table' and type(migrated.WorkshopV5)=='table')
   assert(migrated.WorkshopV5.Points>=tonumber((fixture.Data.WorkshopV2 or {}).Points or 0))
   assert(type(migrated.LegacyArchive)=='table')
   if fixture.Id==101 then
-   assert(migrated.FlowerCollection.OwnedSeedCopies.Daisy>=3)
-   assert(migrated.FlowerCollection.OwnedSeedCopies.Tulip>=1)
+   assert(migrated.FlowerCollection.OwnedSeedCopies.Daisy==1 and migrated.FlowerCollection.ObtainedFlowers.Daisy>=2)
+   assert(migrated.FlowerCollection.OwnedSeedCopies.Tulip==1 and migrated.FlowerCollection.ObtainedFlowers.Tulip>=1)
    assert(migrated.FlowerCollection.FlowerMastery.Daisy.Level>=5)
    assert(migrated.World.UnlockedSectors.SunnyOrchard==true)
    assert(migrated.LegacyArchive.Preexisting=='keep')
   elseif fixture.Id==102 then
-   assert(migrated.FlowerCollection.OwnedSeedCopies.EmberDahlia>=1)
+   assert(migrated.FlowerCollection.OwnedSeedCopies.EmberDahlia==1 and migrated.FlowerCollection.ObtainedFlowers.EmberDahlia>=1)
    assert(migrated.Currencies.PetalDust>=3)
    assert(migrated.LegacyArchive.Tag=='fixture-2')
   elseif fixture.Id==103 then
-   assert(migrated.FlowerCollection.OwnedSeedCopies.CrystalRose>=2)
-   assert(migrated.FlowerCollection.OwnedSeedCopies.PrismBloom>=1)
+   assert(migrated.FlowerCollection.OwnedSeedCopies.CrystalRose==1 and migrated.FlowerCollection.ObtainedFlowers.CrystalRose>=2)
+   assert(migrated.FlowerCollection.OwnedSeedCopies.PrismBloom==1 and migrated.FlowerCollection.ObtainedFlowers.PrismBloom>=1)
    assert(migrated.FlowerCollection.FlowerMastery.CrystalRose.Level>=7)
    assert(migrated.World.UnlockedSectors.CrystalGreenhouse==true)
   end
