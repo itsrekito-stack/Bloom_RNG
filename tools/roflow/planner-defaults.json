@@ -736,14 +736,14 @@
       "group": "[Roll]",
       "title": "Stage 3 · Align Roll timing with progression",
       "detail": "Target roughly 4–5 seconds early with fast cruise and pronounced slowdown, then 2–3 seconds after progression upgrades.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-roll-reveals",
       "group": "[Roll]",
       "title": "Stage 4 · Build rarity-specific rare reveals",
       "detail": "Legendary uses premium gold language, Mythic purple/magical, Celestial white-blue/cosmic. Very rare results temporarily suppress most HUD while preserving server-authoritative result flow.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-inventory-data",
@@ -757,14 +757,14 @@
       "group": "[Inventory]",
       "title": "Stage 2 · Redesign Inventory cards around 1/N",
       "detail": "Dense cards prioritize icon, name and large 1/N. Show only a small Level/Mastery badge instead of making xCount and rarity text the main visual.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-inventory-bee-details",
       "group": "[Inventory]",
       "title": "Stage 3 · Finish Bee detail and Equip panel",
       "detail": "Show Equip/Unequip, 1/N, Mastery, Traits, ability and Trait delta preview in the right detail panel.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-inventory-flower-details",
@@ -792,14 +792,14 @@
       "group": "[Index]",
       "title": "Stage 1 · Implement Index discovery and read-state backend",
       "detail": "Add Flowers, Bees, Synergies and Traits payloads, per-category completion, persistent NEW/unread state and Bee obtained counts.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-index-redaction",
       "group": "[Index]",
       "title": "Stage 2 · Enforce hidden-entry redaction",
       "detail": "Undiscovered entries are locked empty slots. Do not leak silhouettes, hidden recipe data, member lists or other clues before discovery.",
-      "done": false
+      "done": true
     },
     {
       "id": "vision-index-ui",
