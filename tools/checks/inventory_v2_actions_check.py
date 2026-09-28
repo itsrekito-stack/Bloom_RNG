@@ -14,7 +14,7 @@ state=read("src/ServerScriptService/Services/UIStateService.luau")
 bloom=read("src/StarterPlayer/StarterPlayerScripts/Controllers/BloomUI.luau")
 
 for text,label in [
- ('CATEGORY_ORDER={"Flowers","Bees","Resources","Special"}',"category coverage"),
+ ('CATEGORY_ORDER={"Bees","Resources","Special"}',"Flowers removed from Inventory categories"),
  ('SORT_ORDER={"Rarity","Name","Count"}',"sort modes"),
  ('FILTER_ORDER={"All","Favorite","Protected","Available"}',"filter modes"),
  ('local function filteredItems(source,search,filter,sortMode)',"search/filter/sort pipeline"),
@@ -25,19 +25,16 @@ for text,label in [
     need(client,text,label)
 
 for text,label in [
- ('controller:Send("Flag",item.Id,"FavoriteFlowers")',"Favorite action"),
- ('controller:Send("Flag",item.Id,"LockedFlowers")',"Protect action"),
  ('controller:Send("EquipBee","",equippedSlot)',"Bee unequip action"),
  ('controller:Send("EquipBee",item.Id,slot)',"Bee equip action"),
- ('controller.LastSeed=item.Id',"Garden selection handoff"),
- ('"PLANT IN GARDEN"',"unplanted Flower Garden action"),
- ('"EDIT / REMOVE IN GARDEN"',"planted Flower Garden action"),
- ('Use an unlocked Garden pad to open the Garden editor.',"physical Garden handoff copy"),
  ('traitEquipPreview(item,inventory)',"Trait delta preview"),
  ('item.Odds or "1/—"',"1/N presentation"),
  ('item.Obtained or 1',"obtained count presentation"),
 ]:
     need(client,text,label)
+
+if 'controller:Send("GardenEdit"' in client or '"PLANT IN GARDEN"' in client or '"EDIT / REMOVE IN GARDEN"' in client:
+    raise AssertionError("Inventory must not contain Flower planting actions")
 
 need(client,'setButton(dissolve,false)',"obsolete duplicate-dismantle buttons are hidden")
 need(client,'setButton(mastery,false)',"obsolete Dust mastery button is hidden")
@@ -46,20 +43,17 @@ if 'controller:Send("DissolveBee",item.Id,1)' in client:
 if 'controller:Send("FlowerUpgrade",item.Id)' in client:
     raise AssertionError("manual Flower Dust upgrade returned to Inventory V2")
 
-need(bloom,'function UI:OpenPlantInventory(slot)',"Garden editor entry point")
-need(bloom,'self:Open("Garden",{Slot=slot},{SilentMenu=true})',"Plant picker opens dedicated Garden editor")
+need(bloom,'function UI:OpenGardenMenu(slot)',"Garden editor entry point stays inside Garden menu")
 need(bloom,'GardenEditor.Render(self,p,ui)',"Garden editor renderer")
-need(bloom,'local inventoryOpen=self.MenuRenderer=="InventoryV2" and self.Menu~=nil',"Inventory state tracked")
-need(bloom,'local gardenOpen=self.MenuRenderer=="GardenV1" and self.Menu~=nil',"Garden state tracked")
-need(bloom,'local rollSuppressed=inventoryOpen or gardenOpen',"Roll suppression combines Inventory and Garden")
-need(bloom,'self.Roll.Visible=rollUnlocked and not rollSuppressed',"Roll button hidden while work menus are open")
-need(garden,'self.X.U.Near(player,pos,C.InteractionDistance)',"legacy direct Plant remains proximity gated")
+need(bloom,'for _,name in ipairs({"SeedSatchel","Garden","Index","Workshop","Trials","Settings"}) do',"Garden dock button binding")
+need(bloom,'local visible=rollUnlocked and self.Menu==nil',"Roll hidden while menus are open")
 need(garden,'function S:GardenEdit(player,i,id)',"server Garden editor mutation path")
+need(garden,'temp.MenuOpen~=true or temp.MenuName~="Garden"',"Garden menu required for edits")
 need(garden,'(self.EditorSessions[player] or 0)<workspace:GetServerTimeNow()',"Garden editor session validation")
 need(garden,'(p.FlowerCollection.OwnedSeedCopies[id] or 0)<1',"Garden editor species ownership validation")
 
 for text,label in [
- ('elseif action=="Plant" then return self.GardenPlotService:Plant(player,a,b)',"Plant server route"),
+ ('elseif action=="Plant" then return false,"USE_GARDEN_MENU"',"legacy Plant request rejected"),
  ('elseif action=="EquipBee" then return self.InventoryService:EquipBee(player,a,b)',"Equip server route"),
  ('if b~="LockedFlowers" and b~="FavoriteFlowers" then return false,"INVALID_ACTION" end',"Flag field allowlist"),
 ]:
@@ -83,4 +77,4 @@ for text,label in [
     need(state,text,label)
 
 print("inventory-v2 action contract: PASS")
-print("Inventory uses species ownership, 1/N, duplicate progression, manual Bee equip and a dedicated physical Garden handoff; obsolete copy-based Seed flows are removed.")
+print("Inventory contains Bees/resources/keepsakes only; all Flower planting is isolated to the Garden menu.")
