@@ -133,7 +133,7 @@ for required in ["Background","Card","ProgressTrack","ProgressFill","Status","De
 need(loading,'RF:WaitForChild("BloomLoadingTemplate",10)',"loading authored model binding")
 assert 'Instance.new("ScreenGui")' not in loading
 
-states=["gameplay","inventory_v2","index","garden","hive","workshop","trials","settings","season","replay","cards","reward","toast","tutorial","boosts","world_ui","loading"]
+states=["gameplay","inventory_v2","index","garden","hive","workshop","quests","settings","season","replay","cards","reward","toast","tutorial","boosts","world_ui","loading"]
 for state in states:
     assert f'data-ui-state="{state}"' in editor_html, f"UI STATE button missing: {state}"
 for retired in ("fieldguide","map","plant"):

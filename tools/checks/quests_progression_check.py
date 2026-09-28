@@ -34,6 +34,8 @@ need(cfg,'Q05_FirstBloom={Title="Bloom Spark"', "early Bloom quest")
 need(cfg,'Q18_BeeScholar={Title="Bee Scholar"', "Bee Mastery quest")
 need(cfg,'Q24_HiveTen={Title="Hive Architect"', "late Hive quest")
 need(cfg,'Q25_BloomKeeper={Title="Bloom Keeper"', "final collection quest")
+need(cfg,'Q09_SynergyPractice={Title="Garden Chemistry",Text="Discover 2 Garden Synergies.",Kind="GardenSynergies"',"early distinct-synergy quest")
+need(cfg,'Q19_SynergyBuilder={Title="Pattern Builder",Text="Discover 8 Garden Synergies.",Kind="GardenSynergies"',"late distinct-synergy quest")
 
 need(service,'function S:Progress(profile,quest)',"server progress evaluator")
 need(service,'function S:Claim(player,id)',"server reward claim")

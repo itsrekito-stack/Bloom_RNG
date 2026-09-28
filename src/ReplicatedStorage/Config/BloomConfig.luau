@@ -67,7 +67,6 @@ local C={
  LandmarkDust=3,
  LandmarkCharge=10,
  JourneyCoins=10,
- RepeatTrialCoins=5,
  AbilityTokenChance=.6,
  RollRhythmCooldown=1.2,
  OverclockCooldown=.8,
