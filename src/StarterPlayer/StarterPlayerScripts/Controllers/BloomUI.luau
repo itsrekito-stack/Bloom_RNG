@@ -324,6 +324,7 @@ end
 function UI:ApplyWorkshopFocusVisibility()
  local exclusive=self:IsWorkshopExclusive()
  if self.BoostHUD then self.BoostHUD:SetSuppressed(exclusive) end
+ if self.TraitHUD then self.TraitHUD:SetSuppressed(exclusive) end
  if not exclusive then return end
  for _,gui in ipairs(self:WorkshopHUDObjects()) do
   if gui and gui:IsA("GuiObject") then gui.Visible=false end
@@ -347,6 +348,7 @@ function UI:SetWorkshopFocus(active)
   self.WorkshopFocus=false
   self:RestoreWorkshopHUDVisibility()
   if self.BoostHUD then self.BoostHUD:SetSuppressed(false) end
+  if self.TraitHUD then self.TraitHUD:SetSuppressed(false) end
   if self.State then self:Render() end
  end
 end
@@ -1250,6 +1252,10 @@ function UI:Render()
   local boosts=self.State.UI and self.State.UI.Boosts or {Items={}}
   self.BoostHUD:Update(boosts,self.State.Revision)
  end
+ if self.TraitHUD then
+  local traits=self.State.UI and self.State.UI.Inventory and self.State.UI.Inventory.Traits or {}
+  self.TraitHUD:Update(traits,self.State.Revision)
+ end
  self:ApplyWorkshopFocusVisibility()
 end
 
@@ -1919,6 +1925,8 @@ function UI:Start()
  self.GardenPresentation:Init(self)
  self.BoostHUD=require(script.Parent.BoostHUDController)
  self.BoostHUD:Init(self)
+ self.TraitHUD=require(script.Parent.TraitHUDController)
+ self.TraitHUD:Init(self)
 
  event.OnClientEvent:Connect(function(kind,payload)
   if kind=="State" then
