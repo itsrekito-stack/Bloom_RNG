@@ -1,4 +1,4 @@
-local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.SeasonConfig) local Bloom=require(RS.Config.BloomConfig) local Plan=require(RS.Shared.SeasonPlan) local Http=game:GetService("HttpService") local S={Pending={}}
+local RS=game:GetService("ReplicatedStorage") local C=require(RS.Config.SeasonConfig) local Bloom=require(RS.Config.BloomConfig) local Plan=require(RS.Shared.SeasonPlan) local E=require(RS.Shared.WorkshopEffects) local Http=game:GetService("HttpService") local S={Pending={}}
 function S:Init(x) self.X=x end
 function S:LegacyComplete(p)
  if not p or not p.WorkshopV5 then return false end
@@ -12,7 +12,7 @@ function S:DistillNectar(player)
  local cost=Bloom.NectarDistillCost
  if p.Currencies.AncientNectar<cost then return false,"NECTAR_REQUIRED" end
  p.Currencies.AncientNectar-=cost
- p.Currencies.PetalDust+=Bloom.NectarDistillDust
+ p.Currencies.PetalDust+=Bloom.NectarDistillDust*E.Value(p,"ECONOMY_3","DustYield",1)
  return true
 end
 function S:Eligible(p) local completed=0 for _,id in ipairs(C.TrialIds) do if p.Quests.Trials[id] then completed=completed+1 end end return p.Hive.Level>=C.Hive and p.World.UnlockedSectors.SunnyOrchard and p.World.UnlockedSectors.CrystalGreenhouse and p.World.UnlockedSectors.TwilightGrove and completed>=C.Trials and self.X.U.Count(p.FlowerCollection.DiscoveredFlowers)>=C.Flowers and self.X.U.Count(p.Pollinators.DiscoveredBees)>=C.Bees end
