@@ -16,7 +16,8 @@ workshop=read("src/ReplicatedStorage/Config/WorkshopConfig.luau")
 poll=read("src/ServerScriptService/Services/PollinatorService.luau")
 hive=read("src/ServerScriptService/Services/HiveService.luau")
 inventory=read("src/ServerScriptService/Services/InventoryService.luau")
-flower_mastery=read("src/ServerScriptService/Services/FlowerProgressionService.luau")
+map_service=read("src/ServerScriptService/Services/MapService.luau")
+social=read("src/ServerScriptService/Services/SocialService.luau")
 workshop_service=read("src/ServerScriptService/Services/WorkshopService.luau")
 season_plan=read("src/ReplicatedStorage/Shared/SeasonPlan.luau")
 season_service=read("src/ServerScriptService/Services/SeasonService.luau")
@@ -34,7 +35,6 @@ if any(hive_costs[i]>=hive_costs[i+1] for i in range(1,len(hive_costs)-1)):
 delivery_seconds=num(bloom,"DeliverySeconds")
 honey_per=num(bloom,"HoneyPerDelivery")
 coins_per=num(bloom,"CoinsPerDelivery")
-dust_per_copy=num(bloom,"DustPerCopy")
 bloom_max=num(bloom,"BloomMax")
 delivery_charge=num(bloom,"Delivery")
 roll_cd=num(bloom,"RollCooldown")
@@ -64,12 +64,9 @@ ratio=baseline_coins_to_hive8/nonlegacy_workshop_coins
 if not 1.4<=ratio<=3.5:
     raise AssertionError(f"Coin source/sink ratio outside guardrail: {ratio:.2f}x")
 
-# Flower mastery first upgrade is level*5 Dust; duplicate value should require more than one copy but not a grind wall.
-need(flower_mastery,'m.Level*5',"Flower Mastery Dust cost")
-first_mastery_cost=5
-duplicates_for_first=math.ceil(first_mastery_cost/dust_per_copy)
-if not 2<=duplicates_for_first<=3:
-    raise AssertionError(f"duplicate-to-first-mastery pacing drift: {duplicates_for_first} duplicates")
+# Duplicate rolls now feed species Level/Mastery directly; Petal Dust is a world/seasonal resource.
+need(inventory,'self.X.FlowerProgressionService:AddDuplicate(player,id,1)',"Flower duplicate progression")
+need(inventory,'self.X.PollinatorService:AddMastery(player,id,C.BeeDuplicateXP)',"Bee duplicate progression")
 
 legacy_nectar=sum(range(1,7))
 base_seasons_for_legacy=math.ceil(legacy_nectar/season_reward)
@@ -84,8 +81,11 @@ pity_seconds=pity*roll_cd
 if not 25<=pity_seconds<=60:
     raise AssertionError(f"base pity cadence outside guardrail: {pity_seconds:.1f}s")
 
-# Minimum progression needed for first Season yields useful Workshop choices but not an automatic full 36-node seasonal tree.
-minimum_first_season_points=7*2 + 3*2 + 3*2  # Hive 2-8, 3 key trials, collection thresholds 4/8/12.
+# Static Hive milestones + three key trials + selected Journey milestones fund meaningful choices without filling the tree.
+hive_points=2+1+1+2
+trial_points=3*2
+journey_points=1+1+1+2+2
+minimum_first_season_points=hive_points+trial_points+journey_points
 if not 18<=minimum_first_season_points<36:
     raise AssertionError(f"first-Season Workshop point pacing drift: {minimum_first_season_points}")
 
@@ -95,16 +95,18 @@ need(hive,"p.Hive.Honey-=cost","Honey sink")
 need(poll,"profile.Currencies.Coins+=coins","Coin source")
 need(workshop_service,"p.Currencies.Coins-=(n.Coins or 0)","Coin Workshop sink")
 need(season_plan,"after.Currencies.Coins=0","Coin Season sink")
-need(inventory,"p.Currencies.PetalDust+=n*C.DustPerCopy","Petal Dust duplicate source")
-need(flower_mastery,"p.Currencies.PetalDust-=cost","Petal Dust mastery sink")
+need(map_service,"p.Currencies.PetalDust=p.Currencies.PetalDust+3","Petal Dust world landmark source")
+need(social,"p.Currencies.PetalDust=p.Currencies.PetalDust+2+math.min(8,math.floor(n/10))","Petal Dust Server Bloom source")
 need(workshop_service,"p.Currencies.PetalDust-=(n.Dust or 0)","Petal Dust Workshop sink")
 need(season_plan,'after.Currencies.AncientNectar=after.Currencies.AncientNectar+C.SeasonReward',"Ancient Nectar source")
 need(workshop_service,"p.Currencies.AncientNectar-=(n.Nectar or 0)","Ancient Nectar Legacy sink")
 need(season_service,"p.Currencies.AncientNectar-=cost","Ancient Nectar post-Legacy repeatable sink")
 need(season_service,"p.Currencies.PetalDust+=Bloom.NectarDistillDust","Ancient Nectar distill destination")
+need(hive,'C.WorkshopPointHiveMilestones[nextLevel] or 0',"static Hive Workshop Point table")
 need(hive,'self.X.WorkshopService:Point(player,"Hive_"',"Workshop Point Hive source")
 need(trial,'self.X.WorkshopService:Point(player,"Trial_"',"Workshop Point trial source")
-need(meta,'self.X.WorkshopService:Point(player,"Collection_"',"Workshop Point collection source")
+need(meta,'local POINT_MILESTONES={WorkshopVisit=1,Synergy=1,Trait=1,Trial=2,SeasonReady=2}',"Journey Workshop Point table")
+need(meta,'self.X.WorkshopService:Point(player,"JourneyMilestone_"..key,points)',"Journey Workshop Point source")
 need(workshop_service,"w.Points-=(n.Cost or 0)","Workshop Point sink")
 
 print("economy balance contract: PASS")
