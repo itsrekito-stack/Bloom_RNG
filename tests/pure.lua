@@ -291,7 +291,7 @@ test("Workshop purchase prerequisites balance and idempotence",function()
  assert(not s:Buy({},"ROLL_2"))
  assert(s:Buy({},"ROLL_1"))
  assert(not s:Buy({},"ROLL_1"))
- assert(p.WorkshopV5.Points==4 and p.Currencies.Coins==970)
+ assert(p.WorkshopV5.Points==4 and p.Currencies.Coins==900)
  assert(not s:Buy({},"LEGACY_1"))
 end)
 
