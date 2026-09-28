@@ -2,6 +2,7 @@ local RS=game:GetService("ReplicatedStorage")
 local B=require(RS.Config.BeesConfig)
 local G=require(RS.Config.GardenSynergyConfig)
 local GardenRules=require(RS.Shared.GardenRules)
+local E=require(RS.Shared.WorkshopEffects)
 
 local S={}
 
@@ -23,13 +24,13 @@ function S:Get(p)
  local synergy=G.Get(p.Garden and p.Garden.ActiveSynergy or "")
  local effect=synergy and synergy.Effect or {}
  return {
-  Luck=(traits.LuckMultiplier or 1)*(passive.LuckMultiplier or 1)*(effect.LuckMultiplier or 1),
-  Yield=(traits.PollinatorYieldMultiplier or 1)*(passive.PollinatorYieldMultiplier or 1)*(effect.PollinatorYieldMultiplier or 1),
+  Luck=(traits.LuckMultiplier or 1)*(passive.LuckMultiplier or 1)*(effect.LuckMultiplier or 1)*E.Value(p,"GARDEN_2","LuckMultiplier",1),
+  Yield=(traits.PollinatorYieldMultiplier or 1)*(passive.PollinatorYieldMultiplier or 1)*(effect.PollinatorYieldMultiplier or 1)*E.Value(p,"GARDEN_6","PollinatorYieldMultiplier",1)*E.Value(p,"BEES_5","PollinatorYieldMultiplier",1),
   Speed=(traits.PollinatorTravelSpeedMultiplier or 1)*(passive.PollinatorTravelSpeedMultiplier or 1)*(effect.PollinatorTravelSpeedMultiplier or 1),
-  Power=(traits.PollinatorPowerMultiplier or 1)*(passive.PollinatorPowerMultiplier or 1)*(effect.PollinatorPowerMultiplier or 1),
-  FlowerGrowth=(traits.FlowerGrowthMultiplier or 1)*(passive.FlowerGrowthMultiplier or 1)*(effect.FlowerGrowthMultiplier or 1),
-  Coin=(traits.CoinMultiplier or 1)*(passive.CoinMultiplier or 1)*(effect.CoinMultiplier or 1),
-  HiveHoney=(traits.HiveHoneyMultiplier or 1)*(passive.HiveHoneyMultiplier or 1)*(effect.HiveHoneyMultiplier or 1),
+  Power=(traits.PollinatorPowerMultiplier or 1)*(passive.PollinatorPowerMultiplier or 1)*(effect.PollinatorPowerMultiplier or 1)*E.Value(p,"BEES_1","PollinatorPowerMultiplier",1),
+  FlowerGrowth=(traits.FlowerGrowthMultiplier or 1)*(passive.FlowerGrowthMultiplier or 1)*(effect.FlowerGrowthMultiplier or 1)*E.Value(p,"GARDEN_1","FlowerGrowthMultiplier",1)*E.Value(p,"GARDEN_4","FlowerGrowthMultiplier",1),
+  Coin=(traits.CoinMultiplier or 1)*(passive.CoinMultiplier or 1)*(effect.CoinMultiplier or 1)*E.Value(p,"ECONOMY_1","CoinYield",1)*E.Value(p,"ECONOMY_5","CoinYield",1),
+  HiveHoney=(traits.HiveHoneyMultiplier or 1)*(passive.HiveHoneyMultiplier or 1)*(effect.HiveHoneyMultiplier or 1)*E.Value(p,"ECONOMY_2","HiveHoneyMultiplier",1),
   ClonePower=(traits.ClonePowerMultiplier or 1)*(passive.ClonePowerMultiplier or 1),
   AbilityCooldown=(traits.AbilityCooldownMultiplier or 1)*(passive.AbilityCooldownMultiplier or 1)*(effect.AbilityCooldownMultiplier or 1),
   AbilityDuration=(traits.AbilityDurationMultiplier or 1)*(passive.AbilityDurationMultiplier or 1),
