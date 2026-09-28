@@ -44,7 +44,7 @@ checks=[
  (pollinator,'self.X:Emit(player,"Delivery",1)',"Delivery advances progression event"),
  (hive,'self.X:Emit(player,"FirstGardenSlot",1)',"Hive unlocks first Garden slot"),
  (hive,'self:QuestStatus(p,nextLevel)',"Hive upgrades require cross-system quest"),
- (hive,'C.WorkshopPointHiveMilestones[nextLevel] or 0',"Hive uses static Workshop point milestones"),
+ (hive,'C.WorkshopPointsForHiveLevel(nextLevel)',"Hive awards milestone and endless Workshop points"),
  (workshop,'w.Nodes[id]=true',"Workshop purchase owns node"),
  (player,'elseif action=="Roll" then return self.RollService:Roll',"remote Roll route remains server-owned"),
  (ui_state,'Inventory=self:Inventory(player,profile)',"snapshot exposes Inventory"),
