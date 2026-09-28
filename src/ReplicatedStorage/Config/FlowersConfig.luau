@@ -106,7 +106,7 @@ function C.Exists(id:string):boolean
  return C.Species[id]~=nil
 end
 
-function C.GetLevelBuff(id:string,level:number?):any
+function C.GetLevelBuff(id,level)
  local cfg=LEVEL_BUFFS[id]
  if not cfg then return nil end
  local lv=math.clamp(math.floor(tonumber(level) or 1),1,Bloom.MasteryCap)
@@ -116,7 +116,7 @@ function C.GetLevelBuff(id:string,level:number?):any
  return {Stat=cfg.Stat,Label=cfg.Label,Level=lv,Bonus=bonus,Multiplier=multiplier,Inverse=inverse}
 end
 
-function C.FormatLevelBuff(id:string,level:number?):string
+function C.FormatLevelBuff(id,level)
  local buff=C.GetLevelBuff(id,level)
  if not buff then return "No passive bonus" end
  local pct=math.floor((tonumber(buff.Bonus) or 0)*1000+.5)/10
