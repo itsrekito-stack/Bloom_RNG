@@ -2,6 +2,7 @@ local TweenService=game:GetService("TweenService")
 local RS=game:GetService("ReplicatedStorage")
 
 local Bees=require(RS.Config.BeesConfig)
+local Icons=require(RS.Config.IconsConfig)
 local Theme=require(RS.Config.UIThemeConfig)
 
 local C=Theme.Colors
@@ -28,7 +29,7 @@ local STAT_LABELS={
  PollinatorPowerMultiplier="Bee Power",
 }
 
-local function signature(traits)
+local function signature(traits,equippedSlots)
  local parts={}
  for _,item in ipairs(traits or {}) do
   if (tonumber(item.Count) or 0)>0 then
@@ -40,8 +41,36 @@ local function signature(traits)
    },":")
   end
  end
+ local equipped={}
+ for _,beeId in pairs(equippedSlots or {}) do
+  if type(beeId)=="string" and beeId~="" then equipped[#equipped+1]=beeId end
+ end
  table.sort(parts)
+ table.sort(equipped)
+ parts[#parts+1]="equipped:"..table.concat(equipped,",")
  return table.concat(parts,"|")
+end
+
+local function equippedSet(slots)
+ local out={}
+ for _,beeId in pairs(slots or {}) do
+  if type(beeId)=="string" and beeId~="" then out[beeId]=true end
+ end
+ return out
+end
+
+local function traitIcon(id)
+ local icon=Icons.GetTraitIcon(tostring(id or ""))
+ if icon=="" then
+  if id=="Swift" then return Icons.Get("System","ArrowRight") end
+  return Icons.Get("System","Bee")
+ end
+ return icon
+end
+
+local function beeIcon(id)
+ local icon=Icons.GetBeeIcon(tostring(id or ""))
+ return icon~="" and icon or Icons.Get("System","Bee")
 end
 
 local function formatScalar(key,value)
@@ -172,6 +201,7 @@ function S:ShowTierPopup(item,row)
  if row then
   local stroke=row:FindFirstChildOfClass("UIStroke")
   local badge=row:FindFirstChild("IconBadge")
+  local icon=row:FindFirstChild("TraitIcon")
   if stroke then
    local baseColor=stroke.Color
    local baseThickness=stroke.Thickness
@@ -184,7 +214,11 @@ function S:ShowTierPopup(item,row)
    rowScale.Scale=1.04
    TweenService:Create(rowScale,TweenInfo.new(.32,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play()
   end
-  if badge and badge:IsA("TextLabel") then
+  if icon and icon:IsA("ImageLabel") then
+   local base=icon.ImageColor3
+   icon.ImageColor3=C.Gold
+   TweenService:Create(icon,TweenInfo.new(1.4,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{ImageColor3=base}):Play()
+  elseif badge and badge:IsA("TextLabel") then
    local base=badge.TextColor3
    badge.TextColor3=C.Gold
    TweenService:Create(badge,TweenInfo.new(1.4,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{TextColor3=base}):Play()
@@ -202,8 +236,9 @@ function S:ClearRows()
  end
 end
 
-function S:BuildRows(traits,tierUps)
+function S:BuildRows(traits,tierUps,equippedSlots)
  self:ClearRows()
+ local equipped=equippedSet(equippedSlots)
  local visible={}
  for _,item in ipairs(traits or {}) do
   if (tonumber(item.Count) or 0)>0 then visible[#visible+1]=item end
@@ -223,13 +258,46 @@ function S:BuildRows(traits,tierUps)
   local color=item.Color
   if typeof(color)~="Color3" then color=C.Blue end
   local badge=row:FindFirstChild("IconBadge")
+  local icon=row:FindFirstChild("TraitIcon")
+  local beeStrip=row:FindFirstChild("BeeStrip")
+  local beeTemplate=beeStrip and beeStrip:FindFirstChild("BeeIconTemplate")
   local name=row:FindFirstChild("Name")
   local tier=row:FindFirstChild("Tier")
   local progress=row:FindFirstChild("Progress")
   local stroke=row:FindFirstChildOfClass("UIStroke")
+  if icon and icon:IsA("ImageLabel") then
+   icon.Image=traitIcon(item.Id)
+   icon.ImageColor3=C.White
+   icon.ImageTransparency=0
+   icon.Visible=true
+  end
   if badge and badge:IsA("TextLabel") then
    badge.Text=tostring(item.Short or string.sub(tostring(item.Name or "?"),1,1))
    badge.BackgroundColor3=color
+   badge.Visible=not (icon and icon:IsA("ImageLabel"))
+  end
+  if beeStrip and beeTemplate and beeTemplate:IsA("ImageLabel") then
+   for _,member in ipairs(beeStrip:GetChildren()) do
+    if member:GetAttribute("TraitBeeRuntime") then member:Destroy() end
+   end
+   for beeOrder,beeId in ipairs(item.BeeIds or {}) do
+    local member=beeTemplate:Clone()
+    member.Name="Bee_"..tostring(beeId)
+    member.LayoutOrder=beeOrder
+    member.Visible=true
+    member:SetAttribute("TraitBeeRuntime",true)
+    member.Image=beeIcon(beeId)
+    local isEquipped=equipped[beeId]==true
+    member.ImageColor3=isEquipped and C.White or Color3.fromRGB(105,112,120)
+    member.ImageTransparency=isEquipped and 0 or .42
+    member.BackgroundTransparency=isEquipped and .04 or .22
+    local memberStroke=member:FindFirstChildOfClass("UIStroke")
+    if memberStroke then
+     memberStroke.Color=isEquipped and color or C.BorderSoft
+     memberStroke.Transparency=isEquipped and .16 or .62
+    end
+    member.Parent=beeStrip
+   end
   end
   if name and name:IsA("TextLabel") then name.Text=tostring(item.Name or item.Id) end
   if tier and tier:IsA("TextLabel") then
@@ -253,10 +321,10 @@ function S:BuildRows(traits,tierUps)
  end
 end
 
-function S:Update(traits,revision)
+function S:Update(traits,equippedSlots,revision)
  if not self.Root then return end
  self.LastRevision=revision
- local nextSignature=signature(traits)
+ local nextSignature=signature(traits,equippedSlots)
  if nextSignature==self.LastSignature then
   self.Root.Visible=not self.Suppressed
   return
@@ -276,7 +344,7 @@ function S:Update(traits,revision)
 
  self.LastSignature=nextSignature
  self:HideTooltip()
- self:BuildRows(traits,tierUps)
+ self:BuildRows(traits,tierUps,equippedSlots)
  self.Root.Visible=not self.Suppressed
 end
 
