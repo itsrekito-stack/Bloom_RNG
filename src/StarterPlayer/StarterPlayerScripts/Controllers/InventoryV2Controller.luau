@@ -74,6 +74,23 @@ local function firstFreeBeeSlot(slots,capacity)
  return nil
 end
 
+local function autoReplaceBeeSlot(slots,capacity,newId)
+ local newBee=Bees.Get(newId)
+ local newRank=newBee and (Rarity.Rank[newBee.Rarity] or 0) or 0
+ local bestSlot=nil
+ local bestRank=math.huge
+ for i=1,(tonumber(capacity) or 0) do
+  local equippedId=slots[i]
+  local equipped=Bees.Get(equippedId)
+  local rank=equipped and (Rarity.Rank[equipped.Rarity] or 0) or 0
+  if equipped and rank<newRank and (rank<bestRank or (rank==bestRank and (bestSlot==nil or i<bestSlot))) then
+   bestSlot=i
+   bestRank=rank
+  end
+ end
+ return bestSlot
+end
+
 local function cloneTable(t)
  local out={}
  for k,v in pairs(t or {}) do out[k]=v end
@@ -84,13 +101,22 @@ local function traitEquipPreview(item,inventory)
  if not item or item.Kind~="Bee" then return "" end
  local slots=cloneTable(inventory.EquippedBeeSlots or {})
  if findEquippedSlot(slots,item.Id) then return "Equipped" end
- local free=firstFreeBeeSlot(slots,inventory.BeeCapacity)
- if not free then return "No free Bee slot" end
+ local target=firstFreeBeeSlot(slots,inventory.BeeCapacity)
+ local replacedId=nil
+ if not target then
+  target=autoReplaceBeeSlot(slots,inventory.BeeCapacity,item.Id)
+  if not target then return "All equipped Bees are equally or more rare" end
+  replacedId=slots[target]
+ end
  local before=Bees.GetTraitState(slots)
- slots[free]=item.Id
+ slots[target]=item.Id
  local after=Bees.GetTraitState(slots)
  local byId={} for _,state in ipairs(before) do byId[state.Id]=state end
  local changes={}
+ if replacedId then
+  local replaced=Bees.Get(replacedId)
+  table.insert(changes,"Replaces "..(replaced and replaced.DisplayName or replacedId))
+ end
  for _,state in ipairs(after) do
   local old=byId[state.Id]
   if old and (state.Count~=old.Count or state.Tier~=old.Tier) then
@@ -461,7 +487,7 @@ function InventoryV2.Render(controller,profile,uiState)
     setButton(plant,true,"UNEQUIP BEE",true,function() controller:Send("EquipBee","",equippedSlot) end)
    else
     local slot=firstFreeBeeSlot(slots,inventory.BeeCapacity)
-    setButton(plant,true,slot and "EQUIP" or "SLOTS FULL",slot~=nil,function() controller:Send("EquipBee",item.Id,slot) end)
+    setButton(plant,true,"EQUIP",true,function() controller:Send("EquipBee",item.Id,slot) end)
    end
    setButton(favorite,false)
    setButton(protect,false)

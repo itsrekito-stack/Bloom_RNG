@@ -71,13 +71,38 @@ function S:DissolveBee()
  return false,"ACTION_UNAVAILABLE"
 end
 
+local function beeRank(id)
+ local bee=type(id)=="string" and B.Get(id) or nil
+ return bee and (B.RarityRank[bee.Rarity] or 0) or 0
+end
+
+local function chooseEquipSlot(p,id,capacity)
+ local slots=p.Pollinators.EquippedBeeSlots
+ for i=1,capacity do
+  local equipped=slots[i]
+  if equipped==nil or equipped=="" then return i end
+ end
+ local newRank=beeRank(id)
+ local bestSlot=nil
+ local bestRank=math.huge
+ for i=1,capacity do
+  local equipped=slots[i]
+  local rank=beeRank(equipped)
+  if rank<newRank and (rank<bestRank or (rank==bestRank and (bestSlot==nil or i<bestSlot))) then
+   bestSlot=i
+   bestRank=rank
+  end
+ end
+ return bestSlot
+end
+
 function S:EquipBee(player,id,slot)
  local p=self.X:Profile(player)
  if not p then return false,"PROFILE_LOADING" end
  local capacity=self.X.StatsService:BeeCapacity(p)
- if not self.X.U.Integer(slot,capacity) then return false,"INVALID_SLOT" end
 
  if id=="" or id==nil then
+  if not self.X.U.Integer(slot,capacity) then return false,"INVALID_SLOT" end
   p.Pollinators.EquippedBeeSlots[slot]=nil
   self.X.GardenSynergyService:Recalculate(player)
   return true
@@ -85,16 +110,30 @@ function S:EquipBee(player,id,slot)
 
  if type(id)~="string" or not B.Exists(id) then return false,"INVALID_ITEM" end
  if (p.Pollinators.BeeInventory[id] or 0)<1 then return false,"NOT_OWNED" end
-
- for i,v in pairs(p.Pollinators.EquippedBeeSlots) do
-  if i~=slot and v==id then return false,"ALREADY_EQUIPPED" end
+ for _,v in pairs(p.Pollinators.EquippedBeeSlots) do
+  if v==id then return false,"ALREADY_EQUIPPED" end
  end
 
- p.Pollinators.EquippedBeeSlots[slot]=id
+ local chosenSlot=slot
+ if chosenSlot~=nil and not self.X.U.Integer(chosenSlot,capacity) then return false,"INVALID_SLOT" end
+ if chosenSlot==nil then chosenSlot=chooseEquipSlot(p,id,capacity) end
+ if not chosenSlot then return false,"NO_LOWER_RARITY_BEE" end
+
+ local previousId=p.Pollinators.EquippedBeeSlots[chosenSlot]
+ if previousId and previousId~="" and beeRank(previousId)>=beeRank(id) then
+  return false,"NO_LOWER_RARITY_BEE"
+ end
+
+ p.Pollinators.EquippedBeeSlots[chosenSlot]=id
  self.X.GardenSynergyService:Recalculate(player)
  self.X:Emit(player,"EquipBee",1)
  local _,traits=B.GetTraitBonuses(p.Pollinators.EquippedBeeSlots)
  if #traits>0 then self.X:Emit(player,"Trait",1) end
+ if previousId and previousId~="" then
+  local newBee=B.Get(id)
+  local oldBee=B.Get(previousId)
+  self.X:Send(player,"Message",(newBee and newBee.DisplayName or id).." replaced "..(oldBee and oldBee.DisplayName or previousId))
+ end
  return true
 end
 

@@ -27,7 +27,10 @@ function S:Validate(action,a,b,c)
   return integer(a,1,C.MaxFlowerSlots) and short(b,64,true) and c==nil,(integer(a,1,C.MaxFlowerSlots) and short(b,64,true) and c==nil) and nil or"INVALID_VALUE"
  elseif action=="EquipBee" then
   local idOK=a==nil or short(a,64,true)
-  return idOK and integer(b,1,C.MaxBeeSlots) and c==nil,(idOK and integer(b,1,C.MaxBeeSlots) and c==nil) and nil or"INVALID_VALUE"
+  local unequip=a==nil or a==""
+  local slotOK=integer(b,1,C.MaxBeeSlots)
+  local valid=idOK and c==nil and (unequip and slotOK or (b==nil or slotOK))
+  return valid,valid and nil or"INVALID_VALUE"
  elseif action=="WorkshopBuy" or action=="Trial" or action=="SeasonConfirm" or action=="Card" then
   return short(a,64,false) and b==nil and c==nil,(short(a,64,false) and b==nil and c==nil) and nil or"INVALID_VALUE"
  elseif action=="Flag" then

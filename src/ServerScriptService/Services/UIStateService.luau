@@ -37,6 +37,7 @@ local REASONS={
  NOT_DISCOVERED="Discover this item first",
  NOT_OWNED="You do not own this item",
  ALREADY_EQUIPPED="This Bee species is already equipped",
+ NO_LOWER_RARITY_BEE="All equipped Bees are equally or more rare",
  ALREADY_PLANTED="This Flower species is already planted",
  NO_FREE_COPY="No free copy available",
  LAST_COPY="You cannot dissolve your last copy",

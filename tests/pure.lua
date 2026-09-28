@@ -2,7 +2,7 @@ test("default game vision profile",function()
  local p=Schema.CreateDefault()
  assert(Schema.Prepare(p))
  assert(p.SchemaVersion==6 and p.Inventory==nil and p.Currencies.Coins==0)
- assert(p.Tutorial.Version==5 and p.Tutorial.Step==1)
+ assert(p.Tutorial.Version==10 and p.Tutorial.Step==1)
  assert(p.Garden.UnlockedSlots==0 and #p.Garden.Slots==7)
  assert(next(p.FlowerCollection.OwnedSeedCopies)==nil and next(p.Pollinators.BeeInventory)==nil)
 end)
@@ -113,6 +113,8 @@ test("bee duplicates raise species mastery and equip is species-unique",function
   U=U,
   GardenSynergyService={Recalculate=function() end},
   Emit=function() end,
+  Send=function() end,
+  MarkStateDirty=function() end,
  }
  inv:Init(x)
  assert(inv:Grant(player,"Bee","WorkerBee")==true)
@@ -122,6 +124,30 @@ test("bee duplicates raise species mastery and equip is species-unique",function
  assert(inv:EquipBee(player,"WorkerBee",1))
  assert(not inv:EquipBee(player,"WorkerBee",2))
  assert(not inv:DissolveBee(player,"WorkerBee",1))
+end)
+
+test("full Bee slots auto-replace only a lower-rarity Bee",function()
+ local player={} local p=Schema.CreateDefault()
+ p.Pollinators.BeeInventory.WorkerBee=1
+ p.Pollinators.BeeInventory.NectarBee=1
+ p.Pollinators.BeeInventory.RoyalBee=1
+ p.Pollinators.EquippedBeeSlots[1]="WorkerBee"
+ p.Pollinators.EquippedBeeSlots[2]="RoyalBee"
+ local inv=require(node("ServerScriptService/Services/InventoryService"))
+ local x={
+  Profile=function() return p end,
+  PollinatorService={AddMastery=function() return true end},
+  StatsService={BeeCapacity=function() return 2 end},
+  U=U,
+  GardenSynergyService={Recalculate=function() end},
+  Emit=function() end,
+  Send=function() end,
+ }
+ inv:Init(x)
+ assert(inv:EquipBee(player,"NectarBee",nil))
+ assert(p.Pollinators.EquippedBeeSlots[1]=="NectarBee" and p.Pollinators.EquippedBeeSlots[2]=="RoyalBee")
+ local ok,reason=inv:EquipBee(player,"WorkerBee",nil)
+ assert(not ok and reason=="NO_LOWER_RARITY_BEE")
 end)
 
 test("season dry run deterministic and preserves species mastery",function()
@@ -253,7 +279,7 @@ test("tutorial v5 gates future events and completes ordered flow",function()
  }
  service:Init(x)
  local T=require(rs.Config.TutorialConfig)
- assert(#T.Steps==15 and T.Version==5)
+ assert(#T.Steps==13 and T.Version==10)
  p.Tutorial.Events.Delivery=99
  assert(not service:RecordEvent(player,"Delivery"))
  service:Refresh(player) assert(p.Tutorial.Step==1)

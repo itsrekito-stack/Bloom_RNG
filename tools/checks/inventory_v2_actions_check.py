@@ -64,9 +64,15 @@ for text,label in [
 ]:
     need(player,text,label)
 
-need(inventory,'if not self.X.U.Integer(slot,capacity) then return false,"INVALID_SLOT" end',"Bee slot capacity guard")
+need(inventory,'if not self.X.U.Integer(slot,capacity) then return false,"INVALID_SLOT" end',"Bee unequip slot capacity guard")
 need(inventory,'if (p.Pollinators.BeeInventory[id] or 0)<1 then return false,"NOT_OWNED" end',"Bee species ownership guard")
-need(inventory,'if i~=slot and v==id then return false,"ALREADY_EQUIPPED" end',"one equipped copy per Bee species")
+need(inventory,'if v==id then return false,"ALREADY_EQUIPPED" end',"one equipped copy per Bee species")
+need(inventory,'local function chooseEquipSlot(p,id,capacity)',"server-authoritative full-slot replacement")
+need(inventory,'if rank<newRank',"auto replacement only targets lower-rarity Bees")
+need(inventory,'return false,"NO_LOWER_RARITY_BEE"',"full stronger/equal loadout protection")
+need(client,'setButton(plant,true,"EQUIP",true,function() controller:Send("EquipBee",item.Id,slot) end)',"Equip remains active when Bee slots are full")
+assert '"SLOTS FULL"' not in client, "full Bee slots must not disable Equip"
+need(client,'autoReplaceBeeSlot(slots,inventory.BeeCapacity,item.Id)',"client trait preview mirrors auto replacement")
 need(inventory,'pollinators.BeeInventory[id]=1',"every Bee grant guarantees permanent ownership")
 need(inventory,'local owned=(tonumber(pollinators.BeeInventory[id]) or 0)>0',"duplicate mastery uses prior ownership, not discovery flag")
 need(inventory,'self.X:MarkStateDirty(player)',"Bee grants dirty authoritative state for Inventory sync")
