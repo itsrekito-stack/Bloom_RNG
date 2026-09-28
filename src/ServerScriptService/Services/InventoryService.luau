@@ -47,15 +47,16 @@ function S:Grant(player,kind,id)
 
  if kind=="Bee" and B.Exists(id) then
   local pollinators=p.Pollinators
-  local new=not pollinators.DiscoveredBees[id]
+  local new=not (pollinators.DiscoveredBees[id]==true)
+  local owned=(tonumber(pollinators.BeeInventory[id]) or 0)>0
   pollinators.DiscoveredBees[id]=true
   pollinators.BeeObtained[id]=(pollinators.BeeObtained[id] or 0)+1
-  if new then
-   pollinators.BeeInventory[id]=1
-   pollinators.BeeMastery[id]=pollinators.BeeMastery[id] or 0
-  else
+  pollinators.BeeInventory[id]=1
+  pollinators.BeeMastery[id]=pollinators.BeeMastery[id] or 0
+  if owned then
    self.X.PollinatorService:AddMastery(player,id,C.BeeDuplicateXP)
   end
+  self.X:MarkStateDirty(player)
   return new
  end
 

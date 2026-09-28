@@ -108,10 +108,12 @@ function D.Apply(p)
    b.DiscoveredBees[id]=true
   else b.BeeInventory[id]=nil end
  end
- for id in pairs(b.DiscoveredBees) do
-  -- Bee species ownership is permanent. Repair older profiles where discovery survived but BeeInventory did not.
-  if (tonumber(b.BeeInventory[id]) or 0)<1 then b.BeeInventory[id]=1 end
-  b.BeeObtained[id]=math.max(1,tonumber(b.BeeObtained[id]) or 0)
+ for id,discovered in pairs(b.DiscoveredBees) do
+  -- Bee species ownership is permanent. Repair only true discoveries from older profiles.
+  if discovered==true then
+   if (tonumber(b.BeeInventory[id]) or 0)<1 then b.BeeInventory[id]=1 end
+   b.BeeObtained[id]=math.max(1,tonumber(b.BeeObtained[id]) or 0)
+  end
  end
  for id,m in pairs(b.BeeMastery) do
   if type(m)=="table" and B.Bees[id] then
