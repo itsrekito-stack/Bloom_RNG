@@ -1,17 +1,28 @@
 local RS=game:GetService("ReplicatedStorage")
 local C=require(RS.Config.BloomConfig)
-local E=require(RS.Shared.WorkshopEffects)
 local S={}
 
 function S:Init(x)
  self.X=x
 end
 
+function S:State(profile,id)
+ local collection=profile and profile.FlowerCollection
+ if not collection then return {Level=1,XP=0} end
+ local state=collection.FlowerMastery[id]
+ if type(state)~="table" then
+  state={Level=1,XP=0}
+  collection.FlowerMastery[id]=state
+ end
+ state.Level=math.max(1,math.floor(tonumber(state.Level) or 1))
+ state.XP=math.max(0,tonumber(state.XP) or 0)
+ return state
+end
+
 function S:Add(player,id,xp)
  local p=self.X:Profile(player)
  if not p or type(id)~="string" or type(xp)~="number" or xp<=0 then return false end
- local m=p.FlowerCollection.FlowerMastery[id] or {Level=1,XP=0}
- p.FlowerCollection.FlowerMastery[id]=m
+ local m=self:State(p,id)
  m.XP+=xp
  while m.Level<C.MasteryCap and m.XP>=m.Level*C.MasteryXP do
   m.XP-=m.Level*C.MasteryXP
@@ -20,17 +31,13 @@ function S:Add(player,id,xp)
  return true
 end
 
-function S:Upgrade(player,id)
- local p=self.X:Profile(player)
- if not p then return false,"PROFILE_LOADING" end
- if type(id)~="string" or not p.FlowerCollection.DiscoveredFlowers[id] then return false,"NOT_DISCOVERED" end
- local m=p.FlowerCollection.FlowerMastery[id] or {Level=1,XP=0}
- if m.Level>=C.MasteryCap then return false,"MASTERY_MAX" end
- local cost=math.ceil(m.Level*5*(1-E.Value(p,"ECONOMY_5","StudyDiscount",0)))
- if p.Currencies.PetalDust<cost then return false,"DUST_REQUIRED" end
- p.Currencies.PetalDust-=cost
- self:Add(player,id,m.Level*C.MasteryXP)
- return true
+function S:AddDuplicate(player,id,count)
+ count=math.max(1,math.floor(tonumber(count) or 1))
+ return self:Add(player,id,count*C.FlowerDuplicateXP)
+end
+
+function S:Upgrade()
+ return false,"ACTION_UNAVAILABLE"
 end
 
 return S
