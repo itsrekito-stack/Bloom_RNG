@@ -32,7 +32,7 @@ for text,label in [
  ('controller.LastSeed=item.Id',"Garden selection handoff"),
  ('"PLANT IN GARDEN"',"unplanted Flower Garden action"),
  ('"EDIT / REMOVE IN GARDEN"',"planted Flower Garden action"),
- ('"Use an unlocked Garden pad to open the Garden editor."',"physical Garden handoff copy"),
+ ('Use an unlocked Garden pad to open the Garden editor.',"physical Garden handoff copy"),
  ('traitEquipPreview(item,inventory)',"Trait delta preview"),
  ('item.Odds or "1/—"',"1/N presentation"),
  ('item.Obtained or 1',"obtained count presentation"),
