@@ -752,6 +752,7 @@ function UI:Close(options)
   self:Open("SeedSatchel")
  else
   self:RefreshMenuDock()
+  self:RefreshRollHUDVisibility()
  end
 end
 
@@ -772,6 +773,7 @@ function UI:Open(name,arg,options)
  self.MenuRenderer=MENU_RENDERERS[name] or name
  self.MenuArg=arg
  self.MenuRefreshRequested=false
+ self:RefreshRollHUDVisibility()
  self:SetPanelVisible(true)
  self:RefreshMenuDock()
  if name=="Workshop" then self:SetWorkshopFocus(true) end
@@ -1244,6 +1246,20 @@ function UI:ApplySafeArea()
  self:ApplyResponsiveLayout(math.max(320,safeW),math.max(360,safeH))
 end
 
+function UI:RefreshRollHUDVisibility()
+ if not self.State or not self.State.Profile or not self.Roll or not self.RollHUD or not self.RouletteViewport then return false end
+ local p=self.State.Profile
+ local rollStep=T.IndexById.Roll or math.huge
+ local rollUnlocked=p.Tutorial.FeatureUnlocks.Roll==true
+  or p.Tutorial.Skipped==true
+  or (tonumber(p.Tutorial.Step) or 1)>=rollStep
+ local visible=rollUnlocked and self.Menu==nil
+ self.RollHUD.Visible=visible
+ self.Roll.Visible=visible
+ self.RouletteViewport.Visible=visible and (self.Auto or self.RouletteRunning or self.RouletteLanding)
+ return rollUnlocked
+end
+
 function UI:ApplyMenuDockLayout(expanded)
  if not self.Dock then return end
  expanded=expanded==true
@@ -1367,13 +1383,7 @@ function UI:Render()
  self.CurrencyRows.AncientNectar.Value.Text=compact(p.Currencies.AncientNectar)
  self.CurrencyRows.AncientNectar.Root.Visible=(p.Season.Count or 0)>0 or (p.Currencies.AncientNectar or 0)>0
 
- local rollStep=T.IndexById.Roll or math.huge
- local rollUnlocked=p.Tutorial.FeatureUnlocks.Roll==true or p.Tutorial.Skipped==true or (tonumber(p.Tutorial.Step) or 1)>=rollStep
- local menuOpen=self.Menu~=nil
- local rollSuppressed=menuOpen
- self.RollHUD.Visible=rollUnlocked and not rollSuppressed
- self.Roll.Visible=rollUnlocked and not rollSuppressed
- self.RouletteViewport.Visible=rollUnlocked and not rollSuppressed and (self.Auto or self.RouletteRunning or self.RouletteLanding)
+ local rollUnlocked=self:RefreshRollHUDVisibility()
  if not rollUnlocked and (self.Auto or self.RouletteRunning or self.RouletteLanding) then
   self.Auto=false
   self:StopRouletteAnimation()
