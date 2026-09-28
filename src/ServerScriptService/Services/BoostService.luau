@@ -110,7 +110,10 @@ function S:RollLuck(player,profile)
  local temp=self.X.Temp[player] or {}
  local base=self.X.StatsService:Get(p).Luck or 1
  local solar=self:ActivityBoostMultiplier(player,"SolarBloom","LuckMultiplier")
- return base*solar+(tonumber(temp.Dew) or 0)*.1
+ local earned=base*solar+(tonumber(temp.Dew) or 0)*.1
+ local requested=tonumber(p.Settings and p.Settings.EffectiveLuck) or 0
+ if requested>0 then return math.min(earned,math.max(1,requested)) end
+ return earned
 end
 
 function S:ApplyActivity(player,kind)
