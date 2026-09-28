@@ -166,6 +166,7 @@ function X:Request(player,action,a,b,c)
   local limits=numericLimits[a]
   if limits then
    if type(b)~="number" or b~=b or math.abs(b)==math.huge then return false,"INVALID_VALUE" end
+   if a=="EffectiveLuck" and b~=0 and b<1 then return false,"INVALID_VALUE" end
    p.Settings[a]=math.clamp(b,limits[1],limits[2])
    if a=="SFXVolume" then p.Settings.TokenSoundVolume=p.Settings[a] end
    if a=="TokenSoundVolume" then p.Settings.SFXVolume=p.Settings[a] end
