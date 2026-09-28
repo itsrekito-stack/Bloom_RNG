@@ -48,16 +48,11 @@ for needle,label in [
 ]:
     need(service,needle,label)
 
-# Respec validates the future capacities before mutating balances or equips.
-need(service,"local future=Copy(p)","respec future profile")
-need(service,"local gardenCapacity=Rules.FlowerCapacity(future)","future flower capacity")
-need(service,"local beeCapacity=Rules.BeeCapacity(future)","future bee capacity")
-need(service,'if Rules.HasOverflow(p.Garden.Slots,gardenCapacity) then return false,"RESPEC_GARDEN_OCCUPIED" end',"garden-loss protection")
-need(service,"if n and not n.Permanent then","respec excludes permanent nodes")
-need(service,"p.WorkshopV5.Points+=(n.Cost or 0)","respec point refund")
-need(service,"p.Currencies.Coins+=(n.Coins or 0)","respec coin refund")
-need(service,"p.Currencies.PetalDust+=(n.Dust or 0)","respec dust refund")
-need(service,"if tonumber(slot) and tonumber(slot)>beeCapacity then p.Pollinators.EquippedBeeSlots[slot]=nil end","overflow bee unequip")
+# Normal respec is intentionally disabled. RESET & REFUND belongs to a future Biome transition.
+need(service,"function S:Respec(player)","closed respec endpoint")
+need(service,'return false,"ACTION_UNAVAILABLE"',"normal respec fails closed")
+if "p.WorkshopV5.Points+=(n.Cost or 0)" in service:
+    raise AssertionError("unrestricted normal Workshop refund path returned")
 
 # Season reset uses configured point cost instead of a hard-coded +1.
 need(season,"local W=require(RS.Config.WorkshopConfig)","Season plan shares Workshop config")
@@ -72,4 +67,4 @@ need(ui,'icon.Image=Icons.GetWorkshopNodeIcon(id,not revealed)',"unknown icon fo
 need(ui,'if currentRevealed then\n        showTooltip',"hidden node tooltip suppression")
 
 print("workshop tree progression contract: PASS")
-print("42 effect-backed nodes, Hive 1-5 gating, permanent Legacy branch, safe respec and config-driven Season refunds.")
+print("42 effect-backed nodes, Hive 1-5 gating, permanent Legacy branch, disabled normal respec and config-driven Season refunds.")
