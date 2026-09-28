@@ -474,6 +474,8 @@ function InventoryV2.Render(controller,profile,uiState)
    local label=planted and "EDIT / REMOVE IN GARDEN" or "PLANT IN GARDEN"
    setButton(plant,true,label,true,function()
     controller.LastSeed=item.Id
+    controller.GardenEditorState=controller.GardenEditorState or {SelectedFlowerId=nil,SelectedSlot=nil}
+    controller.GardenEditorState.SelectedFlowerId=item.Id
     controller:Close()
     controller:Toast("Flower selected. Use an unlocked Garden pad to open the Garden editor.")
    end)
