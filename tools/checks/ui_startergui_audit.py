@@ -133,7 +133,7 @@ check('Active boosts clips runtime badges to panel',boost_root is not None and b
 check('Active boosts controller linked','self.BoostHUD=require(script.Parent.BoostHUDController)' in source and 'self.BoostHUD:Update(boosts,self.State.Revision)' in source)
 check('Active boost hover states','badge.MouseEnter:Connect' in boost_hud_source and 'badge.MouseLeave:Connect' in boost_hud_source and 'TweenService:Create(scale' in boost_hud_source)
 check('Active boosts minimize behavior','function S:SetMinimized(minimized,animate)' in boost_hud_source and 'self.Toggle.Activated:Connect' in boost_hud_source and 'self.List.Visible=not self.Minimized' in boost_hud_source)
-check('Active boosts static Luck first',one('LuckBadge')[1] is not None and one('LuckBadge')[1].get('Properties',{}).get('LayoutOrder')==0 and 'self.LuckBadge=self.List:FindFirstChild("LuckBadge")' in boost_hud_source)
+check('Active boosts static Luck first',one('LuckBadge')[1] is not None and one('LuckBadge')[1].get('Properties',{}).get('LayoutOrder')==0 and 'self.LuckBadge=self.List and self.List:FindFirstChild("LuckBadge")' in boost_hud_source)
 check('Active boosts horizontal controls',one('ScrollLeft')[1] is not None and one('ScrollRight')[1] is not None and 'CanvasPosition=Vector2.new(x,0)' in boost_hud_source)
 check('Active boost source breakdown','self.TooltipBreakdown.Text=self:TooltipText(item)' in boost_hud_source and 'source(buckets,stat,"Bees",bee.DisplayName.." ×"..count' in boost_service_source and 'source(buckets,"Luck","Activity",tostring(solarCfg.Label or "Solar Bloom")' in boost_service_source)
 check('Workshop hides active boosts','self.BoostHUD:SetSuppressed(exclusive)' in source and 'function S:SetSuppressed(suppressed)' in boost_hud_source)
