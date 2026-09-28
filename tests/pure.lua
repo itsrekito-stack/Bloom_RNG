@@ -208,6 +208,7 @@ test("roll independent players, cooldown and one-time Bloom",function()
   FlowerProgressionService={AddDuplicate=function() return true end},
   PollinatorService={AddMastery=function() return true end},
   GardenSynergyService={Recalculate=function() end},
+  MarkStateDirty=function() end,
   U=U,
  }
  x.InventoryService=inv inv:Init(x) roll:Init(x)
