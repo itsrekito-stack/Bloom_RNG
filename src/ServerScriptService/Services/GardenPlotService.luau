@@ -73,9 +73,10 @@ local function visualCFrame(root)
  return cf
 end
 
-local function prepareStaticVisual(root)
+local function prepareStaticVisual(root,key)
  if not root then return end
  Assets.Configure(root,true,false)
+ Assets.ApplyTextureFallback(root,key)
  root:SetAttribute("BloomLotVisual",true)
 end
 
@@ -102,7 +103,7 @@ function S:Init(x)
    local origin=lotMarker(lot,"LotOrigin")
    if origin then
     hideMarker(origin)
-    for _,key in ipairs({"Garden","Hive","Bench"}) do prepareStaticVisual(lotVisual(lot,key)) end
+    for _,key in ipairs({"Garden","Hive","Bench"}) do prepareStaticVisual(lotVisual(lot,key),key) end
     lot:SetAttribute("BloomGardenLot",true)
     lot:SetAttribute("OwnerUserId",nil)
     table.insert(lots,lot)

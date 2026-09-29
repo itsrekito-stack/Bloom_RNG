@@ -88,3 +88,12 @@ assert 'GardenAnchor' not in garden
 assert 'HiveAnchor' not in garden
 assert 'BenchAnchor' not in garden
 assert 'function A.PlaceAtAnchor(root,anchorCFrame,alignBottom)' in assets
+
+
+# Direct mesh asset IDs are authored into the eight editable Workspace lots.
+project_text=read("default.project.json")
+assert "rbxassetid://89934665266567" in project_text, "Bee mesh asset id missing"
+assert project_text.count("rbxassetid://93439308097157")==8, "Garden mesh must exist in all 8 lots"
+assert project_text.count("rbxassetid://72906636471163")==8, "Hive mesh must exist in all 8 lots"
+assert '"Bee"' in project_text
+assert 'Assets.ApplyTextureFallback(root,key)' in garden

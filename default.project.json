@@ -47,6 +47,66 @@
                 1
               ]
             }
+          },
+          "Garden": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://93439308097157",
+              "Size": [
+                32.5,
+                3,
+                32.5
+              ],
+              "CFrame": [
+                -112.255,
+                9.7923,
+                -3.763,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "Hive": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://72906636471163",
+              "Size": [
+                5.2,
+                6.2,
+                5.2
+              ],
+              "CFrame": [
+                -101.055,
+                11.3923,
+                -3.763,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1
+              ]
+            }
           }
         },
         "GardenLot02": {
@@ -70,6 +130,66 @@
                 -81.5012,
                 8.2923,
                 -78.0092,
+                0.707107,
+                0,
+                0.707107,
+                0,
+                1,
+                0,
+                -0.707107,
+                0,
+                0.707107
+              ]
+            }
+          },
+          "Garden": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://93439308097157",
+              "Size": [
+                32.5,
+                3,
+                32.5
+              ],
+              "CFrame": [
+                -81.5012,
+                9.7923,
+                -78.0092,
+                0.707107,
+                0,
+                0.707107,
+                0,
+                1,
+                0,
+                -0.707107,
+                0,
+                0.707107
+              ]
+            }
+          },
+          "Hive": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://72906636471163",
+              "Size": [
+                5.2,
+                6.2,
+                5.2
+              ],
+              "CFrame": [
+                -73.581602,
+                11.3923,
+                -85.928798,
                 0.707107,
                 0,
                 0.707107,
@@ -115,6 +235,66 @@
                 0
               ]
             }
+          },
+          "Garden": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://93439308097157",
+              "Size": [
+                32.5,
+                3,
+                32.5
+              ],
+              "CFrame": [
+                -7.255,
+                9.7923,
+                -108.763,
+                0,
+                0,
+                1,
+                0,
+                1,
+                0,
+                -1,
+                0,
+                0
+              ]
+            }
+          },
+          "Hive": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://72906636471163",
+              "Size": [
+                5.2,
+                6.2,
+                5.2
+              ],
+              "CFrame": [
+                -7.255,
+                11.3923,
+                -119.963,
+                0,
+                0,
+                1,
+                0,
+                1,
+                0,
+                -1,
+                0,
+                0
+              ]
+            }
           }
         },
         "GardenLot04": {
@@ -149,6 +329,66 @@
                 -0.707107
               ]
             }
+          },
+          "Garden": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://93439308097157",
+              "Size": [
+                32.5,
+                3,
+                32.5
+              ],
+              "CFrame": [
+                66.9912,
+                9.7923,
+                -78.0092,
+                -0.707107,
+                0,
+                0.707107,
+                0,
+                1,
+                0,
+                -0.707107,
+                0,
+                -0.707107
+              ]
+            }
+          },
+          "Hive": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://72906636471163",
+              "Size": [
+                5.2,
+                6.2,
+                5.2
+              ],
+              "CFrame": [
+                59.071602,
+                11.3923,
+                -85.928798,
+                -0.707107,
+                0,
+                0.707107,
+                0,
+                1,
+                0,
+                -0.707107,
+                0,
+                -0.707107
+              ]
+            }
           }
         },
         "GardenLot05": {
@@ -171,6 +411,66 @@
               "CFrame": [
                 97.745,
                 8.2923,
+                -3.763,
+                -1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                -1
+              ]
+            }
+          },
+          "Garden": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://93439308097157",
+              "Size": [
+                32.5,
+                3,
+                32.5
+              ],
+              "CFrame": [
+                97.745,
+                9.7923,
+                -3.763,
+                -1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                -1
+              ]
+            }
+          },
+          "Hive": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://72906636471163",
+              "Size": [
+                5.2,
+                6.2,
+                5.2
+              ],
+              "CFrame": [
+                86.545,
+                11.3923,
                 -3.763,
                 -1,
                 0,
@@ -217,6 +517,66 @@
                 -0.707107
               ]
             }
+          },
+          "Garden": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://93439308097157",
+              "Size": [
+                32.5,
+                3,
+                32.5
+              ],
+              "CFrame": [
+                66.9912,
+                9.7923,
+                70.4832,
+                -0.707107,
+                0,
+                -0.707107,
+                0,
+                1,
+                0,
+                0.707107,
+                0,
+                -0.707107
+              ]
+            }
+          },
+          "Hive": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://72906636471163",
+              "Size": [
+                5.2,
+                6.2,
+                5.2
+              ],
+              "CFrame": [
+                59.071602,
+                11.3923,
+                78.402798,
+                -0.707107,
+                0,
+                -0.707107,
+                0,
+                1,
+                0,
+                0.707107,
+                0,
+                -0.707107
+              ]
+            }
           }
         },
         "GardenLot07": {
@@ -240,6 +600,66 @@
                 -7.255,
                 8.2923,
                 101.237,
+                0,
+                0,
+                -1,
+                0,
+                1,
+                0,
+                1,
+                0,
+                0
+              ]
+            }
+          },
+          "Garden": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://93439308097157",
+              "Size": [
+                32.5,
+                3,
+                32.5
+              ],
+              "CFrame": [
+                -7.255,
+                9.7923,
+                101.237,
+                0,
+                0,
+                -1,
+                0,
+                1,
+                0,
+                1,
+                0,
+                0
+              ]
+            }
+          },
+          "Hive": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://72906636471163",
+              "Size": [
+                5.2,
+                6.2,
+                5.2
+              ],
+              "CFrame": [
+                -7.255,
+                11.3923,
+                112.437,
                 0,
                 0,
                 -1,
@@ -285,7 +705,97 @@
                 0.707107
               ]
             }
+          },
+          "Garden": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://93439308097157",
+              "Size": [
+                32.5,
+                3,
+                32.5
+              ],
+              "CFrame": [
+                -81.5012,
+                9.7923,
+                70.4832,
+                0.707107,
+                0,
+                -0.707107,
+                0,
+                1,
+                0,
+                0.707107,
+                0,
+                0.707107
+              ]
+            }
+          },
+          "Hive": {
+            "$className": "MeshPart",
+            "$properties": {
+              "Anchored": true,
+              "CanCollide": false,
+              "CanTouch": false,
+              "CanQuery": false,
+              "CastShadow": true,
+              "MeshId": "rbxassetid://72906636471163",
+              "Size": [
+                5.2,
+                6.2,
+                5.2
+              ],
+              "CFrame": [
+                -73.581602,
+                11.3923,
+                78.402798,
+                0.707107,
+                0,
+                -0.707107,
+                0,
+                1,
+                0,
+                0.707107,
+                0,
+                0.707107
+              ]
+            }
           }
+        }
+      },
+      "Bee": {
+        "$className": "MeshPart",
+        "$properties": {
+          "Anchored": true,
+          "CanCollide": false,
+          "CanTouch": false,
+          "CanQuery": false,
+          "CastShadow": true,
+          "MeshId": "rbxassetid://89934665266567",
+          "Size": [
+            2.1,
+            2.1,
+            2.1
+          ],
+          "CFrame": [
+            -7.255,
+            11.5,
+            -3.763,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ]
         }
       }
     },
