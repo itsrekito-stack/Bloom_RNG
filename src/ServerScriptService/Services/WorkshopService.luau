@@ -61,13 +61,17 @@ function S:ReconcileHivePoints(player)
  for level=2,math.max(1,math.floor(tonumber(p.Hive.Level) or 1)) do
   local points=Bloom.WorkshopPointsForHiveLevel(level)
   if points>0 then
-   local key=hivePointKeys(p,level)
-   local claimed=hasHivePointSource(p,level)
-   if claimed then
+   local key,legacy,season=hivePointKeys(p,level)
+   local missing=not p.WorkshopV5.ClaimedSources[key] and not p.WorkshopV5.ClaimedSources[legacy]
+   if missing and season==0 and p.WorkshopV5.ClaimedSources["HiveLevel_"..tostring(level)] then
     p.WorkshopV5.ClaimedSources[key]=true
-   else
+    missing=false
+   end
+   if missing then
     local ok=self:Point(player,key,points)
     if ok then restored+=points end
+   elseif not p.WorkshopV5.ClaimedSources[key] then
+    p.WorkshopV5.ClaimedSources[key]=true
    end
   end
  end
