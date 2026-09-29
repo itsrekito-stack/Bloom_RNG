@@ -5,7 +5,7 @@ function S.Build(p,luck,temp)
  local pool={} local function add(kind,items) for id,v in pairs(items) do
   local unlocked=true
   if unlocked then local discovered=kind=="Bee" and p.Pollinators.DiscoveredBees[id] or kind=="FlowerSeed" and p.FlowerCollection.DiscoveredFlowers[id]
-   local rank=R.Rank[v.Rarity] local w=v.DropWeight*(1+(luck-1)*(rank-1)*.25)
+   local rank=R.Rank[v.Rarity] local w=v.DropWeight*(1+(luck-1)*(rank-1)*.25) if not discovered then w=w*E.BranchProduct(p,"DISCOVERY","DiscoveryWeightMultiplier",1) end if rank>=3 then w=w*E.BranchProduct(p,"RARITY","RareWeightMultiplier",1) end
    if p.RollState.SpecialRollReady then if rank>=3 then w=w*C.SpecialRareMultiplier end if not discovered then w=w*C.SpecialNewMultiplier*E.Value(p,"BLOOM_3","NewWeight",1)*(p.Season.ActiveCard=="AutumnFortune" and 1.5 or 1) end if temp.Eclipse then w=w*(rank>=5 and (1.5*E.Value(p,"EXPLORATION_5","EclipseWeight",1)) or 1) end if p.WorkshopV5.Nodes.BLOOM_6 and temp.Signature and rank>=5 then w=w*E.Value(p,"BLOOM_6","SignatureWeight",1) end end
    table.insert(pool,{Kind=kind,Id=id,DisplayName=v.DisplayName,Rarity=v.Rarity,Weight=w,Undiscovered=not discovered})
   end end end
