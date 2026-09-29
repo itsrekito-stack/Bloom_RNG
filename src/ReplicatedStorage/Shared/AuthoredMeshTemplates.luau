@@ -30,20 +30,24 @@ local function contentPresent(value)
  return s~="" and s~="rbxassetid://0"
 end
 
+local function safeContentProperty(instance,property)
+ local ok,value=pcall(function()
+  return instance[property]
+ end)
+ return ok and contentPresent(value)
+end
+
 local function hasTexture(part)
- if part:IsA("MeshPart") and contentPresent(part.TextureID) then return true end
- local surface=part:FindFirstChildOfClass("SurfaceAppearance")
- if surface and (
-  contentPresent(surface.ColorMap)
-  or contentPresent(surface.NormalMap)
-  or contentPresent(surface.RoughnessMap)
-  or contentPresent(surface.MetalnessMap)
- ) then return true end
+ -- SurfaceAppearance map properties require Plugin capability in some Studio
+ -- server contexts. Presence of an authored SurfaceAppearance is enough for us:
+ -- never inspect its protected maps and never overwrite it with fallback styling.
+ if part:FindFirstChildOfClass("SurfaceAppearance") then return true end
+ if part:IsA("MeshPart") and safeContentProperty(part,"TextureID") then return true end
  for _,child in ipairs(part:GetChildren()) do
-  if (child:IsA("Decal") or child:IsA("Texture")) and contentPresent(child.Texture) then return true end
+  if (child:IsA("Decal") or child:IsA("Texture")) and safeContentProperty(child,"Texture") then return true end
  end
  local special=part:FindFirstChildOfClass("SpecialMesh")
- if special and contentPresent(special.TextureId) then return true end
+ if special and safeContentProperty(special,"TextureId") then return true end
  return false
 end
 
