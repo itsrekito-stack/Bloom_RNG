@@ -109,7 +109,7 @@ function S:Roll(player,automatic,requestId)
   p.RollState.SpecialRollReady=false
   if item.Kind=="FlowerSeed"
    and p.WorkshopV5.Nodes.BLOOM_1
-   and rng:NextNumber()<C.SpecialMutationChance+(temp.Crystal and .15 or 0)+E.Value(p,"BLOOM_5","MutationChance",0)
+   and rng:NextNumber()<C.SpecialMutationChance+(temp.Crystal and .15 or 0)+E.Value(p,"BLOOM_5","MutationChance",0)+E.BranchSum(p,"MUTATION","MutationChance",0)
   then
    temp.SeedMutation={Id=item.Id,Mutation="Radiant"}
   end
