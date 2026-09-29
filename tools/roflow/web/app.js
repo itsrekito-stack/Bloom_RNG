@@ -392,7 +392,13 @@ async function runSync(){
  out.textContent="Safe sync: preserve → pull → merge → restore → checkpoint…";
  try{
   const data=await invoke("safe_ai_sync",{editorModel:null});
-  out.textContent=(data.changed?"Updated to ":"Already current at ")+shortSha(data.head)+"\n"+data.subject+(data.modelMerged?"\nBloomUI.model.json merged safely":"")+(data.stashed&&data.restored?"\nOther local changes restored":"")+(data.backupVersion?"\nCheckpoint: "+data.backupVersion:"");
+  const recovery=data.recoveredConflicts?.length
+   ?"\nRecovered interrupted AI Sync conflict safely"
+    +"\nConflict paths: "+data.recoveredConflicts.join(", ")
+    +(data.conflictRecoveries?.length?"\nRecovery copies: "+data.conflictRecoveries.join(", "):"")
+    +(data.preservedStashes?.length?"\nPreserved stash: "+data.preservedStashes.map(shortSha).join(", "):"")
+   :"";
+  out.textContent=(data.changed?"Updated to ":"Already current at ")+shortSha(data.head)+"\n"+data.subject+(data.modelMerged?"\nBloomUI.model.json merged safely":"")+(data.stashed&&data.restored?"\nOther local changes restored":"")+recovery+(data.backupVersion?"\nCheckpoint: "+data.backupVersion:"");
   await refresh();
   if(state.currentPage==="ui")await ensureUiStudio(true);
   else if(state.studioLoaded)unloadUiStudio("AI Sync while inactive");

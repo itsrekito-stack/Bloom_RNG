@@ -101,3 +101,17 @@ assert "if is_required_runtime_ui_child(r) || b != r" in RUST
 
 print("UI sync merge contract: PASS")
 print("Required BloomUI and Workshop authored nodes survive stale local editor merges in Python bridge and RoFlow.")
+
+
+# RoFlow must never leave a failed stash apply as an unmerged Git index.
+assert "fn unmerged_paths(root: &Path)" in RUST
+assert "fn find_roflow_sync_stash(root: &Path)" in RUST
+assert "fn backup_conflict_versions(root: &Path" in RUST
+assert "fn recover_roflow_conflicts(root: &Path" in RUST
+assert '"restore", "--source=HEAD", "--staged", "--worktree"' in RUST
+assert "Repository already has unresolved Git conflicts" in RUST
+assert "RoFlow will not delete an index lock automatically" in RUST
+assert "recovered_conflicts: Vec<String>" in RUST
+assert "conflict_recoveries: Vec<String>" in RUST
+assert "preserved_stashes: Vec<String>" in RUST
+assert '"success-with-recovery"' in RUST

@@ -47,6 +47,9 @@ struct SyncResult {
     model_merged: bool,
     recovery_backup: String,
     backup_version: String,
+    recovered_conflicts: Vec<String>,
+    conflict_recoveries: Vec<String>,
+    preserved_stashes: Vec<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -269,6 +272,105 @@ fn git_env(root: &Path, args: &[&str], envs: &[(&str, &str)]) -> Result<String, 
         return Err(if !stderr.is_empty() { stderr } else { stdout });
     }
     Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
+fn git_dir_path(root: &Path) -> Result<PathBuf, String> {
+    let raw = git(root, &["rev-parse", "--git-dir"])?;
+    let path = PathBuf::from(raw);
+    Ok(if path.is_absolute() { path } else { root.join(path) })
+}
+
+fn git_index_lock(root: &Path) -> Result<Option<String>, String> {
+    let path = git_dir_path(root)?.join("index.lock");
+    Ok(path.is_file().then(|| path.to_string_lossy().to_string()))
+}
+
+fn unmerged_paths(root: &Path) -> Result<Vec<String>, String> {
+    let output = git(root, &["diff", "--name-only", "--diff-filter=U"])?;
+    Ok(output
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(str::to_string)
+        .collect())
+}
+
+fn find_roflow_sync_stash(root: &Path) -> Result<Option<(String, String)>, String> {
+    let output = git(root, &["stash", "list", "--format=%gd%x00%H%x00%s"])?;
+    for line in output.lines() {
+        let mut parts = line.splitn(3, '\0');
+        let reference = parts.next().unwrap_or("").trim();
+        let sha = parts.next().unwrap_or("").trim();
+        let subject = parts.next().unwrap_or("");
+        if !reference.is_empty() && !sha.is_empty() && subject.contains("RoFlow AI SYNC") {
+            return Ok(Some((reference.to_string(), sha.to_string())));
+        }
+    }
+    Ok(None)
+}
+
+fn backup_conflict_versions(root: &Path, stash_spec: &str, paths: &[String]) -> Result<String, String> {
+    let stamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_secs();
+    let relative = format!(".recovery/ai-sync-conflicts-{stamp}");
+    let base = root.join(&relative);
+
+    for raw in paths {
+        let safe = clean_relative_path(raw)?;
+        let local = git_blob(root, &format!("{stash_spec}:{safe}"))
+            .map_err(|e| format!("Could not preserve local conflict copy for {safe}: {e}"))?;
+        let local_path = base.join("local").join(safe);
+        if let Some(parent) = local_path.parent() {
+            fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        }
+        fs::write(&local_path, local).map_err(|e| e.to_string())?;
+
+        if let Ok(remote) = git_blob(root, &format!("HEAD:{safe}")) {
+            let remote_path = base.join("remote").join(safe);
+            if let Some(parent) = remote_path.parent() {
+                fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+            }
+            fs::write(remote_path, remote).map_err(|e| e.to_string())?;
+        }
+
+        if let Ok(base_bytes) = git_blob(root, &format!("{stash_spec}^1:{safe}")) {
+            let base_path = base.join("base").join(safe);
+            if let Some(parent) = base_path.parent() {
+                fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+            }
+            fs::write(base_path, base_bytes).map_err(|e| e.to_string())?;
+        }
+    }
+
+    fs::create_dir_all(&base).map_err(|e| e.to_string())?;
+    let manifest = format!(
+        "RoFlow preserved a failed AI Sync stash restore.\nStash: {stash_spec}\nConflicts:\n{}\n",
+        paths.iter().map(|path| format!("- {path}")).collect::<Vec<_>>().join("\n")
+    );
+    fs::write(base.join("README.txt"), manifest).map_err(|e| e.to_string())?;
+    Ok(relative.replace('\\', "/"))
+}
+
+fn recover_roflow_conflicts(root: &Path, stash_spec: &str, paths: &[String]) -> Result<String, String> {
+    if paths.is_empty() {
+        return Ok(String::new());
+    }
+    let recovery = backup_conflict_versions(root, stash_spec, paths)?;
+    for raw in paths {
+        let safe = clean_relative_path(raw)?;
+        git(root, &["restore", "--source=HEAD", "--staged", "--worktree", "--", safe])
+            .map_err(|e| format!("Conflict backup exists at {recovery}, but failed to restore {safe} to HEAD: {e}"))?;
+    }
+    let remaining = unmerged_paths(root)?;
+    if !remaining.is_empty() {
+        return Err(format!(
+            "Conflict backup exists at {recovery}, but Git still reports unresolved paths: {}",
+            remaining.join(", ")
+        ));
+    }
+    Ok(recovery)
 }
 
 const UPDATE_REMOTE_REF: &str = "refs/remotes/origin/roflow-update";
@@ -1107,6 +1209,31 @@ fn git_diff_stat(state: State<AppState>) -> Result<String, String> {
 #[tauri::command]
 fn safe_ai_sync(editor_model: Option<Value>, state: State<AppState>) -> Result<SyncResult, String> {
     let root = current_root(&state)?;
+
+    if let Some(lock) = git_index_lock(&root)? {
+        return Err(format!(
+            "Git index is locked at {lock}. Close any Git process using this project, then retry. RoFlow will not delete an index lock automatically."
+        ));
+    }
+
+    let mut recovered_conflicts = Vec::new();
+    let mut conflict_recoveries = Vec::new();
+    let mut preserved_stashes = Vec::new();
+
+    let existing_conflicts = unmerged_paths(&root)?;
+    if !existing_conflicts.is_empty() {
+        let (_, stash_sha) = find_roflow_sync_stash(&root)?.ok_or_else(|| {
+            format!(
+                "Repository already has unresolved Git conflicts: {}. They are not tied to a recoverable RoFlow AI SYNC stash, so RoFlow will not modify them.",
+                existing_conflicts.join(", ")
+            )
+        })?;
+        let recovery = recover_roflow_conflicts(&root, &stash_sha, &existing_conflicts)?;
+        recovered_conflicts.extend(existing_conflicts);
+        conflict_recoveries.push(recovery);
+        preserved_stashes.push(stash_sha);
+    }
+
     let before = status_for(&root)?;
     let old_head = before.head.clone();
     let model_path = root.join(MODEL_PATH);
@@ -1136,34 +1263,77 @@ fn safe_ai_sync(editor_model: Option<Value>, state: State<AppState>) -> Result<S
 
     let mut stashed = false;
     let mut restored = false;
+    let mut active_stash_sha = String::new();
     let after_model = status_for(&root)?;
     if after_model.dirty {
         let stamp = SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e| e.to_string())?.as_secs();
         let label = format!("RoFlow AI SYNC {stamp}");
         git(&root, &["stash", "push", "-u", "-m", &label])?;
+        active_stash_sha = git(&root, &["rev-parse", "stash@{0}"])?;
         stashed = true;
     }
 
     if let Err(pull_error) = git(&root, &["pull", "--ff-only"]) {
+        let mut recovery_note = String::new();
         if stashed {
-            if git(&root, &["stash", "apply", "stash@{0}"]).is_ok() {
-                let _ = git(&root, &["stash", "drop", "stash@{0}"]);
+            match git(&root, &["stash", "apply", "stash@{0}"]) {
+                Ok(_) => {
+                    restored = true;
+                    let _ = git(&root, &["stash", "drop", "stash@{0}"]);
+                }
+                Err(restore_error) => {
+                    let conflicts = unmerged_paths(&root)?;
+                    if conflicts.is_empty() {
+                        recovery_note = format!(
+                            " Local changes remain safely in stash {} because restore failed: {}",
+                            active_stash_sha, restore_error
+                        );
+                    } else {
+                        match recover_roflow_conflicts(&root, &active_stash_sha, &conflicts) {
+                            Ok(recovery) => {
+                                restored = true;
+                                recovery_note = format!(
+                                    " Conflicting local copies were preserved at {} and stash {} was kept.",
+                                    recovery, active_stash_sha
+                                );
+                            }
+                            Err(recovery_error) => {
+                                return Err(format!(
+                                    "git pull --ff-only failed: {pull_error}. Local restore also conflicted ({restore_error}) and recovery failed: {recovery_error}. Stash {active_stash_sha} was kept."
+                                ));
+                            }
+                        }
+                    }
+                }
             }
         }
         if let Some(local) = &local_model {
             let _ = write_json(&model_path, local);
         }
-        return Err(format!("git pull --ff-only failed: {pull_error}"));
+        return Err(format!("git pull --ff-only failed: {pull_error}.{recovery_note}"));
     }
 
     if stashed {
-        if let Err(error) = git(&root, &["stash", "apply", "stash@{0}"]) {
-            return Err(format!(
-                "Git updated, but local non-UI changes conflicted while restoring. The stash was kept. {error}"
-            ));
+        match git(&root, &["stash", "apply", "stash@{0}"]) {
+            Ok(_) => {
+                restored = true;
+                git(&root, &["stash", "drop", "stash@{0}"])?;
+            }
+            Err(error) => {
+                let conflicts = unmerged_paths(&root)?;
+                if conflicts.is_empty() {
+                    return Err(format!(
+                        "Git updated, but local changes could not be restored. No merge-conflict paths were reported. Stash {} was kept. {}",
+                        active_stash_sha, error
+                    ));
+                }
+                let recovery = recover_roflow_conflicts(&root, &active_stash_sha, &conflicts)?;
+                recovered_conflicts.extend(conflicts);
+                conflict_recoveries.push(recovery);
+                preserved_stashes.push(active_stash_sha.clone());
+                restored = true;
+            }
         }
-        restored = true;
-        git(&root, &["stash", "drop", "stash@{0}"])?;
     }
 
     let remote_text = fs::read_to_string(&model_path).map_err(|e| e.to_string())?;
@@ -1175,6 +1345,13 @@ fn safe_ai_sync(editor_model: Option<Value>, state: State<AppState>) -> Result<S
         write_json(&model_path, &merged)?;
         model_merged = true;
     }
+
+    recovered_conflicts.sort();
+    recovered_conflicts.dedup();
+    conflict_recoveries.sort();
+    conflict_recoveries.dedup();
+    preserved_stashes.sort();
+    preserved_stashes.dedup();
 
     let final_status = status_for(&root)?;
     let backup = create_backup_internal(
@@ -1194,16 +1371,26 @@ fn safe_ai_sync(editor_model: Option<Value>, state: State<AppState>) -> Result<S
         .into_iter()
         .take(80)
         .collect::<Vec<_>>();
+    let summary = if !recovered_conflicts.is_empty() {
+        format!(
+            "Pulled latest changes and recovered an interrupted RoFlow stash apply. {} conflict path(s) were reset to HEAD; local copies and the stash were preserved.",
+            recovered_conflicts.len()
+        )
+    } else if old_head != final_status.head {
+        "Pulled and applied the latest repository changes.".to_string()
+    } else {
+        "Repository was already current; local work was preserved.".to_string()
+    };
     let _ = record_task(
         &root,
         "ai-sync",
         "AI Sync",
-        if old_head != final_status.head { "Pulled and applied the latest repository changes." } else { "Repository was already current; local work was preserved." },
+        &summary,
         &old_head,
         &final_status.head,
         changed_files,
         &backup_version,
-        "success",
+        if recovered_conflicts.is_empty() { "success" } else { "success-with-recovery" },
     );
     Ok(SyncResult {
         changed: old_head != final_status.head,
@@ -1215,6 +1402,9 @@ fn safe_ai_sync(editor_model: Option<Value>, state: State<AppState>) -> Result<S
         model_merged,
         recovery_backup,
         backup_version,
+        recovered_conflicts,
+        conflict_recoveries,
+        preserved_stashes,
     })
 }
 
