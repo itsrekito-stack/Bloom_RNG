@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "projectId": "bloom-rng-3d",
+  "displayName": "Bloom RNG",
+  "plannerDefaultsPath": "roflow/planner-defaults.json",
+  "buildFile": "BloomRNG.rbxl",
+  "runtimeProbeEnabled": true,
+  "releaseGateTaskIds": [
+    "release-bug-zero",
+    "release-publish-config",
+    "release-store-page",
+    "release-private-alpha",
+    "release-rc-fixes"
+  ],
+  "uiStates": [
+    {
+      "id": "gameplay",
+      "label": "HUD",
+      "root": "SafeRoot",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "inventory_v2",
+      "label": "Inventory",
+      "root": "InventoryPrototype",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "index",
+      "label": "Index",
+      "root": "IndexPrototype",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "traits",
+      "label": "Traits",
+      "root": "TraitHUD",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "garden",
+      "label": "Garden",
+      "root": "GardenKit",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "hive",
+      "label": "Hive",
+      "root": "HiveKit",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "workshop",
+      "label": "Workshop",
+      "root": "WorkshopTemplate",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "quests",
+      "label": "Quests",
+      "root": "QuestsPrototype",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "settings",
+      "label": "Settings",
+      "root": "SettingsKit",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "season",
+      "label": "Season",
+      "root": "SeasonKit",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "replay",
+      "label": "Tutorial Replay",
+      "root": "ReplayKit",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "cards",
+      "label": "Cards",
+      "root": "CardsKit",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "reward",
+      "label": "Reward",
+      "root": "RewardReveal",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "toast",
+      "label": "Toast",
+      "root": "Toast",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "tutorial",
+      "label": "Tutorial",
+      "root": "TutorialGuideBanner",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "boosts",
+      "label": "Active Boosts",
+      "root": "ActiveBoostsHUD",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "world_ui",
+      "label": "World UI",
+      "root": "WorldUIPrototypes",
+      "modelPath": "src/StarterGui/BloomUI.model.json"
+    },
+    {
+      "id": "loading",
+      "label": "Loading",
+      "root": "Background",
+      "modelPath": "src/ReplicatedFirst/BloomLoadingTemplate.model.json"
+    }
+  ]
+}
