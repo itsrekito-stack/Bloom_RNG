@@ -112,3 +112,20 @@ for i in range(1,9):
     dz=hive_cf[2]-garden_cf[2]
     distance=(dx*dx+dz*dz)**0.5
     assert distance>=20.0, f"GardenLot{i:02d} Garden/Hive spacing too small: {distance:.2f}"
+
+
+# Garden/Hive authored MeshParts must stay visible/selectable in Studio Edit Mode.
+lots_render=__import__("json").loads(read("src/Workspace/GardenLots.model.json"))
+render_meshes=[]
+for lot in lots_render.get("Children",[]):
+    for child in lot.get("Children",[]):
+        if child.get("ClassName")=="MeshPart" and child.get("Name") in {"Garden","Hive"}:
+            render_meshes.append(child)
+assert len(render_meshes)==16, f"expected 16 Garden/Hive MeshParts, got {len(render_meshes)}"
+for mesh in render_meshes:
+    props=mesh.get("Properties",{})
+    assert props.get("Transparency")==0, f"{mesh.get('Name')} must be visible in Edit Mode"
+    assert props.get("DoubleSided") is True, f"{mesh.get('Name')} must render both face orientations"
+    assert props.get("CanQuery") is True, f"{mesh.get('Name')} must be selectable/queryable in Studio"
+    assert props.get("Color")==[1,1,1], f"{mesh.get('Name')} must not be black-tinted"
+    assert props.get("Material")=="SmoothPlastic", f"{mesh.get('Name')} must have an explicit visible material"
