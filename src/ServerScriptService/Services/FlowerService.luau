@@ -60,6 +60,54 @@ local function petal(parent: Model, name: string, center: Vector3, angle: number
     return x
 end
 
+local GROWTH_BASE_CFRAME="BloomGrowthBaseCFrame"
+local GROWTH_BASE_SIZE="BloomGrowthBaseSize"
+
+local function captureGrowthBaseline(model: Model)
+    local root=model.PrimaryPart
+    if not root then return false end
+    for _,item in ipairs(model:GetDescendants()) do
+        if item:IsA("BasePart") and item~=root then
+            item:SetAttribute(GROWTH_BASE_CFRAME,root.CFrame:ToObjectSpace(item.CFrame))
+            item:SetAttribute(GROWTH_BASE_SIZE,item.Size)
+        end
+    end
+    model:SetAttribute("BloomGrowthBaseline",true)
+    return true
+end
+
+local function applyLevelVisual(model: Model, level: number, growth: any)
+    local root=model.PrimaryPart
+    if not root then return false end
+    if model:GetAttribute("BloomGrowthBaseline")~=true and not captureGrowthBaseline(model) then return false end
+
+    local levelNumber=math.max(1,tonumber(level) or 1)
+    local perLevel=math.max(0,tonumber(growth and growth.ScalePerLevel) or .025)
+    local heightScale=1+(levelNumber-1)*perLevel
+
+    for _,item in ipairs(model:GetDescendants()) do
+        if item:IsA("BasePart") and item~=root then
+            local baseLocal=item:GetAttribute(GROWTH_BASE_CFRAME)
+            local baseSize=item:GetAttribute(GROWTH_BASE_SIZE)
+            if typeof(baseLocal)=="CFrame" and typeof(baseSize)=="Vector3" then
+                local basePosition=baseLocal.Position
+                local baseRotation=baseLocal-basePosition
+                item.CFrame=root.CFrame
+                    *CFrame.new(basePosition.X,basePosition.Y*heightScale,basePosition.Z)
+                    *baseRotation
+                item.Size=baseSize
+                if item.Name=="Stem" then
+                    item.Size=Vector3.new(baseSize.X*heightScale,baseSize.Y,baseSize.Z)
+                end
+            end
+        end
+    end
+
+    model:SetAttribute("BloomVisualLevel",math.floor(levelNumber))
+    model:SetAttribute("BloomHeightScale",heightScale)
+    return true
+end
+
 local function makeFlowerModel(slotId: number, species: any, position: Vector3): Model
     local m = Instance.new("Model")
     m.Name = string.format("FlowerSlot_%02d", slotId)
@@ -233,10 +281,13 @@ local function makeFlowerModel(slotId: number, species: any, position: Vector3):
     local c2 = Instance.new("UICorner")
     c2.CornerRadius = UDim.new(1, 0)
     c2.Parent = fl
+
+    captureGrowthBaseline(m)
     return m
 end
 
 
 local S={}
 S.Build=makeFlowerModel
+S.ApplyLevelVisual=applyLevelVisual
 return S

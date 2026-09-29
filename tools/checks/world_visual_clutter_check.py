@@ -114,7 +114,10 @@ need(garden_plot,'unlocked and (occupied and .92 or .80) or 1',"ordinary locked 
 need(garden_plot,'pad.CastShadow=false',"subtle authored slot markers cast no dark discs")
 need(garden_plot,'for i=1,C.MaxFlowerSlots do',"all configured slots render")
 need(garden_plot,'self.X.FlowerService.Build(i,f,pos)',"flower roots align exactly to slot position")
-need(garden_plot,'FLOWER_SCALE_CAP=.55',"flower growth visual cap")
+need(garden_plot,'self.X.FlowerService.ApplyLevelVisual(model,mastery.Level,growth)',"live Flower height follows Level")
+need(garden_plot,'self.X.FlowerService.ApplyLevelVisual(flower,mastery.Level,growth)',"initial Flower height follows Level")
+if 'FLOWER_SCALE_CAP' in garden_plot or 'flowerVisualScale' in garden_plot:
+    raise AssertionError("Flower visual growth must not have a cap or uniform Model:ScaleTo helper")
 need(garden_layout,'Radius=8.1',"compact slot ring radius")
 need(garden_layout,'SlotY=.10',"slot surface micro-offset")
 need(garden_layout,'function C.Position(i)',"deterministic shared slot layout")

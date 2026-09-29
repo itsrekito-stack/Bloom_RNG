@@ -7,7 +7,6 @@ local Rules=require(RS.Shared.GardenRules)
 local Assets=require(RS.Shared.AuthoredMeshTemplates)
 
 local S={Plots={},Used={},EditorSessions={}}
-local FLOWER_SCALE_CAP=.55
 local HIVE_INSET=Vector3.new(-2.2,0,0)
 local BENCH_RADIUS=15.7
 local BENCH_ANGLE=math.rad(-135)
@@ -16,11 +15,6 @@ local function horizontalCylinder(part,material)
  part.Shape=Enum.PartType.Cylinder
  part.CFrame=CFrame.new(part.Position)*CFrame.Angles(0,0,math.rad(90))
  if material then part.Material=material end
-end
-
-local function flowerVisualScale(level,growth)
- local scalePerLevel=tonumber(growth.ScalePerLevel) or .025
- return 1+math.min(FLOWER_SCALE_CAP,math.max(0,(level-1)*scalePerLevel))
 end
 
 local function usableVisual(key,parent,name,footprint,position,alignY,alignTop)
@@ -98,7 +92,7 @@ function S:AddFlowerXP(player,i,amount)
  local plot=self.Plots[player]
  local model=plot and plot.Flowers[i]
  if model then
-  model:ScaleTo(flowerVisualScale(mastery.Level,growth))
+  self.X.FlowerService.ApplyLevelVisual(model,mastery.Level,growth)
   local levelText=model:FindFirstChild("LevelText",true)
   local fill=model:FindFirstChild("ProgressFill",true)
   if levelText then levelText.Text=flower.DisplayName.." • LV."..mastery.Level end
@@ -224,7 +218,7 @@ function S:Build(player)
     local mastery=self.X.FlowerProgressionService:State(p,slot.SpeciesId)
     local flower=self.X.FlowerService.Build(i,f,pos)
     flower.Parent=content
-    flower:ScaleTo(flowerVisualScale(mastery.Level,growth))
+    self.X.FlowerService.ApplyLevelVisual(flower,mastery.Level,growth)
     local levelText=flower:FindFirstChild("LevelText",true)
     local fill=flower:FindFirstChild("ProgressFill",true)
     if levelText then levelText.Text=f.DisplayName.." • LV."..mastery.Level end
