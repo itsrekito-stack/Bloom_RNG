@@ -225,8 +225,13 @@ function S.Render(controller,profile,uiState)
    if rarity and rarity:IsA("TextLabel") then
     local cfg=id and Flowers.Species[id]
     local rarityId=cfg and cfg.Rarity or nil
-    rarity.Visible=open and rarityId~=nil
-    rarity.Text=rarityId and string.upper(rarityId) or ""
+    local oddsItem=nil
+    if id then
+     local _,item=masteryFor(inventory,id)
+     oddsItem=item
+    end
+    rarity.Visible=open and oddsItem~=nil
+    rarity.Text=oddsItem and tostring(oddsItem.Odds or "1/—") or ""
     rarity.TextColor3=rarityId and (Rarity.Colors[rarityId] or C.Muted) or C.Muted
    end
    if level and level:IsA("TextLabel") then
