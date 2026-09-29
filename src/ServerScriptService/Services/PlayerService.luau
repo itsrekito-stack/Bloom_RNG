@@ -1,4 +1,4 @@
-local RS=game:GetService("ReplicatedStorage") local Players=game:GetService("Players") local U=require(RS.Shared.BloomUtil) local C=require(RS.Config.BloomConfig) local T=require(RS.Config.TutorialConfig) local DefaultSettings=require(game:GetService("ServerScriptService").Data.DefaultProfile).Settings
+local RS=game:GetService("ReplicatedStorage") local Players=game:GetService("Players") local U=require(RS.Shared.BloomUtil) local C=require(RS.Config.BloomConfig) local T=require(RS.Config.TutorialConfig) local DefaultSettings=require(game:GetService("ServerScriptService").Data.DefaultProfile).Settings local Assets=require(RS.Shared.AuthoredMeshTemplates)
 local X={Temp={},Revisions={},StateRevisions={},LastPushedStateRevision={},Connections={},ClientReadyConnections={},U=U}
 local VALID_KEYBINDS={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do VALID_KEYBINDS[item.Name]=true end
 local STATE_NEUTRAL={Ready=true,Menu=true,Replay=true,SeasonCancel=true,SaveSettings=true}
@@ -238,10 +238,15 @@ function X:Remove(player)
 end
 function X:Start(data,services,names)
  self.DataService=data self.ServiceNames=names for _,name in ipairs(names) do self[name]=services[name] end
+ Assets.CaptureWorkspace()
  for _,name in ipairs({"ReferenceScenery","BrickCenter"}) do local stale=workspace:FindFirstChild(name) if stale then stale:Destroy() end end
- local garden=workspace:FindFirstChild("Garden")
+ local garden=nil
+ for _,candidate in ipairs(workspace:GetChildren()) do
+  if candidate.Name=="Garden" and candidate:FindFirstChild("GardenCenter",true) then garden=candidate break end
+ end
  if garden then for _,name in ipairs({"LocationDecorTemplates","LocationTemplates"}) do local stale=garden:FindFirstChild(name) if stale then stale:Destroy() end end end
- local center=garden local marker=center and center:FindFirstChild("GardenCenter") self.Origin=(marker and marker.Position or Vector3.zero)+Vector3.new(0,5,0)
+ local marker=garden and garden:FindFirstChild("GardenCenter",true)
+ self.Origin=(marker and marker.Position or Vector3.zero)+Vector3.new(0,5,0)
  local world=Instance.new("Folder") world.Name="BloomWorld" world.Parent=workspace self.World=world
  local authoredHub=workspace:FindFirstChild("FruitOrchardHub")
  if not authoredHub then warn("[Bloom][WORLD] Authored FruitOrchardHub is missing; run AI SYNC before Play") end

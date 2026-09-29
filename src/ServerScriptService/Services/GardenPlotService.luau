@@ -4,6 +4,7 @@ local G=require(RS.Config.GardenSynergyConfig)
 local C=require(RS.Config.BloomConfig)
 local T=require(RS.Config.TutorialConfig)
 local Rules=require(RS.Shared.GardenRules)
+local Assets=require(RS.Shared.AuthoredMeshTemplates)
 
 local S={Plots={},Used={},EditorSessions={}}
 local FLOWER_SCALE_CAP=.55
@@ -17,6 +18,22 @@ end
 local function flowerVisualScale(level,growth)
  local scalePerLevel=tonumber(growth.ScalePerLevel) or .025
  return 1+math.min(FLOWER_SCALE_CAP,math.max(0,(level-1)*scalePerLevel))
+end
+
+local function usableVisual(key,parent,name,footprint,position,alignY,alignTop)
+ local visual=Assets.Clone(key)
+ if not visual then return nil end
+ visual.Name=name
+ visual.Parent=parent
+ Assets.Configure(visual,true,false)
+ local scaled=Assets.ScaleToFootprint(visual,footprint)
+ local placed=scaled and (alignTop and Assets.PlaceTop(visual,position,alignY) or Assets.PlaceBottom(visual,position,alignY))
+ if not placed then
+  warn("[Bloom][MESH] failed to place authored "..key.." visual; using runtime fallback")
+  visual:Destroy()
+  return nil
+ end
+ return visual
 end
 
 function S:Init(x)
@@ -109,30 +126,40 @@ function S:Build(player)
   plot={Index=i,Origin=origin,Model=m,Flowers={}}
   self.Plots[player]=plot
 
-  local ground=self.X:Part(m,"Ground",origin-Vector3.new(0,.5,0),Vector3.new(1,33,33),Color3.fromRGB(85,145,80),true)
-  horizontalCylinder(ground,Enum.Material.Grass)
+  local collider=self.X:Part(m,"GardenCollider",origin-Vector3.new(0,.5,0),Vector3.new(1,32,32),Color3.fromRGB(85,145,80),true)
+  horizontalCylinder(collider,Enum.Material.Grass)
+  collider.Transparency=1
+  collider.CanQuery=false
 
-  local border=self.X:Part(m,"Border",origin+Vector3.new(0,.025,0),Vector3.new(.05,25,25),Color3.fromRGB(190,154,111),false)
-  horizontalCylinder(border,Enum.Material.Sandstone)
-  border.CanQuery=false
-
-  local soil=self.X:Part(m,"Soil",origin+Vector3.new(0,.045,0),Vector3.new(.05,23,23),Color3.fromRGB(105,76,52),false)
-  horizontalCylinder(soil,Enum.Material.Ground)
-  soil.CanQuery=false
+  local gardenVisual=usableVisual("Garden",m,"GardenVisual",32.5,origin,origin.Y+.06,true)
+  if not gardenVisual then
+   local ground=self.X:Part(m,"Ground",origin-Vector3.new(0,.5,0),Vector3.new(1,33,33),Color3.fromRGB(85,145,80),true)
+   horizontalCylinder(ground,Enum.Material.Grass)
+   local border=self.X:Part(m,"Border",origin+Vector3.new(0,.025,0),Vector3.new(.05,25,25),Color3.fromRGB(190,154,111),false)
+   horizontalCylinder(border,Enum.Material.Sandstone)
+   border.CanQuery=false
+   local soil=self.X:Part(m,"Soil",origin+Vector3.new(0,.045,0),Vector3.new(.05,23,23),Color3.fromRGB(105,76,52),false)
+   horizontalCylinder(soil,Enum.Material.Ground)
+   soil.CanQuery=false
+  end
 
   local hivePosition=self:HivePosition(player)
-  local hiveBasePosition=origin+Vector3.new(G.Layout.HiveOffset.X,.06,G.Layout.HiveOffset.Z)
-  local hiveBase=self.X:Part(m,"HiveBase",hiveBasePosition,Vector3.new(.12,4.3,4.3),Color3.fromRGB(118,112,102),false)
-  horizontalCylinder(hiveBase,Enum.Material.Slate)
-  hiveBase.CanQuery=false
+  local hive=self.X:Part(m,"Hive",hivePosition,Vector3.new(4.2,4.4,4.4),Color3.fromRGB(224,169,56),true)
+  hive.Transparency=1
+  hive.Material=Enum.Material.SmoothPlastic
 
-  local hive=self.X:Part(m,"Hive",hivePosition,Vector3.new(4,4.1,4.1),Color3.fromRGB(224,169,56),true)
-  horizontalCylinder(hive,Enum.Material.WoodPlanks)
+  local hiveVisual=usableVisual("Hive",m,"HiveVisual",5.2,hivePosition,origin.Y+.05,false)
+  if not hiveVisual then
+   hive.Transparency=0
+   horizontalCylinder(hive,Enum.Material.WoodPlanks)
+   local entrance=self.X:Part(m,"HiveEntrance",hivePosition+Vector3.new(0,-.22,-2.05),Vector3.new(.85,.85,.85),Color3.fromRGB(61,47,37),false)
+   entrance.Shape=Enum.PartType.Ball
+   entrance.Material=Enum.Material.SmoothPlastic
+   entrance.CanQuery=false
+  end
 
-  local entrance=self.X:Part(m,"HiveEntrance",hivePosition+Vector3.new(0,-.22,-2.05),Vector3.new(.85,.85,.85),Color3.fromRGB(61,47,37),false)
-  entrance.Shape=Enum.PartType.Ball
-  entrance.Material=Enum.Material.SmoothPlastic
-  entrance.CanQuery=false
+  local benchPosition=origin+Vector3.new(-12.5,0,-10.5)
+  usableVisual("Bench",m,"GardenBench",6.2,benchPosition,origin.Y+.04,false)
 
   self.X:Prompt(hive,self:HivePromptText(p),function(who)
    if who==player then
@@ -164,9 +191,7 @@ function S:Build(player)
   local ghost=i==C.MaxFlowerSlots and not unlocked
   horizontalCylinder(pad,unlocked and Enum.Material.Ground or (ghost and Enum.Material.ForceField or Enum.Material.Slate))
   pad.Transparency=ghost and .62 or 0
-  if ghost then
-   pad.Color=Color3.fromRGB(80,190,235)
-  end
+  if ghost then pad.Color=Color3.fromRGB(80,190,235) end
   pad.CanQuery=unlocked
   pad:SetAttribute("OwnerUserId",player.UserId)
   pad:SetAttribute("SlotId",i)
@@ -289,7 +314,6 @@ function S:RefreshCapacity(player)
 end
 
 function S:Remove(player)
- self.EditorSessions[player]=nil
  self.EditorSessions[player]=nil
  local plot=self.Plots[player]
  if plot then
