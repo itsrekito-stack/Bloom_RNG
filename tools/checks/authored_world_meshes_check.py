@@ -31,3 +31,16 @@ for forbidden in (".ColorMap", ".NormalMap", ".RoughnessMap", ".MetalnessMap"):
 
 print("authored world mesh integration: PASS")
 print("Workspace mesh templates are captured safely, cloned into runtime visuals, and missing textures receive a material/color fallback.")
+
+
+# Authored Bee presentation must face its path and animate smoothly without
+# one-second positional tweens.
+assert 'local BEE_FORWARD_FIX=CFrame.Angles(0,math.rad(90),0)' in bees
+assert 'RunService.RenderStepped:Connect' in bees
+assert 'CFrame.lookAt(position,position+direction,Vector3.yAxis)' in bees
+assert 'estimatedPhase(frame,packet.ReceivedAt,now)' in bees
+assert 'spreadOffset(index,1.75)' in bees
+assert 'math.sin(now*BOB_SPEED+seed)*BOB_AMOUNT' in bees
+assert 'animateWings(item,now)' in bees
+assert 'string.find(lower,"wing",1,true)' in bees
+assert 'TweenService' not in bees and 'Tween:Create' not in bees
