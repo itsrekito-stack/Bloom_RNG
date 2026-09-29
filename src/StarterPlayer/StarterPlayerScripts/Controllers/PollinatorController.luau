@@ -60,7 +60,7 @@ local function modelBee(id,template,parent)
  local cfg=B.Get(id)
  Assets.ApplyTextureFallback(template,"Bee",cfg and cfg.Color or nil)
  Assets.Configure(template,true,false)
- if not Assets.ScaleToMaxDimension(template,1.9) or not Assets.CenterAt(template,Vector3.zero) then
+ if not Assets.ScaleToMaxDimension(template,2.1) or not Assets.CenterAt(template,Vector3.zero) then
   template:Destroy()
   return fallbackBee(id,parent)
  end
@@ -162,7 +162,7 @@ end
 
 local function routePose(frame,index,seed,phase,now,lastDirection)
  local from=frame.From+spreadOffset(index,1.75)+Vector3.new(0,FLIGHT_HEIGHT,0)
- local to=frame.To+spreadOffset(index,.34)+Vector3.new(0,FLIGHT_HEIGHT,0)
+ local to=frame.To+spreadOffset(index,.58)+Vector3.new(0,FLIGHT_HEIGHT,0)
  local position
  local direction
 
