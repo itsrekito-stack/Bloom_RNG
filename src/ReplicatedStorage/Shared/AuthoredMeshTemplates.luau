@@ -1,6 +1,5 @@
 local RS=game:GetService("ReplicatedStorage")
 local RunService=game:GetService("RunService")
-local ServerStorage=game:GetService("ServerStorage")
 
 local A={FolderName="BloomMeshTemplates"}
 
@@ -115,6 +114,28 @@ local function currentPivot(root)
  return nil
 end
 
+local function hideAuthoringSource(root)
+ root:SetAttribute("BloomAuthoringSource",true)
+ forEachPart(root,function(part)
+  part.Transparency=1
+  part.CanCollide=false
+  part.CanTouch=false
+  part.CanQuery=false
+  part.CastShadow=false
+ end)
+ for _,item in ipairs(root:GetDescendants()) do
+  if item:IsA("Decal") or item:IsA("Texture") then
+   item.Transparency=1
+  elseif item:IsA("ParticleEmitter") or item:IsA("Trail") or item:IsA("Beam") then
+   item.Enabled=false
+  elseif item:IsA("Light") then
+   item.Enabled=false
+  elseif item:IsA("BillboardGui") or item:IsA("SurfaceGui") then
+   item.Enabled=false
+  end
+ end
+end
+
 local function scale(root,factor)
  factor=math.clamp(tonumber(factor) or 1,.02,50)
  if root:IsA("BasePart") then
@@ -178,6 +199,28 @@ function A.FaceAt(root,target,yawOffset)
  return pivot(root,cf)
 end
 
+function A.AuthoredRelative(key,anchorKey,targetAnchorFootprint)
+ local source=A.Template(key)
+ local anchor=A.Template(anchorKey)
+ if not source or not anchor then return nil end
+ local sourcePivot=source:GetAttribute("BloomSourcePivot")
+ local anchorPivot=anchor:GetAttribute("BloomSourcePivot")
+ local anchorSize=anchor:GetAttribute("BloomSourceBoundsSize")
+ if typeof(sourcePivot)~="CFrame" or typeof(anchorPivot)~="CFrame" or typeof(anchorSize)~="Vector3" then return nil end
+ local sourceFootprint=math.max(anchorSize.X,anchorSize.Z)
+ if sourceFootprint<=.001 then return nil end
+ local factor=(tonumber(targetAnchorFootprint) or sourceFootprint)/sourceFootprint
+ local relative=anchorPivot:ToObjectSpace(sourcePivot)
+ local rotation=relative-relative.Position
+ return CFrame.new(relative.Position*factor)*rotation
+end
+
+function A.PlaceRelative(root,anchorRoot,relative)
+ local anchorPivot=currentPivot(anchorRoot)
+ if not anchorPivot or typeof(relative)~="CFrame" then return false end
+ return pivot(root,anchorPivot*relative)
+end
+
 local function candidateFor(key,instance)
  if not (instance:IsA("BasePart") or instance:IsA("Model")) then return false end
  if key=="Garden" and instance:FindFirstChild("GardenCenter",true) then return false end
@@ -208,28 +251,32 @@ function A.CaptureWorkspace()
  end
  if folder:GetAttribute("Captured") then return folder end
 
- local sources=ServerStorage:FindFirstChild("BloomMeshTemplateSources")
- if not sources then
-  sources=Instance.new("Folder")
-  sources.Name="BloomMeshTemplateSources"
-  sources.Parent=ServerStorage
- end
-
  for key in pairs(TEMPLATE_ALIASES) do
   local source=findSource(key)
   if source then
    local old=folder:FindFirstChild(key)
    if old then old:Destroy() end
+
+   local sourcePivot=currentPivot(source)
+   local sourceBoundsCF,sourceBoundsSize=A.Bounds(source)
    local clone=source:Clone()
    clone.Name=key
    clone:SetAttribute("BloomAuthoredMeshTemplate",true)
+   clone:SetAttribute("BloomWorkspaceAuthored",true)
+   if sourcePivot then clone:SetAttribute("BloomSourcePivot",sourcePivot) end
+   if sourceBoundsCF then clone:SetAttribute("BloomSourceBoundsCFrame",sourceBoundsCF) end
+   if sourceBoundsSize then clone:SetAttribute("BloomSourceBoundsSize",sourceBoundsSize) end
    clone.Parent=folder
+
    local missing=A.ApplyTextureFallback(clone,key)
-   source.Name="_BloomSource_"..key
-   source.Parent=sources
-   print(string.format("[Bloom][MESH] captured %s template (%d untextured part%s fallback-styled)",key,missing,missing==1 and "" or "s"))
+   source:SetAttribute("BloomLayoutRole",key)
+   hideAuthoringSource(source)
+   print(string.format(
+    "[Bloom][MESH] captured %s from Workspace in-place (%d untextured part%s fallback-styled)",
+    key,missing,missing==1 and "" or "s"
+   ))
   else
-   warn("[Bloom][MESH] authored "..key.." template not found in Workspace; runtime fallback will be used")
+   warn("[Bloom][MESH] authored "..key.." source not found in Workspace; runtime fallback will be used")
   end
  end
  folder:SetAttribute("Captured",true)

@@ -47,3 +47,22 @@ assert 'TweenService' not in bees and 'Tween:Create' not in bees
 
 assert 'ScaleToMaxDimension(template,2.1)' in bees
 assert 'spreadOffset(index,.58)' in bees
+
+
+# Workspace authoring contract: imported source meshes remain editable in Workspace
+# and runtime clones preserve their authored relative transforms.
+assert 'ServerStorage' not in assets
+assert 'source.Parent=sources' not in assets
+assert 'source.Name="_BloomSource_"' not in assets
+assert 'hideAuthoringSource(source)' in assets
+assert 'source:SetAttribute("BloomLayoutRole",key)' in assets
+assert 'clone:SetAttribute("BloomSourcePivot",sourcePivot)' in assets
+assert 'function A.AuthoredRelative(key,anchorKey,targetAnchorFootprint)' in assets
+assert 'function A.PlaceRelative(root,anchorRoot,relative)' in assets
+assert 'Assets.AuthoredRelative(key,"Garden",anchorFootprint)' in garden
+assert 'Assets.PlaceRelative(visual,anchorVisual,relative)' in garden
+assert 'plot.HivePosition=hivePosition' in garden
+assert 'HIVE_INSET' not in garden
+assert 'BENCH_RADIUS' not in garden
+assert 'BENCH_ANGLE' not in garden
+assert 'Assets.FaceAt(bench,origin)' not in garden

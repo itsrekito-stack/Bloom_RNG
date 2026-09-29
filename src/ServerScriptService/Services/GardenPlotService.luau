@@ -7,9 +7,9 @@ local Rules=require(RS.Shared.GardenRules)
 local Assets=require(RS.Shared.AuthoredMeshTemplates)
 
 local S={Plots={},Used={},EditorSessions={}}
-local HIVE_INSET=Vector3.new(-2.2,0,0)
-local BENCH_RADIUS=15.7
-local BENCH_ANGLE=math.rad(-135)
+local GARDEN_FOOTPRINT=32.5
+local HIVE_FOOTPRINT=5.2
+local BENCH_FOOTPRINT=5.8
 
 local function horizontalCylinder(part,material)
  part.Shape=Enum.PartType.Cylinder
@@ -27,6 +27,22 @@ local function usableVisual(key,parent,name,footprint,position,alignY,alignTop)
  local placed=scaled and (alignTop and Assets.PlaceTop(visual,position,alignY) or Assets.PlaceBottom(visual,position,alignY))
  if not placed then
   warn("[Bloom][MESH] failed to place authored "..key.." visual; using runtime fallback")
+  visual:Destroy()
+  return nil
+ end
+ return visual
+end
+
+local function authoredRelativeVisual(key,parent,name,footprint,anchorVisual,anchorFootprint)
+ if not anchorVisual then return nil end
+ local relative=Assets.AuthoredRelative(key,"Garden",anchorFootprint)
+ if not relative then return nil end
+ local visual=Assets.Clone(key)
+ if not visual then return nil end
+ visual.Name=name
+ visual.Parent=parent
+ Assets.Configure(visual,true,false)
+ if not Assets.ScaleToFootprint(visual,footprint) or not Assets.PlaceRelative(visual,anchorVisual,relative) then
   visual:Destroy()
   return nil
  end
@@ -55,7 +71,7 @@ end
 
 function S:HivePosition(player)
  local plot=self.Plots[player]
- return plot and plot.Origin+G.Layout.HiveOffset+HIVE_INSET
+ return plot and (plot.HivePosition or (plot.Origin+G.Layout.HiveOffset))
 end
 
 function S:HivePromptText(p)
@@ -159,7 +175,7 @@ function S:Build(player)
   collider.Transparency=1
   collider.CanQuery=false
 
-  local gardenVisual=usableVisual("Garden",m,"GardenVisual",32.5,origin,origin.Y+.06,false)
+  local gardenVisual=usableVisual("Garden",m,"GardenVisual",GARDEN_FOOTPRINT,origin,origin.Y+.06,false)
   plot.HasAuthoredGarden=gardenVisual~=nil
   if not gardenVisual then
    local ground=self.X:Part(m,"Ground",origin-Vector3.new(0,.5,0),Vector3.new(1,33,33),Color3.fromRGB(85,145,80),true)
@@ -172,12 +188,20 @@ function S:Build(player)
    soil.CanQuery=false
   end
 
-  local hivePosition=self:HivePosition(player)
+  local fallbackHivePosition=origin+G.Layout.HiveOffset
+  local hiveVisual=authoredRelativeVisual(
+   "Hive",m,"HiveVisual",HIVE_FOOTPRINT,gardenVisual,GARDEN_FOOTPRINT
+  )
+  local hivePosition=fallbackHivePosition
+  if hiveVisual then
+   local hiveCF=select(1,Assets.Bounds(hiveVisual))
+   if hiveCF then hivePosition=hiveCF.Position end
+  end
+  plot.HivePosition=hivePosition
+
   local hive=self.X:Part(m,"Hive",hivePosition,Vector3.new(4.2,4.4,4.4),Color3.fromRGB(224,169,56),true)
   hive.Transparency=1
   hive.Material=Enum.Material.SmoothPlastic
-
-  local hiveVisual=usableVisual("Hive",m,"HiveVisual",5.2,hivePosition,origin.Y+.05,false)
   if not hiveVisual then
    hive.Transparency=0
    horizontalCylinder(hive,Enum.Material.WoodPlanks)
@@ -187,13 +211,9 @@ function S:Build(player)
    entrance.CanQuery=false
   end
 
-  local benchPosition=origin+Vector3.new(
-   math.cos(BENCH_ANGLE)*BENCH_RADIUS,
-   0,
-   math.sin(BENCH_ANGLE)*BENCH_RADIUS
+  authoredRelativeVisual(
+   "Bench",m,"GardenBench",BENCH_FOOTPRINT,gardenVisual,GARDEN_FOOTPRINT
   )
-  local bench=usableVisual("Bench",m,"GardenBench",5.8,benchPosition,origin.Y+.04,false)
-  if bench then Assets.FaceAt(bench,origin) end
 
   self.X:Prompt(hive,self:HivePromptText(p),function(who)
    if who==player then
