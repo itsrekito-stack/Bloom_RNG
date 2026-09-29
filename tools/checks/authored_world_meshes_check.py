@@ -66,3 +66,25 @@ assert 'HIVE_INSET' not in garden
 assert 'BENCH_RADIUS' not in garden
 assert 'BENCH_ANGLE' not in garden
 assert 'Assets.FaceAt(bench,origin)' not in garden
+
+
+# Eight fixed Workspace Garden lots replace procedural player-plot placement.
+lots_path=ROOT/"src/Workspace/GardenLots.model.json"
+assert lots_path.exists(), "Workspace GardenLots authored model missing"
+import json
+lots_model=json.loads(lots_path.read_text(encoding="utf-8"))
+lots=[x for x in lots_model.get("Children",[]) if x.get("Name","").startswith("GardenLot")]
+assert len(lots)==8, f"expected 8 editable Garden lots, got {len(lots)}"
+for lot in lots:
+    names={x.get("Name") for x in lot.get("Children",[])}
+    assert {"GardenAnchor","HiveAnchor","BenchAnchor"}<=names, f"{lot.get('Name')} missing editable anchors"
+assert 'LOT_COUNT=8' in garden
+assert 'function S:AcquireLot(player)' in garden
+assert 'plot.GardenCFrame:PointToWorldSpace(G.Position(slot))' in garden
+assert 'local lot,i=self:AcquireLot(player)' in garden
+assert 'math.floor((i-1)/12)' not in garden
+assert 'self.X.Origin+Vector3.new(math.cos(a)*r' not in garden
+assert 'anchoredVisual("Garden"' in garden
+assert 'anchoredVisual("Hive"' in garden
+assert 'anchoredVisual("Bench"' in garden
+assert 'function A.PlaceAtAnchor(root,anchorCFrame,alignBottom)' in assets

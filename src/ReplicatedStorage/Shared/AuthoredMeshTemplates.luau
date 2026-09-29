@@ -221,6 +221,20 @@ function A.PlaceRelative(root,anchorRoot,relative)
  return pivot(root,anchorPivot*relative)
 end
 
+function A.PlaceAtAnchor(root,anchorCFrame,alignBottom)
+ if typeof(anchorCFrame)~="CFrame" then return false end
+ local boundsCF,size=A.Bounds(root)
+ local p=currentPivot(root)
+ if not boundsCF or not size or not p then return false end
+ local pivotToBounds=p:ToObjectSpace(boundsCF)
+ local targetPosition=anchorCFrame.Position
+ if alignBottom then
+  targetPosition+=anchorCFrame.UpVector*(size.Y*.5)
+ end
+ local targetBounds=CFrame.new(targetPosition)*(anchorCFrame-anchorCFrame.Position)
+ return pivot(root,targetBounds*pivotToBounds:Inverse())
+end
+
 local function candidateFor(key,instance)
  if not (instance:IsA("BasePart") or instance:IsA("Model")) then return false end
  if key=="Garden" and instance:FindFirstChild("GardenCenter",true) then return false end

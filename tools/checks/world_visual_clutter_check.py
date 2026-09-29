@@ -98,14 +98,18 @@ for name in walkable_names:
         raise AssertionError(f"{name} is not aligned to base Y: top={top_y(node):.3f}, base={base_y:.3f}")
 
 # Player Garden prefers the authored mesh and keeps gameplay geometry invisible/subtle.
+need(garden_plot,'local LOT_COUNT=8',"eight fixed Workspace Garden lots")
 need(garden_plot,'local GARDEN_FOOTPRINT=32.5',"authored Garden target footprint")
 need(garden_plot,'local HIVE_FOOTPRINT=5.2',"authored Hive target footprint")
 need(garden_plot,'local BENCH_FOOTPRINT=5.8',"authored Bench target footprint")
-need(garden_plot,'local gardenVisual=usableVisual("Garden",m,"GardenVisual",32.5,origin,origin.Y+.06,false)',"authored Garden bottom-aligns to ground surface")
+need(garden_plot,'local gardenVisual=anchoredVisual("Garden",m,"GardenVisual",GARDEN_FOOTPRINT,gardenAnchor,true)',"Garden visual follows editable Workspace lot anchor")
 need(garden_plot,'plot.HasAuthoredGarden=gardenVisual~=nil',"authored Garden presentation flag")
 need(garden_plot,'if not gardenVisual then',"fallback primitives only when authored Garden is absent")
 need(garden_plot,'local hiveVisual=usableVisual("Hive"', "authored Hive visual")
-need(garden_plot,'authoredRelativeVisual(',"Hive and Bench placement follows Workspace source transforms")
+need(garden_plot,'function S:AcquireLot(player)',"first free authored Garden lot assignment")
+need(garden_plot,'plot.GardenCFrame:PointToWorldSpace(G.Position(slot))',"Flower slots follow authored lot transform")
+need(garden_plot,'anchoredVisual("Hive"', "Hive follows editable lot anchor")
+need(garden_plot,'anchoredVisual("Bench"', "Bench follows editable lot anchor")
 need(garden_plot,'plot.HivePosition=hivePosition',"gameplay Hive position follows authored visual")
 need(garden_plot,'local collider=self.X:Part(m,"GardenCollider"', "invisible Garden gameplay collider")
 need(garden_plot,'collider.Transparency=1',"Garden collider is presentation-invisible")
@@ -150,3 +154,14 @@ for path in ("src/Workspace/Garden/GardenCenter.model.json","src/Workspace/Spawn
 
 print("world visual clutter contract: PASS")
 print(f"Alpha world is sparse ({len(nodes)} authored nodes); player Garden is a flat, low-part circular gameplay asset with no beam/decor clutter.")
+
+
+lots=json.loads(read("src/Workspace/GardenLots.model.json"))
+authored_lots=[x for x in lots.get("Children",[]) if x.get("Name","").startswith("GardenLot")]
+if len(authored_lots)!=8:
+    raise AssertionError(f"expected exactly 8 authored Workspace Garden lots, got {len(authored_lots)}")
+for lot in authored_lots:
+    names={x.get("Name") for x in lot.get("Children",[])}
+    missing={"GardenAnchor","HiveAnchor","BenchAnchor"}-names
+    if missing:
+        raise AssertionError(f"{lot.get('Name')} missing editable markers: {sorted(missing)}")
