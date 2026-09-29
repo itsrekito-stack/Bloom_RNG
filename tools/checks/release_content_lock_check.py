@@ -50,7 +50,9 @@ if "Trials={" in manifest or "SeasonKeyTrials" in manifest or "TrialIds" in seas
 branches=re.findall(r'"([^"]+)"',re.search(r'WorkshopBranches=\{([^}]*)\}',manifest).group(1))
 if len(branches)!=27: raise AssertionError(f"release must ship 27 Workshop branches, got {len(branches)}")
 effect_ids=set(re.findall(r'([A-Z]+_[1-6])=\{',effects))
-if len(effect_ids)!=42: raise AssertionError(f"expected 42 Workshop effects, got {len(effect_ids)}")
+dynamic_effect_branches=set(re.findall(r'^\s*([A-Z]+)=\{Key=',effects,re.M))
+if len(effect_ids)!=42: raise AssertionError(f"expected 42 explicit legacy Workshop effects, got {len(effect_ids)}")
+if len(dynamic_effect_branches)!=20: raise AssertionError(f"expected 20 generated Workshop effect branches, got {len(dynamic_effect_branches)}")
 activity_ids=set(re.findall(r'([A-Za-z0-9_]+)=\{Life=',activities))
 if len(activity_ids)!=12: raise AssertionError(f"expected 12 activity types, got {len(activity_ids)}")
 
