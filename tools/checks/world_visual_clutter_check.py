@@ -100,7 +100,7 @@ for name in walkable_names:
 # Player Garden prefers the authored mesh and keeps gameplay geometry invisible/subtle.
 need(garden_plot,'local HIVE_INSET=Vector3.new(-2.2,0,0)',"Hive is inset from authored border")
 need(garden_plot,'local BENCH_RADIUS=15.7',"bench is composed against Garden perimeter")
-need(garden_plot,'local gardenVisual=usableVisual("Garden"', "authored Garden visual")
+need(garden_plot,'local gardenVisual=usableVisual("Garden",m,"GardenVisual",32.5,origin,origin.Y+.06,false)',"authored Garden bottom-aligns to ground surface")
 need(garden_plot,'plot.HasAuthoredGarden=gardenVisual~=nil',"authored Garden presentation flag")
 need(garden_plot,'if not gardenVisual then',"fallback primitives only when authored Garden is absent")
 need(garden_plot,'local hiveVisual=usableVisual("Hive"', "authored Hive visual")
