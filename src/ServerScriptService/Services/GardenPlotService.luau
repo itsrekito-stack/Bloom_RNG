@@ -134,7 +134,7 @@ function S:Build(player)
   collider.Transparency=1
   collider.CanQuery=false
 
-  local gardenVisual=usableVisual("Garden",m,"GardenVisual",32.5,origin,origin.Y+.06,true)
+  local gardenVisual=usableVisual("Garden",m,"GardenVisual",32.5,origin,origin.Y+.06,false)
   plot.HasAuthoredGarden=gardenVisual~=nil
   if not gardenVisual then
    local ground=self.X:Part(m,"Ground",origin-Vector3.new(0,.5,0),Vector3.new(1,33,33),Color3.fromRGB(85,145,80),true)
