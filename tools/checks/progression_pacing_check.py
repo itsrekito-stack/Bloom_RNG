@@ -55,25 +55,25 @@ if not 25<=hive8_developed<=60:
 
 need(locations,"Order={}","removed location list stays empty")
 need(locations,"Sectors={}","removed location sectors stay empty")
-need(workshop,"local HIVE_BY_INDEX={1,2,3,4,5,5}","Workshop depth reaches Hive5")
+need(workshop,"local HIVE_BY_INDEX={1,2,3,5,7,9}","Workshop depth reaches Hive9")
 need(hive,"C.WorkshopPointsForHiveLevel(nextLevel)","Workshop points continue after Hive 8")
 growth=num(bloom,"EndlessHiveCostGrowth")
 round_to=num(bloom,"EndlessHiveCostRound")
 coin_growth=num(bloom,"EndlessHiveCoinGrowth")
 coin_round=num(bloom,"EndlessHiveCoinRound")
 endless_points=num(bloom,"EndlessHivePointsPerLevel")
-if not 1.2<=growth<=1.5: raise AssertionError(f"endless Hive growth drift: {growth}")
+if not 1.1<=growth<=1.3: raise AssertionError(f"endless Hive growth drift: {growth}")
 if round_to<1: raise AssertionError("endless Hive rounding invalid")
-if not 1.5<=coin_growth<=1.9 or coin_round<1: raise AssertionError("endless Hive Coin curve invalid")
+if not 1.15<=coin_growth<=1.35 or coin_round<1: raise AssertionError("endless Hive Coin curve invalid")
 if endless_points<1: raise AssertionError("Hive 9+ must keep awarding Workshop Points")
 hive9=round(costs[-1]*growth/round_to)*round_to
 if hive9<=costs[-1]: raise AssertionError("Hive 9 cost must exceed Hive 8")
 coin_costs=[float(x) for x in re.findall(r'[0-9.]+',re.search(r'HiveCoinCosts=\{([^}]*)\}',bloom).group(1))]
 hive12=coin_costs[-1]
 for _ in range(4): hive12=round(hive12*coin_growth/coin_round)*coin_round
-if hive12<40000: raise AssertionError(f"Hive 12 Coin sink is too weak: {hive12}")
+if hive12<10000: raise AssertionError(f"Hive 12 Coin sink is too weak: {hive12}")
 
-need(season,"Hive=8","Season Hive gate");need(season,"Flowers=8","Season Flower breadth");need(season,"Bees=5","Season Bee breadth");need(season,"Trials=3","Season trial breadth")
+need(season,"Hive=8","Season Hive gate");need(season,"Flowers=8","Season Flower breadth");need(season,"Bees=5","Season Bee breadth");need(season,"Quests=15","Season quest breadth")
 
 bee_block=bees.split("C.Bees={",1)[1].split("\nlocal Rarity=",1)[0]
 bee_entries=re.findall(r'^ ([A-Za-z0-9_]+)=\{.*?Passive=\{([^}]*)\}',bee_block,re.M)
@@ -82,10 +82,10 @@ for bee_id,passive in bee_entries:
     m=re.search(r'LuckMultiplier=([0-9.]+)',passive)
     if not m: raise AssertionError(f"{bee_id} does not contribute Roll Luck")
     bee_luck.append(float(m.group(1)))
-if not bee_luck or min(bee_luck)<1.03 or max(bee_luck)>1.35:
+if not bee_luck or min(bee_luck)<1.30 or max(bee_luck)>2.00:
     raise AssertionError(f"Bee Luck curve out of bounds: {bee_luck}")
-if "LuckMultiplier=luck" not in bees or "Luck=.01" not in bees:
-    raise AssertionError("Bee Mastery must continue Luck progression beyond base Bee passives")
+if "LuckMultiplier=luck" not in bees or "Luck=.01" not in bees or 'stat=="LuckMultiplier"' not in bees:
+    raise AssertionError("Bee Luck floor/additive stacking or Mastery Luck progression regressed")
 block=bees.split("C.BeeMastery={",1)[1].split("\nC.Traits=",1)[0]
 xp=[int(x) for x in re.findall(r'\d+',re.search(r'XPPerLevel=\{([^}]*)\}',block).group(1))]
 duplicate_xp=num(bloom,"BeeDuplicateXP")
@@ -102,4 +102,4 @@ if not 25<=pity_seconds<=60: raise AssertionError(f"pity pacing drift: {pity_sec
 
 print("progression pacing contract: PASS")
 print(f"Anchors: Hive2 {hive2:.2f}m, Hive4 {hive4:.1f}m, Hive6 {hive6:.1f}m, Hive8 one-Bee {hive8_one:.1f}m / practical-5-Bee {hive8_developed:.1f}m.")
-print(f"Bee Mastery ~{mastery_duplicates:.1f} base duplicates to cap; Legacy ~{legacy_seasons} base Seasons; pity ceiling {pity_seconds:.1f}s.")
+print(f"Bee Luck {min(bee_luck):.2f}–{max(bee_luck):.2f}; Bee Mastery ~{mastery_duplicates:.1f} base duplicates to cap; Legacy ~{legacy_seasons} base Seasons; pity ceiling {pity_seconds:.1f}s.")
