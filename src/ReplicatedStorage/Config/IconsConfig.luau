@@ -66,6 +66,12 @@ C.WorkshopNodeIcons={
  EXPLORATION_1="Luck",EXPLORATION_2="Loadout",EXPLORATION_3="Luck",EXPLORATION_4="Garden",EXPLORATION_5="Luck",EXPLORATION_6="Loadout",
  LEGACY_1="Loadout",LEGACY_2="Loadout",LEGACY_3="Mastery",LEGACY_4="Loadout",LEGACY_5="Loadout",LEGACY_6="Mastery",
 }
+C.WorkshopBranchIcons={
+ ROLL="Roll",GARDEN="Garden",BEES="BeeHexagon",ECONOMY="Economy",BLOOM="Mastery",EXPLORATION="Loadout",LEGACY="Loadout",
+ FORTUNE="Luck",MASTERY="Mastery",HONEY="Economy",COINS="Economy",GROWTH="Garden",POLLEN="Garden",POWER="BeeHexagon",SWIFT="AutoRoll",
+ ABILITY="BeeHexagon",CRITICAL="Luck",CHARGE="Mastery",DISCOVERY="Luck",RARITY="Luck",DUPLICATES="Duplicate",ACTIVITY="Loadout",
+ QUESTS="Loadout",MUTATION="Mastery",SEASON="Loadout",SOCIAL="Loadout",OVERDRIVE="BeeHexagon",
+}
 C.WorkshopLockedBranchIcons={
  ROLL="LockedRoll",GARDEN="LockedGarden",BEES="LockedBees",ECONOMY="LockedEconomy",BLOOM="LockedBloom",EXPLORATION="LockedExploration",LEGACY="LockedLegacy",
 }
@@ -74,7 +80,8 @@ function C.GetWorkshopNodeIcon(nodeId:string,locked:boolean?):string
   local branch=string.match(nodeId,"^([^_]+)") or ""
   return C.GetWorkshopHexIcon(C.WorkshopLockedBranchIcons[branch] or "Locked")
  end
- local key=C.WorkshopNodeIcons[nodeId] or "Locked"
+ local branch=string.match(nodeId,"^([^_]+)") or ""
+ local key=C.WorkshopNodeIcons[nodeId] or C.WorkshopBranchIcons[branch] or "Locked"
  return C.GetWorkshopHexIcon(key)
 end
 
