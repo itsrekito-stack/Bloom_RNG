@@ -36,11 +36,13 @@ local C={
  GardenSlotHiveMilestones={2,3,4,5,6,7},
  BeeSlotHiveMilestones={2,3,4,5,6,7,8},
  WorkshopPointHiveMilestones={[2]=2,[4]=1,[6]=1,[8]=2},
- EndlessHiveCostGrowth=1.35,
+ EndlessHiveCostGrowth=1.18,
  EndlessHiveCostRound=50,
- EndlessHiveCoinGrowth=1.70,
+ EndlessHiveCoinGrowth=1.22,
  EndlessHiveCoinRound=100,
- EndlessHivePointsPerLevel=1,
+ EndlessHivePointsPerLevel=2,
+ EndlessHivePointsStepEvery=3,
+ EndlessHivePointsMax=12,
  HiveQuestRequirements={
   [2]={Discoveries=2},
   [3]={Discoveries=4},
@@ -100,7 +102,12 @@ function C.WorkshopPointsForHiveLevel(level)
  local n=math.max(1,math.floor(tonumber(level) or 1))
  local milestone=C.WorkshopPointHiveMilestones[n]
  if milestone then return milestone end
- if n>#C.HiveCosts then return math.max(0,math.floor(tonumber(C.EndlessHivePointsPerLevel) or 1)) end
+ if n>#C.HiveCosts then
+  local base=math.max(1,math.floor(tonumber(C.EndlessHivePointsPerLevel) or 2))
+  local every=math.max(1,math.floor(tonumber(C.EndlessHivePointsStepEvery) or 3))
+  local cap=math.max(base,math.floor(tonumber(C.EndlessHivePointsMax) or 12))
+  return math.min(cap,base+math.floor((n-(#C.HiveCosts+1))/every))
+ end
  return 0
 end
 
