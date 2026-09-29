@@ -15,7 +15,9 @@ use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindowBuilder};
 
 const MODEL_PATH: &str = "src/StarterGui/BloomUI.model.json";
 const LOADING_MODEL_PATH: &str = "src/ReplicatedFirst/BloomLoadingTemplate.model.json";
-const PLANNER_DEFAULTS_PATH: &str = "tools/roflow/planner-defaults.json";
+const PROJECT_MANIFEST_PATH: &str = "roflow.project.json";
+const LEGACY_PLANNER_DEFAULTS_PATH: &str = "tools/roflow/planner-defaults.json";
+const UPDATE_SOURCE_URL: &str = "https://github.com/itsrekito-stack/Bloom_RNG.git";
 
 #[derive(Default)]
 struct AppState {
@@ -27,12 +29,18 @@ struct AppState {
 #[serde(rename_all = "camelCase")]
 struct ProjectStatus {
     root: String,
+    project_id: String,
+    display_name: String,
     branch: String,
     head: String,
     subject: String,
     dirty: bool,
     changes: Vec<String>,
     model_exists: bool,
+    planner_defaults_path: String,
+    build_file: String,
+    runtime_probe_enabled: bool,
+    release_gate_task_ids: Vec<String>,
 }
 
 #[derive(Serialize)]
@@ -112,10 +120,31 @@ struct PlannerTask {
 #[derive(Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct PlannerStore {
+    #[serde(default)]
+    project_id: String,
     today_date: String,
     today: Vec<PlannerTask>,
     roadmap: Vec<PlannerTask>,
     today_history: HashMap<String, Vec<PlannerTask>>,
+}
+
+#[derive(Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ProjectManifest {
+    #[serde(default)]
+    schema_version: u32,
+    #[serde(default)]
+    project_id: String,
+    #[serde(default)]
+    display_name: String,
+    #[serde(default)]
+    planner_defaults_path: String,
+    #[serde(default)]
+    build_file: String,
+    #[serde(default)]
+    runtime_probe_enabled: bool,
+    #[serde(default)]
+    release_gate_task_ids: Vec<String>,
 }
 
 #[derive(Clone, Default, Deserialize)]
@@ -173,6 +202,7 @@ struct RojoStatus {
     version: String,
     project_file: bool,
     build_file: bool,
+    build_file_name: String,
 }
 
 #[derive(Serialize)]
@@ -256,6 +286,96 @@ fn git(root: &Path, args: &[&str]) -> Result<String, String> {
         return Err(if !stderr.is_empty() { stderr } else { stdout });
     }
     Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
+fn safe_manifest_relative_path(value: &str) -> Option<String> {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    let path = Path::new(trimmed);
+    if path.is_absolute()
+        || path.components().any(|component| {
+            matches!(
+                component,
+                Component::ParentDir | Component::RootDir | Component::Prefix(_)
+            )
+        })
+    {
+        return None;
+    }
+    Some(trimmed.replace('\\', "/"))
+}
+
+fn fallback_project_id(root: &Path) -> String {
+    let source = git(root, &["config", "--get", "remote.origin.url"])
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| root.to_string_lossy().to_string());
+    let digest = format!("{:x}", Sha256::digest(source.as_bytes()));
+    format!("project-{}", &digest[..16])
+}
+
+fn default_project_name(root: &Path) -> String {
+    root.file_name()
+        .and_then(|value| value.to_str())
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or("Project")
+        .to_string()
+}
+
+fn default_build_file(root: &Path) -> String {
+    let raw_name = fs::read_to_string(root.join("default.project.json"))
+        .ok()
+        .and_then(|text| serde_json::from_str::<Value>(&text).ok())
+        .and_then(|value| value.get("name").and_then(Value::as_str).map(str::to_string))
+        .unwrap_or_else(|| default_project_name(root));
+    let mut out = String::new();
+    let mut previous_separator = false;
+    for ch in raw_name.chars() {
+        let safe = ch.is_ascii_alphanumeric() || ch == '-' || ch == '_';
+        if safe {
+            out.push(ch);
+            previous_separator = false;
+        } else if !previous_separator {
+            out.push('_');
+            previous_separator = true;
+        }
+    }
+    let stem = out.trim_matches('_');
+    format!("{}.rbxl", if stem.is_empty() { "Project" } else { stem })
+}
+
+fn project_manifest(root: &Path) -> ProjectManifest {
+    let mut manifest = fs::read_to_string(root.join(PROJECT_MANIFEST_PATH))
+        .ok()
+        .and_then(|text| serde_json::from_str::<ProjectManifest>(&text).ok())
+        .filter(|value| value.schema_version == 1)
+        .unwrap_or_default();
+
+    manifest.schema_version = 1;
+    if manifest.project_id.trim().is_empty() {
+        manifest.project_id = fallback_project_id(root);
+    }
+    if manifest.display_name.trim().is_empty() {
+        manifest.display_name = default_project_name(root);
+    }
+
+    manifest.planner_defaults_path =
+        safe_manifest_relative_path(&manifest.planner_defaults_path).unwrap_or_default();
+    if manifest.planner_defaults_path.is_empty()
+        && root.join(LEGACY_PLANNER_DEFAULTS_PATH).is_file()
+    {
+        manifest.planner_defaults_path = LEGACY_PLANNER_DEFAULTS_PATH.to_string();
+    }
+
+    manifest.build_file = safe_manifest_relative_path(&manifest.build_file)
+        .unwrap_or_else(|| default_build_file(root));
+    manifest
+        .release_gate_task_ids
+        .retain(|id| !id.trim().is_empty() && id.len() <= 96);
+    manifest.release_gate_task_ids.truncate(32);
+    manifest
 }
 
 fn git_env(root: &Path, args: &[&str], envs: &[(&str, &str)]) -> Result<String, String> {
@@ -420,7 +540,7 @@ fn fetch_update_manifest(root: &Path) -> Result<UpdateManifest, String> {
         root,
         &[
             "fetch",
-            "origin",
+            UPDATE_SOURCE_URL,
             "+refs/heads/roflow-update:refs/remotes/origin/roflow-update",
             "--force",
             "--quiet",
@@ -598,18 +718,24 @@ fn default_roadmap_tasks() -> Vec<PlannerTask> {
 }
 
 fn project_planner_defaults(root: &Path) -> PlannerDefaults {
-    let path = root.join(PLANNER_DEFAULTS_PATH);
-    if let Ok(text) = fs::read_to_string(path) {
-        if let Ok(defaults) = serde_json::from_str::<PlannerDefaults>(&text) {
-            if defaults.schema_version == 1 && (!defaults.today.is_empty() || !defaults.roadmap.is_empty()) {
-                return defaults;
+    let manifest = project_manifest(root);
+    if !manifest.planner_defaults_path.is_empty() {
+        let path = root.join(&manifest.planner_defaults_path);
+        if let Ok(text) = fs::read_to_string(path) {
+            if let Ok(defaults) = serde_json::from_str::<PlannerDefaults>(&text) {
+                if defaults.schema_version == 1 {
+                    return defaults;
+                }
             }
         }
     }
+
+    // A project without its own planner manifest starts clean. Never leak the
+    // legacy Bloom RNG roadmap into an unrelated/new project.
     PlannerDefaults {
         schema_version: 1,
-        today: default_today_tasks(),
-        roadmap: default_roadmap_tasks(),
+        today: Vec::new(),
+        roadmap: Vec::new(),
     }
 }
 
@@ -653,6 +779,12 @@ fn load_planner_store(root: &Path, date: &str) -> Result<PlannerStore, String> {
         .ok()
         .and_then(|text| serde_json::from_str::<PlannerStore>(&text).ok())
         .unwrap_or_default();
+
+    let identity = project_manifest(root).project_id;
+    if !store.project_id.is_empty() && store.project_id != identity {
+        store = PlannerStore::default();
+    }
+    store.project_id = identity;
 
     let defaults = project_planner_defaults(root);
     store.roadmap = merge_planner_tasks(&store.roadmap, defaults.roadmap);
@@ -907,6 +1039,9 @@ fn validate_project_root(path: &str) -> Result<PathBuf, String> {
     if !root.join(MODEL_PATH).is_file() {
         return Err(format!("{MODEL_PATH} was not found in this project"));
     }
+    if !root.join("default.project.json").is_file() {
+        return Err("default.project.json was not found in this project".into());
+    }
     if git(&root, &["rev-parse", "--is-inside-work-tree"])? != "true" {
         return Err("Selected folder is not inside a Git working tree".into());
     }
@@ -919,7 +1054,7 @@ fn current_root(state: &State<AppState>) -> Result<PathBuf, String> {
         .lock()
         .map_err(|_| "Project state lock failed".to_string())?
         .clone()
-        .ok_or_else(|| "Select the Bloom_RNG project folder first".to_string())
+        .ok_or_else(|| "Select a project folder first".to_string())
 }
 
 fn status_for(root: &Path) -> Result<ProjectStatus, String> {
@@ -948,14 +1083,21 @@ fn status_for(root: &Path) -> Result<ProjectStatus, String> {
         .map(str::to_string)
         .collect();
 
+    let manifest = project_manifest(root);
     Ok(ProjectStatus {
         root: root.to_string_lossy().to_string(),
+        project_id: manifest.project_id,
+        display_name: manifest.display_name,
         branch,
         head,
         subject,
         dirty: !changes.is_empty(),
         changes,
         model_exists: root.join(MODEL_PATH).is_file(),
+        planner_defaults_path: manifest.planner_defaults_path,
+        build_file: manifest.build_file,
+        runtime_probe_enabled: manifest.runtime_probe_enabled,
+        release_gate_task_ids: manifest.release_gate_task_ids,
     })
 }
 
@@ -1649,7 +1791,26 @@ fn checkpoint_minute(line: &str) -> Option<u32> {
 
 
 #[tauri::command]
-fn runtime_probe_report() -> Result<RuntimeProbeReport, String> {
+fn runtime_probe_report(state: State<AppState>) -> Result<RuntimeProbeReport, String> {
+    let root = current_root(&state)?;
+    if !project_manifest(&root).runtime_probe_enabled {
+        return Ok(RuntimeProbeReport {
+            available: false,
+            path: String::new(),
+            modified_at: 0,
+            milestones: Vec::new(),
+            evidence: Vec::new(),
+            latest_server_checkpoint: String::new(),
+            latest_client_checkpoint: String::new(),
+            latest_persistence_join: String::new(),
+            latest_persistence_leave: String::new(),
+            persistence_verdict: "DISABLED".into(),
+            checkpoint_minutes: Vec::new(),
+            logs_scanned: 0,
+            lines: Vec::new(),
+        });
+    }
+
     let logs = recent_studio_logs(8)?;
     let latest = logs.last().cloned().ok_or_else(|| "No Roblox Studio log found yet".to_string())?;
     let mut milestones = BTreeSet::new();
@@ -1753,6 +1914,7 @@ fn rojo_running(state: &AppState) -> Result<bool, String> {
 fn rojo_status_for(root: &Path, state: &AppState) -> Result<RojoStatus, String> {
     let executable = find_rojo(root);
     let running = rojo_running(state)?;
+    let build_file_name = project_manifest(root).build_file;
     Ok(RojoStatus {
         available: executable.is_some(),
         running,
@@ -1762,7 +1924,8 @@ fn rojo_status_for(root: &Path, state: &AppState) -> Result<RojoStatus, String> 
             .map(|path| path.to_string_lossy().to_string())
             .unwrap_or_default(),
         project_file: root.join("default.project.json").is_file(),
-        build_file: root.join("BloomRNG.rbxl").is_file(),
+        build_file: root.join(&build_file_name).is_file(),
+        build_file_name,
     })
 }
 
@@ -1780,6 +1943,11 @@ fn planner_set_done(task_id: String, done: bool, state: State<AppState>) -> Resu
         .ok()
         .and_then(|text| serde_json::from_str::<PlannerStore>(&text).ok())
         .ok_or("Planner has not been initialized yet")?;
+
+    let identity = project_manifest(&root).project_id;
+    if store.project_id != identity {
+        return Err("Planner state belongs to another project. Reload the Planner.".into());
+    }
 
     let mut found = false;
     for task in store.today.iter_mut().chain(store.roadmap.iter_mut()) {
@@ -2034,9 +2202,10 @@ fn rojo_stop(state: State<AppState>) -> Result<RojoStatus, String> {
 #[tauri::command]
 async fn rojo_build(state: State<'_, AppState>) -> Result<ActionResult, String> {
     let root = current_root(&state)?;
+    let build_file = project_manifest(&root).build_file;
     tauri::async_runtime::spawn_blocking(move || {
         let executable = find_rojo(&root).ok_or("Rojo executable was not found")?;
-        let output_path = root.join("BloomRNG.rbxl");
+        let output_path = root.join(&build_file);
         let mut command = Command::new(&executable);
         command
             .arg("build")
@@ -2066,9 +2235,10 @@ async fn rojo_build(state: State<'_, AppState>) -> Result<ActionResult, String> 
 #[tauri::command]
 fn open_roblox_project(state: State<AppState>) -> Result<(), String> {
     let root = current_root(&state)?;
-    let project = root.join("BloomRNG.rbxl");
+    let build_file = project_manifest(&root).build_file;
+    let project = root.join(&build_file);
     if !project.is_file() {
-        return Err("BloomRNG.rbxl does not exist yet. Build the project first.".into());
+        return Err(format!("{build_file} does not exist yet. Build the project first."));
     }
 
     #[cfg(target_os = "windows")]
