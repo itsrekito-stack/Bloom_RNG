@@ -4,11 +4,6 @@ const $=selector=>document.querySelector(selector);
 const state={
  status:null,
  root:localStorage.getItem("roflowProjectRoot")||"",
- projectId:"",
- displayName:"",
- buildFileName:"",
- runtimeProbeEnabled:false,
- releaseGateTaskIds:[],
  studioLoaded:false,
  currentPage:"dashboard",
  studioUnloadTimer:null,
@@ -18,7 +13,7 @@ const state={
  health:null,
  rojo:null,
  planner:null,
- plannerShowCompleted:true,
+ plannerShowCompleted:localStorage.getItem("roflowPlannerShowCompleted")!=="0",
  runtimeGate:null,
  updateChecked:false,
  updateLastChecked:0,
@@ -41,53 +36,6 @@ function log(message){
 
 function requireProject(){
  if(!state.root)throw new Error("Choose a project first");
-}
-
-function projectUiStorageKey(projectId){
- return "roflowProjectUi:"+String(projectId||"").trim();
-}
-function saveProjectUiState(){
- if(!state.projectId)return;
- const payload={
-  currentPage:state.currentPage||"dashboard",
-  selectedFile:state.selectedFile||"",
-  plannerShowCompleted:state.plannerShowCompleted!==false
- };
- localStorage.setItem(projectUiStorageKey(state.projectId),JSON.stringify(payload));
-}
-function loadProjectUiState(projectId){
- let saved=null;
- try{saved=JSON.parse(localStorage.getItem(projectUiStorageKey(projectId))||"null")}catch{}
- state.currentPage=typeof saved?.currentPage==="string"?saved.currentPage:"dashboard";
- state.selectedFile=typeof saved?.selectedFile==="string"?saved.selectedFile:"";
- state.plannerShowCompleted=typeof saved?.plannerShowCompleted==="boolean"?saved.plannerShowCompleted:true;
-}
-function resetProjectRuntimeState(){
- state.status=null;
- state.tasks=[];
- state.health=null;
- state.rojo=null;
- state.planner=null;
- state.runtimeGate=null;
- state.selectedFile="";
- state.logs=["RoFlow project context reset."];
-
- if($("#logOutput"))$("#logOutput").textContent=state.logs[0];
- if($("#recentTasks"))renderTasks([]);
- if($("#todayTaskList"))renderPlanner({todayDate:localPlannerDate(),today:[],roadmap:[]});
- state.planner=null;
-
- const healthValue=$("#healthValue");if(healthValue){healthValue.textContent="—";healthValue.style.color=""}
- if($("#healthStats"))$("#healthStats").textContent="Run Health Check for this project.";
- if($("#healthList"))$("#healthList").innerHTML='<div class="empty-state">No project health result loaded.</div>';
-
- if($("#runtimeMilestones"))$("#runtimeMilestones").textContent="—";
- if($("#runtimeEvidence"))$("#runtimeEvidence").textContent="No runtime evidence loaded for this project.";
- if($("#runtimeServerCheckpoint"))$("#runtimeServerCheckpoint").textContent="—";
- if($("#runtimeClientCheckpoint"))$("#runtimeClientCheckpoint").textContent="—";
- if($("#runtimePersistence"))$("#runtimePersistence").textContent="—";
- if($("#runtimeProbeMeta"))$("#runtimeProbeMeta").textContent="Project context changed.";
- if($("#runtimeProbeOutput"))$("#runtimeProbeOutput").textContent="No project runtime evidence loaded.";
 }
 
 function updateBadge(text,tone="muted"){
@@ -133,12 +81,7 @@ async function maybeAutoUpdate(force=false){
 
 function applyStatus(status){
  state.status=status;
- state.projectId=status.projectId||state.projectId||"";
- state.displayName=status.displayName||(status.root||"").split(/[\\/]/).filter(Boolean).pop()||"Project";
- state.buildFileName=status.buildFile||state.buildFileName||"Project.rbxl";
- state.runtimeProbeEnabled=status.runtimeProbeEnabled===true;
- state.releaseGateTaskIds=Array.isArray(status.releaseGateTaskIds)?status.releaseGateTaskIds:[];
- $("#projectName").textContent=state.displayName;
+ $("#projectName").textContent=(status.root||"").split(/[\\/]/).filter(Boolean).pop()||"Bloom_RNG";
  $("#projectPath").textContent=status.root||"";
  $("#branchValue").textContent=status.branch||"(detached)";
  $("#commitValue").textContent=shortSha(status.head)+" · "+(status.subject||"");
@@ -298,7 +241,6 @@ async function runHealth(){
 
 function applyRojo(status){
  state.rojo=status;
- state.buildFileName=status.buildFileName||state.status?.buildFile||state.buildFileName||"Project.rbxl";
  $("#rojoValue").textContent=status.running?"RUNNING":status.available?"READY":"NOT FOUND";
  $("#rojoValue").style.color=status.running?"#66e0a6":status.available?"#58b1ff":"#ff697b";
  $("#rojoStats").textContent=status.available?(status.version||status.path||"Rojo available"):"Install Rojo or place rojo.exe in the project/Desktop/Rojo.";
@@ -325,41 +267,37 @@ function setQaEvidence(selector,ready,label,detail=""){
  node.classList.toggle("ready",ready);
  node.textContent=label+" · "+(ready?"EVIDENCE READY":detail||"WAITING");
 }
+const RELEASE_MANUAL_GATE_IDS=[
+ "release-bug-zero",
+ "release-publish-config",
+ "release-store-page",
+ "release-private-alpha",
+ "release-rc-fixes"
+];
 function renderReleaseGate(){
- const gate=$("#releaseGate"),stateNode=$("#releaseGateState"),detail=$("#releaseGateDetail"),bar=$("#releaseGateBar");
- const manualIds=state.releaseGateTaskIds||[];
-
- if(!state.runtimeProbeEnabled&&manualIds.length===0){
-  if(gate)gate.classList.remove("ready");
-  if(stateNode)stateNode.textContent="PROJECT-SCOPED";
-  if(detail)detail.textContent="No release gate is configured for this project.";
-  if(bar)bar.style.width="0%";
-  return;
- }
-
  const runtime=state.runtimeGate||{};
- const runtimeChecks=state.runtimeProbeEnabled?[
+ const runtimeChecks=[
   runtime.coreReady===true,
   runtime.persistenceReady===true,
   runtime.baselineReady===true,
   runtime.onboardingReady===true,
   runtime.multiplayerReady===true,
   runtime.soakReady===true
- ]:[];
+ ];
  const runtimeDone=runtimeChecks.filter(Boolean).length;
  const roadmap=state.planner?.roadmap||[];
  const byId=new Map(roadmap.map(task=>[task.id,task]));
- const manualTasks=manualIds.map(id=>byId.get(id)).filter(Boolean);
+ const manualTasks=RELEASE_MANUAL_GATE_IDS.map(id=>byId.get(id)).filter(Boolean);
  const manualDone=manualTasks.filter(task=>task.done===true).length;
- const manualReady=manualIds.length===0||(manualTasks.length===manualIds.length&&manualDone===manualIds.length);
- const runtimeReady=runtimeChecks.length===0||runtimeDone===runtimeChecks.length;
- const ready=runtimeReady&&manualReady;
- const total=runtimeChecks.length+manualIds.length;
+ const manualReady=manualTasks.length===RELEASE_MANUAL_GATE_IDS.length&&manualDone===RELEASE_MANUAL_GATE_IDS.length;
+ const ready=runtimeDone===runtimeChecks.length&&manualReady;
+ const total=runtimeChecks.length+RELEASE_MANUAL_GATE_IDS.length;
  const complete=runtimeDone+manualDone;
+ const gate=$("#releaseGate"),stateNode=$("#releaseGateState"),detail=$("#releaseGateDetail"),bar=$("#releaseGateBar");
  if(gate)gate.classList.toggle("ready",ready);
  if(stateNode)stateNode.textContent=ready?"READY FOR FINAL CHECKPOINT":"BLOCKED";
- if(detail)detail.textContent=`Runtime evidence ${runtimeDone}/${runtimeChecks.length} · manual release checks ${manualDone}/${manualIds.length}${ready?" · final checkpoint can begin":""}`;
- if(bar)bar.style.width=(total?Math.round(complete/total*100):0)+"%";
+ if(detail)detail.textContent=`Runtime evidence ${runtimeDone}/${runtimeChecks.length} · manual release checks ${manualDone}/${RELEASE_MANUAL_GATE_IDS.length}${ready?" · final checkpoint can begin":""}`;
+ if(bar)bar.style.width=Math.round(complete/total*100)+"%";
 }
 function renderRuntimeProbe(report){
  const milestones=report?.milestones||[],evidence=report?.evidence||[],minutes=report?.checkpointMinutes||[];
@@ -398,13 +336,6 @@ function renderRuntimeProbe(report){
  $("#runtimeProbeOutput").textContent=lines.length?lines.slice(-80).join("\n"):"No RuntimeProbe/PersistenceProbe lines in the recent Studio logs.";
 }
 async function refreshRuntimeProbe(silent=false){
- if(!state.runtimeProbeEnabled){
-  state.runtimeGate=null;
-  renderReleaseGate();
-  if($("#runtimeProbeMeta"))$("#runtimeProbeMeta").textContent="Runtime probe is not enabled for this project.";
-  if($("#runtimeProbeOutput"))$("#runtimeProbeOutput").textContent="This project has no configured RuntimeProbe contract.";
-  return;
- }
  try{
   const report=await invoke("runtime_probe_report");
   renderRuntimeProbe(report);
@@ -418,23 +349,16 @@ async function refreshRuntimeProbe(silent=false){
 }
 
 async function connectRoot(path){
- const previousRoot=state.root;
- if(state.projectId)saveProjectUiState();
- if(state.studioLoaded&&previousRoot&&previousRoot!==path)unloadUiStudio("project changed");
-
  const status=await invoke("set_project_root",{path});
- resetProjectRuntimeState();
-
- state.root=status.root||path;
- localStorage.setItem("roflowProjectRoot",state.root);
+ state.root=path;
+ localStorage.setItem("roflowProjectRoot",path);
  applyStatus(status);
- loadProjectUiState(state.projectId);
- navigate(state.currentPage||"dashboard");
-
  await Promise.all([refreshBackups(),refreshTasks(),refreshRojo(),refreshPlanner()]);
- if(state.currentPage==="ui")await ensureUiStudio(true);
-
- log("Project connected: "+state.displayName+" · "+state.root);
+ if(state.studioLoaded){
+  if(state.currentPage==="ui")await ensureUiStudio(true);
+  else unloadUiStudio("project changed while inactive");
+ }
+ log("Project connected: "+path);
  setTimeout(()=>maybeAutoUpdate(),350);
  return status;
 }
@@ -593,7 +517,6 @@ function diffClass(line){
 
 async function selectChangedFile(path,status){
  state.selectedFile=path;
- saveProjectUiState();
  document.querySelectorAll(".file-item").forEach(item=>item.classList.toggle("active",item.dataset.path===path));
  $("#diffTitle").textContent=path;
  $("#diffMeta").textContent=status;
@@ -648,7 +571,7 @@ async function stopRojo(){
  try{applyRojo(await invoke("rojo_stop"));$("#rojoOutput").textContent="Rojo serve stopped.";log("Rojo serve stopped")}catch(error){$("#rojoOutput").textContent=String(error);log("Rojo stop failed: "+error)}
 }
 async function buildProject(){
- const button=$("#buildBtn");button.disabled=true;$("#rojoOutput").textContent="Building "+(state.buildFileName||"project") +"…";
+ const button=$("#buildBtn");button.disabled=true;$("#rojoOutput").textContent="Building BloomRNG.rbxl…";
  try{
   const result=await invoke("rojo_build");
   $("#rojoOutput").textContent=(result.success?"BUILD SUCCESS\n":"BUILD FAILED\n")+(result.path||"")+"\n"+(result.output||"");
@@ -673,7 +596,6 @@ function navigate(page){
  if(page==="planner")refreshPlanner();
  if(page==="tasks")refreshTasks();
  if(page==="roblox"){refreshRojo();refreshRuntimeProbe(true)}
- saveProjectUiState();
 }
 
 document.querySelectorAll(".nav[data-page]").forEach(button=>button.onclick=()=>navigate(button.dataset.page));
@@ -694,7 +616,7 @@ $("#commitBtn").onclick=commitChanges;
 $("#commitMessage").addEventListener("keydown",event=>{if(event.key==="Enter")commitChanges()});
 $("#plannerCompletedToggle").onclick=()=>{
  state.plannerShowCompleted=!state.plannerShowCompleted;
- saveProjectUiState();
+ localStorage.setItem("roflowPlannerShowCompleted",state.plannerShowCompleted?"1":"0");
  if(state.planner)renderPlanner(state.planner);
 };
 $("#reloadTasksBtn").onclick=refreshTasks;
@@ -703,7 +625,7 @@ $("#refreshRuntimeProbeBtn").onclick=()=>refreshRuntimeProbe(false);
 $("#startRojoBtn").onclick=startRojo;
 $("#stopRojoBtn").onclick=stopRojo;
 $("#buildBtn").onclick=buildProject;
-$("#openStudioBtn").onclick=async()=>{try{await invoke("open_roblox_project");log("Opened "+(state.buildFileName||"Roblox project"))}catch(error){$("#rojoOutput").textContent=String(error);log("Open Studio failed: "+error)}};
+$("#openStudioBtn").onclick=async()=>{try{await invoke("open_roblox_project");log("Opened BloomRNG.rbxl")}catch(error){$("#rojoOutput").textContent=String(error);log("Open Studio failed: "+error)}};
 
 window.addEventListener("message",async event=>{
  if(event.data?.type==="roflow-suspend-ready"){
@@ -712,8 +634,9 @@ window.addEventListener("message",async event=>{
   return;
  }
  if(event.data?.type==="roflow-project-changed"){
-  const nextRoot=event.data.path||state.root;
-  if(nextRoot)await connectRoot(nextRoot).catch(error=>log("Project switch failed: "+error));
+  state.root=event.data.path||state.root;
+  if(state.root)localStorage.setItem("roflowProjectRoot",state.root);
+  await refresh().catch(()=>{});
  }else if(event.data?.type==="roflow-sync-complete"){
   await refresh().catch(()=>{});
   log("UI Studio completed AI Sync");
