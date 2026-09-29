@@ -1,9 +1,9 @@
-local RS=game:GetService("ReplicatedStorage") local A=require(RS.Config.ActivityConfig) local S={Blessed={},Progress=0,Contributions={},Round=0,NextEvent=0,Pulse=nil}
+local RS=game:GetService("ReplicatedStorage") local A=require(RS.Config.ActivityConfig) local C=require(RS.Config.BloomConfig) local E=require(RS.Shared.WorkshopEffects) local S={Blessed={},Progress=0,Contributions={},Round=0,NextEvent=0,Pulse=nil}
 function S:Init(x) self.X=x self.NextEvent=os.clock()+A.EventInterval end
 function S:Bless(visitor,owner)
  if visitor==owner or self.Blessed[visitor] then return false end local p=self.X:Profile(visitor) local target=self.X:Profile(owner) if not p or not target then return false end
  local pos=self.X.GardenPlotService:HivePosition(owner) if not pos or not self.X.U.Near(visitor,pos,14) then return false end
- self.Blessed[visitor]=true self.X.Temp[owner].BlessingUntil=os.clock()+60 self.X:Send(visitor,"Message","Blessing left") return true
+ self.Blessed[visitor]=true local temp=self.X.Temp[owner] temp.BlessingUntil=os.clock()+C.BlessingSeconds temp.BlessingMultiplier=C.BlessingMultiplier*E.BranchProduct(target,"SOCIAL","BlessingMultiplier",1) self.X:Send(visitor,"Message","Blessing left") return true
 end
 function S:Contribute(player,amount)
  local flower=self.X.World:FindFirstChild("ServerBloom") local text=flower and flower:FindFirstChild("LevelText",true) if text then text.Text="SERVER BLOOM • "..math.floor(self.Progress).."/"..A.ServerBloomTarget end
