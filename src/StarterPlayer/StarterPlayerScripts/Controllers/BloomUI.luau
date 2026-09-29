@@ -2440,10 +2440,14 @@ function UI:Start()
   local status=self.Player:GetAttribute("BloomProfileState")
   if status then print("[BloomUI] Profile state attribute:",status) end
  end)
- local remotes=RS:WaitForChild("BloomRemotes")
- self.Request=remotes:WaitForChild("Request")
- self.StateRequest=remotes:WaitForChild("StateRequest")
- local event=remotes:WaitForChild("Event")
+ local remotes=RS:WaitForChild("BloomRemotes",10)
+ if not remotes then error("[BloomUI] ReplicatedStorage/BloomRemotes missing after 10s; run AI SYNC before Play") end
+ self.Request=remotes:WaitForChild("Request",5)
+ self.StateRequest=remotes:WaitForChild("StateRequest",5)
+ local event=remotes:WaitForChild("Event",5)
+ if not self.Request or not self.StateRequest or not event then
+  error("[BloomUI] BloomRemotes contract incomplete; expected Request, StateRequest and Event. Run AI SYNC before Play")
+ end
  self.Gui=self:ResolveBloomGui()
  self:GuardBloomGui()
  self.SafeRoot=self.Gui:WaitForChild("SafeRoot",10)

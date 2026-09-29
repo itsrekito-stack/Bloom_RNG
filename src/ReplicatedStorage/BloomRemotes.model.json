@@ -1,0 +1,18 @@
+{
+  "ClassName": "Folder",
+  "Name": "BloomRemotes",
+  "Children": [
+    {
+      "ClassName": "RemoteEvent",
+      "Name": "Request"
+    },
+    {
+      "ClassName": "RemoteEvent",
+      "Name": "Event"
+    },
+    {
+      "ClassName": "RemoteFunction",
+      "Name": "StateRequest"
+    }
+  ]
+}

@@ -50,14 +50,37 @@ function S:Validate(action,a,b,c)
  end
  return false,"INVALID_ACTION"
 end
+local function ensureRemote(parent,className,name)
+ local item=parent:FindFirstChild(name)
+ if item and not item:IsA(className) then
+  warn("[Bloom][REMOTES] replacing invalid "..name.." ("..item.ClassName..") with "..className)
+  item:Destroy()
+  item=nil
+ end
+ if not item then
+  item=Instance.new(className)
+  item.Name=name
+  item.Parent=parent
+ end
+ return item
+end
 function S:Init(x)
  self.X=x
- local old=RS:FindFirstChild("BloomRemotes") if old then old:Destroy() end
- local folder=Instance.new("Folder") folder.Name="BloomRemotes" folder.Parent=RS
- local request=Instance.new("RemoteEvent") request.Name="Request" request.Parent=folder
- local event=Instance.new("RemoteEvent") event.Name="Event" event.Parent=folder
- local stateRequest=Instance.new("RemoteFunction") stateRequest.Name="StateRequest" stateRequest.Parent=folder
- self.Request=request self.Event=event self.StateRequest=stateRequest
+ local folder=RS:FindFirstChild("BloomRemotes")
+ if folder and not folder:IsA("Folder") then
+  warn("[Bloom][REMOTES] replacing invalid ReplicatedStorage/BloomRemotes ("..folder.ClassName..")")
+  folder:Destroy()
+  folder=nil
+ end
+ if not folder then
+  warn("[Bloom][REMOTES] authored BloomRemotes missing; creating runtime fallback. Run AI SYNC before Play.")
+  folder=Instance.new("Folder")
+  folder.Name="BloomRemotes"
+  folder.Parent=RS
+ end
+ self.Request=ensureRemote(folder,"RemoteEvent","Request")
+ self.Event=ensureRemote(folder,"RemoteEvent","Event")
+ self.StateRequest=ensureRemote(folder,"RemoteFunction","StateRequest")
 end
 function S:Accept(player)
  local now=os.clock() local b=self.Buckets[player] or {Time=now,Tokens=C.RemoteBurst} self.Buckets[player]=b b.Tokens=math.min(C.RemoteBurst,b.Tokens+(now-b.Time)*C.RemoteRate) b.Time=now if b.Tokens<1 then return false end b.Tokens=b.Tokens-1 return true

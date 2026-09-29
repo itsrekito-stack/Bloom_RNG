@@ -89,22 +89,27 @@ local function hideMarker(part)
  part.CastShadow=false
 end
 
-local function objectPivot(root)
- if root:IsA("BasePart") then return root.CFrame end
- if root:IsA("Model") then return root:GetPivot() end
- return nil
-end
-
-local function setObjectPivot(root,cf)
- if root:IsA("BasePart") then
-  root.CFrame=cf
-  return true
+local function rebaseClone(source,clone,masterOrigin,targetOrigin)
+ if source:IsA("BasePart") and clone:IsA("BasePart") then
+  clone.CFrame=targetOrigin.CFrame*masterOrigin.CFrame:ToObjectSpace(source.CFrame)
+  return
  end
- if root:IsA("Model") then
-  root:PivotTo(cf)
-  return true
+ if source:IsA("Model") and clone:IsA("Model") then
+  clone:PivotTo(targetOrigin.CFrame*masterOrigin.CFrame:ToObjectSpace(source:GetPivot()))
+  return
  end
- return false
+ local sourceParts={}
+ for _,item in ipairs(source:GetDescendants()) do
+  if item:IsA("BasePart") then sourceParts[item:GetFullName()]=item.CFrame end
+ end
+ for _,item in ipairs(clone:GetDescendants()) do
+  if item:IsA("BasePart") then
+   local suffix=string.sub(item:GetFullName(),#clone:GetFullName()+2)
+   local sourcePath=source:GetFullName().."."..suffix
+   local sourceCF=sourceParts[sourcePath]
+   if sourceCF then item.CFrame=targetOrigin.CFrame*masterOrigin.CFrame:ToObjectSpace(sourceCF) end
+  end
+ end
 end
 
 local function syncLotFromMaster(master,target)
@@ -113,19 +118,17 @@ local function syncLotFromMaster(master,target)
  local targetOrigin=lotMarker(target,"LotOrigin")
  if not masterOrigin or not targetOrigin then return false end
 
- for _,key in ipairs({"Garden","Hive","Bench"}) do
-  local source=lotVisual(master,key)
-  local existing=lotVisual(target,key)
-  if existing then existing:Destroy() end
-  if source then
-   local sourcePivot=objectPivot(source)
-   if sourcePivot then
-    local clone=source:Clone()
-    clone.Name=key
-    clone.Parent=target
-    local relative=masterOrigin.CFrame:ToObjectSpace(sourcePivot)
-    setObjectPivot(clone,targetOrigin.CFrame*relative)
-   end
+ -- GardenLot01 is the only authored layout. Everything else is a translated clone.
+ -- This deliberately copies custom decorations too, so Studio edits to Lot01 are
+ -- immediately reflected by Lot02-Lot08 when Play starts.
+ for _,child in ipairs(target:GetChildren()) do
+  if child~=targetOrigin then child:Destroy() end
+ end
+ for _,source in ipairs(master:GetChildren()) do
+  if source~=masterOrigin then
+   local clone=source:Clone()
+   clone.Parent=target
+   rebaseClone(source,clone,masterOrigin,targetOrigin)
   end
  end
  return true
