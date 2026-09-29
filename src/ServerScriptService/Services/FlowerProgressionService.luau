@@ -1,5 +1,6 @@
 local RS=game:GetService("ReplicatedStorage")
 local C=require(RS.Config.BloomConfig)
+local E=require(RS.Shared.WorkshopEffects)
 local S={}
 
 function S:Init(x)
@@ -24,6 +25,7 @@ function S:Add(player,id,xp)
  if not p or type(id)~="string" or type(xp)~="number" or xp<=0 then return false end
  local m=self:State(p,id)
  local beforeLevel=m.Level
+ xp*=E.BranchProduct(p,"MASTERY","MasteryXPMultiplier",1)
  m.XP+=xp
  while m.Level<C.MasteryCap and m.XP>=m.Level*C.MasteryXP do
   m.XP-=m.Level*C.MasteryXP
@@ -37,7 +39,9 @@ end
 
 function S:AddDuplicate(player,id,count)
  count=math.max(1,math.floor(tonumber(count) or 1))
- return self:Add(player,id,count*C.FlowerDuplicateXP)
+ local p=self.X:Profile(player)
+ if not p then return false end
+ return self:Add(player,id,count*C.FlowerDuplicateXP*E.BranchProduct(p,"DUPLICATES","DuplicateXPMultiplier",1))
 end
 
 function S:Upgrade()
