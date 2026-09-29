@@ -1,0 +1,59 @@
+{
+  "Name": "BloomBeeTemplate",
+  "ClassName": "Model",
+  "Children": [
+    {
+      "Name": "Body",
+      "ClassName": "MeshPart",
+      "Properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": true,
+        "CastShadow": true,
+        "Transparency": 0,
+        "DoubleSided": true,
+        "Color": [
+          1,
+          1,
+          1
+        ],
+        "Material": "SmoothPlastic",
+        "Reflectance": 0,
+        "RenderFidelity": "Precise",
+        "MeshId": "rbxassetid://86695413882310",
+        "Size": [
+          2.2,
+          1.6,
+          2.2
+        ],
+        "CFrame": [
+          -7.255,
+          13.5,
+          -3.763,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "Children": [
+        {
+          "Name": "SurfaceAppearance",
+          "ClassName": "SurfaceAppearance",
+          "Properties": {
+            "ColorMap": "rbxassetid://82885432584977",
+            "NormalMap": "rbxassetid://78481603920082",
+            "RoughnessMap": "rbxassetid://98327088756066",
+            "MetalnessMap": "rbxassetid://81267734819459"
+          }
+        }
+      ]
+    }
+  ]
+}

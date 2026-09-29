@@ -107,7 +107,7 @@ need(garden_plot,'local authoredHive=lotVisual(lot,"Hive")',"Garden lot reads th
 need(garden_plot,'local authoredBench=lotVisual(lot,"Bench")',"Garden lot reads the actual editable Bench mesh")
 need(garden_plot,'plot.HasAuthoredGarden=gardenVisual~=nil',"authored Garden presentation flag")
 need(garden_plot,'if not gardenVisual then',"fallback primitives only when authored Garden is absent")
-need(garden_plot,'local hiveVisual=usableVisual("Hive"', "authored Hive visual")
+need(garden_plot,'local hiveVisual=authoredHive',"authored Hive model is used directly")
 need(garden_plot,'function S:AcquireLot(player)',"first free authored Garden lot assignment")
 need(garden_plot,'plot.GardenCFrame:PointToWorldSpace(G.Position(slot))',"Flower slots follow authored lot transform")
 need(garden_plot,'local hiveVisual=authoredHive',"Hive gameplay follows actual Workspace mesh")

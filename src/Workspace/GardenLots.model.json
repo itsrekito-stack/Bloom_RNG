@@ -39,85 +39,180 @@
         },
         {
           "Name": "Garden",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://93439308097157",
-            "Size": [
-              32.5,
-              3,
-              32.5
-            ],
-            "CFrame": [
-              97.745,
-              9.7923,
-              -3.763,
-              -1,
-              0,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0,
-              -1
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://129177202413424",
+                "Size": [
+                  32.5,
+                  4.2,
+                  32.5
+                ],
+                "CFrame": [
+                  97.745,
+                  9.7923,
+                  -3.763,
+                  -1,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  -1
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://78412111995637",
+                    "NormalMap": "rbxassetid://136759550555690",
+                    "RoughnessMap": "rbxassetid://128004619420959",
+                    "MetalnessMap": "rbxassetid://105789290097643"
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "Name": "Hive",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://72906636471163",
-            "Size": [
-              5.2,
-              6.2,
-              5.2
-            ],
-            "CFrame": [
-              77.245,
-              11.3923,
-              -3.763,
-              -1,
-              0,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0,
-              -1
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://81932595223184",
+                "Size": [
+                  6,
+                  6.8,
+                  6
+                ],
+                "CFrame": [
+                  77.245,
+                  11.3923,
+                  -3.763,
+                  -1,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  -1
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://76306025091711",
+                    "NormalMap": "rbxassetid://79842265130286",
+                    "RoughnessMap": "rbxassetid://126305584306389",
+                    "MetalnessMap": "rbxassetid://102368757888827"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Bench",
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://123879096199687",
+                "Size": [
+                  7,
+                  2.6,
+                  3.2
+                ],
+                "CFrame": [
+                  111.245,
+                  9.6923,
+                  -19.263,
+                  -1,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  -1
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://80716695702238",
+                    "NormalMap": "rbxassetid://83115535549013",
+                    "RoughnessMap": "rbxassetid://119534925989340",
+                    "MetalnessMap": "rbxassetid://71410551962327"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -158,85 +253,180 @@
         },
         {
           "Name": "Garden",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://93439308097157",
-            "Size": [
-              32.5,
-              3,
-              32.5
-            ],
-            "CFrame": [
-              66.991212,
-              9.7923,
-              70.483212,
-              -0.707107,
-              0,
-              -0.707107,
-              0,
-              1,
-              0,
-              0.707107,
-              0,
-              -0.707107
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://129177202413424",
+                "Size": [
+                  32.5,
+                  4.2,
+                  32.5
+                ],
+                "CFrame": [
+                  66.991212,
+                  9.7923,
+                  70.483212,
+                  -0.707107,
+                  0,
+                  -0.707107,
+                  0,
+                  1,
+                  0,
+                  0.707107,
+                  0,
+                  -0.707107
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://78412111995637",
+                    "NormalMap": "rbxassetid://136759550555690",
+                    "RoughnessMap": "rbxassetid://128004619420959",
+                    "MetalnessMap": "rbxassetid://105789290097643"
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "Name": "Hive",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://72906636471163",
-            "Size": [
-              5.2,
-              6.2,
-              5.2
-            ],
-            "CFrame": [
-              52.495523,
-              11.3923,
-              84.978901,
-              -0.707107,
-              0,
-              -0.707107,
-              0,
-              1,
-              0,
-              0.707107,
-              0,
-              -0.707107
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://81932595223184",
+                "Size": [
+                  6,
+                  6.8,
+                  6
+                ],
+                "CFrame": [
+                  52.495523,
+                  11.3923,
+                  84.978901,
+                  -0.707107,
+                  0,
+                  -0.707107,
+                  0,
+                  1,
+                  0,
+                  0.707107,
+                  0,
+                  -0.707107
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://76306025091711",
+                    "NormalMap": "rbxassetid://79842265130286",
+                    "RoughnessMap": "rbxassetid://126305584306389",
+                    "MetalnessMap": "rbxassetid://102368757888827"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Bench",
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://123879096199687",
+                "Size": [
+                  7,
+                  2.6,
+                  3.2
+                ],
+                "CFrame": [
+                  65.576998,
+                  9.6923,
+                  49.977109,
+                  -0.707107,
+                  0,
+                  -0.707107,
+                  0,
+                  1,
+                  0,
+                  0.707107,
+                  0,
+                  -0.707107
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://80716695702238",
+                    "NormalMap": "rbxassetid://83115535549013",
+                    "RoughnessMap": "rbxassetid://119534925989340",
+                    "MetalnessMap": "rbxassetid://71410551962327"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -277,85 +467,180 @@
         },
         {
           "Name": "Garden",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://93439308097157",
-            "Size": [
-              32.5,
-              3,
-              32.5
-            ],
-            "CFrame": [
-              -7.255,
-              9.7923,
-              101.237,
-              0,
-              0,
-              -1,
-              0,
-              1,
-              0,
-              1,
-              0,
-              0
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://129177202413424",
+                "Size": [
+                  32.5,
+                  4.2,
+                  32.5
+                ],
+                "CFrame": [
+                  -7.255,
+                  9.7923,
+                  101.237,
+                  0,
+                  0,
+                  -1,
+                  0,
+                  1,
+                  0,
+                  1,
+                  0,
+                  0
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://78412111995637",
+                    "NormalMap": "rbxassetid://136759550555690",
+                    "RoughnessMap": "rbxassetid://128004619420959",
+                    "MetalnessMap": "rbxassetid://105789290097643"
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "Name": "Hive",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://72906636471163",
-            "Size": [
-              5.2,
-              6.2,
-              5.2
-            ],
-            "CFrame": [
-              -7.255,
-              11.3923,
-              121.737,
-              0,
-              0,
-              -1,
-              0,
-              1,
-              0,
-              1,
-              0,
-              0
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://81932595223184",
+                "Size": [
+                  6,
+                  6.8,
+                  6
+                ],
+                "CFrame": [
+                  -7.255,
+                  11.3923,
+                  121.737,
+                  0,
+                  0,
+                  -1,
+                  0,
+                  1,
+                  0,
+                  1,
+                  0,
+                  0
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://76306025091711",
+                    "NormalMap": "rbxassetid://79842265130286",
+                    "RoughnessMap": "rbxassetid://126305584306389",
+                    "MetalnessMap": "rbxassetid://102368757888827"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Bench",
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://123879096199687",
+                "Size": [
+                  7,
+                  2.6,
+                  3.2
+                ],
+                "CFrame": [
+                  -22.755,
+                  9.6923,
+                  87.737,
+                  0,
+                  0,
+                  -1,
+                  0,
+                  1,
+                  0,
+                  1,
+                  0,
+                  0
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://80716695702238",
+                    "NormalMap": "rbxassetid://83115535549013",
+                    "RoughnessMap": "rbxassetid://119534925989340",
+                    "MetalnessMap": "rbxassetid://71410551962327"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -396,85 +681,180 @@
         },
         {
           "Name": "Garden",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://93439308097157",
-            "Size": [
-              32.5,
-              3,
-              32.5
-            ],
-            "CFrame": [
-              -81.501212,
-              9.7923,
-              70.483212,
-              0.707107,
-              0,
-              -0.707107,
-              0,
-              1,
-              0,
-              0.707107,
-              0,
-              0.707107
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://129177202413424",
+                "Size": [
+                  32.5,
+                  4.2,
+                  32.5
+                ],
+                "CFrame": [
+                  -81.501212,
+                  9.7923,
+                  70.483212,
+                  0.707107,
+                  0,
+                  -0.707107,
+                  0,
+                  1,
+                  0,
+                  0.707107,
+                  0,
+                  0.707107
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://78412111995637",
+                    "NormalMap": "rbxassetid://136759550555690",
+                    "RoughnessMap": "rbxassetid://128004619420959",
+                    "MetalnessMap": "rbxassetid://105789290097643"
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "Name": "Hive",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://72906636471163",
-            "Size": [
-              5.2,
-              6.2,
-              5.2
-            ],
-            "CFrame": [
-              -67.005523,
-              11.3923,
-              84.978901,
-              0.707107,
-              0,
-              -0.707107,
-              0,
-              1,
-              0,
-              0.707107,
-              0,
-              0.707107
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://81932595223184",
+                "Size": [
+                  6,
+                  6.8,
+                  6
+                ],
+                "CFrame": [
+                  -67.005523,
+                  11.3923,
+                  84.978901,
+                  0.707107,
+                  0,
+                  -0.707107,
+                  0,
+                  1,
+                  0,
+                  0.707107,
+                  0,
+                  0.707107
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://76306025091711",
+                    "NormalMap": "rbxassetid://79842265130286",
+                    "RoughnessMap": "rbxassetid://126305584306389",
+                    "MetalnessMap": "rbxassetid://102368757888827"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Bench",
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://123879096199687",
+                "Size": [
+                  7,
+                  2.6,
+                  3.2
+                ],
+                "CFrame": [
+                  -102.007315,
+                  9.6923,
+                  71.897426,
+                  0.707107,
+                  0,
+                  -0.707107,
+                  0,
+                  1,
+                  0,
+                  0.707107,
+                  0,
+                  0.707107
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://80716695702238",
+                    "NormalMap": "rbxassetid://83115535549013",
+                    "RoughnessMap": "rbxassetid://119534925989340",
+                    "MetalnessMap": "rbxassetid://71410551962327"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -515,85 +895,180 @@
         },
         {
           "Name": "Garden",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://93439308097157",
-            "Size": [
-              32.5,
-              3,
-              32.5
-            ],
-            "CFrame": [
-              -112.255,
-              9.7923,
-              -3.763,
-              1,
-              0,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0,
-              1
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://129177202413424",
+                "Size": [
+                  32.5,
+                  4.2,
+                  32.5
+                ],
+                "CFrame": [
+                  -112.255,
+                  9.7923,
+                  -3.763,
+                  1,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://78412111995637",
+                    "NormalMap": "rbxassetid://136759550555690",
+                    "RoughnessMap": "rbxassetid://128004619420959",
+                    "MetalnessMap": "rbxassetid://105789290097643"
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "Name": "Hive",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://72906636471163",
-            "Size": [
-              5.2,
-              6.2,
-              5.2
-            ],
-            "CFrame": [
-              -91.755,
-              11.3923,
-              -3.763,
-              1,
-              0,
-              0,
-              0,
-              1,
-              0,
-              0,
-              0,
-              1
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://81932595223184",
+                "Size": [
+                  6,
+                  6.8,
+                  6
+                ],
+                "CFrame": [
+                  -91.755,
+                  11.3923,
+                  -3.763,
+                  1,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://76306025091711",
+                    "NormalMap": "rbxassetid://79842265130286",
+                    "RoughnessMap": "rbxassetid://126305584306389",
+                    "MetalnessMap": "rbxassetid://102368757888827"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Bench",
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://123879096199687",
+                "Size": [
+                  7,
+                  2.6,
+                  3.2
+                ],
+                "CFrame": [
+                  -125.755,
+                  9.6923,
+                  11.737,
+                  1,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://80716695702238",
+                    "NormalMap": "rbxassetid://83115535549013",
+                    "RoughnessMap": "rbxassetid://119534925989340",
+                    "MetalnessMap": "rbxassetid://71410551962327"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -634,85 +1109,180 @@
         },
         {
           "Name": "Garden",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://93439308097157",
-            "Size": [
-              32.5,
-              3,
-              32.5
-            ],
-            "CFrame": [
-              -81.501212,
-              9.7923,
-              -78.009212,
-              0.707107,
-              0,
-              0.707107,
-              0,
-              1,
-              0,
-              -0.707107,
-              0,
-              0.707107
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://129177202413424",
+                "Size": [
+                  32.5,
+                  4.2,
+                  32.5
+                ],
+                "CFrame": [
+                  -81.501212,
+                  9.7923,
+                  -78.009212,
+                  0.707107,
+                  0,
+                  0.707107,
+                  0,
+                  1,
+                  0,
+                  -0.707107,
+                  0,
+                  0.707107
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://78412111995637",
+                    "NormalMap": "rbxassetid://136759550555690",
+                    "RoughnessMap": "rbxassetid://128004619420959",
+                    "MetalnessMap": "rbxassetid://105789290097643"
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "Name": "Hive",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://72906636471163",
-            "Size": [
-              5.2,
-              6.2,
-              5.2
-            ],
-            "CFrame": [
-              -67.005523,
-              11.3923,
-              -92.504901,
-              0.707107,
-              0,
-              0.707107,
-              0,
-              1,
-              0,
-              -0.707107,
-              0,
-              0.707107
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://81932595223184",
+                "Size": [
+                  6,
+                  6.8,
+                  6
+                ],
+                "CFrame": [
+                  -67.005523,
+                  11.3923,
+                  -92.504901,
+                  0.707107,
+                  0,
+                  0.707107,
+                  0,
+                  1,
+                  0,
+                  -0.707107,
+                  0,
+                  0.707107
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://76306025091711",
+                    "NormalMap": "rbxassetid://79842265130286",
+                    "RoughnessMap": "rbxassetid://126305584306389",
+                    "MetalnessMap": "rbxassetid://102368757888827"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Bench",
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://123879096199687",
+                "Size": [
+                  7,
+                  2.6,
+                  3.2
+                ],
+                "CFrame": [
+                  -80.086998,
+                  9.6923,
+                  -57.503109,
+                  0.707107,
+                  0,
+                  0.707107,
+                  0,
+                  1,
+                  0,
+                  -0.707107,
+                  0,
+                  0.707107
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://80716695702238",
+                    "NormalMap": "rbxassetid://83115535549013",
+                    "RoughnessMap": "rbxassetid://119534925989340",
+                    "MetalnessMap": "rbxassetid://71410551962327"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -753,85 +1323,180 @@
         },
         {
           "Name": "Garden",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://93439308097157",
-            "Size": [
-              32.5,
-              3,
-              32.5
-            ],
-            "CFrame": [
-              -7.255,
-              9.7923,
-              -108.763,
-              0,
-              0,
-              1,
-              0,
-              1,
-              0,
-              -1,
-              0,
-              0
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://129177202413424",
+                "Size": [
+                  32.5,
+                  4.2,
+                  32.5
+                ],
+                "CFrame": [
+                  -7.255,
+                  9.7923,
+                  -108.763,
+                  0,
+                  0,
+                  1,
+                  0,
+                  1,
+                  0,
+                  -1,
+                  0,
+                  0
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://78412111995637",
+                    "NormalMap": "rbxassetid://136759550555690",
+                    "RoughnessMap": "rbxassetid://128004619420959",
+                    "MetalnessMap": "rbxassetid://105789290097643"
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "Name": "Hive",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://72906636471163",
-            "Size": [
-              5.2,
-              6.2,
-              5.2
-            ],
-            "CFrame": [
-              -7.255,
-              11.3923,
-              -129.263,
-              0,
-              0,
-              1,
-              0,
-              1,
-              0,
-              -1,
-              0,
-              0
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://81932595223184",
+                "Size": [
+                  6,
+                  6.8,
+                  6
+                ],
+                "CFrame": [
+                  -7.255,
+                  11.3923,
+                  -129.263,
+                  0,
+                  0,
+                  1,
+                  0,
+                  1,
+                  0,
+                  -1,
+                  0,
+                  0
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://76306025091711",
+                    "NormalMap": "rbxassetid://79842265130286",
+                    "RoughnessMap": "rbxassetid://126305584306389",
+                    "MetalnessMap": "rbxassetid://102368757888827"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Bench",
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://123879096199687",
+                "Size": [
+                  7,
+                  2.6,
+                  3.2
+                ],
+                "CFrame": [
+                  8.245,
+                  9.6923,
+                  -95.263,
+                  0,
+                  0,
+                  1,
+                  0,
+                  1,
+                  0,
+                  -1,
+                  0,
+                  0
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://80716695702238",
+                    "NormalMap": "rbxassetid://83115535549013",
+                    "RoughnessMap": "rbxassetid://119534925989340",
+                    "MetalnessMap": "rbxassetid://71410551962327"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -872,85 +1537,180 @@
         },
         {
           "Name": "Garden",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://93439308097157",
-            "Size": [
-              32.5,
-              3,
-              32.5
-            ],
-            "CFrame": [
-              66.991212,
-              9.7923,
-              -78.009212,
-              -0.707107,
-              0,
-              0.707107,
-              0,
-              1,
-              0,
-              -0.707107,
-              0,
-              -0.707107
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://129177202413424",
+                "Size": [
+                  32.5,
+                  4.2,
+                  32.5
+                ],
+                "CFrame": [
+                  66.991212,
+                  9.7923,
+                  -78.009212,
+                  -0.707107,
+                  0,
+                  0.707107,
+                  0,
+                  1,
+                  0,
+                  -0.707107,
+                  0,
+                  -0.707107
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://78412111995637",
+                    "NormalMap": "rbxassetid://136759550555690",
+                    "RoughnessMap": "rbxassetid://128004619420959",
+                    "MetalnessMap": "rbxassetid://105789290097643"
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "Name": "Hive",
-          "ClassName": "MeshPart",
-          "Properties": {
-            "Anchored": true,
-            "CanCollide": false,
-            "CanTouch": false,
-            "CanQuery": true,
-            "CastShadow": true,
-            "MeshId": "rbxassetid://72906636471163",
-            "Size": [
-              5.2,
-              6.2,
-              5.2
-            ],
-            "CFrame": [
-              52.495523,
-              11.3923,
-              -92.504901,
-              -0.707107,
-              0,
-              0.707107,
-              0,
-              1,
-              0,
-              -0.707107,
-              0,
-              -0.707107
-            ],
-            "Transparency": 0,
-            "DoubleSided": true,
-            "Color": [
-              1,
-              1,
-              1
-            ],
-            "Material": "SmoothPlastic",
-            "Reflectance": 0,
-            "RenderFidelity": "Precise"
-          }
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://81932595223184",
+                "Size": [
+                  6,
+                  6.8,
+                  6
+                ],
+                "CFrame": [
+                  52.495523,
+                  11.3923,
+                  -92.504901,
+                  -0.707107,
+                  0,
+                  0.707107,
+                  0,
+                  1,
+                  0,
+                  -0.707107,
+                  0,
+                  -0.707107
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://76306025091711",
+                    "NormalMap": "rbxassetid://79842265130286",
+                    "RoughnessMap": "rbxassetid://126305584306389",
+                    "MetalnessMap": "rbxassetid://102368757888827"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Name": "Bench",
+          "ClassName": "Model",
+          "Children": [
+            {
+              "Name": "Body",
+              "ClassName": "MeshPart",
+              "Properties": {
+                "Anchored": true,
+                "CanCollide": false,
+                "CanTouch": false,
+                "CanQuery": true,
+                "CastShadow": true,
+                "Transparency": 0,
+                "DoubleSided": true,
+                "Color": [
+                  1,
+                  1,
+                  1
+                ],
+                "Material": "SmoothPlastic",
+                "Reflectance": 0,
+                "RenderFidelity": "Precise",
+                "MeshId": "rbxassetid://123879096199687",
+                "Size": [
+                  7,
+                  2.6,
+                  3.2
+                ],
+                "CFrame": [
+                  87.497315,
+                  9.6923,
+                  -79.423426,
+                  -0.707107,
+                  0,
+                  0.707107,
+                  0,
+                  1,
+                  0,
+                  -0.707107,
+                  0,
+                  -0.707107
+                ]
+              },
+              "Children": [
+                {
+                  "Name": "SurfaceAppearance",
+                  "ClassName": "SurfaceAppearance",
+                  "Properties": {
+                    "ColorMap": "rbxassetid://80716695702238",
+                    "NormalMap": "rbxassetid://83115535549013",
+                    "RoughnessMap": "rbxassetid://119534925989340",
+                    "MetalnessMap": "rbxassetid://71410551962327"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     }

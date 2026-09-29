@@ -4,10 +4,10 @@ local RunService=game:GetService("RunService")
 local A={FolderName="BloomMeshTemplates"}
 
 local TEMPLATE_ALIASES={
- Bee={"Bee"},
+ Bee={"BloomBeeTemplate","Bee"},
  Garden={"Garden"},
  Hive={"Hive"},
- Bench={"Curved Sandstone Benc","Curved Sandstone Bench"},
+ Bench={"Bench","Curved Sandstone Benc","Curved Sandstone Bench"},
 }
 
 local FALLBACK={
