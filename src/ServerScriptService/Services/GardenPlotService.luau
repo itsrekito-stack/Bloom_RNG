@@ -8,6 +8,7 @@ local Assets=require(RS.Shared.AuthoredMeshTemplates)
 
 local S={Plots={},Used={},EditorSessions={},Lots={}}
 local LOT_FOLDER_NAME="GardenLots"
+local MASTER_LOT_NAME="GardenLot01"
 local LOT_COUNT=8
 local GARDEN_FOOTPRINT=32.5
 local HIVE_FOOTPRINT=5.2
@@ -88,6 +89,48 @@ local function hideMarker(part)
  part.CastShadow=false
 end
 
+local function objectPivot(root)
+ if root:IsA("BasePart") then return root.CFrame end
+ if root:IsA("Model") then return root:GetPivot() end
+ return nil
+end
+
+local function setObjectPivot(root,cf)
+ if root:IsA("BasePart") then
+  root.CFrame=cf
+  return true
+ end
+ if root:IsA("Model") then
+  root:PivotTo(cf)
+  return true
+ end
+ return false
+end
+
+local function syncLotFromMaster(master,target)
+ if master==target then return true end
+ local masterOrigin=lotMarker(master,"LotOrigin")
+ local targetOrigin=lotMarker(target,"LotOrigin")
+ if not masterOrigin or not targetOrigin then return false end
+
+ for _,key in ipairs({"Garden","Hive","Bench"}) do
+  local source=lotVisual(master,key)
+  local existing=lotVisual(target,key)
+  if existing then existing:Destroy() end
+  if source then
+   local sourcePivot=objectPivot(source)
+   if sourcePivot then
+    local clone=source:Clone()
+    clone.Name=key
+    clone.Parent=target
+    local relative=masterOrigin.CFrame:ToObjectSpace(sourcePivot)
+    setObjectPivot(clone,targetOrigin.CFrame*relative)
+   end
+  end
+ end
+ return true
+end
+
 function S:Init(x)
  self.X=x
  self.Lots={}
@@ -95,6 +138,19 @@ function S:Init(x)
  if not folder then
   warn("[Bloom][GARDEN] Workspace/GardenLots missing; run AI SYNC")
   return
+ end
+
+ local master=folder:FindFirstChild(MASTER_LOT_NAME)
+ if not master or not master:IsA("Model") then
+  warn("[Bloom][GARDEN] "..MASTER_LOT_NAME.." missing; cannot mirror authored Garden layout")
+ else
+  for _,lot in ipairs(folder:GetChildren()) do
+   if lot:IsA("Model") and string.match(lot.Name,"^GardenLot%d%d$") and lot~=master then
+    if not syncLotFromMaster(master,lot) then
+     warn("[Bloom][GARDEN] failed to mirror "..MASTER_LOT_NAME.." into "..lot.Name)
+    end
+   end
+  end
  end
 
  local lots={}

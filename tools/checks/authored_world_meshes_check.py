@@ -96,3 +96,12 @@ assert 'TweenService' not in bees
 
 print("authored world model integration: PASS")
 print("Garden/Hive/Bench/Bee are real models backed by mesh + SurfaceAppearance assets.")
+
+
+# GardenLot01 is the only authored layout the developer needs to edit.
+# At server start, GardenLot02-08 mirror its Garden/Hive/Bench relative transforms.
+assert 'local MASTER_LOT_NAME="GardenLot01"' in garden
+assert 'local function syncLotFromMaster(master,target)' in garden
+assert 'local relative=masterOrigin.CFrame:ToObjectSpace(sourcePivot)' in garden
+assert 'setObjectPivot(clone,targetOrigin.CFrame*relative)' in garden
+assert 'lot~=master' in garden
