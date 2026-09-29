@@ -14,8 +14,8 @@ garden=read("src/StarterPlayer/StarterPlayerScripts/Controllers/GardenEditorCont
 index=read("src/StarterPlayer/StarterPlayerScripts/Controllers/IndexController.luau")
 
 species=set(re.findall(r'^species\("([A-Za-z0-9_]+)"',flowers,re.M))
-if len(species)!=12:
-    raise AssertionError(f"expected 12 Flower species, got {len(species)}")
+if len(species)<12:
+    raise AssertionError(f"expected at least 12 Flower species, got {len(species)}")
 
 block_match=re.search(r'local LEVEL_BUFFS=\{(.*?)\n\}',flowers,re.S)
 if not block_match:

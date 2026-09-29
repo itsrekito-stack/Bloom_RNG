@@ -116,6 +116,7 @@ need(garden_plot,'for i=1,C.MaxFlowerSlots do',"all configured slots render")
 need(garden_plot,'self.X.FlowerService.Build(i,f,pos)',"flower roots align exactly to slot position")
 need(garden_plot,'self.X.FlowerService.ApplyLevelVisual(model,mastery.Level,growth)',"live Flower height follows Level")
 need(garden_plot,'self.X.FlowerService.ApplyLevelVisual(flower,mastery.Level,growth)',"initial Flower height follows Level")
+need(garden_plot,'function S:RefreshFlowerSpecies(player,id)',"planted Flower can refresh immediately after Level-up")
 if 'FLOWER_SCALE_CAP' in garden_plot or 'flowerVisualScale' in garden_plot:
     raise AssertionError("Flower visual growth must not have a cap or uniform Model:ScaleTo helper")
 need(garden_layout,'Radius=8.1',"compact slot ring radius")

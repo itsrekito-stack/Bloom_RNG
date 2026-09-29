@@ -79,6 +79,37 @@ function S:RefreshHivePrompt(player)
  return true
 end
 
+function S:RefreshFlowerSpecies(player,id)
+ local p=self.X:Profile(player)
+ local plot=self.Plots[player]
+ local flower=type(id)=="string" and F.Species[id] or nil
+ if not p or not plot or not flower then return false end
+ local mastery=self.X.FlowerProgressionService:State(p,id)
+ local growth=flower.GrowthProfile or {ScalePerLevel=.025}
+ local refreshed=false
+
+ for i,slot in ipairs(p.Garden.Slots) do
+  if slot.SpeciesId==id then
+   local model=plot.Flowers[i]
+   if model then
+    self.X.FlowerService.ApplyLevelVisual(model,mastery.Level,growth)
+    local levelText=model:FindFirstChild("LevelText",true)
+    local fill=model:FindFirstChild("ProgressFill",true)
+    if levelText then levelText.Text=flower.DisplayName.." • LV."..mastery.Level end
+    if fill then
+     fill.Size=UDim2.fromScale(
+      mastery.Level>=C.MasteryCap and 1
+       or math.clamp(mastery.XP/math.max(1,mastery.Level*C.MasteryXP),0,1),
+      1
+     )
+    end
+    refreshed=true
+   end
+  end
+ end
+ return refreshed
+end
+
 function S:AddFlowerXP(player,i,amount)
  local p=self.X:Profile(player)
  if not p or type(i)~="number" or i%1~=0 or type(amount)~="number" or amount~=amount or amount<=0 then return false end
