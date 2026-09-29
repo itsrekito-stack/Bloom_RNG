@@ -68,12 +68,16 @@ assert 'BENCH_ANGLE' not in garden
 assert 'Assets.FaceAt(bench,origin)' not in garden
 
 
-# Eight fixed Workspace Garden lots replace procedural player-plot placement.
-project=read("default.project.json")
-assert '"GardenLots"' in project
-for index in range(1,9):
-    assert f'"GardenLot{index:02d}"' in project, f"GardenLot{index:02d} missing from Rojo tree"
-assert project.count('"$ignoreUnknownInstances": true')>=10, "Garden lots must preserve manually inserted meshes"
+# Eight fixed Workspace Garden lots are a real Workspace model, not virtual project children.
+import json
+lots_path=ROOT/"src/Workspace/GardenLots.model.json"
+assert lots_path.exists(), "GardenLots.model.json missing"
+lots_data=json.loads(lots_path.read_text(encoding="utf-8"))
+lots=[x for x in lots_data.get("Children",[]) if x.get("Name","").startswith("GardenLot")]
+assert len(lots)==8, f"expected 8 actual Garden lots, got {len(lots)}"
+for lot in lots:
+    names={x.get("Name") for x in lot.get("Children",[])}
+    assert {"Garden","Hive","LotOrigin"}<=names, f"{lot.get('Name')} missing real Garden/Hive/LotOrigin"
 assert 'LOT_COUNT=8' in garden
 assert 'function S:AcquireLot(player)' in garden
 assert 'local authoredGarden=lotVisual(lot,"Garden")' in garden
@@ -90,22 +94,20 @@ assert 'BenchAnchor' not in garden
 assert 'function A.PlaceAtAnchor(root,anchorCFrame,alignBottom)' in assets
 
 
-# Direct mesh asset IDs are authored into the eight editable Workspace lots.
-project_text=read("default.project.json")
-assert "rbxassetid://89934665266567" in project_text, "Bee mesh asset id missing"
-assert project_text.count("rbxassetid://93439308097157")==8, "Garden mesh must exist in all 8 lots"
-assert project_text.count("rbxassetid://72906636471163")==8, "Hive mesh must exist in all 8 lots"
-assert '"Bee"' in project_text
+# Direct Garden/Hive mesh asset IDs are authored into the real Workspace lot model.
+lots_text=read("src/Workspace/GardenLots.model.json")
+assert lots_text.count("rbxassetid://93439308097157")==8, "Garden mesh must exist in all 8 lots"
+assert lots_text.count("rbxassetid://72906636471163")==8, "Hive mesh must exist in all 8 lots"
 assert 'Assets.ApplyTextureFallback(root,key)' in garden
 
 
 # Each editable gameplay lot keeps the Hive outside the Garden rim.
-project_data=__import__("json").loads(read("default.project.json"))
-lots_node=project_data["tree"]["Workspace"]["GardenLots"]
+lots_node={x["Name"]:x for x in lots_data.get("Children",[])}
 for i in range(1,9):
     lot=lots_node[f"GardenLot{i:02d}"]
-    garden_cf=lot["Garden"]["$properties"]["CFrame"]
-    hive_cf=lot["Hive"]["$properties"]["CFrame"]
+    parts={x["Name"]:x for x in lot.get("Children",[])}
+    garden_cf=parts["Garden"]["Properties"]["CFrame"]
+    hive_cf=parts["Hive"]["Properties"]["CFrame"]
     dx=hive_cf[0]-garden_cf[0]
     dz=hive_cf[2]-garden_cf[2]
     distance=(dx*dx+dz*dz)**0.5

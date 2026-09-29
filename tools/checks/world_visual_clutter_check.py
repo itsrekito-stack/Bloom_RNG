@@ -158,12 +158,12 @@ print("world visual clutter contract: PASS")
 print(f"Alpha world is sparse ({len(nodes)} authored nodes); player Garden is a flat, low-part circular gameplay asset with no beam/decor clutter.")
 
 
-project=json.loads(read("default.project.json"))
-garden_lots=project["tree"]["Workspace"].get("GardenLots",{})
-for i in range(1,9):
-    name=f"GardenLot{i:02d}"
-    node=garden_lots.get(name)
-    if not node:
-        raise AssertionError(f"{name} missing from Workspace project tree")
-    if node.get("$ignoreUnknownInstances") is not True:
-        raise AssertionError(f"{name} must preserve manually inserted Garden/Hive/Bench meshes")
+lots=json.loads(read("src/Workspace/GardenLots.model.json"))
+garden_lots=[x for x in lots.get("Children",[]) if x.get("Name","").startswith("GardenLot")]
+if len(garden_lots)!=8:
+    raise AssertionError(f"expected 8 actual Workspace Garden lots, got {len(garden_lots)}")
+for lot in garden_lots:
+    names={x.get("Name") for x in lot.get("Children",[])}
+    missing={"Garden","Hive","LotOrigin"}-names
+    if missing:
+        raise AssertionError(f"{lot.get('Name')} missing real gameplay meshes: {sorted(missing)}")
