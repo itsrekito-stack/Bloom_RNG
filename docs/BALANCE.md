@@ -2,7 +2,7 @@
 
 | Параметр | Было | Принято | Причина |
 |---|---:|---:|---|
-| Flower slots | 3–15, покупки Coins | 3–15, Hive + Workshop | Убрать параллельные capacity thresholds |
+| Flower slots | legacy 3–15 | 1–7 through tutorial + Hive milestones | Capacity belongs to Hive progression, not Workshop |
 | Fruit copy | max 1 | Seed copies = owned minus planted | Физический сад требует количества |
 | Roll cooldown | 1.55s, minimum .3s | 1.55s, nodes 1.2/.8s | Контроль request rate |
 | Bloom | отсутствовал | 100, delivery +2, active +4–12 | Связать автоматизацию и world play |
@@ -42,3 +42,16 @@
 - Quest objectives deliberately mix Rolls, Hive deliveries, Activities, Bloom Rolls, discoveries, Garden Synergies, Bee Mastery, Hive levels and Workshop purchases so progress is not tied to one loop.
 - Hive Workshop Point grants use season-scoped idempotent source keys. On join, existing profiles reconcile any missing Hive-level point sources before state is pushed.
 - Equip Synergy is server-authoritative: it computes the highest attainable Trait breakpoint from owned Bees and capacity, applies the matching loadout, recalculates the Trait state, then verifies the Tier actually activated.
+
+
+## 2026-09-29 Workshop expansion + global Luck rebalance
+
+- Workshop expands from 7 to 27 branches: 20 new progression lines, six nodes each, for 162 purchasable nodes plus CORE.
+- The authored Workshop tree is now a 2800×2800 radial hex layout. All 27 branches are real editable GUI objects in BloomUI.model.json; runtime only binds state.
+- New branches cover Luck, Mastery, Honey, Coins, Flower Growth, Pollen Yield, Bee Power, Travel Speed, Ability Cooldown, Critical Chance, Bloom Charge, Discovery, Rarity, Duplicate XP, Activities, Quests, Mutation, Season rewards, Social Blessing and Ability rewards.
+- The weakest Bee now starts at +30% Roll Luck; Bee Luck rises through rarity/order to +87% for the strongest current Celestial Bee.
+- Every planted Flower now contributes Roll Luck. Common Flowers start at +30% and rarity raises the base through Mythic; Flower Level adds up to another +30 percentage points.
+- Bee and Flower collection Luck stacks additively inside each collection before external multipliers. This keeps the requested +30% per-item floor without exponential 7×8 slot blow-up.
+- Endless Hive Honey growth is 1.18× and Coin growth 1.22×. Hive 9+ starts at 2 Workshop Points/level and gains +1 every 3 Hive levels, capped at 12/level.
+- New Workshop depth gates are Hive 1 / 2 / 3 / 5 / 7 / 9. Deep nodes therefore remain long-form progression while the first choice is available immediately after Workshop unlock.
+- Workshop Coin sinks stay 100 / 250 / 700 / 1,800 / 4,500 / 10,000 per branch. Selected progression branches also consume Petal Dust; Season/Legacy paths use Ancient Nectar.
