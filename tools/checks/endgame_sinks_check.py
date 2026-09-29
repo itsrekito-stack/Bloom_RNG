@@ -21,7 +21,7 @@ state=read("src/ServerScriptService/Services/UIStateService.luau")
 need(cfg,"FlowerDuplicateXP=25","Flower duplicate progression value")
 need(cfg,"BeeDuplicateXP=20","Bee duplicate progression value")
 need(inventory,'self.X.FlowerProgressionService:AddDuplicate(player,id,1)',"Flower duplicate -> Level")
-need(inventory,'self.X.PollinatorService:AddMastery(player,id,C.BeeDuplicateXP)',"Bee duplicate -> Mastery")
+need(inventory,'self.X.PollinatorService:AddMastery(player,id,C.BeeDuplicateXP*E.BranchProduct(p,"DUPLICATES","DuplicateXPMultiplier",1))',"Bee duplicate -> Mastery")
 need(inventory,'function S:Dissolve()',"old Flower sink fails closed")
 need(inventory,'function S:DissolveBee()',"old Bee sink fails closed")
 if inventory.count('return false,"ACTION_UNAVAILABLE"')<2:
@@ -32,7 +32,7 @@ if 'controller:Send("DissolveBee",item.Id,1)' in client:
 # Coins and Petal Dust remain sinks in the authored Workshop.
 need(workshop,"local COINS_BY_INDEX={100,250,700,1800,4500,10000}","Workshop Coin sink curve")
 need(workshop,"Coins=COINS_BY_INDEX[i] or 0","Workshop nodes consume depth Coin curve")
-need(workshop,'Dust=(branch=="ECONOMY" or branch=="BLOOM") and i*3 or 0',"Workshop Dust sink branches")
+need(workshop,'local DUST_BRANCHES={ECONOMY=true,BLOOM=true,FORTUNE=true,MASTERY=true,DISCOVERY=true,RARITY=true,DUPLICATES=true,MUTATION=true}',"Workshop Dust sink branches")
 need(workshop_service,"p.Currencies.Coins-=(n.Coins or 0)","Workshop Coin spend")
 need(workshop_service,"p.Currencies.PetalDust-=(n.Dust or 0)","Workshop Dust spend")
 need(season_plan,"after.Currencies.Coins=0","Season Coin reset")
@@ -42,9 +42,9 @@ if "after.Currencies.PetalDust=0" in season_plan:
     raise AssertionError("Petal Dust must persist across Season Turn")
 
 coin_curve=[100,250,700,1800,4500,10000]
-seasonal_coin_sink=sum(coin_curve)*6
-seasonal_dust_sink=sum(i*3 for i in range(1,7))*2
-if seasonal_coin_sink!=104100 or seasonal_dust_sink!=126:
+seasonal_coin_sink=sum(coin_curve)*27
+seasonal_dust_sink=sum([3,5,8,10,13,15])*8
+if seasonal_coin_sink!=468450 or seasonal_dust_sink!=432:
     raise AssertionError("Workshop sink arithmetic changed unexpectedly")
 
 # Ancient Nectar remains useful after permanent Legacy completion.
