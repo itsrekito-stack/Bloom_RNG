@@ -229,11 +229,13 @@ function S:Snapshot(player,profile)
   if flower then
    local mastery=p.FlowerCollection.FlowerMastery[id]
    local level=math.max(1,math.floor(tonumber(mastery and mastery.Level) or 1))
-   local buff=Flowers.GetLevelBuff and Flowers.GetLevelBuff(id,level) or nil
-   local stat=buff and BEE_STAT_MAP[buff.Stat]
-   local meta=stat and META[stat]
-   if buff and stat and meta then
-    source(buckets,stat,"Flowers",flower.DisplayName.." • Lv."..tostring(level),multiplierText(buff.Multiplier,meta.Inverse),"Planted Flower passive. Raise its Flower Level to strengthen this bonus.",nil)
+   local buffs=Flowers.GetLevelBuffs and Flowers.GetLevelBuffs(id,level) or {}
+   for _,buff in ipairs(buffs) do
+    local stat=BEE_STAT_MAP[buff.Stat]
+    local meta=stat and META[stat]
+    if stat and meta then
+     source(buckets,stat,"Flowers",flower.DisplayName.." • Lv."..tostring(level),multiplierText(buff.Multiplier,meta.Inverse),"Planted Flower passive. Raise its Flower Level to strengthen this bonus.",nil)
+    end
    end
   end
  end
@@ -282,8 +284,9 @@ function S:Snapshot(player,profile)
  end
  local blessingRemaining=remaining(temp.BlessingUntil,now)
  if blessingRemaining then
-  rewardMultiplier*=1.05
-  source(buckets,"Reward","Social","Hive Blessing",multiplierText(1.05,false),"Temporary reward multiplier from another player.",blessingRemaining)
+  local blessingMultiplier=tonumber(temp.BlessingMultiplier) or C.BlessingMultiplier
+  rewardMultiplier*=blessingMultiplier
+  source(buckets,"Reward","Social","Hive Blessing",multiplierText(blessingMultiplier,false),"Temporary reward multiplier from another player.",blessingRemaining)
  end
  local mutationRemaining=remaining(temp.TemporaryMutationUntil,now)
  if mutationRemaining then
@@ -306,6 +309,11 @@ function S:Snapshot(player,profile)
  local abilityRewardWorkshop=E.Value(p,"BEES_6","AbilityYield",1)
  if abilityRewardWorkshop~=1 then
   source(buckets,"AbilityReward","Workshop","BEES_6",multiplierText(abilityRewardWorkshop,false),"Rewards produced while a bee ability is active.",nil)
+ end
+
+ local fortuneWorkshop=E.BranchProduct(p,"FORTUNE","LuckMultiplier",1)
+ if fortuneWorkshop~=1 then
+  source(buckets,"Luck","Workshop","Fortune branch",multiplierText(fortuneWorkshop,false),"Permanent Workshop Luck multiplier.",nil)
  end
 
  if temp.Crystal and p.WorkshopV5.Nodes.BLOOM_1 then
