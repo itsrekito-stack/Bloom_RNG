@@ -54,7 +54,7 @@ local function tempRewardBonus(temp)
  local now=os.clock()
  return ((temp.TemporaryMutationUntil or 0)>now and 1.1 or 1)
   *((temp.NeighbourUntil or 0)>now and 1.15 or 1)
-  *((temp.BlessingUntil or 0)>now and 1.05 or 1)
+  *((temp.BlessingUntil or 0)>now and (tonumber(temp.BlessingMultiplier) or 1.05) or 1)
 end
 
 function S:Init(x)
