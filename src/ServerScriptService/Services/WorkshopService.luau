@@ -17,12 +17,25 @@ function S:Point(player,key,amount)
  w.ClaimedSources[key]=true
  w.Points=w.Points+amount
  if w.Nodes.ECONOMY_4 then p.Currencies.Coins=p.Currencies.Coins+E.Value(p,"ECONOMY_4","MilestoneCoins",0) end
+ if self.X.MarkStateDirty then self.X:MarkStateDirty(player) end
  return true
 end
 
 local function hivePointKeys(profile,level)
  local season=math.max(0,math.floor(tonumber(profile.Season and profile.Season.Count) or 0))
- return "HiveSeason_"..tostring(season).."_Level_"..tostring(level),"Hive_"..tostring(season).."_"..tostring(level)
+ return "HiveSeason_"..tostring(season).."_Level_"..tostring(level),"Hive_"..tostring(season).."_"..tostring(level),season
+end
+
+local function hasHivePointSource(profile,level)
+ local key,legacy,season=hivePointKeys(profile,level)
+ local claimed=profile.WorkshopV5.ClaimedSources
+ if claimed[key] then return true,key end
+ if claimed[legacy] then return true,legacy end
+ if season==0 then
+  local old="HiveLevel_"..tostring(level)
+  if claimed[old] then return true,old end
+ end
+ return false,nil
 end
 
 function S:AwardHiveLevel(player,level)
@@ -31,8 +44,12 @@ function S:AwardHiveLevel(player,level)
  level=math.max(2,math.floor(tonumber(level) or 2))
  local points=Bloom.WorkshopPointsForHiveLevel(level)
  if points<=0 then return 0 end
- local key,legacy=hivePointKeys(p,level)
- if p.WorkshopV5.ClaimedSources[key] or p.WorkshopV5.ClaimedSources[legacy] then return 0,"OWNED" end
+ local key=hivePointKeys(p,level)
+ local claimed=hasHivePointSource(p,level)
+ if claimed then
+  p.WorkshopV5.ClaimedSources[key]=true
+  return 0,"OWNED"
+ end
  local ok,reason=self:Point(player,key,points)
  return ok and points or 0,reason
 end
@@ -44,8 +61,11 @@ function S:ReconcileHivePoints(player)
  for level=2,math.max(1,math.floor(tonumber(p.Hive.Level) or 1)) do
   local points=Bloom.WorkshopPointsForHiveLevel(level)
   if points>0 then
-   local key,legacy=hivePointKeys(p,level)
-   if not p.WorkshopV5.ClaimedSources[key] and not p.WorkshopV5.ClaimedSources[legacy] then
+   local key=hivePointKeys(p,level)
+   local claimed=hasHivePointSource(p,level)
+   if claimed then
+    p.WorkshopV5.ClaimedSources[key]=true
+   else
     local ok=self:Point(player,key,points)
     if ok then restored+=points end
    end
