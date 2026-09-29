@@ -51,9 +51,19 @@ local function effectText(effect)
  return #parts>0 and table.concat(parts,"  •  ") or "No bonus"
 end
 
+local SORT_MODES={"Rarity","Level","Name","Used"}
+local SORT_TEXT={
+ Rarity="SORT • RARITY ↓",
+ Level="SORT • LEVEL ↓",
+ Name="SORT • NAME A-Z",
+ Used="SORT • USED FIRST",
+}
+
 local function selectedState(controller)
- controller.GardenEditorState=controller.GardenEditorState or {SelectedFlowerId=nil,SelectedSlot=nil}
- return controller.GardenEditorState
+ controller.GardenEditorState=controller.GardenEditorState or {SelectedFlowerId=nil,SelectedSlot=nil,SortMode="Rarity"}
+ local state=controller.GardenEditorState
+ if not table.find(SORT_MODES,state.SortMode) then state.SortMode="Rarity" end
+ return state
 end
 
 function S.Render(controller,profile,uiState)
@@ -82,6 +92,7 @@ function S.Render(controller,profile,uiState)
  local synergyEffect=runtime:FindFirstChild("SynergyEffect",true)
  local hint=runtime:FindFirstChild("GhostHint",true)
  local remove=runtime:FindFirstChild("RemoveButton",true)
+ local sortButton=runtime:FindFirstChild("SortButton",true)
  local ghostSlot=slotRing and slotRing:FindFirstChild("Slot7")
  local ghostBadge=ghostSlot and ghostSlot:FindFirstChild("GhostBadge")
 
@@ -100,12 +111,52 @@ function S.Render(controller,profile,uiState)
   local speciesId=slot and slot.SpeciesId
   if speciesId and speciesId~="" then usedById[speciesId]=slotIndex end
  end
- table.sort(flowers,function(a,b)
-  local ar=Rarity.Rank[a.Rarity] or 0
-  local br=Rarity.Rank[b.Rarity] or 0
+ local function rarityRank(entry)
+  return Rarity.Rank[entry.Rarity] or 0
+ end
+ local function levelOf(entry)
+  return math.max(1,math.floor(tonumber(entry.Mastery and entry.Mastery.Level) or 1))
+ end
+ local function byRarityThenName(a,b)
+  local ar,br=rarityRank(a),rarityRank(b)
   if ar==br then return tostring(a.DisplayName)<tostring(b.DisplayName) end
   return ar>br
+ end
+ local sortMode=state.SortMode or "Rarity"
+ table.sort(flowers,function(a,b)
+  if sortMode=="Level" then
+   local al,bl=levelOf(a),levelOf(b)
+   if al~=bl then return al>bl end
+   return byRarityThenName(a,b)
+  elseif sortMode=="Name" then
+   return tostring(a.DisplayName):lower()<tostring(b.DisplayName):lower()
+  elseif sortMode=="Used" then
+   local au,bu=usedById[a.Id],usedById[b.Id]
+   if (au~=nil)~=(bu~=nil) then return au~=nil end
+   if au and bu and au~=bu then return au<bu end
+   return byRarityThenName(a,b)
+  end
+  return byRarityThenName(a,b)
  end)
+
+ if sortButton and sortButton:IsA("TextButton") then
+  sortButton.Text=SORT_TEXT[sortMode] or SORT_TEXT.Rarity
+  sortButton.AutoButtonColor=false
+  local sortStroke=sortButton:FindFirstChildOfClass("UIStroke")
+  sortButton.MouseEnter:Connect(function()
+   sortButton.BackgroundColor3=C.PanelHover
+   if sortStroke then sortStroke.Color=C.Blue sortStroke.Transparency=.02 end
+  end)
+  sortButton.MouseLeave:Connect(function()
+   sortButton.BackgroundColor3=C.Panel
+   if sortStroke then sortStroke.Color=C.Border sortStroke.Transparency=.18 end
+  end)
+  sortButton.Activated:Connect(function()
+   local index=table.find(SORT_MODES,state.SortMode) or 1
+   state.SortMode=SORT_MODES[index%#SORT_MODES+1]
+   controller:RenderMenu(true)
+  end)
+ end
 
  for order,entry in ipairs(flowers) do
   local card=flowerTemplate:Clone()
@@ -159,6 +210,7 @@ function S.Render(controller,profile,uiState)
    end
    local icon=button:FindFirstChild("Icon")
    local name=button:FindFirstChild("Name")
+   local rarity=button:FindFirstChild("Rarity")
    local level=button:FindFirstChild("Level")
    local lock=button:FindFirstChild("Lock")
    if icon and icon:IsA("ImageLabel") then
@@ -169,6 +221,13 @@ function S.Render(controller,profile,uiState)
    end
    if name and name:IsA("TextLabel") then
     name.Text=not open and (ghost and "GHOST SLOT" or "LOCKED") or (id and Flowers.Species[id] and Flowers.Species[id].DisplayName or "EMPTY")
+   end
+   if rarity and rarity:IsA("TextLabel") then
+    local cfg=id and Flowers.Species[id]
+    local rarityId=cfg and cfg.Rarity or nil
+    rarity.Visible=open and rarityId~=nil
+    rarity.Text=rarityId and string.upper(rarityId) or ""
+    rarity.TextColor3=rarityId and (Rarity.Colors[rarityId] or C.Muted) or C.Muted
    end
    if level and level:IsA("TextLabel") then
     local mastery=id and masteryFor(inventory,id) or {Level=1}

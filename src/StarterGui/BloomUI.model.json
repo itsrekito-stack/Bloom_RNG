@@ -149,18 +149,18 @@
               ]
             },
             {
-              "ClassName": "ImageLabel",
+              "ClassName": "ImageButton",
               "Name": "Icon",
               "Properties": {
                 "Size": {
                   "UDim2": [
                     [
                       0,
-                      22
+                      30
                     ],
                     [
                       0,
-                      22
+                      30
                     ]
                   ]
                 },
@@ -173,14 +173,17 @@
                   "UDim2": [
                     [
                       0,
-                      18
+                      14
                     ],
                     [
                       0,
-                      11
+                      16
                     ]
                   ]
-                }
+                },
+                "AutoButtonColor": false,
+                "Active": true,
+                "Selectable": true
               }
             },
             {
@@ -38518,8 +38521,8 @@
                                 "Size": {
                                   "UDim2": [
                                     [
-                                      1,
-                                      -24
+                                      0,
+                                      118
                                     ],
                                     [
                                       0,
@@ -38960,6 +38963,85 @@
                                   ]
                                 }
                               ]
+                            },
+                            {
+                              "ClassName": "TextButton",
+                              "Name": "SortButton",
+                              "Properties": {
+                                "Position": {
+                                  "UDim2": [
+                                    [
+                                      1,
+                                      -118
+                                    ],
+                                    [
+                                      0,
+                                      7
+                                    ]
+                                  ]
+                                },
+                                "Size": {
+                                  "UDim2": [
+                                    [
+                                      0,
+                                      106
+                                    ],
+                                    [
+                                      0,
+                                      24
+                                    ]
+                                  ]
+                                },
+                                "BackgroundColor3": [
+                                  0.047,
+                                  0.086,
+                                  0.133
+                                ],
+                                "BackgroundTransparency": 0.02,
+                                "BorderSizePixel": 0,
+                                "Text": "SORT • RARITY ↓",
+                                "TextColor3": [
+                                  0.65,
+                                  0.82,
+                                  1
+                                ],
+                                "TextSize": 8,
+                                "TextWrapped": false,
+                                "TextXAlignment": "Center",
+                                "TextYAlignment": "Center",
+                                "Font": "GothamBold",
+                                "AutoButtonColor": false,
+                                "Visible": true,
+                                "ZIndex": 63
+                              },
+                              "Children": [
+                                {
+                                  "ClassName": "UICorner",
+                                  "Name": "UICorner",
+                                  "Properties": {
+                                    "CornerRadius": {
+                                      "UDim": [
+                                        0,
+                                        8
+                                      ]
+                                    }
+                                  }
+                                },
+                                {
+                                  "ClassName": "UIStroke",
+                                  "Name": "UIStroke",
+                                  "Properties": {
+                                    "Color": [
+                                      0.11,
+                                      0.31,
+                                      0.48
+                                    ],
+                                    "Thickness": 1,
+                                    "Transparency": 0.18,
+                                    "ApplyStrokeMode": "Border"
+                                  }
+                                }
+                              ]
                             }
                           ]
                         },
@@ -39277,7 +39359,7 @@
                                             ],
                                             [
                                               0,
-                                              10
+                                              7
                                             ]
                                           ]
                                         },
@@ -39289,7 +39371,7 @@
                                             ],
                                             [
                                               0,
-                                              28
+                                              27
                                             ]
                                           ]
                                         },
@@ -39313,7 +39395,7 @@
                                     },
                                     {
                                       "ClassName": "TextLabel",
-                                      "Name": "Level",
+                                      "Name": "Rarity",
                                       "Properties": {
                                         "Position": {
                                           "UDim2": [
@@ -39323,7 +39405,7 @@
                                             ],
                                             [
                                               0,
-                                              39
+                                              35
                                             ]
                                           ]
                                         },
@@ -39335,7 +39417,7 @@
                                             ],
                                             [
                                               0,
-                                              18
+                                              13
                                             ]
                                           ]
                                         },
@@ -39347,7 +39429,53 @@
                                           0.72,
                                           0.79
                                         ],
-                                        "TextSize": 9,
+                                        "TextSize": 8,
+                                        "TextWrapped": false,
+                                        "TextXAlignment": "Left",
+                                        "TextYAlignment": "Center",
+                                        "Font": "GothamBold",
+                                        "Visible": false,
+                                        "ZIndex": 62
+                                      },
+                                      "Children": []
+                                    },
+                                    {
+                                      "ClassName": "TextLabel",
+                                      "Name": "Level",
+                                      "Properties": {
+                                        "Position": {
+                                          "UDim2": [
+                                            [
+                                              0,
+                                              48
+                                            ],
+                                            [
+                                              0,
+                                              49
+                                            ]
+                                          ]
+                                        },
+                                        "Size": {
+                                          "UDim2": [
+                                            [
+                                              1,
+                                              -56
+                                            ],
+                                            [
+                                              0,
+                                              13
+                                            ]
+                                          ]
+                                        },
+                                        "BackgroundTransparency": 1,
+                                        "BorderSizePixel": 0,
+                                        "Text": "",
+                                        "TextColor3": [
+                                          0.65,
+                                          0.72,
+                                          0.79
+                                        ],
+                                        "TextSize": 8,
                                         "TextWrapped": true,
                                         "TextXAlignment": "Left",
                                         "TextYAlignment": "Center",
@@ -39524,7 +39652,7 @@
                                             ],
                                             [
                                               0,
-                                              10
+                                              7
                                             ]
                                           ]
                                         },
@@ -39536,7 +39664,7 @@
                                             ],
                                             [
                                               0,
-                                              28
+                                              27
                                             ]
                                           ]
                                         },
@@ -39560,7 +39688,7 @@
                                     },
                                     {
                                       "ClassName": "TextLabel",
-                                      "Name": "Level",
+                                      "Name": "Rarity",
                                       "Properties": {
                                         "Position": {
                                           "UDim2": [
@@ -39570,7 +39698,7 @@
                                             ],
                                             [
                                               0,
-                                              39
+                                              35
                                             ]
                                           ]
                                         },
@@ -39582,7 +39710,7 @@
                                             ],
                                             [
                                               0,
-                                              18
+                                              13
                                             ]
                                           ]
                                         },
@@ -39594,7 +39722,53 @@
                                           0.72,
                                           0.79
                                         ],
-                                        "TextSize": 9,
+                                        "TextSize": 8,
+                                        "TextWrapped": false,
+                                        "TextXAlignment": "Left",
+                                        "TextYAlignment": "Center",
+                                        "Font": "GothamBold",
+                                        "Visible": false,
+                                        "ZIndex": 62
+                                      },
+                                      "Children": []
+                                    },
+                                    {
+                                      "ClassName": "TextLabel",
+                                      "Name": "Level",
+                                      "Properties": {
+                                        "Position": {
+                                          "UDim2": [
+                                            [
+                                              0,
+                                              48
+                                            ],
+                                            [
+                                              0,
+                                              49
+                                            ]
+                                          ]
+                                        },
+                                        "Size": {
+                                          "UDim2": [
+                                            [
+                                              1,
+                                              -56
+                                            ],
+                                            [
+                                              0,
+                                              13
+                                            ]
+                                          ]
+                                        },
+                                        "BackgroundTransparency": 1,
+                                        "BorderSizePixel": 0,
+                                        "Text": "",
+                                        "TextColor3": [
+                                          0.65,
+                                          0.72,
+                                          0.79
+                                        ],
+                                        "TextSize": 8,
                                         "TextWrapped": true,
                                         "TextXAlignment": "Left",
                                         "TextYAlignment": "Center",
@@ -39771,7 +39945,7 @@
                                             ],
                                             [
                                               0,
-                                              10
+                                              7
                                             ]
                                           ]
                                         },
@@ -39783,7 +39957,7 @@
                                             ],
                                             [
                                               0,
-                                              28
+                                              27
                                             ]
                                           ]
                                         },
@@ -39807,7 +39981,7 @@
                                     },
                                     {
                                       "ClassName": "TextLabel",
-                                      "Name": "Level",
+                                      "Name": "Rarity",
                                       "Properties": {
                                         "Position": {
                                           "UDim2": [
@@ -39817,7 +39991,7 @@
                                             ],
                                             [
                                               0,
-                                              39
+                                              35
                                             ]
                                           ]
                                         },
@@ -39829,7 +40003,7 @@
                                             ],
                                             [
                                               0,
-                                              18
+                                              13
                                             ]
                                           ]
                                         },
@@ -39841,7 +40015,53 @@
                                           0.72,
                                           0.79
                                         ],
-                                        "TextSize": 9,
+                                        "TextSize": 8,
+                                        "TextWrapped": false,
+                                        "TextXAlignment": "Left",
+                                        "TextYAlignment": "Center",
+                                        "Font": "GothamBold",
+                                        "Visible": false,
+                                        "ZIndex": 62
+                                      },
+                                      "Children": []
+                                    },
+                                    {
+                                      "ClassName": "TextLabel",
+                                      "Name": "Level",
+                                      "Properties": {
+                                        "Position": {
+                                          "UDim2": [
+                                            [
+                                              0,
+                                              48
+                                            ],
+                                            [
+                                              0,
+                                              49
+                                            ]
+                                          ]
+                                        },
+                                        "Size": {
+                                          "UDim2": [
+                                            [
+                                              1,
+                                              -56
+                                            ],
+                                            [
+                                              0,
+                                              13
+                                            ]
+                                          ]
+                                        },
+                                        "BackgroundTransparency": 1,
+                                        "BorderSizePixel": 0,
+                                        "Text": "",
+                                        "TextColor3": [
+                                          0.65,
+                                          0.72,
+                                          0.79
+                                        ],
+                                        "TextSize": 8,
                                         "TextWrapped": true,
                                         "TextXAlignment": "Left",
                                         "TextYAlignment": "Center",
@@ -40018,7 +40238,7 @@
                                             ],
                                             [
                                               0,
-                                              10
+                                              7
                                             ]
                                           ]
                                         },
@@ -40030,7 +40250,7 @@
                                             ],
                                             [
                                               0,
-                                              28
+                                              27
                                             ]
                                           ]
                                         },
@@ -40054,7 +40274,7 @@
                                     },
                                     {
                                       "ClassName": "TextLabel",
-                                      "Name": "Level",
+                                      "Name": "Rarity",
                                       "Properties": {
                                         "Position": {
                                           "UDim2": [
@@ -40064,7 +40284,7 @@
                                             ],
                                             [
                                               0,
-                                              39
+                                              35
                                             ]
                                           ]
                                         },
@@ -40076,7 +40296,7 @@
                                             ],
                                             [
                                               0,
-                                              18
+                                              13
                                             ]
                                           ]
                                         },
@@ -40088,7 +40308,53 @@
                                           0.72,
                                           0.79
                                         ],
-                                        "TextSize": 9,
+                                        "TextSize": 8,
+                                        "TextWrapped": false,
+                                        "TextXAlignment": "Left",
+                                        "TextYAlignment": "Center",
+                                        "Font": "GothamBold",
+                                        "Visible": false,
+                                        "ZIndex": 62
+                                      },
+                                      "Children": []
+                                    },
+                                    {
+                                      "ClassName": "TextLabel",
+                                      "Name": "Level",
+                                      "Properties": {
+                                        "Position": {
+                                          "UDim2": [
+                                            [
+                                              0,
+                                              48
+                                            ],
+                                            [
+                                              0,
+                                              49
+                                            ]
+                                          ]
+                                        },
+                                        "Size": {
+                                          "UDim2": [
+                                            [
+                                              1,
+                                              -56
+                                            ],
+                                            [
+                                              0,
+                                              13
+                                            ]
+                                          ]
+                                        },
+                                        "BackgroundTransparency": 1,
+                                        "BorderSizePixel": 0,
+                                        "Text": "",
+                                        "TextColor3": [
+                                          0.65,
+                                          0.72,
+                                          0.79
+                                        ],
+                                        "TextSize": 8,
                                         "TextWrapped": true,
                                         "TextXAlignment": "Left",
                                         "TextYAlignment": "Center",
@@ -40265,7 +40531,7 @@
                                             ],
                                             [
                                               0,
-                                              10
+                                              7
                                             ]
                                           ]
                                         },
@@ -40277,7 +40543,7 @@
                                             ],
                                             [
                                               0,
-                                              28
+                                              27
                                             ]
                                           ]
                                         },
@@ -40301,7 +40567,7 @@
                                     },
                                     {
                                       "ClassName": "TextLabel",
-                                      "Name": "Level",
+                                      "Name": "Rarity",
                                       "Properties": {
                                         "Position": {
                                           "UDim2": [
@@ -40311,7 +40577,7 @@
                                             ],
                                             [
                                               0,
-                                              39
+                                              35
                                             ]
                                           ]
                                         },
@@ -40323,7 +40589,7 @@
                                             ],
                                             [
                                               0,
-                                              18
+                                              13
                                             ]
                                           ]
                                         },
@@ -40335,7 +40601,53 @@
                                           0.72,
                                           0.79
                                         ],
-                                        "TextSize": 9,
+                                        "TextSize": 8,
+                                        "TextWrapped": false,
+                                        "TextXAlignment": "Left",
+                                        "TextYAlignment": "Center",
+                                        "Font": "GothamBold",
+                                        "Visible": false,
+                                        "ZIndex": 62
+                                      },
+                                      "Children": []
+                                    },
+                                    {
+                                      "ClassName": "TextLabel",
+                                      "Name": "Level",
+                                      "Properties": {
+                                        "Position": {
+                                          "UDim2": [
+                                            [
+                                              0,
+                                              48
+                                            ],
+                                            [
+                                              0,
+                                              49
+                                            ]
+                                          ]
+                                        },
+                                        "Size": {
+                                          "UDim2": [
+                                            [
+                                              1,
+                                              -56
+                                            ],
+                                            [
+                                              0,
+                                              13
+                                            ]
+                                          ]
+                                        },
+                                        "BackgroundTransparency": 1,
+                                        "BorderSizePixel": 0,
+                                        "Text": "",
+                                        "TextColor3": [
+                                          0.65,
+                                          0.72,
+                                          0.79
+                                        ],
+                                        "TextSize": 8,
                                         "TextWrapped": true,
                                         "TextXAlignment": "Left",
                                         "TextYAlignment": "Center",
@@ -40512,7 +40824,7 @@
                                             ],
                                             [
                                               0,
-                                              10
+                                              7
                                             ]
                                           ]
                                         },
@@ -40524,7 +40836,7 @@
                                             ],
                                             [
                                               0,
-                                              28
+                                              27
                                             ]
                                           ]
                                         },
@@ -40548,7 +40860,7 @@
                                     },
                                     {
                                       "ClassName": "TextLabel",
-                                      "Name": "Level",
+                                      "Name": "Rarity",
                                       "Properties": {
                                         "Position": {
                                           "UDim2": [
@@ -40558,7 +40870,7 @@
                                             ],
                                             [
                                               0,
-                                              39
+                                              35
                                             ]
                                           ]
                                         },
@@ -40570,7 +40882,7 @@
                                             ],
                                             [
                                               0,
-                                              18
+                                              13
                                             ]
                                           ]
                                         },
@@ -40582,7 +40894,53 @@
                                           0.72,
                                           0.79
                                         ],
-                                        "TextSize": 9,
+                                        "TextSize": 8,
+                                        "TextWrapped": false,
+                                        "TextXAlignment": "Left",
+                                        "TextYAlignment": "Center",
+                                        "Font": "GothamBold",
+                                        "Visible": false,
+                                        "ZIndex": 62
+                                      },
+                                      "Children": []
+                                    },
+                                    {
+                                      "ClassName": "TextLabel",
+                                      "Name": "Level",
+                                      "Properties": {
+                                        "Position": {
+                                          "UDim2": [
+                                            [
+                                              0,
+                                              48
+                                            ],
+                                            [
+                                              0,
+                                              49
+                                            ]
+                                          ]
+                                        },
+                                        "Size": {
+                                          "UDim2": [
+                                            [
+                                              1,
+                                              -56
+                                            ],
+                                            [
+                                              0,
+                                              13
+                                            ]
+                                          ]
+                                        },
+                                        "BackgroundTransparency": 1,
+                                        "BorderSizePixel": 0,
+                                        "Text": "",
+                                        "TextColor3": [
+                                          0.65,
+                                          0.72,
+                                          0.79
+                                        ],
+                                        "TextSize": 8,
                                         "TextWrapped": true,
                                         "TextXAlignment": "Left",
                                         "TextYAlignment": "Center",
@@ -40759,7 +41117,7 @@
                                             ],
                                             [
                                               0,
-                                              10
+                                              7
                                             ]
                                           ]
                                         },
@@ -40771,7 +41129,7 @@
                                             ],
                                             [
                                               0,
-                                              28
+                                              27
                                             ]
                                           ]
                                         },
@@ -40795,7 +41153,7 @@
                                     },
                                     {
                                       "ClassName": "TextLabel",
-                                      "Name": "Level",
+                                      "Name": "Rarity",
                                       "Properties": {
                                         "Position": {
                                           "UDim2": [
@@ -40805,7 +41163,7 @@
                                             ],
                                             [
                                               0,
-                                              39
+                                              35
                                             ]
                                           ]
                                         },
@@ -40817,7 +41175,7 @@
                                             ],
                                             [
                                               0,
-                                              18
+                                              13
                                             ]
                                           ]
                                         },
@@ -40829,7 +41187,53 @@
                                           0.72,
                                           0.79
                                         ],
-                                        "TextSize": 9,
+                                        "TextSize": 8,
+                                        "TextWrapped": false,
+                                        "TextXAlignment": "Left",
+                                        "TextYAlignment": "Center",
+                                        "Font": "GothamBold",
+                                        "Visible": false,
+                                        "ZIndex": 62
+                                      },
+                                      "Children": []
+                                    },
+                                    {
+                                      "ClassName": "TextLabel",
+                                      "Name": "Level",
+                                      "Properties": {
+                                        "Position": {
+                                          "UDim2": [
+                                            [
+                                              0,
+                                              48
+                                            ],
+                                            [
+                                              0,
+                                              49
+                                            ]
+                                          ]
+                                        },
+                                        "Size": {
+                                          "UDim2": [
+                                            [
+                                              1,
+                                              -56
+                                            ],
+                                            [
+                                              0,
+                                              13
+                                            ]
+                                          ]
+                                        },
+                                        "BackgroundTransparency": 1,
+                                        "BorderSizePixel": 0,
+                                        "Text": "",
+                                        "TextColor3": [
+                                          0.65,
+                                          0.72,
+                                          0.79
+                                        ],
+                                        "TextSize": 8,
                                         "TextWrapped": true,
                                         "TextXAlignment": "Left",
                                         "TextYAlignment": "Center",

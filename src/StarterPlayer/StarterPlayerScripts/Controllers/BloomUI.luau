@@ -29,7 +29,7 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="quests-no-trials-content-v15-2026-09-29"
+local CLIENT_BUILD="hive-garden-qol-v16-2026-09-29"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
@@ -1413,11 +1413,15 @@ function UI:RenderQuestTracker()
  local journeyRow=self.QuestRows[2]
  journeyRow.Visible=not journeyDone
  if not journeyDone then
+  local questState=ui.Quests or {}
+  local questItem=questState.Items and questState.Items[journeyStep] or nil
+  local current=math.max(0,tonumber(questItem and questItem.Current) or 0)
+  local target=math.max(1,tonumber(questItem and questItem.Target) or 1)
   setRow(
    journeyRow,
    "QUEST  •  "..tostring(math.min(journeyStep,journeyCount)).." / "..tostring(journeyCount),
-   self:JourneyText(journeyStep),
-   tostring(math.min(journeyStep,journeyCount)).." / "..tostring(journeyCount),
+   tostring(questItem and questItem.Description or self:JourneyText(journeyStep)),
+   compact(current).." / "..compact(target),
    C.Blue
   )
  end
@@ -1484,12 +1488,31 @@ function UI:Render()
   self.ObjectiveTitle.Text="TUTORIAL  •  "..p.Tutorial.Step.."/"..#T.Steps
   self.ObjectiveText.Text=step.Text
   self.ObjectiveProgressFill.Size=UDim2.fromScale(math.clamp((p.Tutorial.Step-1)/#T.Steps,0,1),1)
+  self.ObjectiveProgressFill.BackgroundColor3=C.Blue
+  if self.ObjectiveAccent then self.ObjectiveAccent.BackgroundColor3=C.Blue end
+  if self.ObjectiveIcon then
+   self.ObjectiveIcon.Image=self.ObjectiveDefaultIcon or self.ObjectiveIcon.Image
+   self.ObjectiveIcon.ImageColor3=C.White
+  end
   self.ObjectiveProgress.Visible=true
  else
-  self.ObjectiveTitle.Text="QUEST  •  "..tostring(math.min(tonumber(p.Quests.JourneyStep) or 1,self:JourneyCount())).." / "..tostring(self:JourneyCount())
-  self.ObjectiveText.Text=self:JourneyText(p.Quests.JourneyStep)
-  self.ObjectiveProgress.Visible=false
-  if self.JourneyGuideController then self.JourneyGuideController:RenderObjective() end
+  local hive=self.State.UI and self.State.UI.Hive or {}
+  local level=math.max(1,math.floor(tonumber(hive.Level) or tonumber(p.Hive.Level) or 1))
+  local nextLevel=math.max(level+1,math.floor(tonumber(hive.NextLevel) or level+1))
+  self.ObjectiveTitle.Text="HIVE  •  LEVEL "..tostring(level).."  →  "..tostring(nextLevel)
+  if hive.QuestReady==false then
+   self.ObjectiveText.Text=tostring(hive.QuestText or "Complete the next Hive quest")
+  else
+   self.ObjectiveText.Text=compact(hive.Honey).." / "..compact(hive.HoneyCost).." Honey  •  "..compact(hive.Coins).." / "..compact(hive.CoinCost).." Coins"
+  end
+  self.ObjectiveProgressFill.Size=UDim2.fromScale(math.clamp(tonumber(hive.Progress) or 0,0,1),1)
+  self.ObjectiveProgressFill.BackgroundColor3=C.Gold
+  if self.ObjectiveAccent then self.ObjectiveAccent.BackgroundColor3=C.Gold end
+  if self.ObjectiveIcon then
+   self.ObjectiveIcon.Image=Icons.Get("System","Hive")
+   self.ObjectiveIcon.ImageColor3=C.White
+  end
+  self.ObjectiveProgress.Visible=true
  end
 
  self.CurrencyRows.Coins.Value.Text=compact(p.Currencies.Coins)
@@ -1969,6 +1992,25 @@ function UI:BindStaticUI()
  self.ObjectiveText=self.ObjectiveCard:WaitForChild("ObjectiveText")
  self.ObjectiveProgress=self.ObjectiveCard:WaitForChild("ObjectiveProgress")
  self.ObjectiveProgressFill=self.ObjectiveProgress:WaitForChild("ObjectiveProgressFill")
+ self.ObjectiveAccent=self.ObjectiveCard:FindFirstChild("Accent")
+ self.ObjectiveIcon=self.ObjectiveCard:WaitForChild("Icon")
+ if not self.ObjectiveIcon:IsA("ImageButton") then error("[BloomUI] ObjectiveCard/Icon must be an authored ImageButton") end
+ self.ObjectiveDefaultIcon=self.ObjectiveIcon.Image
+ self.ObjectiveIcon.AutoButtonColor=false
+ self.ObjectiveIcon.Activated:Connect(function()
+  local p=self.State and self.State.Profile
+  if not p or T.Steps[p.Tutorial.Step] then return end
+  self:OpenDockMenu("Hive")
+ end)
+ self.ObjectiveIcon.MouseEnter:Connect(function()
+  local p=self.State and self.State.Profile
+  if p and not T.Steps[p.Tutorial.Step] then
+   TweenService:Create(self.ObjectiveIcon,TweenInfo.new(Theme.Motion.Fast),{ImageColor3=C.Gold}):Play()
+  end
+ end)
+ self.ObjectiveIcon.MouseLeave:Connect(function()
+  TweenService:Create(self.ObjectiveIcon,TweenInfo.new(Theme.Motion.Fast),{ImageColor3=C.White}):Play()
+ end)
 
  self.QuestTracker=root:WaitForChild("QuestTrackerHUD")
  self.QuestRows={}
@@ -2153,6 +2195,8 @@ local function validateBloomGui(gui)
  local root=gui:FindFirstChild("SafeRoot")
  if not root or not root:IsA("GuiObject") then return false,{"SafeRoot"} end
  local missing={}
+ local objectiveIcon=root:FindFirstChild("ObjectiveCard") and root.ObjectiveCard:FindFirstChild("Icon")
+ if not objectiveIcon or not objectiveIcon:IsA("ImageButton") then table.insert(missing,"ObjectiveCard/Icon:ImageButton") end
  for _,name in ipairs(REQUIRED_AUTHORED_UI) do
   if not root:FindFirstChild(name) then table.insert(missing,name) end
  end
@@ -2181,7 +2225,7 @@ local function validateBloomGui(gui)
    if not stateKits or not stateKits:FindFirstChild("GardenKit") then
     table.insert(missing,"MainPanel/StateKits/GardenKit")
    else
-    for _,name in ipairs({"UsedBadge","GhostBadge"}) do
+    for _,name in ipairs({"UsedBadge","GhostBadge","SortButton","Rarity"}) do
      if not stateKits.GardenKit:FindFirstChild(name,true) then table.insert(missing,"MainPanel/StateKits/GardenKit/"..name) end
     end
    end
