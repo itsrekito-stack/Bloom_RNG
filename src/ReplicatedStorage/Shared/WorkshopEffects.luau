@@ -14,8 +14,30 @@ function S.Feature(p,id,feature)
  local node=Config[id]
  return node~=nil and node.Feature==feature
 end
--- Backward-compatible aggregate helper. Prefer Value() because different
--- effect families have different aggregation semantics.
+function S.BranchProduct(p,branch,key,default)
+ local result=tonumber(default) or 1
+ for i=1,6 do
+  local id=tostring(branch).."_"..i
+  if S.Owned(p,id) then
+   local node=Config[id]
+   local value=node and tonumber(node[key])
+   if value then result*=value end
+  end
+ end
+ return result
+end
+function S.BranchSum(p,branch,key,default)
+ local result=tonumber(default) or 0
+ for i=1,6 do
+  local id=tostring(branch).."_"..i
+  if S.Owned(p,id) then
+   local node=Config[id]
+   local value=node and tonumber(node[key])
+   if value then result+=value end
+  end
+ end
+ return result
+end
 function S.Get(p,key,default)
  local result=default or 0
  for id,owned in pairs(p.WorkshopV5.Nodes) do
