@@ -28,7 +28,7 @@ function S.Reconcile(p) if type(p)~="table" then return false,"Profile must be a
 local function prepareProfile(p)
  local ok,err=S.Validate(p) if not ok then return false,err end
  if type(p.SchemaVersion)=="number" and p.SchemaVersion>C.SchemaVersion then return false,"FUTURE_SCHEMA" end
- local n=U.Copy(p) local migrate=not(n.Migrations and n.Migrations.BloomReworkV1) local visionMigrate=not(n.Migrations and n.Migrations.GameVisionV1) local journeyMigrate=not(n.Migrations and n.Migrations.JourneyNoTrialV1) local trialsMigrate=not(n.Migrations and n.Migrations.TrialsRemovedV1)
+ local n=U.Copy(p) local migrate=not(n.Migrations and n.Migrations.BloomReworkV1) local visionMigrate=not(n.Migrations and n.Migrations.GameVisionV1) local journeyMigrate=not(n.Migrations and n.Migrations.JourneyNoTrialV1) local trialsCleanup=not(n.Migrations and n.Migrations.TrialsRuntimeCleanupV2)
  -- Do not seed defaults into a returning player's empty garden or add starter inventory twice.
  local savedSlots=type(n.Garden)=="table" and type(n.Garden.Slots)=="table" and U.Copy(n.Garden.Slots)
  local savedCopies=type(n.FlowerCollection)=="table" and type(n.FlowerCollection.OwnedSeedCopies)=="table" and U.Copy(n.FlowerCollection.OwnedSeedCopies)
@@ -42,10 +42,12 @@ local function prepareProfile(p)
  reconcile(n,Default)
  if savedSlots then n.Garden.Slots=savedSlots end
  if savedCopies then n.FlowerCollection.OwnedSeedCopies=savedCopies end
- if trialsMigrate then
-  if n.Quests and n.Quests.Trials~=nil then Domain.Archive(n,"TrialsRemovedV1","CompletedTrials",U.Copy(n.Quests.Trials)) n.Quests.Trials=nil end
-  if n.Tutorial and n.Tutorial.FeatureUnlocks and n.Tutorial.FeatureUnlocks.Trials~=nil then Domain.Archive(n,"TrialsRemovedV1","FeatureUnlock",n.Tutorial.FeatureUnlocks.Trials) n.Tutorial.FeatureUnlocks.Trials=nil end
+ if trialsCleanup then
+  if n.Quests and n.Quests.Trials~=nil then Domain.Archive(n,"TrialsRuntimeCleanupV2","CompletedTrials",U.Copy(n.Quests.Trials)) n.Quests.Trials=nil end
+  if n.Tutorial and n.Tutorial.FeatureUnlocks and n.Tutorial.FeatureUnlocks.Trials~=nil then Domain.Archive(n,"TrialsRuntimeCleanupV2","FeatureUnlock",n.Tutorial.FeatureUnlocks.Trials) n.Tutorial.FeatureUnlocks.Trials=nil end
+  if n.Season and n.Season.CompletedGoals~=nil then Domain.Archive(n,"TrialsRuntimeCleanupV2","SeasonCompletedGoals",U.Copy(n.Season.CompletedGoals)) n.Season.CompletedGoals=nil end
   n.Migrations.TrialsRemovedV1=true
+  n.Migrations.TrialsRuntimeCleanupV2=true
  end
  if migrate then
   local legacyCurrencies=type(p.Currencies)=="table" and p.Currencies or {}
