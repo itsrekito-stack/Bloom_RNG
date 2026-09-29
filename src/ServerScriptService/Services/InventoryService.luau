@@ -151,15 +151,16 @@ function S:EquipTraitSynergy(player,traitId)
  end)
  for _,beeId in ipairs(fillers) do if #slots>=capacity then break end slots[#slots+1]=beeId end
 
+ local state
+ for _,entry in ipairs(B.GetTraitState(slots)) do if entry.Id==traitId then state=entry break end end
+ if not state or state.Tier<1 then return false,"SYNERGY_UNAVAILABLE" end
+
  table.clear(p.Pollinators.EquippedBeeSlots)
  for i,beeId in ipairs(slots) do p.Pollinators.EquippedBeeSlots[i]=beeId end
  self.X.PollinatorService:Remove(player)
  self.X.GardenSynergyService:Recalculate(player)
  self.X:Emit(player,"EquipBee",1)
  self.X:Emit(player,"Trait",1)
- local state
- for _,entry in ipairs(B.GetTraitState(p.Pollinators.EquippedBeeSlots)) do if entry.Id==traitId then state=entry break end end
- if not state or state.Tier<1 then return false,"SYNERGY_UNAVAILABLE" end
  self.X:Send(player,"Message",tostring(trait.Name).." synergy equipped • Tier "..tostring(state.Tier))
  return true
 end
