@@ -44,3 +44,6 @@ assert 'math.sin(now*BOB_SPEED+seed)*BOB_AMOUNT' in bees
 assert 'animateWings(item,now)' in bees
 assert 'string.find(lower,"wing",1,true)' in bees
 assert 'TweenService' not in bees and 'Tween:Create' not in bees
+
+assert 'ScaleToMaxDimension(template,2.1)' in bees
+assert 'spreadOffset(index,.58)' in bees
