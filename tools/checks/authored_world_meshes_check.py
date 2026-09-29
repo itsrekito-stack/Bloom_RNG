@@ -23,6 +23,10 @@ assert 'GardenCollider' in garden
 assert 'Assets.Clone("Bee")' in bees
 assert 'BloomFallbackVisual' in assets
 assert 'SurfaceAppearance' in assets
+assert 'safeContentProperty' in assets
+assert 'part:FindFirstChildOfClass("SurfaceAppearance") then return true' in assets
+for forbidden in (".ColorMap", ".NormalMap", ".RoughnessMap", ".MetalnessMap"):
+    assert forbidden not in assets, f"server mesh scan must not read capability-protected SurfaceAppearance property {forbidden}"
 
 print("authored world mesh integration: PASS")
 print("Workspace mesh templates are captured safely, cloned into runtime visuals, and missing textures receive a material/color fallback.")
