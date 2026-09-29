@@ -44,7 +44,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://93439308097157",
             "Size": [
@@ -65,7 +65,17 @@
               0,
               0,
               -1
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         },
         {
@@ -75,7 +85,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://72906636471163",
             "Size": [
@@ -96,7 +106,17 @@
               0,
               0,
               -1
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         }
       ]
@@ -143,7 +163,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://93439308097157",
             "Size": [
@@ -164,7 +184,17 @@
               0.707107,
               0,
               -0.707107
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         },
         {
@@ -174,7 +204,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://72906636471163",
             "Size": [
@@ -195,7 +225,17 @@
               0.707107,
               0,
               -0.707107
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         }
       ]
@@ -242,7 +282,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://93439308097157",
             "Size": [
@@ -263,7 +303,17 @@
               1,
               0,
               0
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         },
         {
@@ -273,7 +323,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://72906636471163",
             "Size": [
@@ -294,7 +344,17 @@
               1,
               0,
               0
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         }
       ]
@@ -341,7 +401,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://93439308097157",
             "Size": [
@@ -362,7 +422,17 @@
               0.707107,
               0,
               0.707107
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         },
         {
@@ -372,7 +442,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://72906636471163",
             "Size": [
@@ -393,7 +463,17 @@
               0.707107,
               0,
               0.707107
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         }
       ]
@@ -440,7 +520,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://93439308097157",
             "Size": [
@@ -461,7 +541,17 @@
               0,
               0,
               1
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         },
         {
@@ -471,7 +561,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://72906636471163",
             "Size": [
@@ -492,7 +582,17 @@
               0,
               0,
               1
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         }
       ]
@@ -539,7 +639,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://93439308097157",
             "Size": [
@@ -560,7 +660,17 @@
               -0.707107,
               0,
               0.707107
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         },
         {
@@ -570,7 +680,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://72906636471163",
             "Size": [
@@ -591,7 +701,17 @@
               -0.707107,
               0,
               0.707107
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         }
       ]
@@ -638,7 +758,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://93439308097157",
             "Size": [
@@ -659,7 +779,17 @@
               -1,
               0,
               0
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         },
         {
@@ -669,7 +799,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://72906636471163",
             "Size": [
@@ -690,7 +820,17 @@
               -1,
               0,
               0
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         }
       ]
@@ -737,7 +877,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://93439308097157",
             "Size": [
@@ -758,7 +898,17 @@
               -0.707107,
               0,
               -0.707107
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         },
         {
@@ -768,7 +918,7 @@
             "Anchored": true,
             "CanCollide": false,
             "CanTouch": false,
-            "CanQuery": false,
+            "CanQuery": true,
             "CastShadow": true,
             "MeshId": "rbxassetid://72906636471163",
             "Size": [
@@ -789,7 +939,17 @@
               -0.707107,
               0,
               -0.707107
-            ]
+            ],
+            "Transparency": 0,
+            "DoubleSided": true,
+            "Color": [
+              1,
+              1,
+              1
+            ],
+            "Material": "SmoothPlastic",
+            "Reflectance": 0,
+            "RenderFidelity": "Precise"
           }
         }
       ]
