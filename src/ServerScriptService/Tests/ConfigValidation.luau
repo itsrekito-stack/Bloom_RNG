@@ -6,6 +6,7 @@ local R=require(RS.Config.RarityConfig)
 local W=require(RS.Config.WorkshopConfig)
 local WE=require(RS.Config.WorkshopEffectsConfig)
 local G=require(RS.Config.GardenSynergyConfig)
+local Default=require(game:GetService("ServerScriptService").Data.DefaultProfile)
 local S={}
 
 local function count(map)
@@ -15,6 +16,8 @@ local function count(map)
 end
 
 function S.Run()
+ assert(RS.Config:FindFirstChild("BuildTrialConfig")==nil,"Retired Trials config must stay removed")
+ assert(Default.Quests.Trials==nil and Default.Season.CompletedGoals==nil,"Retired Trials state must not be seeded")
  local seen={} for _,id in ipairs(R.Order) do assert(not seen[id],"Duplicate rarity") seen[id]=true end
 
  assert(count(F.Species)==27,"Release must contain 27 Flowers")
