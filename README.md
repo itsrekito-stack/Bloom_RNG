@@ -141,6 +141,18 @@ require(game.ServerScriptService.Tests.SmokeTests).Run()
 
 See [FINAL_QA_REPORT.md](docs/FINAL_QA_REPORT.md) for the current release blockers and [DEFINITION_OF_DONE.md](docs/DEFINITION_OF_DONE.md) for the full acceptance matrix.
 
+## 🧭 RoFlow
+
+RoFlow is now a **standalone repository/application**: `itsrekito-stack/RoFlow`.
+
+This game repository only owns its project-specific contract:
+
+- `roflow.project.json` — stable project ID, build output, RuntimeProbe/release settings and UI Studio states.
+- `roflow/planner-defaults.json` — Bloom RNG's own Planner goals/tasks.
+- `.roflow/` — local ignored runtime state such as checked tasks, task history and backups.
+
+Switching to another project in RoFlow does not reuse this project's Planner, UI state, backups or RuntimeProbe configuration.
+
 ## 📁 Repository map
 
 ```text
@@ -152,9 +164,9 @@ Bloom_RNG/
 │  ├─ StarterPlayer/         client controllers and presentation
 │  └─ Workspace/             authored world source
 ├─ tools/
-│  ├─ checks/                deterministic/static QA
-│  ├─ bloom-ui-editor/       Bloom UI Studio tooling
-│  └─ roflow/                project-driven planner / QA tooling
+│  └─ checks/                deterministic/static gameplay QA
+├─ roflow/                   this project's RoFlow planner defaults
+├─ roflow.project.json       project-scoped RoFlow contract
 ├─ tests/                    persistence and gameplay harnesses
 ├─ docs/                     audits, phase reports and release docs
 └─ default.project.json      Rojo project
