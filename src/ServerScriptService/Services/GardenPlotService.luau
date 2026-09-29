@@ -8,6 +8,9 @@ local Assets=require(RS.Shared.AuthoredMeshTemplates)
 
 local S={Plots={},Used={},EditorSessions={}}
 local FLOWER_SCALE_CAP=.55
+local HIVE_INSET=Vector3.new(-2.2,0,0)
+local BENCH_RADIUS=15.7
+local BENCH_ANGLE=math.rad(-135)
 
 local function horizontalCylinder(part,material)
  part.Shape=Enum.PartType.Cylinder
@@ -58,7 +61,7 @@ end
 
 function S:HivePosition(player)
  local plot=self.Plots[player]
- return plot and plot.Origin+G.Layout.HiveOffset
+ return plot and plot.Origin+G.Layout.HiveOffset+HIVE_INSET
 end
 
 function S:HivePromptText(p)
@@ -132,6 +135,7 @@ function S:Build(player)
   collider.CanQuery=false
 
   local gardenVisual=usableVisual("Garden",m,"GardenVisual",32.5,origin,origin.Y+.06,true)
+  plot.HasAuthoredGarden=gardenVisual~=nil
   if not gardenVisual then
    local ground=self.X:Part(m,"Ground",origin-Vector3.new(0,.5,0),Vector3.new(1,33,33),Color3.fromRGB(85,145,80),true)
    horizontalCylinder(ground,Enum.Material.Grass)
@@ -158,8 +162,13 @@ function S:Build(player)
    entrance.CanQuery=false
   end
 
-  local benchPosition=origin+Vector3.new(-12.5,0,-10.5)
-  usableVisual("Bench",m,"GardenBench",6.2,benchPosition,origin.Y+.04,false)
+  local benchPosition=origin+Vector3.new(
+   math.cos(BENCH_ANGLE)*BENCH_RADIUS,
+   0,
+   math.sin(BENCH_ANGLE)*BENCH_RADIUS
+  )
+  local bench=usableVisual("Bench",m,"GardenBench",5.8,benchPosition,origin.Y+.04,false)
+  if bench then Assets.FaceAt(bench,origin) end
 
   self.X:Prompt(hive,self:HivePromptText(p),function(who)
    if who==player then
@@ -180,25 +189,35 @@ function S:Build(player)
  for i=1,C.MaxFlowerSlots do
   local pos=self:Position(player,i)
   local unlocked=i<=p.Garden.UnlockedSlots
+  local slot=p.Garden.Slots[i]
+  local occupied=unlocked and slot and slot.SpeciesId~=nil and slot.SpeciesId~=""
+  local ghost=i==C.MaxFlowerSlots and not unlocked
+  local authored=plot.HasAuthoredGarden==true
+  local diameter=authored and 2.9 or 3.6
   local pad=self.X:Part(
    content,
    "Slot_"..i,
    pos-Vector3.new(0,.015,0),
-   Vector3.new(.03,3.6,3.6),
-   unlocked and Color3.fromRGB(140,101,65) or Color3.fromRGB(72,70,68),
+   Vector3.new(.03,diameter,diameter),
+   unlocked and Color3.fromRGB(123,88,61) or Color3.fromRGB(72,70,68),
    false
   )
-  local ghost=i==C.MaxFlowerSlots and not unlocked
-  horizontalCylinder(pad,unlocked and Enum.Material.Ground or (ghost and Enum.Material.ForceField or Enum.Material.Slate))
-  pad.Transparency=ghost and .62 or 0
-  if ghost then pad.Color=Color3.fromRGB(80,190,235) end
+  horizontalCylinder(pad,ghost and Enum.Material.ForceField or (unlocked and Enum.Material.Ground or Enum.Material.Slate))
+  if authored then
+   pad.Transparency=ghost and .62 or (unlocked and (occupied and .92 or .80) or 1)
+   if ghost then pad.Color=Color3.fromRGB(80,190,235)
+   elseif unlocked then pad.Color=Color3.fromRGB(116,80,55) end
+   pad.CastShadow=false
+  else
+   pad.Transparency=ghost and .62 or 0
+   if ghost then pad.Color=Color3.fromRGB(80,190,235) end
+  end
   pad.CanQuery=unlocked
   pad:SetAttribute("OwnerUserId",player.UserId)
   pad:SetAttribute("SlotId",i)
   pad:SetAttribute("GhostSlot",ghost)
 
   if unlocked then
-   local slot=p.Garden.Slots[i]
    local f=slot and F.Species[slot.SpeciesId]
    if f then
     local growth=f.GrowthProfile or {}

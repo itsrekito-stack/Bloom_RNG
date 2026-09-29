@@ -11,6 +11,7 @@ bees=read("src/ReplicatedStorage/Config/BeesConfig.luau")
 stats=read("src/ServerScriptService/Services/StatsService.luau")
 poll=read("src/ServerScriptService/Services/PollinatorService.luau")
 inventory=read("src/ServerScriptService/Services/InventoryService.luau")
+client=read("src/StarterPlayer/StarterPlayerScripts/Controllers/PollinatorController.luau")
 
 if "PlayerXPMultiplier" in bees:
     raise AssertionError("bee config still promises disconnected Player XP")
@@ -79,3 +80,17 @@ for field in [
 
 print("bee runtime contract: PASS")
 print("Traits, active abilities, special ticks/bursts and equipment state are connected to server runtime.")
+
+
+# Client presentation: orientation follows the route, movement is continuous, and
+# equipped Bees are visually separated without changing server-authoritative targets.
+need(client,'local BEE_FORWARD_FIX=CFrame.Angles(0,math.rad(90),0)',"authored Bee forward-axis correction")
+need(client,'RunService.RenderStepped:Connect',"per-frame Bee flight animation")
+need(client,'CFrame.lookAt(position,position+direction,Vector3.yAxis)',"Bee faces travel direction")
+need(client,'estimatedPhase(frame,packet.ReceivedAt,now)',"network phase is interpolated locally")
+need(client,'spreadOffset(index,1.75)',"Hive departure spacing")
+need(client,'math.sin(now*BOB_SPEED+seed)*BOB_AMOUNT',"flight bob animation")
+need(client,'animateWings(item,now)',"optional authored wing animation")
+need(client,'string.find(lower,"wing",1,true)',"wing discovery")
+if 'TweenService' in client or 'Tween:Create' in client:
+    raise AssertionError("Bee flight must not return to one-second position tweens")

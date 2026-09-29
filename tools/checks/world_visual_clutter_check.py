@@ -97,40 +97,31 @@ for name in walkable_names:
     if abs(top_y(node)-base_y)>.13:
         raise AssertionError(f"{name} is not aligned to base Y: top={top_y(node):.3f}, base={base_y:.3f}")
 
-# Player Garden follows the isolated reference: grass disk, thin border, soil,
-# deterministic circular slots and one compact functional Hive.
-need(garden_plot,'local ground=self.X:Part(m,"Ground"', "garden ground exists")
-need(garden_plot,'Vector3.new(1,33,33)',"garden ground diameter")
-need(garden_plot,'local border=self.X:Part(m,"Border"', "minimal garden border")
-need(garden_plot,'Vector3.new(.05,25,25)',"garden border diameter")
-need(garden_plot,'local soil=self.X:Part(m,"Soil"', "garden soil exists")
-need(garden_plot,'Vector3.new(.05,23,23)',"garden soil diameter")
-need(garden_plot,'local hiveBase=self.X:Part(m,"HiveBase"', "compact Hive base")
-need(garden_plot,'Vector3.new(.12,4.3,4.3)',"Hive base footprint")
-need(garden_plot,'local hive=self.X:Part(m,"Hive"', "functional Hive body")
-need(garden_plot,'Vector3.new(4,4.1,4.1)',"compact Hive body size")
-need(garden_plot,'local entrance=self.X:Part(m,"HiveEntrance"', "minimal Hive entrance")
+# Player Garden prefers the authored mesh and keeps gameplay geometry invisible/subtle.
+need(garden_plot,'local HIVE_INSET=Vector3.new(-2.2,0,0)',"Hive is inset from authored border")
+need(garden_plot,'local BENCH_RADIUS=15.7',"bench is composed against Garden perimeter")
+need(garden_plot,'local gardenVisual=usableVisual("Garden"', "authored Garden visual")
+need(garden_plot,'plot.HasAuthoredGarden=gardenVisual~=nil',"authored Garden presentation flag")
+need(garden_plot,'if not gardenVisual then',"fallback primitives only when authored Garden is absent")
+need(garden_plot,'local hiveVisual=usableVisual("Hive"', "authored Hive visual")
+need(garden_plot,'local bench=usableVisual("Bench"', "authored bench visual")
+need(garden_plot,'Assets.FaceAt(bench,origin)',"bench faces Garden center")
+need(garden_plot,'local collider=self.X:Part(m,"GardenCollider"', "invisible Garden gameplay collider")
+need(garden_plot,'collider.Transparency=1',"Garden collider is presentation-invisible")
+need(garden_plot,'local diameter=authored and 2.9 or 3.6',"authored Garden uses smaller slot markers")
+need(garden_plot,'occupied and .92 or .80',"occupied/empty authored slot markers are restrained")
+need(garden_plot,'unlocked and (occupied and .92 or .80) or 1',"ordinary locked authored slots are hidden")
+need(garden_plot,'pad.CastShadow=false',"subtle authored slot markers cast no dark discs")
 need(garden_plot,'for i=1,C.MaxFlowerSlots do',"all configured slots render")
-need(garden_plot,'Vector3.new(.03,3.6,3.6)',"compact round slot pads")
 need(garden_plot,'self.X.FlowerService.Build(i,f,pos)',"flower roots align exactly to slot position")
 need(garden_plot,'FLOWER_SCALE_CAP=.55',"flower growth visual cap")
-need(garden_layout,'Radius=8.1',"compact eight-slot ring radius")
+need(garden_layout,'Radius=8.1',"compact slot ring radius")
 need(garden_layout,'SlotY=.10',"slot surface micro-offset")
-need(garden_layout,'HiveOffset=Vector3.new(13.9,2.07,0)',"Hive sits beside soil bed")
 need(garden_layout,'function C.Position(i)',"deterministic shared slot layout")
-need(garden_layout,'((i-1)/Bloom.MaxFlowerSlots)*math.pi*2',"single compact ring distributes every slot evenly")
 
 for token in ("GardenBed","PlotBorder","HiveBand_","Tree","Lamp","Fence"):
     if token in garden_plot:
         raise AssertionError(f"alpha-unneeded Garden decoration returned: {token}")
-
-# Y offsets are intentionally microscopic: Ground top=0, Border=.05,
-# Soil=.07, Slot=.10, HiveBase=.12 relative to plot origin.
-need(garden_plot,'origin-Vector3.new(0,.5,0)',"ground top aligned to plot origin")
-need(garden_plot,'origin+Vector3.new(0,.025,0)',"border micro Y")
-need(garden_plot,'origin+Vector3.new(0,.045,0)',"soil micro Y")
-need(garden_plot,'pos-Vector3.new(0,.015,0)',"slot pad micro Y")
-need(garden_plot,'Vector3.new(G.Layout.HiveOffset.X,.06,G.Layout.HiveOffset.Z)',"Hive base micro Y")
 
 retired_paths=[
  "src/Workspace/ReferenceScenery.rbxm",

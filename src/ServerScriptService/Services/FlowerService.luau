@@ -1,5 +1,6 @@
 local RS=game:GetService("ReplicatedStorage")
 local Theme=require(RS.Config.UIThemeConfig)
+local Rarity=require(RS.Config.RarityConfig)
 local UIColors=Theme.Colors
 
 local function part(parent: Instance, name: string, size: Vector3, color: Color3, shape: Enum.PartType?, material: Enum.Material?, transparency: number?): Part
@@ -46,7 +47,7 @@ local function roundedBillboard(parent: BasePart, name: string, size: UDim2, stu
 end
 
 local function stem(parent: Model, pos: Vector3, h: number, color: Color3): Part
-    local x = part(parent, "Stem", Vector3.new(h, .34, .34), color, Enum.PartType.Cylinder)
+    local x = part(parent, "Stem", Vector3.new(h, .38, .38), color, Enum.PartType.Cylinder)
     x.CanCollide = false
     x.CFrame = CFrame.new(pos + Vector3.new(0, h * .5, 0)) * CFrame.Angles(0, 0, math.rad(90))
     return x
@@ -136,6 +137,29 @@ local function makeFlowerModel(slotId: number, species: any, position: Vector3):
         end
     else
         for i = 1, 6 do petal(m, "Petal"..i, center, i / 6 * math.pi * 2, .52, Vector3.new(.42, .16, .9), species.Color, 18) end
+    end
+
+    local rarityRank=Rarity.Rank[species.Rarity] or 1
+    if rarityRank>=4 then
+        local highlight=Instance.new("Highlight")
+        highlight.Name="RarityOutline"
+        highlight.Adornee=m
+        highlight.FillTransparency=1
+        highlight.OutlineColor=species.AccentColor
+        highlight.OutlineTransparency=rarityRank>=6 and .24 or (rarityRank>=5 and .36 or .52)
+        highlight.DepthMode=Enum.HighlightDepthMode.Occluded
+        highlight.Parent=m
+    end
+    if rarityRank>=5 then
+        bloom.Material=Enum.Material.Neon
+        bloom.CastShadow=false
+        local light=Instance.new("PointLight")
+        light.Name="RarityGlow"
+        light.Color=species.AccentColor
+        light.Brightness=rarityRank>=6 and .65 or .42
+        light.Range=rarityRank>=6 and 6 or 4.5
+        light.Shadows=false
+        light.Parent=bloom
     end
 
     local info = Instance.new("BillboardGui")

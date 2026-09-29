@@ -168,6 +168,16 @@ function A.PlaceBottom(root,position,bottomY)
  return pivot(root,p+(desired-cf.Position))
 end
 
+function A.FaceAt(root,target,yawOffset)
+ local p=currentPivot(root)
+ if not p then return false end
+ local position=p.Position
+ local flatTarget=Vector3.new(target.X,position.Y,target.Z)
+ if (flatTarget-position).Magnitude<.001 then return false end
+ local cf=CFrame.lookAt(position,flatTarget)*CFrame.Angles(0,tonumber(yawOffset) or 0,0)
+ return pivot(root,cf)
+end
+
 local function candidateFor(key,instance)
  if not (instance:IsA("BasePart") or instance:IsA("Model")) then return false end
  if key=="Garden" and instance:FindFirstChild("GardenCenter",true) then return false end

@@ -23,6 +23,7 @@ assert 'GardenCollider' in garden
 assert 'Assets.Clone("Bee")' in bees
 assert 'BloomFallbackVisual' in assets
 assert 'SurfaceAppearance' in assets
+assert 'function A.FaceAt(root,target,yawOffset)' in assets
 assert 'safeContentProperty' in assets
 assert 'part:FindFirstChildOfClass("SurfaceAppearance") then return true' in assets
 for forbidden in (".ColorMap", ".NormalMap", ".RoughnessMap", ".MetalnessMap"):
