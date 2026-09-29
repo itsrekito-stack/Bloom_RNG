@@ -1,7 +1,7 @@
 -- Release/content contract. Gameplay configs remain authoritative.
 return {
- Version=2,
- ReleaseId="BloomRNG-v1-content-expansion",
+ Version=3,
+ ReleaseId="BloomRNG-v1-workshop-expansion",
  LegacyFruitsShipping=false,
  FlowerIconPolicy="DedicatedAssetOrSystemFlowerFallback",
  RarityOrder={"Common","Uncommon","Rare","Epic","Legendary","Mythic","Celestial"},
@@ -37,6 +37,6 @@ return {
  },
  Locations={},
  Activities={"PollenSpark","NectarBud","DewDrop","PollenTrail","CrossPollination","Overcharge","BloomSurge","PollenWind","SolarBloom","CrystalResonance","ShadowBloom","FireflyRoute"},
- WorkshopBranches={"ROLL","GARDEN","BEES","ECONOMY","BLOOM","EXPLORATION","LEGACY"},
+ WorkshopBranches={"ROLL","GARDEN","BEES","ECONOMY","BLOOM","EXPLORATION","LEGACY","FORTUNE","MASTERY","HONEY","COINS","GROWTH","POLLEN","POWER","SWIFT","ABILITY","CRITICAL","CHARGE","DISCOVERY","RARITY","DUPLICATES","ACTIVITY","QUESTS","MUTATION","SEASON","SOCIAL","OVERDRIVE"},
  WorkshopNodesPerBranch=6,
 }

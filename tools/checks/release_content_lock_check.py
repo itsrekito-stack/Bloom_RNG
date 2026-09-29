@@ -48,9 +48,11 @@ if synergy_count!=32 or 'GardenSynergyCount=32' not in manifest: raise Assertion
 if "Trials={" in manifest or "SeasonKeyTrials" in manifest or "TrialIds" in season: raise AssertionError("Trials returned to release content")
 
 branches=re.findall(r'"([^"]+)"',re.search(r'WorkshopBranches=\{([^}]*)\}',manifest).group(1))
-if len(branches)!=7: raise AssertionError("release must ship 7 Workshop branches")
+if len(branches)!=27: raise AssertionError(f"release must ship 27 Workshop branches, got {len(branches)}")
 effect_ids=set(re.findall(r'([A-Z]+_[1-6])=\{',effects))
-if len(effect_ids)!=42: raise AssertionError(f"expected 42 Workshop effects, got {len(effect_ids)}")
+dynamic_effect_branches=set(re.findall(r'^\s*([A-Z]+)=\{Key=',effects,re.M))
+if len(effect_ids)!=42: raise AssertionError(f"expected 42 explicit legacy Workshop effects, got {len(effect_ids)}")
+if len(dynamic_effect_branches)!=20: raise AssertionError(f"expected 20 generated Workshop effect branches, got {len(dynamic_effect_branches)}")
 activity_ids=set(re.findall(r'([A-Za-z0-9_]+)=\{Life=',activities))
 if len(activity_ids)!=12: raise AssertionError(f"expected 12 activity types, got {len(activity_ids)}")
 
@@ -61,4 +63,4 @@ if 'return icon~=""and icon or thumb(C.Ids.System.Bee or 0)' not in icons: raise
 if 'function C.GetFlowerIcon(id) local icon=C.Get("Flowers",id) return icon~="" and icon or C.Get("System","Flower") end' not in icons: raise AssertionError("Flower icon fallback missing")
 
 print("release content lock: PASS")
-print("Content: 27 Flowers, 28 Bees, 32 Garden Synergies, 25 Quests, 12 Activities, 7 Workshop branches, no Trials.")
+print("Content: 27 Flowers, 28 Bees, 32 Garden Synergies, 25 Quests, 12 Activities, 27 Workshop branches, no Trials.")

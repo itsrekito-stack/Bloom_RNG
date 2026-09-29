@@ -153,6 +153,17 @@ local function workshopEffectText(rules)
   elseif key=="BeeXP" then text="Bee XP ×"..tostring(value)
   elseif key=="TraitCooldown" then text="Trait cooldown ×"..tostring(value)
   elseif key=="AbilityYield" then text="Ability rewards ×"..tostring(value)
+  elseif key=="MasteryXPMultiplier" then text="Mastery XP ×"..tostring(value)
+  elseif key=="CoinMultiplier" then text="Coins ×"..tostring(value)
+  elseif key=="BloomChargeMultiplier" then text="Bloom charge ×"..tostring(value)
+  elseif key=="DiscoveryWeightMultiplier" then text="Undiscovered weight ×"..tostring(value)
+  elseif key=="RareWeightMultiplier" then text="Rare+ weight ×"..tostring(value)
+  elseif key=="DuplicateXPMultiplier" then text="Duplicate XP ×"..tostring(value)
+  elseif key=="ActivityIntervalMultiplier" then text="Activity interval ×"..tostring(value)
+  elseif key=="QuestRewardMultiplier" then text="Quest rewards ×"..tostring(value)
+  elseif key=="SeasonRewardMultiplier" then text="Season Nectar ×"..tostring(value)
+  elseif key=="BlessingMultiplier" then text="Hive Blessing ×"..tostring(value)
+  elseif key=="AbilityRewardMultiplier" then text="Ability rewards ×"..tostring(value)
   elseif key=="DustYield" then text="Petal Dust ×"..tostring(value)
   elseif key=="MilestoneCoins" then text="Milestone Coins +"..tostring(value)
   elseif key=="CoinYield" then text="Coins ×"..tostring(value)
@@ -1042,16 +1053,8 @@ function UI:RenderMenu(preserveInteraction)
    local selectedNode=W.Nodes[self.SelectedNode] or W.Nodes.CORE
    local selectedId=selectedNode and selectedNode.Id or "CORE"
 
-   local branchColors={
-    CORE=C.White,
-    ROLL=C.Blue,
-    GARDEN=C.Green,
-    BEES=C.Honey,
-    ECONOMY=C.Gold,
-    BLOOM=C.Dust,
-    EXPLORATION=C.Nectar,
-    LEGACY=C.Danger,
-   }
+   local branchColors=W.BranchColors or {CORE=C.White}
+   branchColors.CORE=branchColors.CORE or C.White
 
    local function moveTooltip(screenX,screenY)
     if not tooltip.Parent then return end

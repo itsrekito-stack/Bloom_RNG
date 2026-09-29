@@ -54,7 +54,7 @@ function S:Grant(player,kind,id)
   pollinators.BeeInventory[id]=1
   pollinators.BeeMastery[id]=pollinators.BeeMastery[id] or 0
   if owned then
-   self.X.PollinatorService:AddMastery(player,id,C.BeeDuplicateXP)
+   self.X.PollinatorService:AddMastery(player,id,C.BeeDuplicateXP*E.BranchProduct(p,"DUPLICATES","DuplicateXPMultiplier",1))
   end
   self.X:MarkStateDirty(player)
   return new

@@ -54,7 +54,7 @@ local function tempRewardBonus(temp)
  local now=os.clock()
  return ((temp.TemporaryMutationUntil or 0)>now and 1.1 or 1)
   *((temp.NeighbourUntil or 0)>now and 1.15 or 1)
-  *((temp.BlessingUntil or 0)>now and 1.05 or 1)
+  *((temp.BlessingUntil or 0)>now and (tonumber(temp.BlessingMultiplier) or 1.05) or 1)
 end
 
 function S:Init(x)
@@ -72,7 +72,7 @@ function S:AddMastery(player,id,baseAmount)
   p.Pollinators.BeeMastery[id]=before.MaxXP
   return false
  end
- local gain=amount*E.Value(p,"BEES_3","BeeXP",1)
+ local gain=amount*E.Value(p,"BEES_3","BeeXP",1)*E.BranchProduct(p,"MASTERY","MasteryXPMultiplier",1)
  local total=math.min(before.MaxXP,before.TotalXP+gain)
  p.Pollinators.BeeMastery[id]=total
  local after=B.GetMasteryState(total)
@@ -236,7 +236,7 @@ function S:Deliver(player,profile,temp,state,bee,mastery,stats,slots,states)
  local hiveMultiplier=1
  local criticalChanceBonus=0
  if active then
-  rewardMultiplier=(tonumber(ability.RewardMultiplier) or 1)
+  rewardMultiplier=(tonumber(ability.RewardMultiplier) or 1)*E.BranchProduct(profile,"OVERDRIVE","AbilityRewardMultiplier",1)
    *E.Value(profile,"BEES_6","AbilityYield",1)
    *(profile.Season.ActiveCard=="TwilightSeason" and 1.15 or 1)
   hiveMultiplier=tonumber(ability.HiveHoneyMultiplier) or 1
@@ -247,7 +247,7 @@ function S:Deliver(player,profile,temp,state,bee,mastery,stats,slots,states)
   player,profile,stats,mastery,1,tempRewardBonus(temp),
   rewardMultiplier,hiveMultiplier,criticalChanceBonus
  )
- self.X.RollService:Charge(player,C.Charge.Delivery*(profile.Season.ActiveCard=="SummerSwarm" and .75 or 1))
+ self.X.RollService:Charge(player,C.Charge.Delivery*E.BranchProduct(profile,"CHARGE","BloomChargeMultiplier",1)*(profile.Season.ActiveCard=="SummerSwarm" and .75 or 1))
  self.X:Emit(player,"Delivery",1)
  self.X.SocialService:Contribute(player,1)
 
@@ -331,6 +331,7 @@ function S:Tick(player,dt)
   temp.NextActivity=os.clock()
    +C.ActivityInterval
    *E.Value(profile,"EXPLORATION_4","WildInterval",1)
+   *E.BranchProduct(profile,"ACTIVITY","ActivityIntervalMultiplier",1)
    *(profile.Season.ActiveCard=="SpringResonance" and .8 or 1)
   local kinds={"PollenSpark","NectarBud","DewDrop","PollenTrail","CrossPollination","BloomSurge","PollenWind"}
   temp.ActivityIndex=(temp.ActivityIndex or 0)%#kinds+1

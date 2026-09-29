@@ -12,7 +12,9 @@ function S.BuildSeasonTurnPlan(profile)
  local after=U.Copy(profile)
 
  after.Currencies.Coins=0
- after.Currencies.AncientNectar=after.Currencies.AncientNectar+C.SeasonReward+E.Value(profile,"LEGACY_6","SeasonNectar",0)
+ local seasonNectar=C.SeasonReward+E.Value(profile,"LEGACY_6","SeasonNectar",0)
+ seasonNectar=math.max(1,math.floor(seasonNectar*E.BranchProduct(profile,"SEASON","SeasonRewardMultiplier",1)+.5))
+ after.Currencies.AncientNectar=after.Currencies.AncientNectar+seasonNectar
 
  after.Hive={
   Level=1,

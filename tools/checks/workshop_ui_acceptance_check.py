@@ -96,7 +96,7 @@ for token in (
 ):
     need(ui,token,'Workshop currency binding')
 
-# The CORE node is the visual center of the authored 2200x1700 tree and runtime
+# The CORE node is the visual center of the authored 2800x2800 tree and runtime
 # centering uses the actual viewport, so both desktop targets open centered.
 pan=one('PanMap')
 canvas=one('TreeCanvas')
@@ -104,17 +104,21 @@ core=one('Node_CORE')
 assert pan and canvas and core
 assert pan['Properties']['Position']['UDim2']==[[0,0],[0,0]], "PanMap runtime/editor origin diverged"
 map_size=pan['Properties']['Size']['UDim2']
-assert map_size==[[0,2200],[0,1700]], map_size
+assert map_size==[[0,2800],[0,2800]], map_size
 cp=core['Properties']['Position']['UDim2']
 cs=core['Properties']['Size']['UDim2']
 core_center=(cp[0][1]+cs[0][1]/2,cp[1][1]+cs[1][1]/2)
-assert core_center==(1100.0,850.0), core_center
+assert core_center==(1400.0,1400.0), core_center
 for width,height in ((1366,768),(1280,720)):
     viewport=(width-12,height-12)
     target=(core_center[0]-viewport[0]/2,core_center[1]-viewport[1]/2)
     visible_center=(core_center[0]-target[0],core_center[1]-target[1])
     assert abs(visible_center[0]-viewport[0]/2)<.01
     assert abs(visible_center[1]-viewport[1]/2)<.01
+authored_nodes=[n for n in walk(pan) if str(n.get("Name","")).startswith("Node_")]
+authored_links=[n for n in walk(pan) if str(n.get("Name","")).startswith("Link_")]
+assert len(authored_nodes)==163, f"expected CORE + 162 authored Workshop nodes, got {len(authored_nodes)}"
+assert len(authored_links)==162, f"expected 162 authored Workshop links, got {len(authored_links)}"
 need(ui,'function UI:CenterWorkshopCanvas(canvas,panMap,zoom)','runtime Workshop centering')
 need(ui,'center-viewport*.5','CORE-to-viewport centering')
 need(ui,'self.WorkshopCanvasPosition=nil','fresh Workshop open recenters tree')

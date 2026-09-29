@@ -98,7 +98,7 @@ function S:Claim(player,id)
  if current<target then return false,"QUEST_INCOMPLETE" end
 
  local reward=quest.Reward or {}
- local bonus=math.max(1,tonumber(Effects.Value(profile,"LEGACY_4","QuestRewardMultiplier",1)) or 1)
+ local bonus=math.max(1,tonumber(Effects.Value(profile,"LEGACY_4","QuestRewardMultiplier",1)) or 1)*Effects.BranchProduct(profile,"QUESTS","QuestRewardMultiplier",1)
  profile.Currencies.Coins+=math.floor((tonumber(reward.Coins) or 0)*bonus+.5)
  profile.Currencies.PetalDust+=math.floor((tonumber(reward.PetalDust) or 0)*bonus+.5)
  profile.Currencies.AncientNectar+=(tonumber(reward.AncientNectar) or 0)
