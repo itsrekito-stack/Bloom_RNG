@@ -280,6 +280,41 @@ fn git_dir_path(root: &Path) -> Result<PathBuf, String> {
     Ok(if path.is_absolute() { path } else { root.join(path) })
 }
 
+fn git_env_path(path: &Path) -> String {
+    let raw = path.to_string_lossy();
+    #[cfg(target_os = "windows")]
+    {
+        if let Some(stripped) = raw.strip_prefix(r"\\?\UNC\") {
+            return format!(r"\\{}", stripped);
+        }
+        if let Some(stripped) = raw.strip_prefix(r"\\?\") {
+            return stripped.to_string();
+        }
+    }
+    raw.to_string()
+}
+
+fn roflow_temp_index_paths(root: &Path) -> Result<(PathBuf, PathBuf), String> {
+    let git_dir = git_dir_path(root)?;
+    Ok((
+        git_dir.join("roflow-backup.index"),
+        git_dir.join("roflow-backup.index.lock"),
+    ))
+}
+
+fn cleanup_roflow_temp_index(root: &Path) -> Result<(), String> {
+    let (index, lock) = roflow_temp_index_paths(root)?;
+    if lock.exists() {
+        fs::remove_file(&lock)
+            .map_err(|e| format!("Failed to remove stale RoFlow backup lock {}: {e}", lock.display()))?;
+    }
+    if index.exists() {
+        fs::remove_file(&index)
+            .map_err(|e| format!("Failed to remove stale RoFlow backup index {}: {e}", index.display()))?;
+    }
+    Ok(())
+}
+
 fn git_index_lock(root: &Path) -> Result<Option<String>, String> {
     let path = git_dir_path(root)?.join("index.lock");
     Ok(path.is_file().then(|| path.to_string_lossy().to_string()))
@@ -360,7 +395,7 @@ fn recover_roflow_conflicts(root: &Path, stash_spec: &str, paths: &[String]) -> 
     let recovery = backup_conflict_versions(root, stash_spec, paths)?;
     for raw in paths {
         let safe = clean_relative_path(raw)?;
-        git(root, &["restore", "--source=HEAD", "--staged", "--worktree", "--", safe])
+        git(root, &["restore", "--source=HEAD", "--staged", "--worktree", "--", &safe])
             .map_err(|e| format!("Conflict backup exists at {recovery}, but failed to restore {safe} to HEAD: {e}"))?;
     }
     let remaining = unmerged_paths(root)?;
@@ -766,14 +801,9 @@ fn create_backup_internal(
     let source_head = git(root, &["rev-parse", "HEAD"])?;
     let subject = git(root, &["log", "-1", "--pretty=%s"]).unwrap_or_default();
 
-    let git_dir = git(root, &["rev-parse", "--git-dir"])?;
-    let git_dir_path = {
-        let path = PathBuf::from(&git_dir);
-        if path.is_absolute() { path } else { root.join(path) }
-    };
-    let temp_index = git_dir_path.join("roflow-backup.index");
-    let _ = fs::remove_file(&temp_index);
-    let temp_index_string = temp_index.to_string_lossy().to_string();
+    cleanup_roflow_temp_index(root)?;
+    let (temp_index, temp_lock) = roflow_temp_index_paths(root)?;
+    let temp_index_string = git_env_path(&temp_index);
     let index_env = [("GIT_INDEX_FILE", temp_index_string.as_str())];
 
     let snapshot_result = (|| -> Result<String, String> {
@@ -807,6 +837,7 @@ fn create_backup_internal(
             &identity,
         )
     })();
+    let _ = fs::remove_file(&temp_lock);
     let _ = fs::remove_file(&temp_index);
     let snapshot_sha = snapshot_result?;
 
@@ -1210,6 +1241,8 @@ fn git_diff_stat(state: State<AppState>) -> Result<String, String> {
 fn safe_ai_sync(editor_model: Option<Value>, state: State<AppState>) -> Result<SyncResult, String> {
     let root = current_root(&state)?;
 
+    cleanup_roflow_temp_index(&root)?;
+
     if let Some(lock) = git_index_lock(&root)? {
         return Err(format!(
             "Git index is locked at {lock}. Close any Git process using this project, then retry. RoFlow will not delete an index lock automatically."
@@ -1322,8 +1355,11 @@ fn safe_ai_sync(editor_model: Option<Value>, state: State<AppState>) -> Result<S
             Err(error) => {
                 let conflicts = unmerged_paths(&root)?;
                 if conflicts.is_empty() {
+                    git(&root, &["reset", "--hard", "HEAD"])?;
+                    let _ = git(&root, &["clean", "-fd", "-e", ".roflow", "-e", ".recovery"]);
+                    preserved_stashes.push(active_stash_sha.clone());
                     return Err(format!(
-                        "Git updated, but local changes could not be restored. No merge-conflict paths were reported. Stash {} was kept. {}",
+                        "Git updated, but local changes could not be restored cleanly. Partial stash changes were rolled back to HEAD and stash {} was kept intact. {}",
                         active_stash_sha, error
                     ));
                 }
@@ -1911,11 +1947,19 @@ fn health_check(state: State<AppState>) -> Result<HealthReport, String> {
         detail: if unmerged.trim().is_empty() { "No unresolved Git conflicts".into() } else { truncate_output(unmerged, 2_000) },
     });
 
-    let index_lock = root.join(".git").join("index.lock");
+    let index_lock = git_dir_path(&root).map(|p| p.join("index.lock")).unwrap_or_else(|_| root.join(".git").join("index.lock"));
+    let roflow_lock = git_dir_path(&root).map(|p| p.join("roflow-backup.index.lock")).unwrap_or_else(|_| root.join(".git").join("roflow-backup.index.lock"));
+    let lock_ok = !index_lock.exists() && !roflow_lock.exists();
     checks.push(HealthItem {
         name: "Git lock".into(),
-        ok: !index_lock.exists(),
-        detail: if index_lock.exists() { ".git/index.lock exists".into() } else { "No stale Git index lock".into() },
+        ok: lock_ok,
+        detail: if index_lock.exists() {
+            ".git/index.lock exists".into()
+        } else if roflow_lock.exists() {
+            ".git/roflow-backup.index.lock exists".into()
+        } else {
+            "No stale Git index lock".into()
+        },
     });
 
     let src_ok = root.join("src").is_dir();
