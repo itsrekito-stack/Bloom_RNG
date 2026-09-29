@@ -1,6 +1,7 @@
 --!strict
 local Bloom=require(script.Parent.BloomConfig)
 local C={Species={}}
+local RARITY_LUCK_BASE={Common=1.30,Uncommon=1.36,Rare=1.43,Epic=1.52,Legendary=1.62,Mythic=1.75,Celestial=1.90}
 
 local DROP_WEIGHTS={
  Daisy=280000,
@@ -119,6 +120,7 @@ species("CrownBloom","Crown Bloom","Mythic","StarBloom",Color3.fromRGB(255,222,1
 local function initializeDerived()
  for id,flower in pairs(C.Species) do
   flower.DropWeight=DROP_WEIGHTS[id]
+  flower.LuckMultiplier=RARITY_LUCK_BASE[flower.Rarity] or 1.30
 
   local allowedBiomes={}
   for sector in pairs(flower.AllowedSectors) do
@@ -151,6 +153,14 @@ function C.Exists(id:string):boolean
  return C.Species[id]~=nil
 end
 
+function C.GetLuckMultiplier(id,level)
+ local flower=C.Species[id]
+ if not flower then return 1 end
+ local lv=math.clamp(math.floor(tonumber(level) or 1),1,Bloom.MasteryCap)
+ local base=tonumber(flower.LuckMultiplier) or 1.30
+ return base+math.min(.30,(lv-1)*.003)
+end
+
 function C.GetLevelBuff(id,level)
  local cfg=LEVEL_BUFFS[id]
  if not cfg then return nil end
@@ -161,12 +171,27 @@ function C.GetLevelBuff(id,level)
  return {Stat=cfg.Stat,Label=cfg.Label,Level=lv,Bonus=bonus,Multiplier=multiplier,Inverse=inverse}
 end
 
+function C.GetLevelBuffs(id,level)
+ local special=C.GetLevelBuff(id,level)
+ local luck=C.GetLuckMultiplier(id,level)
+ local luckBuff={Stat="LuckMultiplier",Label="Luck",Level=math.clamp(math.floor(tonumber(level) or 1),1,Bloom.MasteryCap),Bonus=math.max(0,luck-1),Multiplier=luck,Inverse=false}
+ if special and special.Stat=="LuckMultiplier" then
+  luckBuff.Bonus=luck*special.Multiplier-1
+  luckBuff.Multiplier=luck*special.Multiplier
+  return {luckBuff}
+ end
+ return special and {special,luckBuff} or {luckBuff}
+end
+
 function C.FormatLevelBuff(id,level)
- local buff=C.GetLevelBuff(id,level)
- if not buff then return "No passive bonus" end
- local pct=math.floor((tonumber(buff.Bonus) or 0)*1000+.5)/10
- local value=(pct%1==0) and tostring(math.floor(pct)) or string.format("%.1f",pct)
- return (buff.Inverse and "-" or "+")..value.."% "..tostring(buff.Label)
+ local buffs=C.GetLevelBuffs(id,level)
+ local out={}
+ for _,buff in ipairs(buffs) do
+  local pct=math.floor((tonumber(buff.Bonus) or 0)*1000+.5)/10
+  local value=(pct%1==0) and tostring(math.floor(pct)) or string.format("%.1f",pct)
+  out[#out+1]=(buff.Inverse and "-" or "+")..value.."% "..tostring(buff.Label)
+ end
+ return #out>0 and table.concat(out," • ") or "No passive bonus"
 end
 
 return C
