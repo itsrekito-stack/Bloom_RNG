@@ -7,7 +7,6 @@ local B=require(RS.Config.BeesConfig)
 local W=require(RS.Config.WorkshopConfig)
 local R=require(RS.Config.RarityConfig)
 local L=require(RS.Config.LocationsConfig)
-local Trials=require(RS.Config.BuildTrialConfig)
 local Seasons=require(RS.Config.SeasonConfig)
 local Features=require(RS.Config.FeatureUnlockConfig)
 local Tutorial=require(RS.Config.TutorialConfig)
@@ -72,7 +71,7 @@ function D.Apply(p)
   if not value then w.LegacyNodes[id]=nil
   elseif not W.Nodes[id].Permanent then D.Archive(p,"WorkshopV5.LegacyNodes",id,value);w.LegacyNodes[id]=nil end
  end
- -- Sources use dynamic season/hive/collection/trial ids. Preserve every string
+ -- Sources use dynamic season/hive/collection ids. Preserve every string
  -- source but require boolean claims; never refund/re-grant points during repair.
  map(p,w.ClaimedSources,"WorkshopV5.ClaimedSources",nil,"flag")
  local f=p.FlowerCollection
@@ -185,8 +184,6 @@ function D.Apply(p)
   local valid=(key=="Flower" or key=="Flower2") and F.Species[id] or key=="Bee" and B.Bees[id]
   if not valid then D.Archive(p,"Season.Keepsakes",key,id);p.Season.Keepsakes[key]=nil end
  end
- map(p,p.Season.CompletedGoals,"Season.CompletedGoals",Trials,"flag")
- map(p,p.Quests.Trials,"Quests.Trials",Trials,"flag")
  map(p,p.Quests.Claimed,"Quests.Claimed",nil,"flag")
  number(p,p.Quests,"JourneyStep","Quests",1,true);p.Quests.JourneyStep=math.max(1,p.Quests.JourneyStep)
  number(p,p.Tutorial,"Step","Tutorial",1,true,#Tutorial.Steps+1);p.Tutorial.Step=math.max(1,p.Tutorial.Step)
