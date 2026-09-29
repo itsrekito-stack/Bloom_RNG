@@ -2,6 +2,7 @@
 local C={
  Version=6,
  Nodes={},
+ NodesPerBranch=6,
  Branches={
   "ROLL","GARDEN","BEES","ECONOMY","BLOOM","EXPLORATION","LEGACY",
   "FORTUNE","MASTERY","HONEY","COINS","GROWTH","POLLEN","POWER","SWIFT","ABILITY","CRITICAL",

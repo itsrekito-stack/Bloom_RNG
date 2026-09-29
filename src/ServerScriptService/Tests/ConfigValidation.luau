@@ -36,10 +36,22 @@ function S.Run()
  end
 
  local workshopCount=0
+ local branchCounts={}
+ local seenBranches={}
+ for _,branch in ipairs(W.Branches) do
+  assert(type(branch)=="string" and not seenBranches[branch],"Duplicate Workshop branch "..tostring(branch))
+  seenBranches[branch]=true
+  branchCounts[branch]=0
+ end
+ assert(type(W.NodesPerBranch)=="number" and W.NodesPerBranch%1==0 and W.NodesPerBranch>0,"Workshop NodesPerBranch must be a positive integer")
+ assert(W.Nodes.CORE and W.Nodes.CORE.Branch=="CORE","Workshop CORE node is missing")
  for id,n in pairs(W.Nodes) do
   workshopCount+=1
-  if n.Parent then assert(W.Nodes[n.Parent],"Broken Workshop prerequisite") end
+  if n.Parent then assert(W.Nodes[n.Parent],"Broken Workshop prerequisite "..id.." -> "..tostring(n.Parent)) end
   if id~="CORE" then
+   assert(seenBranches[n.Branch],"Unknown Workshop branch on node "..id..": "..tostring(n.Branch))
+   assert(type(n.Index)=="number" and n.Index%1==0 and n.Index>=1 and n.Index<=W.NodesPerBranch,"Invalid Workshop node index "..id)
+   branchCounts[n.Branch]+=1
    local effect=WE[id] assert(effect,"Missing Workshop effect "..id)
    for key,value in pairs(effect) do
     assert(type(key)=="string","Invalid Workshop effect key")
@@ -48,7 +60,11 @@ function S.Run()
    end
   end
  end
- assert(workshopCount==43,"Workshop must contain 43 nodes")
+ for _,branch in ipairs(W.Branches) do
+  assert(branchCounts[branch]==W.NodesPerBranch,string.format("Workshop branch %s must contain %d nodes, found %d",branch,W.NodesPerBranch,branchCounts[branch]))
+ end
+ local expectedWorkshopCount=1+#W.Branches*W.NodesPerBranch
+ assert(workshopCount==expectedWorkshopCount,string.format("Workshop must contain %d nodes, found %d",expectedWorkshopCount,workshopCount))
 
  local recipeIds={}
  assert(#G.Recipes==32,"Release must contain 32 Garden Synergies")
