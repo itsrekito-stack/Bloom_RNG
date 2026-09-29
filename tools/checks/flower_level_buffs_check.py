@@ -59,14 +59,16 @@ for flower_id,row in rows.items():
     if row["inverse"] and row["stat"]!="AbilityCooldownMultiplier":
         raise AssertionError(f"{flower_id}: inverse scaling is only valid for cooldown")
 
-need(flowers,"function C.GetLevelBuff(id,level)","level buff API")
+need(flowers,"function C.GetLevelBuff(id,level)","specialty level buff API")
+need(flowers,"function C.GetLuckMultiplier(id,level)","universal Flower Luck API")
+need(flowers,"Common=1.30","weakest Flower +30% Luck floor")
 need(flowers,"local lv=math.clamp(math.floor(tonumber(level) or 1),1,Bloom.MasteryCap)","Flower Level clamp")
 need(flowers,"(lv-1)*(tonumber(cfg.PerLevel) or 0)","per-Level growth")
 need(flowers,"function C.FormatLevelBuff(id,level)","player-facing passive formatter")
 
 need(stats,"for _,slot in ipairs((p.Garden and p.Garden.Slots) or {}) do","only planted Garden Flowers contribute")
 need(stats,"local mastery=p.FlowerCollection and p.FlowerCollection.FlowerMastery and p.FlowerCollection.FlowerMastery[id]","species Level is authoritative source")
-need(stats,"local buff=F.GetLevelBuff and F.GetLevelBuff(id,mastery and mastery.Level or 1) or nil","authoritative Flower passive lookup")
+need(stats,"local buffs=F.GetLevelBuffs and F.GetLevelBuffs(id,mastery and mastery.Level or 1) or {}","authoritative Flower passive lookup")
 for field in [
     "flower.LuckMultiplier","flower.PollinatorYieldMultiplier","flower.PollinatorTravelSpeedMultiplier",
     "flower.PollinatorPowerMultiplier","flower.FlowerGrowthMultiplier","flower.CoinMultiplier",
@@ -80,6 +82,7 @@ need(index,'Flowers.FormatLevelBuff(item.Id,level)',"Index shows current Flower 
 need(index,'Flowers.FormatLevelBuff(item.Id,level+1)',"Index previews next Flower Level passive")
 
 luck_flowers={flower_id for flower_id,row in rows.items() if row["stat"]=="LuckMultiplier"}
+assert "flower.LuckMultiplier=RARITY_LUCK_BASE[flower.Rarity] or 1.30" in flowers, "every Flower must carry rarity-scaled Luck"
 if not {"Clover","PrismBloom","MoonOrchid","StarBloom"}<=luck_flowers:
     raise AssertionError(f"Luck progression Flower line incomplete: {sorted(luck_flowers)}")
 
