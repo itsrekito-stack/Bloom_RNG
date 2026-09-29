@@ -12,6 +12,11 @@ local LOT_COUNT=8
 local GARDEN_FOOTPRINT=32.5
 local HIVE_FOOTPRINT=5.2
 local BENCH_FOOTPRINT=5.8
+local LOT_VISUAL_NAMES={
+ Garden={"Garden"},
+ Hive={"Hive"},
+ Bench={"Bench","GardenBench","Curved Sandstone Benc","Curved Sandstone Bench"},
+}
 
 local function horizontalCylinder(part,material)
  part.Shape=Enum.PartType.Cylinder
@@ -55,6 +60,25 @@ local function lotMarker(lot,name)
  return item and item:IsA("BasePart") and item or nil
 end
 
+local function lotVisual(lot,key)
+ for _,name in ipairs(LOT_VISUAL_NAMES[key] or {}) do
+  local item=lot and lot:FindFirstChild(name,true)
+  if item and (item:IsA("BasePart") or item:IsA("Model")) then return item end
+ end
+ return nil
+end
+
+local function visualCFrame(root)
+ local cf=select(1,Assets.Bounds(root))
+ return cf
+end
+
+local function prepareStaticVisual(root)
+ if not root then return end
+ Assets.Configure(root,true,false)
+ root:SetAttribute("BloomLotVisual",true)
+end
+
 local function hideMarker(part)
  part.Transparency=1
  part.CanCollide=false
@@ -75,18 +99,15 @@ function S:Init(x)
  local lots={}
  for _,lot in ipairs(folder:GetChildren()) do
   if lot:IsA("Model") and string.match(lot.Name,"^GardenLot%d%d$") then
-   local gardenAnchor=lotMarker(lot,"GardenAnchor")
-   local hiveAnchor=lotMarker(lot,"HiveAnchor")
-   local benchAnchor=lotMarker(lot,"BenchAnchor")
-   if gardenAnchor and hiveAnchor and benchAnchor then
-    hideMarker(gardenAnchor)
-    hideMarker(hiveAnchor)
-    hideMarker(benchAnchor)
+   local origin=lotMarker(lot,"LotOrigin")
+   if origin then
+    hideMarker(origin)
+    for _,key in ipairs({"Garden","Hive","Bench"}) do prepareStaticVisual(lotVisual(lot,key)) end
     lot:SetAttribute("BloomGardenLot",true)
     lot:SetAttribute("OwnerUserId",nil)
     table.insert(lots,lot)
    else
-    warn("[Bloom][GARDEN] incomplete authored lot:",lot:GetFullName())
+    warn("[Bloom][GARDEN] authored lot missing LotOrigin:",lot:GetFullName())
    end
   end
  end
@@ -221,16 +242,19 @@ function S:Build(player)
    return
   end
 
-  local gardenAnchor=lotMarker(lot,"GardenAnchor")
-  local hiveAnchor=lotMarker(lot,"HiveAnchor")
-  local benchAnchor=lotMarker(lot,"BenchAnchor")
-  if not gardenAnchor or not hiveAnchor or not benchAnchor then
+  local lotOrigin=lotMarker(lot,"LotOrigin")
+  if not lotOrigin then
    self.Used[i]=nil
    player:Kick("Garden layout is unavailable. Please rejoin.")
    return
   end
 
-  local origin=gardenAnchor.Position
+  local authoredGarden=lotVisual(lot,"Garden")
+  local authoredHive=lotVisual(lot,"Hive")
+  local authoredBench=lotVisual(lot,"Bench")
+  local gardenCF=authoredGarden and visualCFrame(authoredGarden) or lotOrigin.CFrame
+  local origin=gardenCF.Position
+
   local m=Instance.new("Model")
   m.Name="Garden_"..player.UserId
   m:SetAttribute("OwnerUserId",player.UserId)
@@ -242,9 +266,7 @@ function S:Build(player)
    Index=i,
    Lot=lot,
    Origin=origin,
-   GardenCFrame=gardenAnchor.CFrame,
-   HiveAnchor=hiveAnchor,
-   BenchAnchor=benchAnchor,
+   GardenCFrame=gardenCF,
    Model=m,
    Flowers={},
   }
@@ -255,7 +277,18 @@ function S:Build(player)
   collider.Transparency=1
   collider.CanQuery=false
 
-  local gardenVisual=anchoredVisual("Garden",m,"GardenVisual",GARDEN_FOOTPRINT,gardenAnchor,true)
+  local gardenVisual=authoredGarden
+  if not gardenVisual then
+   gardenVisual=anchoredVisual("Garden",m,"GardenVisual",GARDEN_FOOTPRINT,lotOrigin,true)
+   if gardenVisual then
+    local fallbackCF=visualCFrame(gardenVisual)
+    if fallbackCF then
+     plot.GardenCFrame=fallbackCF
+     plot.Origin=fallbackCF.Position
+     origin=fallbackCF.Position
+    end
+   end
+  end
   plot.HasAuthoredGarden=gardenVisual~=nil
   if not gardenVisual then
    local ground=self.X:Part(m,"Ground",origin-Vector3.new(0,.5,0),Vector3.new(1,33,33),Color3.fromRGB(85,145,80),true)
@@ -268,12 +301,26 @@ function S:Build(player)
    soil.CanQuery=false
   end
 
-  local hiveVisual=anchoredVisual("Hive",m,"HiveVisual",HIVE_FOOTPRINT,hiveAnchor,true)
-  local hivePosition=hiveAnchor.Position+Vector3.new(0,2.2,0)
-  if hiveVisual then
-   local hiveCF=select(1,Assets.Bounds(hiveVisual))
-   if hiveCF then hivePosition=hiveCF.Position end
+  local hiveVisual=authoredHive
+  if not hiveVisual and gardenVisual then
+   local relative=Assets.AuthoredRelative("Hive","Garden",GARDEN_FOOTPRINT)
+   if relative then
+    hiveVisual=Assets.Clone("Hive")
+    if hiveVisual then
+     hiveVisual.Name="HiveVisual"
+     hiveVisual.Parent=m
+     Assets.Configure(hiveVisual,true,false)
+     if not Assets.ScaleToFootprint(hiveVisual,HIVE_FOOTPRINT)
+      or not Assets.PlaceRelative(hiveVisual,gardenVisual,relative) then
+      hiveVisual:Destroy()
+      hiveVisual=nil
+     end
+    end
+   end
   end
+
+  local hiveCF=hiveVisual and visualCFrame(hiveVisual)
+  local hivePosition=hiveCF and hiveCF.Position or (origin+G.Layout.HiveOffset)
   plot.HivePosition=hivePosition
 
   local hive=self.X:Part(m,"Hive",hivePosition,Vector3.new(4.2,4.4,4.4),Color3.fromRGB(224,169,56),true)
@@ -288,7 +335,21 @@ function S:Build(player)
    entrance.CanQuery=false
   end
 
-  anchoredVisual("Bench",m,"GardenBench",BENCH_FOOTPRINT,benchAnchor,true)
+  if not authoredBench and gardenVisual then
+   local relative=Assets.AuthoredRelative("Bench","Garden",GARDEN_FOOTPRINT)
+   if relative then
+    local bench=Assets.Clone("Bench")
+    if bench then
+     bench.Name="GardenBench"
+     bench.Parent=m
+     Assets.Configure(bench,true,false)
+     if not Assets.ScaleToFootprint(bench,BENCH_FOOTPRINT)
+      or not Assets.PlaceRelative(bench,gardenVisual,relative) then
+      bench:Destroy()
+     end
+    end
+   end
+  end
 
   self.X:Prompt(hive,self:HivePromptText(p),function(who)
    if who==player then

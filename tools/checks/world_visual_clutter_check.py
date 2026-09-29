@@ -102,14 +102,16 @@ need(garden_plot,'local LOT_COUNT=8',"eight fixed Workspace Garden lots")
 need(garden_plot,'local GARDEN_FOOTPRINT=32.5',"authored Garden target footprint")
 need(garden_plot,'local HIVE_FOOTPRINT=5.2',"authored Hive target footprint")
 need(garden_plot,'local BENCH_FOOTPRINT=5.8',"authored Bench target footprint")
-need(garden_plot,'local gardenVisual=anchoredVisual("Garden",m,"GardenVisual",GARDEN_FOOTPRINT,gardenAnchor,true)',"Garden visual follows editable Workspace lot anchor")
+need(garden_plot,'local authoredGarden=lotVisual(lot,"Garden")',"Garden lot reads the actual editable Garden mesh")
+need(garden_plot,'local authoredHive=lotVisual(lot,"Hive")',"Garden lot reads the actual editable Hive mesh")
+need(garden_plot,'local authoredBench=lotVisual(lot,"Bench")',"Garden lot reads the actual editable Bench mesh")
 need(garden_plot,'plot.HasAuthoredGarden=gardenVisual~=nil',"authored Garden presentation flag")
 need(garden_plot,'if not gardenVisual then',"fallback primitives only when authored Garden is absent")
 need(garden_plot,'local hiveVisual=usableVisual("Hive"', "authored Hive visual")
 need(garden_plot,'function S:AcquireLot(player)',"first free authored Garden lot assignment")
 need(garden_plot,'plot.GardenCFrame:PointToWorldSpace(G.Position(slot))',"Flower slots follow authored lot transform")
-need(garden_plot,'anchoredVisual("Hive"', "Hive follows editable lot anchor")
-need(garden_plot,'anchoredVisual("Bench"', "Bench follows editable lot anchor")
+need(garden_plot,'local hiveVisual=authoredHive',"Hive gameplay follows actual Workspace mesh")
+need(garden_plot,'if not authoredBench and gardenVisual then',"Bench stays where authored in Workspace")
 need(garden_plot,'plot.HivePosition=hivePosition',"gameplay Hive position follows authored visual")
 need(garden_plot,'local collider=self.X:Part(m,"GardenCollider"', "invisible Garden gameplay collider")
 need(garden_plot,'collider.Transparency=1',"Garden collider is presentation-invisible")
@@ -156,12 +158,12 @@ print("world visual clutter contract: PASS")
 print(f"Alpha world is sparse ({len(nodes)} authored nodes); player Garden is a flat, low-part circular gameplay asset with no beam/decor clutter.")
 
 
-lots=json.loads(read("src/Workspace/GardenLots.model.json"))
-authored_lots=[x for x in lots.get("Children",[]) if x.get("Name","").startswith("GardenLot")]
-if len(authored_lots)!=8:
-    raise AssertionError(f"expected exactly 8 authored Workspace Garden lots, got {len(authored_lots)}")
-for lot in authored_lots:
-    names={x.get("Name") for x in lot.get("Children",[])}
-    missing={"GardenAnchor","HiveAnchor","BenchAnchor"}-names
-    if missing:
-        raise AssertionError(f"{lot.get('Name')} missing editable markers: {sorted(missing)}")
+project=json.loads(read("default.project.json"))
+garden_lots=project["tree"]["Workspace"].get("GardenLots",{})
+for i in range(1,9):
+    name=f"GardenLot{i:02d}"
+    node=garden_lots.get(name)
+    if not node:
+        raise AssertionError(f"{name} missing from Workspace project tree")
+    if node.get("$ignoreUnknownInstances") is not True:
+        raise AssertionError(f"{name} must preserve manually inserted Garden/Hive/Bench meshes")
