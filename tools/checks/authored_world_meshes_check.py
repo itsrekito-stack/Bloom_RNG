@@ -97,3 +97,16 @@ assert project_text.count("rbxassetid://93439308097157")==8, "Garden mesh must e
 assert project_text.count("rbxassetid://72906636471163")==8, "Hive mesh must exist in all 8 lots"
 assert '"Bee"' in project_text
 assert 'Assets.ApplyTextureFallback(root,key)' in garden
+
+
+# Each editable gameplay lot keeps the Hive outside the Garden rim.
+project_data=__import__("json").loads(read("default.project.json"))
+lots_node=project_data["tree"]["Workspace"]["GardenLots"]
+for i in range(1,9):
+    lot=lots_node[f"GardenLot{i:02d}"]
+    garden_cf=lot["Garden"]["$properties"]["CFrame"]
+    hive_cf=lot["Hive"]["$properties"]["CFrame"]
+    dx=hive_cf[0]-garden_cf[0]
+    dz=hive_cf[2]-garden_cf[2]
+    distance=(dx*dx+dz*dz)**0.5
+    assert distance>=20.0, f"GardenLot{i:02d} Garden/Hive spacing too small: {distance:.2f}"
