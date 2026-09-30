@@ -8,10 +8,9 @@ Fruits={Apple=137259411920180,Banana=120948463128434,Lemon=103009882213725,Pear=
 Bees={WorkerBee=120474399887250,SprinterBee=81841357837322,NectarBee=125666499506926,ScholarBee=113247515668453,TwinBee=79186329071015,RoyalBee=90863269031200,PrismBee=71487091178305,TwilightBee=114763891690754,BloomQueenBee=111205051533608,CrystalBee=105869326934726,MagmaBee=138449294199376,ShadowBee=133728580716533,StormBee=94635050980764,GardenerBee=0,CourierBee=0,ScoutBee=0,DewBee=0,MinerBee=0,MelodyBee=0,LanternBee=0,MossBee=0,SapphireBee=0,AuroraBee=0,CometBee=0,OracleBee=0,NovaBee=0,ChronoBee=0,SeraphBee=0},
 
 -- New uploaded UI set.
-Actions={Roll=133396446853560,AutoRoll=95369396982504},
-Menus={Index=95009714203350,Inventory=136672443964590,Workshop=121938586363055,Settings=99022451093865,Shop=88512137472413},
+Actions={Roll=125311014921608,AutoRoll=95369396982504},
+Menus={Index=95009714203350,Inventory=124063432113598,Workshop=121024323846687,Settings=74677124320045,Shop=88512137472413},
 Currencies={Coins=110435036629715,FruitDust=111742972197656},
-HUDVisuals={Coins=89228638871248,Honey=122551440126725,Luck=119329224468450},
 System={
  ArrowLeft=77190512602362,
  ArrowRight=122373491010297,
@@ -19,17 +18,17 @@ System={
  Close=136238101956753,
  Confirm=112568733630169,
  Flower=117046422836136,
- Garden=130516384075830,
- Hive=100391168457976,
+ Garden=74690198578201,
+ Hive=112708830524820,
  Info=72782667939249,
  Lock=139746584718669,
  Minus=120883253848128,
- Plus=103645472786780,
+ Plus=123220293807442,
  Quests=131527836752075,
- Settings=99022451093865,
+ Settings=74677124320045,
  Shop=88512137472413,
  Tutorial=110567723791302,
- Upgrade=121938586363055,
+ Upgrade=131390447056966,
  Warning=72509884923996,
 },
 Traits={
@@ -53,7 +52,6 @@ function C.GetBeeIcon(id:string):string local v=C.Ids.Bees[id]local icon=typeof(
 function C.GetActionIcon(id:string):string local v=C.Ids.Actions[id]return typeof(v)=="number"and thumb(v)or""end
 function C.GetMenuIcon(id:string):string local v=C.Ids.Menus[id]return typeof(v)=="number"and thumb(v)or""end
 function C.GetCurrencyIcon(id:string):string local v=C.Ids.Currencies[id]return typeof(v)=="number"and thumb(v)or""end
-function C.GetHUDVisual(id:string):string local v=C.Ids.HUDVisuals[id]return typeof(v)=="number"and thumb(v)or""end
 function C.GetSystemIcon(id:string):string local v=C.Ids.System[id]return typeof(v)=="number"and thumb(v)or""end
 function C.GetTraitIcon(id:string):string local v=C.Ids.Traits[id]return typeof(v)=="number"and thumb(v)or""end
 function C.GetWorkshopHexIcon(id:string):string local v=C.Ids.WorkshopHex[id]return typeof(v)=="number"and thumb(v)or""end

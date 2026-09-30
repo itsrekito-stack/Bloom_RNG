@@ -29,7 +29,7 @@ local SettingsV2=require(script.Parent.SettingsController)
 
 local C=Theme.Colors
 local KEY_CODES={} for _,item in ipairs(Enum.KeyCode:GetEnumItems()) do KEY_CODES[item.Name]=item end
-local CLIENT_BUILD="authored-hud-visuals-v17-2026-09-30"
+local CLIENT_BUILD="hive-garden-qol-v16-2026-09-29"
 local WORKSHOP_ZOOM_ACTION="BloomWorkshopZoomCapture"
 local UI={Player=Players.LocalPlayer,Pending=false,Auto=false,NextRoll=0,Menu=nil,State=nil,Connections={},RouletteRunning=false,RouletteLanding=false,RouletteGeneration=0,RollSession=0,RollRequestSequence=0,RollRequestSessions={}}
 
@@ -1518,19 +1518,13 @@ function UI:Render()
   self.ObjectiveProgress.Visible=true
  end
 
- self.CurrencyRows.Coins.Root.Visible=true
  self.CurrencyRows.Coins.Value.Text=compact(p.Currencies.Coins)
- self.CurrencyRows.Honey.Root.Visible=true
  self.CurrencyRows.Honey.Value.Text=compact(p.Hive.Honey)
- local luck=self.State.UI and self.State.UI.Boosts and self.State.UI.Boosts.Luck
- self.CurrencyRows.Luck.Root.Visible=true
- self.CurrencyRows.Luck.Value.Text=tostring(luck and luck.ValueText or "0%")
  self.CurrencyRows.Hive.Value.Text="Level "..tostring(p.Hive.Level)
- self.CurrencyRows.Hive.Root.Visible=false
  self.CurrencyRows.PetalDust.Value.Text=compact(p.Currencies.PetalDust)
- self.CurrencyRows.PetalDust.Root.Visible=false
+ self.CurrencyRows.PetalDust.Root.Visible=p.Tutorial.FeatureUnlocks.SeedSatchel==true
  self.CurrencyRows.AncientNectar.Value.Text=compact(p.Currencies.AncientNectar)
- self.CurrencyRows.AncientNectar.Root.Visible=false
+ self.CurrencyRows.AncientNectar.Root.Visible=(p.Season.Count or 0)>0 or (p.Currencies.AncientNectar or 0)>0
 
  local rollUnlocked=self:RefreshRollHUDVisibility()
  if not rollUnlocked and (self.Auto or self.RouletteRunning or self.RouletteLanding) then
@@ -2036,22 +2030,16 @@ function UI:BindStaticUI()
  self.CurrencyHUD=root:WaitForChild("CurrencyHUD")
  self.CurrencyLayout=self.CurrencyHUD:FindFirstChildOfClass("UIListLayout")
  self.CurrencyRows={}
- local currencyColors={Coins=C.Gold,Honey=C.Honey,Luck=C.Blue,Hive=C.Green,PetalDust=C.Dust,AncientNectar=C.Nectar}
- local currencyIcons={Coins=Icons.GetCurrencyIcon("Coins"),Honey=Icons.Get("System","Hive"),Luck=Icons.GetWorkshopHexIcon("Luck"),Hive=Icons.Get("System","Hive"),PetalDust=Icons.GetCurrencyIcon("PetalDust"),AncientNectar=Icons.Get("System","Flower")}
- for _,key in ipairs({"Coins","Honey","Luck","Hive","PetalDust","AncientNectar"}) do
+ local currencyColors={Coins=C.Gold,Honey=C.Honey,Hive=C.Green,PetalDust=C.Dust,AncientNectar=C.Nectar}
+ local currencyIcons={Coins=Icons.GetCurrencyIcon("Coins"),Honey=Icons.Get("System","Hive"),Hive=Icons.Get("System","Hive"),PetalDust=Icons.GetCurrencyIcon("PetalDust"),AncientNectar=Icons.Get("System","Flower")}
+ for _,key in ipairs({"Coins","Honey","Hive","PetalDust","AncientNectar"}) do
   local row=self.CurrencyHUD:WaitForChild(key)
   local iconRoot=row:FindFirstChild("IconBg")
   local icon=iconRoot and iconRoot:FindFirstChild("Icon") or row:FindFirstChild("Icon")
   if icon and icon:IsA("ImageLabel") then icon.Image=currencyIcons[key] or "" end
-  local visual=row:FindFirstChild("Visual")
-  if visual and visual:IsA("ImageLabel") then
-   local image=Icons.GetHUDVisual(key)
-   visual.Image=image
-   visual.Visible=image~=""
-  end
   local accent=row:FindFirstChild("Accent")
   if accent and accent:IsA("Frame") then accent.BackgroundColor3=currencyColors[key] end
-  self.CurrencyRows[key]={Root=row,Title=row:WaitForChild("Title"),Value=row:WaitForChild("Value"),Icon=icon,Visual=visual,Color=currencyColors[key]}
+  self.CurrencyRows[key]={Root=row,Title=row:WaitForChild("Title"),Value=row:WaitForChild("Value"),Icon=icon,Color=currencyColors[key]}
  end
 
  self.Dock=root:WaitForChild("MenuDock")
