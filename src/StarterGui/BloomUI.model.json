@@ -497,6 +497,55 @@
               },
               "Children": [
                 {
+                  "ClassName": "ImageLabel",
+                  "Name": "Visual",
+                  "Properties": {
+                    "Size": {
+                      "UDim2": [
+                        [
+                          1,
+                          0
+                        ],
+                        [
+                          1,
+                          0
+                        ]
+                      ]
+                    },
+                    "Position": {
+                      "UDim2": [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          0,
+                          0
+                        ]
+                      ]
+                    },
+                    "AnchorPoint": {
+                      "Vector2": [
+                        0,
+                        0
+                      ]
+                    },
+                    "BackgroundTransparency": 1,
+                    "BorderSizePixel": 0,
+                    "Image": "rbxthumb://type=Asset&id=89228638871248&w=420&h=420",
+                    "ImageColor3": [
+                      1,
+                      1,
+                      1
+                    ],
+                    "ImageTransparency": 0,
+                    "ScaleType": "Fit",
+                    "Visible": true,
+                    "ZIndex": 20
+                  },
+                  "Children": []
+                },
+                {
                   "ClassName": "Frame",
                   "Name": "IconBg",
                   "Properties": {
@@ -520,7 +569,7 @@
                     "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
                     "ZIndex": 21,
-                    "Visible": true,
+                    "Visible": false,
                     "ClipsDescendants": false,
                     "Position": {
                       "UDim2": [
@@ -648,7 +697,7 @@
                     "TextXAlignment": "Right",
                     "TextYAlignment": "Center",
                     "Font": "GothamBold",
-                    "ZIndex": 21,
+                    "ZIndex": 22,
                     "Visible": true,
                     "Position": {
                       "UDim2": [
@@ -708,6 +757,55 @@
               },
               "Children": [
                 {
+                  "ClassName": "ImageLabel",
+                  "Name": "Visual",
+                  "Properties": {
+                    "Size": {
+                      "UDim2": [
+                        [
+                          1,
+                          0
+                        ],
+                        [
+                          1,
+                          0
+                        ]
+                      ]
+                    },
+                    "Position": {
+                      "UDim2": [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          0,
+                          0
+                        ]
+                      ]
+                    },
+                    "AnchorPoint": {
+                      "Vector2": [
+                        0,
+                        0
+                      ]
+                    },
+                    "BackgroundTransparency": 1,
+                    "BorderSizePixel": 0,
+                    "Image": "rbxthumb://type=Asset&id=122551440126725&w=420&h=420",
+                    "ImageColor3": [
+                      1,
+                      1,
+                      1
+                    ],
+                    "ImageTransparency": 0,
+                    "ScaleType": "Fit",
+                    "Visible": true,
+                    "ZIndex": 20
+                  },
+                  "Children": []
+                },
+                {
                   "ClassName": "Frame",
                   "Name": "IconBg",
                   "Properties": {
@@ -731,7 +829,7 @@
                     "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
                     "ZIndex": 21,
-                    "Visible": true,
+                    "Visible": false,
                     "ClipsDescendants": false,
                     "Position": {
                       "UDim2": [
@@ -859,7 +957,7 @@
                     "TextXAlignment": "Right",
                     "TextYAlignment": "Center",
                     "Font": "GothamBold",
-                    "ZIndex": 21,
+                    "ZIndex": 22,
                     "Visible": true,
                     "Position": {
                       "UDim2": [
@@ -901,7 +999,7 @@
                 "BackgroundTransparency": 1,
                 "BorderSizePixel": 0,
                 "ZIndex": 20,
-                "Visible": true,
+                "Visible": false,
                 "ClipsDescendants": false,
                 "LayoutOrder": 3,
                 "Position": {
@@ -1112,7 +1210,7 @@
                 "BackgroundTransparency": 1,
                 "BorderSizePixel": 0,
                 "ZIndex": 20,
-                "Visible": true,
+                "Visible": false,
                 "ClipsDescendants": false,
                 "LayoutOrder": 4,
                 "Position": {
@@ -1323,7 +1421,7 @@
                 "BackgroundTransparency": 1,
                 "BorderSizePixel": 0,
                 "ZIndex": 20,
-                "Visible": true,
+                "Visible": false,
                 "ClipsDescendants": false,
                 "LayoutOrder": 5,
                 "Position": {
@@ -1509,6 +1607,266 @@
                   }
                 }
               ]
+            },
+            {
+              "ClassName": "Frame",
+              "Name": "Luck",
+              "Properties": {
+                "Size": {
+                  "UDim2": [
+                    [
+                      0,
+                      124
+                    ],
+                    [
+                      0,
+                      32
+                    ]
+                  ]
+                },
+                "BackgroundColor3": [
+                  0.07058823529411765,
+                  0.09803921568627451,
+                  0.13333333333333333
+                ],
+                "BackgroundTransparency": 1,
+                "BorderSizePixel": 0,
+                "ZIndex": 20,
+                "Visible": true,
+                "ClipsDescendants": false,
+                "LayoutOrder": 3,
+                "Position": {
+                  "UDim2": [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      0,
+                      74
+                    ]
+                  ]
+                }
+              },
+              "Children": [
+                {
+                  "ClassName": "ImageLabel",
+                  "Name": "Visual",
+                  "Properties": {
+                    "Size": {
+                      "UDim2": [
+                        [
+                          1,
+                          0
+                        ],
+                        [
+                          1,
+                          0
+                        ]
+                      ]
+                    },
+                    "Position": {
+                      "UDim2": [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          0,
+                          0
+                        ]
+                      ]
+                    },
+                    "AnchorPoint": {
+                      "Vector2": [
+                        0,
+                        0
+                      ]
+                    },
+                    "BackgroundTransparency": 1,
+                    "BorderSizePixel": 0,
+                    "Image": "rbxthumb://type=Asset&id=119329224468450&w=420&h=420",
+                    "ImageColor3": [
+                      1,
+                      1,
+                      1
+                    ],
+                    "ImageTransparency": 0,
+                    "ScaleType": "Fit",
+                    "Visible": true,
+                    "ZIndex": 20
+                  },
+                  "Children": []
+                },
+                {
+                  "ClassName": "Frame",
+                  "Name": "IconBg",
+                  "Properties": {
+                    "Size": {
+                      "UDim2": [
+                        [
+                          0,
+                          30
+                        ],
+                        [
+                          0,
+                          30
+                        ]
+                      ]
+                    },
+                    "BackgroundColor3": [
+                      0.09411764705882353,
+                      0.12941176470588237,
+                      0.17254901960784313
+                    ],
+                    "BackgroundTransparency": 1,
+                    "BorderSizePixel": 0,
+                    "ZIndex": 21,
+                    "Visible": false,
+                    "ClipsDescendants": false,
+                    "Position": {
+                      "UDim2": [
+                        [
+                          1,
+                          -30
+                        ],
+                        [
+                          0.5,
+                          -15
+                        ]
+                      ]
+                    }
+                  },
+                  "Children": [
+                    {
+                      "ClassName": "ImageLabel",
+                      "Name": "Icon",
+                      "Properties": {
+                        "Size": {
+                          "UDim2": [
+                            [
+                              0,
+                              28
+                            ],
+                            [
+                              0,
+                              28
+                            ]
+                          ]
+                        },
+                        "BackgroundTransparency": 1,
+                        "BorderSizePixel": 0,
+                        "Image": "rbxthumb://type=Asset&id=112708830524820&w=420&h=420",
+                        "ScaleType": "Fit",
+                        "ZIndex": 22,
+                        "Position": {
+                          "UDim2": [
+                            [
+                              0.5,
+                              -14
+                            ],
+                            [
+                              0.5,
+                              -14
+                            ]
+                          ]
+                        },
+                        "Visible": true
+                      }
+                    }
+                  ]
+                },
+                {
+                  "ClassName": "TextLabel",
+                  "Name": "Title",
+                  "Properties": {
+                    "Size": {
+                      "UDim2": [
+                        [
+                          1,
+                          -86
+                        ],
+                        [
+                          0,
+                          12
+                        ]
+                      ]
+                    },
+                    "BackgroundTransparency": 1,
+                    "BorderSizePixel": 0,
+                    "Text": "",
+                    "TextColor3": [
+                      0.6509803921568628,
+                      0.7215686274509804,
+                      0.792156862745098
+                    ],
+                    "TextSize": 9,
+                    "TextWrapped": true,
+                    "TextXAlignment": "Left",
+                    "TextYAlignment": "Center",
+                    "Font": "GothamBold",
+                    "ZIndex": 21,
+                    "Visible": false,
+                    "Position": {
+                      "UDim2": [
+                        [
+                          0,
+                          48
+                        ],
+                        [
+                          0,
+                          4
+                        ]
+                      ]
+                    }
+                  }
+                },
+                {
+                  "ClassName": "TextLabel",
+                  "Name": "Value",
+                  "Properties": {
+                    "Size": {
+                      "UDim2": [
+                        [
+                          0,
+                          82
+                        ],
+                        [
+                          1,
+                          0
+                        ]
+                      ]
+                    },
+                    "BackgroundTransparency": 1,
+                    "BorderSizePixel": 0,
+                    "Text": "0",
+                    "TextColor3": [
+                      0.9607843137254902,
+                      0.9725490196078431,
+                      0.9882352941176471
+                    ],
+                    "TextSize": 18,
+                    "TextWrapped": false,
+                    "TextXAlignment": "Right",
+                    "TextYAlignment": "Center",
+                    "Font": "GothamBold",
+                    "ZIndex": 22,
+                    "Visible": true,
+                    "Position": {
+                      "UDim2": [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          0,
+                          0
+                        ]
+                      ]
+                    }
+                  }
+                }
+              ]
             }
           ]
         },
@@ -1640,7 +1998,7 @@
                     },
                     "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
-                    "Image": "rbxthumb://type=Asset&id=124063432113598&w=420&h=420",
+                    "Image": "rbxthumb://type=Asset&id=136672443964590&w=420&h=420",
                     "ScaleType": "Fit",
                     "ZIndex": 132,
                     "Position": {
@@ -1850,7 +2208,7 @@
                     },
                     "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
-                    "Image": "rbxthumb://type=Asset&id=121024323846687&w=420&h=420",
+                    "Image": "rbxthumb://type=Asset&id=121938586363055&w=420&h=420",
                     "ScaleType": "Fit",
                     "ZIndex": 132,
                     "Position": {
@@ -2258,7 +2616,7 @@
                     },
                     "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
-                    "Image": "rbxthumb://type=Asset&id=74677124320045&w=420&h=420",
+                    "Image": "rbxthumb://type=Asset&id=99022451093865&w=420&h=420",
                     "ScaleType": "Fit",
                     "ZIndex": 132,
                     "Position": {
@@ -2666,7 +3024,7 @@
                     },
                     "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
-                    "Image": "rbxthumb://type=Asset&id=74690198578201&w=420&h=420",
+                    "Image": "rbxthumb://type=Asset&id=130516384075830&w=420&h=420",
                     "ScaleType": "Fit",
                     "ZIndex": 132,
                     "Position": {
@@ -2870,7 +3228,7 @@
                     },
                     "BackgroundTransparency": 1,
                     "BorderSizePixel": 0,
-                    "Image": "rbxthumb://type=Asset&id=112708830524820&w=420&h=420",
+                    "Image": "rbxthumb://type=Asset&id=100391168457976&w=420&h=420",
                     "ScaleType": "Fit",
                     "ZIndex": 132,
                     "Position": {
@@ -4682,7 +5040,7 @@
                 },
                 "BackgroundTransparency": 1,
                 "BorderSizePixel": 0,
-                "Image": "rbxthumb://type=Asset&id=125311014921608&w=420&h=420",
+                "Image": "rbxthumb://type=Asset&id=133396446853560&w=420&h=420",
                 "ScaleType": "Fit",
                 "ZIndex": 29,
                 "Position": {
